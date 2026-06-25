@@ -146,6 +146,11 @@ html:not(.dark) thead tr {
   background: rgba(241, 243, 255, 0.60) !important;
 }
 
+/* Logo — invert to white in dark mode */
+.dark img[src="/logo.svg"] {
+  filter: brightness(0) invert(1);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }

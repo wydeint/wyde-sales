@@ -399,7 +399,7 @@ export default function CustomersPage() {
                           <td className="px-3 py-2">
                             {r._valid
                               ? <CheckCircle size={12} className="text-green-400" />
-                              : <XCircle size={12} className="text-red-400" title={r._error} />}
+                              : <span title={r._error}><XCircle size={12} className="text-red-400" /></span>}
                           </td>
                           <td className="px-3 py-2" style={{ color: 'var(--text-1)' }}>{r.customer_name || '—'}</td>
                           <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{r.phone || '—'}</td>

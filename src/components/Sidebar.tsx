@@ -6,7 +6,8 @@ import {
   LayoutDashboard, Users, TrendingUp, CalendarDays,
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
-  Target, LogOut, Sun, Moon, ChevronRight, CreditCard
+  Target, LogOut, Sun, Moon, ChevronRight, CreditCard,
+  Briefcase, Settings2
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -34,6 +35,7 @@ const NAV = [
       { href: '/dashboard/commission', icon: DollarSign, label: 'Commission' },
       { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/finance', icon: CreditCard, label: 'การเงิน (ห้อง)' },
+      { href: '/dashboard/jobs', icon: Briefcase, label: 'ทะเบียนงาน (Jobs)' },
     ],
   },
   {
@@ -62,6 +64,7 @@ const NAV = [
       { href: '/dashboard/projects', icon: Building2, label: 'Projects' },
       { href: '/dashboard/users', icon: UserCog, label: 'Users' },
       { href: '/dashboard/targets', icon: Target, label: 'Sales Targets' },
+      { href: '/dashboard/settings', icon: Settings2, label: 'Commission Tiers' },
     ],
   },
 ]

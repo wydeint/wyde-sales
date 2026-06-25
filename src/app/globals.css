@@ -161,6 +161,34 @@ html:not(.dark) thead tr {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 
 /* ══════════════════════════════════════════
+   Form field utilities (used across all pages)
+══════════════════════════════════════════ */
+.field-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.field-input {
+  background: var(--input-bg);
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-1);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus {
+  border-color: var(--accent);
+}
+.field-input::placeholder { color: var(--text-3); }
+.field-input option { background: #1e1b4b; color: #f1f5f9; }
+
+/* ══════════════════════════════════════════
    Transitions
 ══════════════════════════════════════════ */
 a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }

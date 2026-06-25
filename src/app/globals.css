@@ -1,26 +1,161 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ── Dark mode via .dark class on <html> ── */
+@variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ══════════════════════════════════════════
+   Theme Variables
+══════════════════════════════════════════ */
+
+/* Light — iOS 26 Pastel */
+:root {
+  --bg-gradient: linear-gradient(135deg, #dde4ff 0%, #eafaf4 45%, #f5e8ff 100%);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --sidebar-bg: rgba(248, 249, 255, 0.88);
+  --sidebar-border: rgba(199, 210, 254, 0.40);
+  --input-bg: rgba(255, 255, 255, 0.70);
+  --hover-bg: rgba(99, 102, 241, 0.07);
+  --active-bg: rgba(99, 102, 241, 0.13);
+  --divider: rgba(199, 210, 254, 0.35);
+  --text-1: #1e1b4b;
+  --text-2: #4c5a7a;
+  --text-3: #8b95b0;
+  --accent: #6366f1;
+  --accent-green: #059669;
+  --accent-purple: #7c3aed;
+  --accent-blue: #2563eb;
+  --accent-orange: #ea580c;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Dark — iOS 26 Deep Glass */
+.dark {
+  --bg-gradient: linear-gradient(135deg, #0e0b1e 0%, #090d18 50%, #130b1f 100%);
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-border: rgba(255, 255, 255, 0.085);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --sidebar-bg: rgba(12, 9, 24, 0.92);
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --hover-bg: rgba(255, 255, 255, 0.06);
+  --active-bg: rgba(99, 102, 241, 0.18);
+  --divider: rgba(255, 255, 255, 0.07);
+  --text-1: #f1f5f9;
+  --text-2: #94a3b8;
+  --text-3: #4b5a72;
+  --accent: #818cf8;
+  --accent-green: #34d399;
+  --accent-purple: #a78bfa;
+  --accent-blue: #60a5fa;
+  --accent-orange: #fb923c;
 }
+
+/* ══════════════════════════════════════════
+   Base
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { height: 100%; }
+
+body {
+  min-height: 100%;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-1);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════
+   Glass Utilities
+══════════════════════════════════════════ */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-input {
+  background: var(--input-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+
+/* ══════════════════════════════════════════
+   Light Mode — Override Hardcoded Dark Colors
+══════════════════════════════════════════ */
+
+/* Card / panel backgrounds */
+html:not(.dark) .bg-\[\#161b22\] {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+html:not(.dark) .bg-\[\#0d1117\] {
+  background: rgba(255, 255, 255, 0.38) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+html:not(.dark) .bg-\[\#0d1117\]\/30,
+html:not(.dark) .bg-\[\#0d1117\]\/50 {
+  background: rgba(241, 243, 255, 0.45) !important;
+}
+html:not(.dark) .bg-\[\#1c2128\],
+html:not(.dark) .hover\:bg-\[\#1c2128\]:hover {
+  background: rgba(99, 102, 241, 0.06) !important;
+}
+html:not(.dark) .bg-\[\#21262d\] {
+  background: rgba(99, 102, 241, 0.09) !important;
+}
+
+/* Borders */
+html:not(.dark) .border-\[\#30363d\] {
+  border-color: rgba(199, 210, 254, 0.50) !important;
+}
+html:not(.dark) .border-\[\#21262d\] {
+  border-color: rgba(199, 210, 254, 0.30) !important;
+}
+
+/* Text */
+html:not(.dark) .text-white { color: var(--text-1) !important; }
+html:not(.dark) .text-\[\#c9d1d9\] { color: var(--text-2) !important; }
+html:not(.dark) .text-\[\#8b949e\] { color: var(--text-2) !important; }
+html:not(.dark) .text-\[\#484f58\] { color: var(--text-3) !important; }
+
+/* Table rows */
+html:not(.dark) thead tr {
+  background: rgba(241, 243, 255, 0.60) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--divider);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ══════════════════════════════════════════
+   Transitions
+══════════════════════════════════════════ */
+a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }

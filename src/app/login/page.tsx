@@ -38,12 +38,8 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="relative w-16 h-16 mb-4">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-purple-600" />
-            <div className="absolute inset-0 rounded-2xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">W</span>
-            </div>
-            <div className="absolute inset-0 rounded-2xl ring-1 ring-white/25" />
+          <div className="w-20 h-20 mb-4 flex items-center justify-center">
+            <img src="/logo.png" alt="WydE Int." className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>
             Wyde Sales

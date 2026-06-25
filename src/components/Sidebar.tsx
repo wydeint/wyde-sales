@@ -106,12 +106,8 @@ export default function Sidebar() {
       <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
         <div className="flex items-center gap-3">
           {/* Logo mark */}
-          <div className="relative w-9 h-9 flex-shrink-0">
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-400 via-violet-500 to-purple-600 opacity-90" />
-            <div className="absolute inset-0 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-base tracking-tight">W</span>
-            </div>
-            <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
+          <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="WydE Int." className="w-full h-full object-contain" />
           </div>
           <div>
             <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>

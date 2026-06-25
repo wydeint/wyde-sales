@@ -1,0 +1,283 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Plus, ShieldCheck, Pencil, AlertTriangle } from 'lucide-react'
+import Modal from '@/components/ui/Modal'
+import { Input, Select, TextArea } from '@/components/ui/Input'
+
+interface Warranty {
+  id: string
+  customer_id: string
+  project_id: string
+  room: string
+  handover_date: string
+  warranty_start: string
+  warranty_end: string
+  warranty_months: number
+  status: string
+  notes: string
+  created_at: string
+  customers?: { name: string; phone: string }
+  projects?: { name: string }
+}
+
+interface Customer { id: string; name: string }
+interface Project { id: string; name: string }
+
+const STATUS = [
+  { value: 'active', label: 'ยังอยู่ในประกัน', color: 'bg-green-500/20 text-green-400' },
+  { value: 'expiring_soon', label: 'ใกล้หมด', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'expired', label: 'หมดประกันแล้ว', color: 'bg-red-500/20 text-red-400' },
+]
+
+const emptyForm = {
+  customer_id: '', project_id: '', room: '',
+  handover_date: '', warranty_start: '', warranty_end: '',
+  warranty_months: 12, status: 'active', notes: ''
+}
+
+const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'
+
+function daysLeft(endDate: string) {
+  if (!endDate) return null
+  const diff = Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000)
+  return diff
+}
+
+export default function WarrantyPage() {
+  const supabase = createClient()
+  const [warranties, setWarranties] = useState<Warranty[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState<Warranty | null>(null)
+  const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
+
+  async function load() {
+    setLoading(true)
+    const [{ data: w }, { data: c }, { data: p }] = await Promise.all([
+      supabase.from('warranties').select('*, customers(name,phone), projects(name)').order('warranty_end', { ascending: true }),
+      supabase.from('customers').select('id,name').order('name'),
+      supabase.from('projects').select('id,name').order('name'),
+    ])
+    setWarranties(w || [])
+    setCustomers(c || [])
+    setProjects(p || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function calcWarrantyEnd(start: string, months: number) {
+    if (!start) return ''
+    const d = new Date(start)
+    d.setMonth(d.getMonth() + months)
+    return d.toISOString().slice(0, 10)
+  }
+
+  function updateStart(val: string) {
+    const end = calcWarrantyEnd(val, form.warranty_months)
+    setForm({ ...form, warranty_start: val, warranty_end: end })
+  }
+
+  function updateMonths(val: number) {
+    const end = calcWarrantyEnd(form.warranty_start, val)
+    setForm({ ...form, warranty_months: val, warranty_end: end })
+  }
+
+  function genId() {
+    const nums = warranties.map(w => parseInt(w.id.replace('WAR-', ''))).filter(n => !isNaN(n))
+    return 'WAR-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(3, '0')
+  }
+
+  async function save() {
+    if (!form.customer_id) return
+    setSaving(true)
+    if (editing) {
+      await supabase.from('warranties').update(form).eq('id', editing.id)
+    } else {
+      await supabase.from('warranties').insert({ id: genId(), ...form })
+    }
+    setSaving(false)
+    setOpen(false)
+    load()
+  }
+
+  const custOptions = [{ value: '', label: '— เลือกลูกค้า —' }, ...customers.map(c => ({ value: c.id, label: c.name }))]
+  const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
+  const statusOptions = STATUS.map(s => ({ value: s.value, label: s.label }))
+
+  const active = warranties.filter(w => w.status === 'active' || w.status === 'expiring_soon')
+  const expired = warranties.filter(w => w.status === 'expired')
+  const expiringSoon = warranties.filter(w => w.status === 'expiring_soon')
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-white text-xl font-bold">Warranty</h1>
+          <p className="text-[#8b949e] text-sm mt-0.5">ติดตามระยะเวลาประกันผลงาน</p>
+        </div>
+        <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
+          className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          <Plus size={16} />เพิ่มประกัน
+        </button>
+      </div>
+
+      {/* Alert: expiring soon */}
+      {expiringSoon.length > 0 && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-center gap-3">
+          <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0" />
+          <p className="text-yellow-300 text-sm">มี {expiringSoon.length} รายการที่ประกันจะหมดภายใน 30 วัน</p>
+        </div>
+      )}
+
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {STATUS.map(s => (
+          <div key={s.value} className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+            <p className="text-[#8b949e] text-xs mb-1">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.color.split(' ')[1]}`}>{warranties.filter(w => w.status === s.value).length}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Active warranties */}
+      {active.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-[#8b949e] text-xs font-bold mb-3">อยู่ในประกัน ({active.length})</h2>
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#21262d]">
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">โครงการ / ห้อง</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">เริ่มประกัน</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">หมดประกัน</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">คงเหลือ</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">สถานะ</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {active.map((w, i) => {
+                  const st = STATUS.find(s => s.value === w.status) || STATUS[0]
+                  const days = daysLeft(w.warranty_end)
+                  return (
+                    <tr key={w.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
+                      <td className="px-4 py-3">
+                        <p className="text-white text-sm">{(w as any).customers?.name || '-'}</p>
+                        <p className="text-[#484f58] text-xs">{(w as any).customers?.phone}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-[#c9d1d9] text-sm">{(w as any).projects?.name || '-'}</p>
+                        <p className="text-[#58a6ff] text-xs">{w.room}</p>
+                      </td>
+                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{dateStr(w.warranty_start)}</td>
+                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{dateStr(w.warranty_end)}</td>
+                      <td className="px-4 py-3">
+                        {days !== null && (
+                          <span className={`text-sm font-medium ${days <= 30 ? 'text-yellow-400' : 'text-green-400'}`}>
+                            {days > 0 ? `${days} วัน` : 'หมดแล้ว'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => {
+                          setEditing(w)
+                          setForm({ customer_id: w.customer_id, project_id: w.project_id, room: w.room, handover_date: w.handover_date || '', warranty_start: w.warranty_start || '', warranty_end: w.warranty_end || '', warranty_months: w.warranty_months, status: w.status, notes: w.notes || '' })
+                          setOpen(true)
+                        }} className="text-[#8b949e] hover:text-white transition-colors">
+                          <Pencil size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Expired */}
+      {expired.length > 0 && (
+        <div>
+          <h2 className="text-[#8b949e] text-xs font-bold mb-3">หมดประกันแล้ว ({expired.length})</h2>
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden opacity-60">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#21262d]">
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">โครงการ / ห้อง</th>
+                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">หมดประกัน</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {expired.map((w, i) => (
+                  <tr key={w.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
+                    <td className="px-4 py-3 text-white text-sm">{(w as any).customers?.name || '-'}</td>
+                    <td className="px-4 py-3">
+                      <p className="text-[#c9d1d9] text-sm">{(w as any).projects?.name || '-'}</p>
+                      <p className="text-[#58a6ff] text-xs">{w.room}</p>
+                    </td>
+                    <td className="px-4 py-3 text-red-400 text-sm">{dateStr(w.warranty_end)}</td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => {
+                        setEditing(w)
+                        setForm({ customer_id: w.customer_id, project_id: w.project_id, room: w.room, handover_date: w.handover_date || '', warranty_start: w.warranty_start || '', warranty_end: w.warranty_end || '', warranty_months: w.warranty_months, status: w.status, notes: w.notes || '' })
+                        setOpen(true)
+                      }} className="text-[#8b949e] hover:text-white transition-colors">
+                        <Pencil size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {!loading && warranties.length === 0 && (
+        <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
+          <ShieldCheck size={32} className="mx-auto text-[#484f58] mb-2" />
+          <p className="text-[#8b949e] text-sm">ยังไม่มีข้อมูลประกัน</p>
+        </div>
+      )}
+
+      {/* Modal */}
+      <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไขประกัน' : 'เพิ่มประกันใหม่'} size="lg">
+        <div className="grid grid-cols-2 gap-4">
+          <Select label="ลูกค้า *" value={form.customer_id} onChange={e => setForm({ ...form, customer_id: e.target.value })} options={custOptions} />
+          <Select label="โครงการ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projOptions} />
+          <Input label="ห้อง" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} placeholder="A-1201" />
+          <Input label="วัน Handover" type="date" value={form.handover_date} onChange={e => setForm({ ...form, handover_date: e.target.value })} />
+          <Input label="วันเริ่มประกัน" type="date" value={form.warranty_start} onChange={e => updateStart(e.target.value)} />
+          <Input label="ระยะเวลาประกัน (เดือน)" type="number" value={form.warranty_months} onChange={e => updateMonths(Number(e.target.value))} />
+          <div className="col-span-2 bg-[#0d1117] rounded-lg p-3">
+            <p className="text-[#8b949e] text-xs mb-1">วันหมดประกัน (คำนวณอัตโนมัติ)</p>
+            <p className="text-white font-medium">{form.warranty_end ? dateStr(form.warranty_end) : '-'}</p>
+          </div>
+          <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={statusOptions} />
+          <div className="col-span-2">
+            <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-5">
+          <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={save} disabled={saving || !form.customer_id} className="px-4 py-2 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+        </div>
+      </Modal>
+    </div>
+  )
+}

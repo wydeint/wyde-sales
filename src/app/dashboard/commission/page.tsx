@@ -1,0 +1,255 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Plus, DollarSign, Pencil, CheckCircle } from 'lucide-react'
+import Modal from '@/components/ui/Modal'
+import { Input, Select, TextArea } from '@/components/ui/Input'
+
+interface Commission {
+  id: string
+  customer_id: string
+  sales_person_id: string
+  project_id: string
+  room: string
+  sale_price: number
+  commission_rate: number
+  commission_amount: number
+  bonus: number
+  total_commission: number
+  status: string
+  paid_date: string
+  notes: string
+  created_at: string
+  customers?: { name: string }
+  users?: { name: string }
+  projects?: { name: string }
+}
+
+interface Customer { id: string; name: string }
+interface User { id: string; name: string }
+interface Project { id: string; name: string }
+
+const STATUS = [
+  { value: 'pending', label: 'รอดำเนินการ', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'approved', label: 'อนุมัติแล้ว', color: 'bg-blue-500/20 text-blue-400' },
+  { value: 'paid', label: 'จ่ายแล้ว', color: 'bg-green-500/20 text-green-400' },
+]
+
+const emptyForm = {
+  customer_id: '', sales_person_id: '', project_id: '', room: '',
+  sale_price: 0, commission_rate: 3, commission_amount: 0,
+  bonus: 0, total_commission: 0, status: 'pending', paid_date: '', notes: ''
+}
+
+const f = (v: number) => v ? '฿' + v.toLocaleString() : '฿0'
+const pct = (v: number) => v ? v + '%' : '0%'
+
+export default function CommissionPage() {
+  const supabase = createClient()
+  const [commissions, setCommissions] = useState<Commission[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState<Commission | null>(null)
+  const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
+
+  async function load() {
+    setLoading(true)
+    const [{ data: com }, { data: cust }, { data: u }, { data: p }] = await Promise.all([
+      supabase.from('commissions').select('*, customers(name), users!commissions_sales_person_id_fkey(name), projects(name)').order('created_at', { ascending: false }),
+      supabase.from('customers').select('id,name').eq('status', 'closed').order('name'),
+      supabase.from('users').select('id,name').eq('active', true).order('name'),
+      supabase.from('projects').select('id,name').order('name'),
+    ])
+    setCommissions(com || [])
+    setCustomers(cust || [])
+    setUsers(u || [])
+    setProjects(p || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function calcCommission(price: number, rate: number, bonus: number) {
+    const comm = Math.round(price * rate / 100)
+    return { commission_amount: comm, total_commission: comm + bonus }
+  }
+
+  function updatePrice(val: number) {
+    const { commission_amount, total_commission } = calcCommission(val, form.commission_rate, form.bonus)
+    setForm({ ...form, sale_price: val, commission_amount, total_commission })
+  }
+
+  function updateRate(val: number) {
+    const { commission_amount, total_commission } = calcCommission(form.sale_price, val, form.bonus)
+    setForm({ ...form, commission_rate: val, commission_amount, total_commission })
+  }
+
+  function updateBonus(val: number) {
+    setForm({ ...form, bonus: val, total_commission: form.commission_amount + val })
+  }
+
+  function genId() {
+    const nums = commissions.map(c => parseInt(c.id.replace('COM-', ''))).filter(n => !isNaN(n))
+    return 'COM-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(3, '0')
+  }
+
+  async function save() {
+    if (!form.customer_id || !form.sales_person_id) return
+    setSaving(true)
+    if (editing) {
+      await supabase.from('commissions').update(form).eq('id', editing.id)
+    } else {
+      await supabase.from('commissions').insert({ id: genId(), ...form })
+    }
+    setSaving(false)
+    setOpen(false)
+    load()
+  }
+
+  const custOptions = [{ value: '', label: '— เลือกลูกค้า —' }, ...customers.map(c => ({ value: c.id, label: c.name }))]
+  const userOptions = [{ value: '', label: '— เลือก Sales —' }, ...users.map(u => ({ value: u.id, label: u.name }))]
+  const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
+  const statusOptions = STATUS.map(s => ({ value: s.value, label: s.label }))
+
+  const totalPending = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + c.total_commission, 0)
+  const totalApproved = commissions.filter(c => c.status === 'approved').reduce((s, c) => s + c.total_commission, 0)
+  const totalPaid = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + c.total_commission, 0)
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-white text-xl font-bold">Commission</h1>
+          <p className="text-[#8b949e] text-sm mt-0.5">ติดตามค่าคอมมิชชั่นทีมขาย</p>
+        </div>
+        <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
+          className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          <Plus size={16} />บันทึก Commission
+        </button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+          <p className="text-[#8b949e] text-xs mb-1">รอดำเนินการ</p>
+          <p className="text-yellow-400 text-xl font-bold">{f(totalPending)}</p>
+          <p className="text-[#484f58] text-xs mt-1">{commissions.filter(c => c.status === 'pending').length} รายการ</p>
+        </div>
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+          <p className="text-[#8b949e] text-xs mb-1">อนุมัติแล้ว</p>
+          <p className="text-blue-400 text-xl font-bold">{f(totalApproved)}</p>
+          <p className="text-[#484f58] text-xs mt-1">{commissions.filter(c => c.status === 'approved').length} รายการ</p>
+        </div>
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+          <p className="text-[#8b949e] text-xs mb-1">จ่ายแล้ว</p>
+          <p className="text-green-400 text-xl font-bold">{f(totalPaid)}</p>
+          <p className="text-[#484f58] text-xs mt-1">{commissions.filter(c => c.status === 'paid').length} รายการ</p>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[#21262d]">
+              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ID</th>
+              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า / ห้อง</th>
+              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">Sales</th>
+              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">ราคาขาย</th>
+              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Rate</th>
+              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Commission</th>
+              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Bonus</th>
+              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">รวม</th>
+              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">สถานะ</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {loading && <tr><td colSpan={10} className="text-center py-12 text-[#8b949e]">กำลังโหลด...</td></tr>}
+            {!loading && commissions.length === 0 && (
+              <tr><td colSpan={10} className="text-center py-12">
+                <DollarSign size={32} className="mx-auto text-[#484f58] mb-2" />
+                <p className="text-[#8b949e] text-sm">ยังไม่มี Commission</p>
+              </td></tr>
+            )}
+            {commissions.map((c, i) => {
+              const st = STATUS.find(s => s.value === c.status) || STATUS[0]
+              return (
+                <tr key={c.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
+                  <td className="px-4 py-3 text-[#58a6ff] text-xs font-mono">{c.id}</td>
+                  <td className="px-4 py-3">
+                    <p className="text-white text-sm">{(c as any).customers?.name || '-'}</p>
+                    <p className="text-[#58a6ff] text-xs">{c.room || '-'}</p>
+                  </td>
+                  <td className="px-4 py-3 text-[#c9d1d9] text-sm">{(c as any).users?.name || '-'}</td>
+                  <td className="px-4 py-3 text-right text-[#c9d1d9] text-sm">{f(c.sale_price)}</td>
+                  <td className="px-4 py-3 text-right text-[#8b949e] text-sm">{pct(c.commission_rate)}</td>
+                  <td className="px-4 py-3 text-right text-[#c9d1d9] text-sm">{f(c.commission_amount)}</td>
+                  <td className="px-4 py-3 text-right text-yellow-400 text-sm">{c.bonus > 0 ? f(c.bonus) : '-'}</td>
+                  <td className="px-4 py-3 text-right text-green-400 text-sm font-medium">{f(c.total_commission)}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => {
+                      setEditing(c)
+                      setForm({ customer_id: c.customer_id, sales_person_id: c.sales_person_id, project_id: c.project_id, room: c.room, sale_price: c.sale_price, commission_rate: c.commission_rate, commission_amount: c.commission_amount, bonus: c.bonus, total_commission: c.total_commission, status: c.status, paid_date: c.paid_date || '', notes: c.notes })
+                      setOpen(true)
+                    }} className="text-[#8b949e] hover:text-white transition-colors">
+                      <Pencil size={14} />
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal */}
+      <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไข Commission' : 'บันทึก Commission ใหม่'} size="lg">
+        <div className="grid grid-cols-2 gap-4">
+          <Select label="ลูกค้า *" value={form.customer_id} onChange={e => setForm({ ...form, customer_id: e.target.value })} options={custOptions} />
+          <Select label="Sales *" value={form.sales_person_id} onChange={e => setForm({ ...form, sales_person_id: e.target.value })} options={userOptions} />
+          <Select label="โครงการ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projOptions} />
+          <Input label="ห้อง" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} placeholder="A-1201" />
+          <Input label="ราคาขาย (บาท)" type="number" value={form.sale_price} onChange={e => updatePrice(Number(e.target.value))} />
+          <Input label="Commission Rate (%)" type="number" value={form.commission_rate} onChange={e => updateRate(Number(e.target.value))} />
+          <div className="col-span-2 bg-[#0d1117] rounded-lg p-3 grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-[#8b949e] text-xs mb-1">Commission</p>
+              <p className="text-white font-medium">{f(form.commission_amount)}</p>
+            </div>
+            <div>
+              <p className="text-[#8b949e] text-xs mb-1">Bonus</p>
+              <input type="number" value={form.bonus} onChange={e => updateBonus(Number(e.target.value))}
+                className="bg-transparent text-yellow-400 font-medium text-sm w-full outline-none border-b border-[#30363d] pb-0.5" />
+            </div>
+            <div>
+              <p className="text-[#8b949e] text-xs mb-1">รวมทั้งหมด</p>
+              <p className="text-green-400 font-bold">{f(form.total_commission)}</p>
+            </div>
+          </div>
+          <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={statusOptions} />
+          {form.status === 'paid' && (
+            <Input label="วันที่จ่าย" type="date" value={form.paid_date} onChange={e => setForm({ ...form, paid_date: e.target.value })} />
+          )}
+          <div className="col-span-2">
+            <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-5">
+          <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={save} disabled={saving || !form.customer_id || !form.sales_person_id} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+        </div>
+      </Modal>
+    </div>
+  )
+}

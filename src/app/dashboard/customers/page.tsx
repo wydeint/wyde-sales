@@ -78,7 +78,7 @@ export default function CustomersPage() {
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).order('name'),
     ])
-    setCustomers(c || [])
+    setCustomers((c as any) || [])
     setProjects(p || [])
     setUsers(u || [])
     setLoading(false)

@@ -36,7 +36,7 @@ export default function PipelinePage() {
         .select('id, customer_name, phone, project_id, interested_room, budget, status, assigned_to, created_at, projects(name), users!customers_assigned_to_fkey(name)')
         .neq('status', 'lost')
         .order('created_at', { ascending: false })
-      setCustomers(data || [])
+      setCustomers((data as any) || [])
       setLoading(false)
     }
     load()

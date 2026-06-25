@@ -68,9 +68,19 @@ export default function FinancePage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [tab, setTab] = useState<'outstanding' | 'paid' | 'all'>('outstanding')
+  const [myOnly, setMyOnly] = useState(false)
+  const [myCustomerIds, setMyCustomerIds] = useState<string[]>([])
 
   async function load() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: u } = await supabase.from('users').select('id').eq('email', user.email!).single()
+      if (u) {
+        const { data: myC } = await supabase.from('customers').select('id').eq('assigned_to', u.id)
+        setMyCustomerIds((myC || []).map((x: any) => x.id))
+      }
+    }
     const [{ data: p }, { data: c }, { data: pr }] = await Promise.all([
       supabase.from('payments').select('*, customers(name,phone), projects(name)').order('due_date', { ascending: true }),
       supabase.from('customers').select('id,name').order('name'),
@@ -115,7 +125,10 @@ export default function FinancePage() {
   const totalPaid = paid.reduce((s, p) => s + p.paid_amount, 0)
   const totalOverdue = overdue.reduce((s, p) => s + p.amount, 0)
 
-  const displayList = tab === 'outstanding' ? outstanding : tab === 'paid' ? paid : payments
+  const baseList = tab === 'outstanding' ? outstanding : tab === 'paid' ? paid : payments
+  const displayList = myOnly && myCustomerIds.length > 0
+    ? baseList.filter(p => myCustomerIds.includes(p.customer_id))
+    : baseList
 
   return (
     <div className="p-6">
@@ -157,8 +170,9 @@ export default function FinancePage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-[#161b22] border border-[#30363d] rounded-lg p-1 w-fit">
+      {/* Tabs + My filter */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+      <div className="flex gap-1 bg-[#161b22] border border-[#30363d] rounded-lg p-1 w-fit">
         {[
           { key: 'outstanding', label: `ค้างชำระ (${outstanding.length})` },
           { key: 'paid', label: `ชำระแล้ว (${paid.length})` },
@@ -169,6 +183,11 @@ export default function FinancePage() {
             {t.label}
           </button>
         ))}
+      </div>
+      <button onClick={() => setMyOnly(!myOnly)}
+        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${myOnly ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40' : 'text-[#8b949e] border-[#30363d] hover:text-white'}`}>
+        {myOnly ? '● ของฉัน' : '○ ของฉัน'}
+      </button>
       </div>
 
       {/* Table */}

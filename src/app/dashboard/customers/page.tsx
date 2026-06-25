@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Users, Pencil, Search, ChevronDown } from 'lucide-react'
+import { Plus, Users, Pencil, Search, Upload, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -57,6 +57,41 @@ function statusInfo(s: string) {
   return STATUS_LIST.find(x => x.value === s) || STATUS_LIST[0]
 }
 
+interface CsvRow {
+  customer_name: string; phone: string; email: string; line_id: string
+  source: string; project_id: string; interested_room: string
+  budget: number; status: string; assigned_to: string; notes: string
+  _valid: boolean; _error: string
+}
+
+// Map CSV header synonyms → DB field
+const CSV_MAP: Record<string, string> = {
+  'ชื่อ': 'customer_name', 'name': 'customer_name', 'customer_name': 'customer_name', 'ชื่อ-นามสกุล': 'customer_name',
+  'เบอร์': 'phone', 'phone': 'phone', 'tel': 'phone', 'โทร': 'phone',
+  'email': 'email', 'อีเมล': 'email',
+  'line': 'line_id', 'line_id': 'line_id', 'ไลน์': 'line_id',
+  'source': 'source', 'ช่องทาง': 'source',
+  'project': 'project_id', 'project_id': 'project_id', 'โครงการ': 'project_id',
+  'room': 'interested_room', 'ห้อง': 'interested_room', 'interested_room': 'interested_room',
+  'budget': 'budget', 'งบ': 'budget', 'งบประมาณ': 'budget',
+  'status': 'status', 'สถานะ': 'status',
+  'sales': 'assigned_to', 'assigned_to': 'assigned_to', 'Sales': 'assigned_to',
+  'notes': 'notes', 'หมายเหตุ': 'notes',
+}
+
+function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
+  const lines = text.trim().split(/\r?\n/)
+  if (lines.length < 2) return { headers: [], rows: [] }
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''))
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''))
+    const obj: Record<string, string> = {}
+    headers.forEach((h, i) => { obj[h] = vals[i] || '' })
+    return obj
+  })
+  return { headers, rows }
+}
+
 export default function CustomersPage() {
   const supabase = createClient()
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -70,6 +105,13 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterProject, setFilterProject] = useState('')
+
+  // CSV import state
+  const [csvOpen, setCsvOpen] = useState(false)
+  const [csvRows, setCsvRows] = useState<CsvRow[]>([])
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([])
+  const [csvImporting, setCsvImporting] = useState(false)
+  const [csvResult, setCsvResult] = useState<{ done: number; skipped: number } | null>(null)
 
   async function load() {
     setLoading(true)
@@ -104,6 +146,58 @@ export default function CustomersPage() {
     load()
   }
 
+  function handleCsvFile(file: File) {
+    setCsvResult(null)
+    const reader = new FileReader()
+    reader.onload = e => {
+      const text = e.target?.result as string
+      const { headers, rows } = parseCSV(text)
+      setCsvHeaders(headers)
+      const parsed: CsvRow[] = rows.map(row => {
+        const mapped: any = { _valid: true, _error: '' }
+        for (const [csvH, val] of Object.entries(row)) {
+          const dbField = CSV_MAP[csvH] || CSV_MAP[csvH.toLowerCase()]
+          if (dbField) mapped[dbField] = val
+        }
+        // Resolve project name → id
+        if (mapped.project_id && !mapped.project_id.startsWith('PRJ')) {
+          const proj = projects.find(p => p.name.toLowerCase().includes(mapped.project_id.toLowerCase()))
+          if (proj) mapped.project_id = proj.id
+          else { mapped._valid = false; mapped._error = `ไม่พบโครงการ: ${mapped.project_id}` }
+        }
+        // Resolve user name → id
+        if (mapped.assigned_to && mapped.assigned_to.length > 2) {
+          const u = users.find(x => x.name.toLowerCase().includes(mapped.assigned_to.toLowerCase()))
+          if (u) mapped.assigned_to = u.id
+        }
+        if (!mapped.customer_name) { mapped._valid = false; mapped._error = 'ไม่มีชื่อลูกค้า' }
+        mapped.budget = Number(mapped.budget) || 0
+        mapped.status = mapped.status || 'new'
+        return mapped as CsvRow
+      }).filter(r => r.customer_name || r._error)
+      setCsvRows(parsed)
+    }
+    reader.readAsText(file, 'UTF-8')
+  }
+
+  async function importCsv() {
+    const valid = csvRows.filter(r => r._valid)
+    if (!valid.length) return
+    setCsvImporting(true)
+    let done = 0, skipped = 0
+    const existingNums = customers.map(c => parseInt(c.id.replace('CST-', ''))).filter(n => !isNaN(n))
+    let nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1
+    for (const row of valid) {
+      const { _valid, _error, ...data } = row
+      const id = 'CST-' + String(nextNum++).padStart(4, '0')
+      const { error } = await supabase.from('customers').insert({ id, ...data })
+      if (error) skipped++; else done++
+    }
+    setCsvImporting(false)
+    setCsvResult({ done, skipped })
+    load()
+  }
+
   const projectOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
   const userOptions = [{ value: '', label: '— เลือก Sales —' }, ...users.map(u => ({ value: u.id, label: u.name }))]
   const statusOptions = [{ value: '', label: 'ทุกสถานะ' }, ...STATUS_LIST.map(s => ({ value: s.value, label: s.label }))]
@@ -125,10 +219,17 @@ export default function CustomersPage() {
           <h1 className="text-white text-xl font-bold">ลูกค้า Condo Origin</h1>
           <p className="text-[#8b949e] text-sm mt-0.5">รายชื่อลูกค้าและ Pipeline การขาย</p>
         </div>
-        <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-          className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} />เพิ่มลูกค้า
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { setCsvRows([]); setCsvResult(null); setCsvOpen(true) }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
+            <Upload size={15} />นำเข้า CSV
+          </button>
+          <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
+            className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus size={16} />เพิ่มลูกค้า
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -236,6 +337,94 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+
+      {/* CSV Import Modal */}
+      <Modal open={csvOpen} onClose={() => setCsvOpen(false)} title="นำเข้าลูกค้าจาก CSV" size="lg">
+        {csvResult ? (
+          <div className="text-center py-6">
+            <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
+            <p className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>นำเข้าสำเร็จ</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>
+              เพิ่ม {csvResult.done} ราย · ข้าม {csvResult.skipped} ราย
+            </p>
+            <button onClick={() => setCsvOpen(false)} className="mt-4 px-6 py-2 bg-[#238636] hover:bg-[#2ea043] text-white text-sm rounded-lg transition-colors">
+              ปิด
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Drop zone */}
+            {csvRows.length === 0 && (
+              <div
+                className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer mb-4 transition-colors"
+                style={{ borderColor: 'var(--divider)', background: 'var(--hover-bg)' }}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleCsvFile(f) }}
+                onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.csv'; i.onchange = (e: any) => handleCsvFile(e.target.files[0]); i.click() }}
+              >
+                <Upload size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>วาง CSV หรือคลิกเพื่อเลือกไฟล์</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
+                  คอลัมน์: ชื่อ, เบอร์, LINE, โครงการ, ห้อง, งบ, สถานะ, Sales
+                </p>
+              </div>
+            )}
+
+            {/* Preview table */}
+            {csvRows.length > 0 && (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>
+                    พบ {csvRows.length} แถว · ✅ {csvRows.filter(r => r._valid).length} · ❌ {csvRows.filter(r => !r._valid).length}
+                  </p>
+                  <button onClick={() => setCsvRows([])} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
+                    เลือกใหม่
+                  </button>
+                </div>
+                <div className="overflow-auto max-h-64 rounded-xl border" style={{ borderColor: 'var(--divider)' }}>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
+                        <th className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}></th>
+                        <th className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
+                        <th className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}>เบอร์</th>
+                        <th className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}>โครงการ</th>
+                        <th className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}>ห้อง</th>
+                        <th className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}>สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {csvRows.map((r, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--divider)', background: r._valid ? 'transparent' : 'rgba(239,68,68,0.05)' }}>
+                          <td className="px-3 py-2">
+                            {r._valid
+                              ? <CheckCircle size={12} className="text-green-400" />
+                              : <XCircle size={12} className="text-red-400" title={r._error} />}
+                          </td>
+                          <td className="px-3 py-2" style={{ color: 'var(--text-1)' }}>{r.customer_name || '—'}</td>
+                          <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{r.phone || '—'}</td>
+                          <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>
+                            {projects.find(p => p.id === r.project_id)?.name || r.project_id || '—'}
+                          </td>
+                          <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{r.interested_room || '—'}</td>
+                          <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{r.status || 'new'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button onClick={() => setCsvOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
+                  <button onClick={importCsv} disabled={csvImporting || csvRows.filter(r => r._valid).length === 0}
+                    className="px-5 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+                    {csvImporting ? 'กำลังนำเข้า...' : `นำเข้า ${csvRows.filter(r => r._valid).length} ราย`}
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </Modal>
 
       {/* Modal */}
       <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'} size="lg">

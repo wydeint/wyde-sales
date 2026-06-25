@@ -38,8 +38,8 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 mb-4 flex items-center justify-center">
-            <img src="/logo.svg" alt="WydE Int." className="w-full h-full object-contain" />
+          <div className="mb-4 flex items-center justify-center" style={{ width: 160, height: 72 }}>
+            <img src="/logo.svg" alt="WydE Int." style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>
             Wyde Sales

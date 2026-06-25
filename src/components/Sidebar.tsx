@@ -106,8 +106,8 @@ export default function Sidebar() {
       <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
         <div className="flex items-center gap-3">
           {/* Logo mark */}
-          <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
-            <img src="/logo.svg" alt="WydE Int." className="w-full h-full object-contain" />
+          <div className="flex-shrink-0 flex items-center" style={{ width: 72, height: 32 }}>
+            <img src="/logo.svg" alt="WydE Int." style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
           </div>
           <div>
             <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>

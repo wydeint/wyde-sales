@@ -7,7 +7,7 @@ import {
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
   Target, LogOut, Sun, Moon, ChevronRight, CreditCard,
-  Briefcase, Settings2
+  Briefcase, Settings2, TrendingDown
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -52,6 +52,7 @@ const NAV = [
     color: 'text-amber-400 dark:text-amber-400',
     dot: 'bg-amber-400',
     items: [
+      { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้ส่งมอบ' },
       { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
       { href: '/dashboard/finance', icon: Wallet, label: 'Finance' },
     ],

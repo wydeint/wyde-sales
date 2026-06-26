@@ -28,15 +28,15 @@ const NAV = [
     color: 'text-emerald-400 dark:text-emerald-400',
     dot: 'bg-emerald-400',
     items: [
-      { href: '/dashboard/customers', icon: Users, label: 'ลูกค้า Condo Origin' },
-      { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Pipeline' },
+      { href: '/dashboard/leads', icon: Database, label: 'Origin Pool' },
+      { href: '/dashboard/customers', icon: Users, label: 'Prospects' },
+      { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects (Kanban)' },
+      { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },
       { href: '/dashboard/daily-report', icon: ClipboardList, label: 'Daily Report' },
       { href: '/dashboard/commission', icon: DollarSign, label: 'Commission' },
       { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
-      { href: '/dashboard/finance', icon: CreditCard, label: 'การเงิน (ห้อง)' },
-      { href: '/dashboard/leads', icon: Database, label: 'Leads Pool (Condo)' },
-      { href: '/dashboard/jobs', icon: Briefcase, label: 'ทะเบียนงาน (Jobs)' },
+      { href: '/dashboard/finance', icon: CreditCard, label: 'Finance' },
     ],
   },
   {
@@ -178,49 +178,43 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom bar */}
-      <div className="px-3 pb-4 pt-3 space-y-1" style={{ borderTop: '1px solid var(--divider)' }}>
-        {/* User chip */}
-        <div
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl mb-1"
-          style={{ background: 'var(--hover-bg)' }}
-        >
+      {/* Bottom bar — compact single row */}
+      <div className="px-3 pb-3 pt-2.5 flex items-center gap-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
+        {/* Avatar + name */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <div
-            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
+            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
             {userInitial}
           </div>
-          <span className="text-xs font-medium truncate" style={{ color: 'var(--text-2)' }}>
-            {userName || 'Loading...'}
+          <span className="text-[11px] font-medium truncate" style={{ color: 'var(--text-3)' }}>
+            {userName || '...'}
           </span>
         </div>
 
-        {/* Theme toggle */}
+        {/* Theme toggle icon-only */}
         <button
           onClick={toggle}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm"
-          style={{ color: 'var(--text-2)' }}
+          title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
+          style={{ color: 'var(--text-3)' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
-          {theme === 'dark'
-            ? <Sun size={15} style={{ color: 'var(--text-3)' }} />
-            : <Moon size={15} style={{ color: 'var(--text-3)' }} />
-          }
-          <span className="font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
 
-        {/* Sign out */}
+        {/* Sign out icon-only */}
         <button
           onClick={signOut}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm"
-          style={{ color: 'var(--text-2)' }}
+          title="ออกจากระบบ"
+          className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
+          style={{ color: 'var(--text-3)' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
-          <LogOut size={15} style={{ color: 'var(--text-3)' }} />
-          <span className="font-medium">ออกจากระบบ</span>
+          <LogOut size={14} />
         </button>
       </div>
     </aside>

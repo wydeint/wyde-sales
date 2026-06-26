@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, UserCog, Pencil, CheckCircle, XCircle } from 'lucide-react'
+import { Plus, UserCog, Pencil, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { Input, Select } from '@/components/ui/Input'
 
@@ -53,6 +53,7 @@ export default function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null)
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   async function load() {
     setLoading(true)
@@ -63,10 +64,11 @@ export default function UsersPage() {
 
   useEffect(() => { load() }, [])
 
-  function openNew() { setEditing(null); setForm(empty); setOpen(true) }
+  function openNew() { setEditing(null); setForm(empty); setSaveError(''); setOpen(true) }
   function openEdit(u: User) {
     setEditing(u)
     setForm({ email: u.email, name: u.name, role: u.role, level: u.level, dept: u.dept || '', active: u.active, manager_id: u.manager_id || '' })
+    setSaveError('')
     setOpen(true)
   }
 
@@ -79,11 +81,14 @@ export default function UsersPage() {
   async function save() {
     if (!form.email || !form.name) return
     setSaving(true)
+    setSaveError('')
     if (editing) {
-      await supabase.from('users').update(form).eq('id', editing.id)
+      const { error } = await supabase.from('users').update(form).eq('id', editing.id)
+      if (error) { setSaveError(error.message); setSaving(false); return }
     } else {
       const id = genId(form.name)
-      await supabase.from('users').insert({ id, ...form })
+      const { error } = await supabase.from('users').insert({ id, ...form })
+      if (error) { setSaveError(error.message); setSaving(false); return }
     }
     setSaving(false)
     setOpen(false)
@@ -179,6 +184,11 @@ export default function UsersPage() {
             <Input label="แผนก" value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })} placeholder="เช่น Sales, Admin" />
           </div>
         </div>
+        {saveError && (
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+            <AlertCircle size={14} />{saveError}
+          </div>
+        )}
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
           <button onClick={save} disabled={saving || !form.name || !form.email} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">

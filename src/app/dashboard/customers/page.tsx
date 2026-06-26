@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Users, Pencil, Search, Upload, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Plus, Users, Pencil, Search, Upload, CheckCircle, XCircle, AlertCircle, FileSpreadsheet } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -64,8 +64,9 @@ interface CsvRow {
   _valid: boolean; _error: string
 }
 
-// Map CSV header synonyms → DB field
+// Map header synonyms → DB field (CSV + ORICRM xlsx)
 const CSV_MAP: Record<string, string> = {
+  // Generic Thai/EN headers
   'ชื่อ': 'customer_name', 'name': 'customer_name', 'customer_name': 'customer_name', 'ชื่อ-นามสกุล': 'customer_name',
   'เบอร์': 'phone', 'phone': 'phone', 'tel': 'phone', 'โทร': 'phone',
   'email': 'email', 'อีเมล': 'email',
@@ -77,6 +78,20 @@ const CSV_MAP: Record<string, string> = {
   'status': 'status', 'สถานะ': 'status',
   'sales': 'assigned_to', 'assigned_to': 'assigned_to', 'Sales': 'assigned_to',
   'notes': 'notes', 'หมายเหตุ': 'notes',
+  // ORICRM columns (from Origin CRM xlsx export)
+  'Customer': 'customer_name',
+  'Call Contract': 'phone',
+  'Call CRM': 'line_id',
+  'e-receipt': 'email',
+  'Project ID': 'project_id',
+  'Project Name Eng': '_project_name',
+  'Tower': '_tower',
+  'Room No': '_room_no',
+  'ราคาหน้าสัญญา (ห้องที่ยังไม่ขาย BG Price)': 'budget',
+  'ราคาหน้าสัญญา': 'budget',
+  'พนักงานขาย': 'assigned_to',
+  'Model Name': '_model_name',
+  'วันที่จอง': '_booking_date',
 }
 
 function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
@@ -92,6 +107,28 @@ function parseCSV(text: string): { headers: string[]; rows: Record<string, strin
   return { headers, rows }
 }
 
+async function parseXlsx(file: File): Promise<Record<string, string>[]> {
+  const XLSX = await import('xlsx')
+  const buf = await file.arrayBuffer()
+  const wb = XLSX.read(buf, { type: 'array' })
+  const ws = wb.Sheets[wb.SheetNames[0]]
+  // Find header row (skip title rows — look for row with 'Customer' or 'ชื่อ')
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
+  let headerRow = 0
+  for (let r = range.s.r; r <= Math.min(range.s.r + 5, range.e.r); r++) {
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c })]
+      if (cell && (cell.v === 'Customer' || cell.v === 'ชื่อ' || cell.v === 'No.' || cell.v === 'customer_name')) {
+        headerRow = r
+        break
+      }
+    }
+    if (headerRow === r && r > 0) break
+  }
+  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { range: headerRow, defval: '', raw: false })
+  return rows
+}
+
 export default function CustomersPage() {
   const supabase = createClient()
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -102,6 +139,7 @@ export default function CustomersPage() {
   const [editing, setEditing] = useState<Customer | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterProject, setFilterProject] = useState('')
@@ -136,48 +174,88 @@ export default function CustomersPage() {
   async function save() {
     if (!form.customer_name) return
     setSaving(true)
+    setSaveError('')
+    const payload = {
+      ...form,
+      project_id: form.project_id || null,
+      assigned_to: form.assigned_to || null,
+    }
     if (editing) {
-      await supabase.from('customers').update(form).eq('id', editing.id)
+      const { error } = await supabase.from('customers').update(payload).eq('id', editing.id)
+      if (error) { setSaveError(error.message); setSaving(false); return }
     } else {
-      await supabase.from('customers').insert({ id: genId(), ...form })
+      const { error } = await supabase.from('customers').insert({ id: genId(), ...payload })
+      if (error) { setSaveError(error.message); setSaving(false); return }
     }
     setSaving(false)
     setOpen(false)
     load()
   }
 
-  function handleCsvFile(file: File) {
-    setCsvResult(null)
-    const reader = new FileReader()
-    reader.onload = e => {
-      const text = e.target?.result as string
-      const { headers, rows } = parseCSV(text)
-      setCsvHeaders(headers)
-      const parsed: CsvRow[] = rows.map(row => {
-        const mapped: any = { _valid: true, _error: '' }
-        for (const [csvH, val] of Object.entries(row)) {
-          const dbField = CSV_MAP[csvH] || CSV_MAP[csvH.toLowerCase()]
-          if (dbField) mapped[dbField] = val
-        }
-        // Resolve project name → id
-        if (mapped.project_id && !mapped.project_id.startsWith('PRJ')) {
-          const proj = projects.find(p => p.name.toLowerCase().includes(mapped.project_id.toLowerCase()))
-          if (proj) mapped.project_id = proj.id
+  function processRows(rawRows: Record<string, string>[]) {
+    const parsed: CsvRow[] = rawRows.map(row => {
+      const mapped: any = { _valid: true, _error: '' }
+      for (const [csvH, val] of Object.entries(row)) {
+        const dbField = CSV_MAP[csvH] || CSV_MAP[csvH.trim()]
+        if (dbField) mapped[dbField] = val
+      }
+      // Combine Tower + Room No → interested_room (e.g. "Z-501")
+      if (mapped._tower && mapped._room_no) {
+        mapped.interested_room = `${mapped._tower}-${mapped._room_no}`
+      }
+      // Use model name as note hint
+      if (mapped._model_name && !mapped.notes) {
+        mapped.notes = mapped._model_name
+      }
+      // Resolve project: try project_id first (OPL06), then name
+      if (mapped.project_id) {
+        const byId = projects.find(p => p.id === mapped.project_id)
+        if (byId) {
+          // already correct
+        } else {
+          const nameHint = mapped._project_name || mapped.project_id
+          const byName = projects.find(p => p.name.toLowerCase().includes(nameHint.toLowerCase()))
+          if (byName) mapped.project_id = byName.id
           else { mapped._valid = false; mapped._error = `ไม่พบโครงการ: ${mapped.project_id}` }
         }
-        // Resolve user name → id
-        if (mapped.assigned_to && mapped.assigned_to.length > 2) {
-          const u = users.find(x => x.name.toLowerCase().includes(mapped.assigned_to.toLowerCase()))
-          if (u) mapped.assigned_to = u.id
-        }
-        if (!mapped.customer_name) { mapped._valid = false; mapped._error = 'ไม่มีชื่อลูกค้า' }
-        mapped.budget = Number(mapped.budget) || 0
-        mapped.status = mapped.status || 'new'
-        return mapped as CsvRow
-      }).filter(r => r.customer_name || r._error)
-      setCsvRows(parsed)
+      } else if (mapped._project_name) {
+        const byName = projects.find(p => p.name.toLowerCase().includes(mapped._project_name.toLowerCase()))
+        if (byName) mapped.project_id = byName.id
+      }
+      // Resolve user name → id
+      if (mapped.assigned_to && mapped.assigned_to.length > 2) {
+        const u = users.find(x => x.name.toLowerCase().includes(mapped.assigned_to.toLowerCase()))
+        if (u) mapped.assigned_to = u.id
+        else mapped.assigned_to = ''
+      }
+      if (!mapped.customer_name) { mapped._valid = false; mapped._error = 'ไม่มีชื่อลูกค้า' }
+      mapped.budget = Number(String(mapped.budget).replace(/,/g, '')) || 0
+      mapped.status = mapped.status || 'booked'
+      // Cleanup internal fields
+      delete mapped._tower; delete mapped._room_no; delete mapped._model_name
+      delete mapped._project_name; delete mapped._booking_date
+      return mapped as CsvRow
+    }).filter(r => r.customer_name || r._error)
+    setCsvRows(parsed)
+  }
+
+  function handleCsvFile(file: File) {
+    setCsvResult(null)
+    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      parseXlsx(file).then(rows => {
+        setCsvHeaders(Object.keys(rows[0] || {}))
+        processRows(rows)
+      })
+    } else {
+      const reader = new FileReader()
+      reader.onload = e => {
+        const text = e.target?.result as string
+        const { headers, rows } = parseCSV(text)
+        setCsvHeaders(headers)
+        processRows(rows)
+      }
+      reader.readAsText(file, 'UTF-8')
     }
-    reader.readAsText(file, 'UTF-8')
   }
 
   async function importCsv() {
@@ -225,7 +303,7 @@ export default function CustomersPage() {
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
             <Upload size={15} />นำเข้า CSV
           </button>
-          <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
+          <button onClick={() => { setEditing(null); setForm(emptyForm); setSaveError(''); setOpen(true) }}
             className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             <Plus size={16} />เพิ่มลูกค้า
           </button>
@@ -360,12 +438,12 @@ export default function CustomersPage() {
                 style={{ borderColor: 'var(--divider)', background: 'var(--hover-bg)' }}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleCsvFile(f) }}
-                onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.csv'; i.onchange = (e: any) => handleCsvFile(e.target.files[0]); i.click() }}
+                onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.csv,.xlsx,.xls'; i.onchange = (e: any) => handleCsvFile(e.target.files[0]); i.click() }}
               >
                 <Upload size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
                 <p className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>วาง CSV หรือคลิกเพื่อเลือกไฟล์</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-                  คอลัมน์: ชื่อ, เบอร์, LINE, โครงการ, ห้อง, งบ, สถานะ, Sales
+                  รองรับไฟล์ CSV หรือ XLSX (Origin CRM Export)
                 </p>
               </div>
             )}
@@ -448,6 +526,11 @@ export default function CustomersPage() {
             <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="บันทึกเพิ่มเติม..." />
           </div>
         </div>
+        {saveError && (
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+            <AlertCircle size={14} />{saveError}
+          </div>
+        )}
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
           <button onClick={save} disabled={saving || !form.customer_name} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">

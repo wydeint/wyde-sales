@@ -173,6 +173,16 @@ export default function EventsPage() {
     loadCustomers(selectedEvent.id)
   }
 
+  async function promoteAll() {
+    const toPromote = customers.filter(c =>
+      (c.status === 'booked' || c.status === 'contacted' || c.status === 'not_purchased') &&
+      !promotedIds.has(c.id)
+    )
+    for (const c of toPromote) {
+      await promoteToProspect(c)
+    }
+  }
+
   async function promoteToProspect(c: EventCustomer) {
     if (promotedIds.has(c.id)) return
     // Check if already exists by lead_id or name+project
@@ -185,6 +195,9 @@ export default function EventsPage() {
       return
     }
     const newId = 'PROS-' + c.id.slice(0, 8).toUpperCase()
+    const custStatus = c.status === 'booked' ? 'booked'
+      : c.status === 'contacted' ? 'prospect'
+      : 'closed_lost'
     await supabase.from('customers').insert({
       id: newId,
       customer_name: c.customer_name,
@@ -196,7 +209,7 @@ export default function EventsPage() {
       event_customer_id: c.id,
       source_event_id: selectedEvent?.id || null,
       source: 'event',
-      status: 'booked',
+      status: custStatus,
       booking_date: c.booked_date || null,
     })
     setPromotedIds(prev => new Set(prev).add(c.id))
@@ -287,7 +300,17 @@ export default function EventsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => { setSelectedEvent(ev); setEventLeads([]); setCustForm(emptyCust); setOpenCustomer(true) }}
+                  <button onClick={() => {
+                    setSelectedEvent(ev)
+                    const prefilled = {
+                      ...emptyCust,
+                      project_id: ev.project_id || '',
+                      booked_date: ev.event_date || '',
+                    }
+                    setCustForm(prefilled)
+                    if (ev.project_id) loadLeads(ev.project_id)
+                    setOpenCustomer(true)
+                  }}
                     className="flex items-center gap-1.5 text-xs bg-[#1d6fa5] hover:bg-[#1f6feb] text-white px-3 py-1.5 rounded-lg transition-colors">
                     <Users size={13} />เพิ่มลูกค้า
                   </button>
@@ -336,14 +359,14 @@ export default function EventsPage() {
                       {/* Revenue row */}
                       <div className="grid grid-cols-3 gap-3">
                         <div className="bg-[#161b22] rounded-xl p-3">
-                          <p className="text-[#484f58] text-[10px] mb-1">Revenue (Booked Value)</p>
+                          <p className="text-[#484f58] text-[10px] mb-1">มูลค่างานรวม (Booked Value)</p>
                           <p className="text-emerald-400 font-bold">{fmtBaht(perf.revenue)}</p>
-                          <p className="text-[#484f58] text-[10px]">{perf.booked} ห้อง</p>
+                          <p className="text-[#484f58] text-[10px]">{perf.booked} ห้อง booked</p>
                         </div>
                         <div className="bg-[#161b22] rounded-xl p-3">
-                          <p className="text-[#484f58] text-[10px] mb-1">เงินจอง (Booked Value)</p>
-                          <p className="text-blue-400 font-bold">{fmtBaht(perf.bookedValue)}</p>
-                          <p className="text-[#484f58] text-[10px]">{perf.booked} ห้อง booked</p>
+                          <p className="text-[#484f58] text-[10px] mb-1">เฉลี่ย / ห้อง</p>
+                          <p className="text-blue-400 font-bold">{fmtBaht(perf.booked > 0 ? Math.round(perf.revenue / perf.booked) : 0)}</p>
+                          <p className="text-[#484f58] text-[10px]">avg booked value</p>
                         </div>
                         <div className="bg-[#161b22] rounded-xl p-3">
                           <p className="text-[#484f58] text-[10px] mb-1">มัดจำ (เงินสด)</p>
@@ -357,6 +380,14 @@ export default function EventsPage() {
                   {/* Customer List */}
                   <div className="px-4 py-2 bg-[#0d1117]/50 flex items-center justify-between">
                     <p className="text-[#8b949e] text-xs font-medium">รายชื่อลูกค้าในงาน ({customers.length} คน)</p>
+                    {customers.some(c => ['booked','contacted','not_purchased'].includes(c.status) && !promotedIds.has(c.id)) && (
+                      <button
+                        onClick={promoteAll}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#1d6fa5]/20 text-[#58a6ff] hover:bg-[#1d6fa5]/40 transition-colors font-medium"
+                      >
+                        <UserPlus size={12} /> Promote ทั้งหมด → Prospects
+                      </button>
+                    )}
                   </div>
                   {customers.length === 0 && (
                     <div className="px-4 py-6 text-center text-[#8b949e] text-sm">ยังไม่มีรายชื่อลูกค้า</div>
@@ -463,13 +494,13 @@ export default function EventsPage() {
       <Modal open={openCustomer} onClose={() => setOpenCustomer(false)} title={`+ เพิ่มรายชื่อลูกค้า — ${selectedEvent?.event_name || ''}`} size="lg">
         <div className="grid grid-cols-2 gap-4">
 
-          {/* Project → Room → auto-fill */}
-          <Select label="โครงการ" value={custForm.project_id}
-            onChange={e => {
-              setCustForm({ ...custForm, project_id: e.target.value, lead_id: '', room_no: '', customer_name: '', phone: '' })
-              loadLeads(e.target.value)
-            }}
-            options={projOptions} />
+          {/* Project — locked to event's project, shown as read-only */}
+          <div>
+            <p className="text-xs text-[#8b949e] mb-1">โครงการ</p>
+            <div className="bg-[#21262d] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-[#c9d1d9]">
+              {projects.find(p => p.id === custForm.project_id)?.name || '— ไม่ระบุโครงการ —'}
+            </div>
+          </div>
 
           <Select label="เลือกห้อง (Origin Pool)" value={custForm.lead_id}
             onChange={e => {
@@ -506,8 +537,12 @@ export default function EventsPage() {
 
           {custForm.status === 'booked' && (
             <>
-              <Input label="วัน BOOKED" type="date" value={custForm.booked_date}
-                onChange={e => setCustForm({ ...custForm, booked_date: e.target.value })} />
+              <div>
+                <p className="text-xs text-[#8b949e] mb-1">วัน BOOKED (วันจัดงาน)</p>
+                <div className="bg-[#21262d] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-[#c9d1d9]">
+                  {custForm.booked_date ? new Date(custForm.booked_date).toLocaleDateString('th-TH') : '—'}
+                </div>
+              </div>
               <Select label="ประเภท" value={custForm.booking_type}
                 onChange={e => setCustForm({ ...custForm, booking_type: e.target.value })}
                 options={BOOKING_TYPES.map(t => ({ value: t.value, label: t.label }))} />

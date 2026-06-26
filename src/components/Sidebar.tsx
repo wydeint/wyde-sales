@@ -7,7 +7,7 @@ import {
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
   Target, LogOut, Sun, Moon, ChevronRight, CreditCard,
-  Briefcase, Settings2, TrendingDown, Database
+  Briefcase, Settings2, TrendingDown, Database, Receipt
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -32,11 +32,11 @@ const NAV = [
       { href: '/dashboard/customers', icon: Users, label: 'Prospects' },
       { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects (Kanban)' },
       { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
+      { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
+      { href: '/dashboard/payments', icon: Receipt, label: 'การเก็บเงิน' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },
       { href: '/dashboard/daily-report', icon: ClipboardList, label: 'Daily Report' },
       { href: '/dashboard/commission', icon: DollarSign, label: 'Commission' },
-      { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
-      { href: '/dashboard/finance', icon: CreditCard, label: 'Finance' },
     ],
   },
   {
@@ -55,7 +55,7 @@ const NAV = [
     items: [
       { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้ส่งมอบ' },
       { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
-      { href: '/dashboard/finance', icon: Wallet, label: 'Finance' },
+      { href: '/dashboard/finance', icon: Wallet, label: 'Finance & Ledger' },
     ],
   },
   {

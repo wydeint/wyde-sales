@@ -12,11 +12,22 @@ interface EventCustomer {
   interested_room: string; status: string; notes: string
 }
 interface Event {
-  id: string; project_id: string; project_name: string; event_name: string
+  id: string; project_id: string; project_name: string; event_type: string; event_name: string
   event_date: string; location: string; total_attendees: number; line_adds: number; notes: string
 }
 
-const emptyEvent = { project_id: '', project_name: '', event_name: '', event_date: '', location: '', total_attendees: 0, line_adds: 0, notes: '' }
+const EVENT_TYPES = [
+  { value: '', label: '— ประเภท —' },
+  { value: 'grand_opening', label: 'Grand Opening' },
+  { value: 'road_show', label: 'Road Show' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'site_visit', label: 'Site Visit' },
+  { value: 'home_expo', label: 'Home Expo / งานแสดงสินค้า' },
+  { value: 'online', label: 'Online Event' },
+  { value: 'other', label: 'อื่นๆ' },
+]
+
+const emptyEvent = { project_id: '', project_name: '', event_type: '', event_name: '', event_date: '', location: '', total_attendees: 0, line_adds: 0, notes: '' }
 const emptyCustomer = { customer_name: '', phone: '', email: '', interested_room: '', status: 'new', notes: '' }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -68,7 +79,13 @@ export default function EventsPage() {
     if (!form.event_name) return
     setSaving(true)
     const proj = projects.find(p => p.id === form.project_id)
-    const data = { ...form, project_name: proj?.name || '' }
+    const data = {
+      ...form,
+      project_name: proj?.name || '',
+      project_id: form.project_id || null,
+      event_date: form.event_date || null,
+      event_type: form.event_type || null,
+    }
     if (editingEvent) {
       await supabase.from('events').update(data).eq('id', editingEvent.id)
     } else {
@@ -105,6 +122,7 @@ export default function EventsPage() {
   }
 
   const projectOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
+  const typeLabel = (t: string) => EVENT_TYPES.find(e => e.value === t)?.label || t
   const statusOptions = [{ value: 'new', label: 'ใหม่' }, { value: 'contacted', label: 'ติดต่อแล้ว' }, { value: 'converted', label: 'แปลงแล้ว' }]
 
   return (
@@ -136,6 +154,7 @@ export default function EventsPage() {
                 <div className="flex items-center gap-3 mb-1">
                   <span className="text-[#58a6ff] text-xs font-mono">{ev.id}</span>
                   <h3 className="text-white font-medium">{ev.event_name}</h3>
+                  {ev.event_type && <span className="text-xs bg-[#21262d] text-[#8b949e] px-2 py-0.5 rounded">{typeLabel(ev.event_type)}</span>}
                   {ev.project_name && <span className="text-xs bg-[#21262d] text-[#8b949e] px-2 py-0.5 rounded">{ev.project_name}</span>}
                 </div>
                 <div className="flex items-center gap-4 text-[#8b949e] text-xs">
@@ -150,7 +169,7 @@ export default function EventsPage() {
                   className="flex items-center gap-1.5 text-xs bg-[#1d6fa5] hover:bg-[#1f6feb] text-white px-3 py-1.5 rounded-lg transition-colors">
                   <Users size={13} />เพิ่มลูกค้า
                 </button>
-                <button onClick={() => { setEditingEvent(ev); setForm({ project_id: ev.project_id, project_name: ev.project_name, event_name: ev.event_name, event_date: ev.event_date, location: ev.location, total_attendees: ev.total_attendees, line_adds: ev.line_adds, notes: ev.notes }); setOpenEvent(true) }}
+                <button onClick={() => { setEditingEvent(ev); setForm({ project_id: ev.project_id, project_name: ev.project_name, event_type: ev.event_type || '', event_name: ev.event_name, event_date: ev.event_date, location: ev.location, total_attendees: ev.total_attendees, line_adds: ev.line_adds, notes: ev.notes }); setOpenEvent(true) }}
                   className="text-[#8b949e] hover:text-white p-1.5 transition-colors">
                   <Pencil size={14} />
                 </button>
@@ -213,8 +232,9 @@ export default function EventsPage() {
           <div className="col-span-2">
             <Input label="ชื่องาน *" value={form.event_name} onChange={e => setForm({ ...form, event_name: e.target.value })} placeholder="เช่น Grand Opening The Origin Ladprao" />
           </div>
-          <Select label="โครงการ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
+          <Select label="ประเภท Event" value={form.event_type} onChange={e => setForm({ ...form, event_type: e.target.value })} options={EVENT_TYPES} />
           <Input label="วันจัดงาน" type="date" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
+          <Select label="โครงการ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
           <div className="col-span-2">
             <Input label="สถานที่" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="เช่น ล็อบบี้ตึก A" />
           </div>

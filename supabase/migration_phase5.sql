@@ -28,3 +28,6 @@ alter table handovers add column if not exists final_payment_date date;       --
 alter table handovers add column if not exists warranty_days     integer;     -- ระยะประกัน
 alter table handovers add column if not exists warranty_end      date;        -- auto = handover_date + warranty_days
 alter table handovers add column if not exists lead_id           bigint references condo_leads(id) on delete set null;
+
+-- ── 3. Jobs — link to condo_lead ──────────────────────────
+alter table jobs add column if not exists lead_id bigint references condo_leads(id) on delete set null;

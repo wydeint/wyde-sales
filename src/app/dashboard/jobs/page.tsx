@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Search, ChevronDown, X, Calculator, Briefcase } from 'lucide-react'
+import { Plus, Search, X, Calculator, Briefcase, Receipt } from 'lucide-react'
+import Link from 'next/link'
 
 // ─────────────────────────────────────────
 // Constants
@@ -14,7 +15,6 @@ const PACKAGE_TYPES = [
   'Built-in', 'Curtain', 'Wallcovering', 'Loose furniture', 'อื่นๆ',
 ]
 const WORKING_STATUSES = ['ดำเนินการ', 'ส่งมอบแล้ว', 'รอเอกสาร', 'ยกเลิก']
-const CHANNELS = ['โอนเงิน', 'บัตรเครดิต', 'เงินสด', 'เช็ค']
 const COMMISSION_STATUSES = ['pending', 'approved', 'paid']
 const COMMISSION_STATUS_LABEL: Record<string, string> = { pending: 'รอ', approved: 'อนุมัติ', paid: 'จ่ายแล้ว' }
 
@@ -25,13 +25,29 @@ type CommissionTier = {
   tier_name: string
 }
 
+type Lead = {
+  id: number
+  room_no: string
+  customer_name: string
+  phone: string | null
+}
+
+type PaymentSummary = {
+  installment_name: string
+  status: string
+  amount: number
+  due_date: string | null
+}
+
 type Job = {
   id: string
+  lead_id: number | null
   customer_id: string
   project_id: string
   room_no: string
   customer_type: string
   company_name: string
+  customer_name: string
   po_no: string
   so_no: string
   work_type: string
@@ -56,6 +72,7 @@ type Job = {
   customers?: { customer_name: string; room_no: string }
   projects?: { name: string }
   sales?: { name: string }
+  condo_leads?: { customer_name: string; room_no: string; phone: string | null }
 }
 
 const emptyJob = (): Partial<Job> => ({
@@ -90,10 +107,11 @@ function calcCommission(revenue: number, tiers: CommissionTier[]): { rate: numbe
 export default function JobsPage() {
   const supabase = createClient()
   const [jobs, setJobs] = useState<Job[]>([])
-  const [customers, setCustomers] = useState<{ id: string; customer_name: string; room_no: string; project_id: string; project_name: string }[]>([])
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [users, setUsers] = useState<{ id: string; name: string }[]>([])
   const [tiers, setTiers] = useState<CommissionTier[]>([])
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [paymentMap, setPaymentMap] = useState<Record<string, PaymentSummary | null>>({})
   const [myRole, setMyRole] = useState('')
   const [myId, setMyId] = useState('')
   const [loading, setLoading] = useState(true)
@@ -110,6 +128,17 @@ export default function JobsPage() {
   const [saving, setSaving] = useState(false)
   const [nextId, setNextId] = useState('JOB-001')
 
+  // ─── Load leads by project ───
+  const loadLeads = useCallback(async (projectId: string) => {
+    if (!projectId) { setLeads([]); return }
+    const { data } = await supabase
+      .from('condo_leads')
+      .select('id, room_no, customer_name, phone')
+      .eq('project_id', projectId)
+      .order('room_no')
+    setLeads((data as Lead[]) || [])
+  }, [])
+
   // ─── Load ───
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -119,23 +148,36 @@ export default function JobsPage() {
     }
     const [
       { data: jobsData },
-      { data: cusData },
       { data: projData },
       { data: usrData },
       { data: tierData },
+      { data: paymentsData },
     ] = await Promise.all([
-      supabase.from('jobs').select('*, customers(customer_name,room_no), projects(name), sales:users!jobs_sales_id_fkey(name)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id, customer_name, room_no, project_id, project_name').order('customer_name'),
+      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
+      supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
     ])
     setJobs((jobsData as Job[]) || [])
-    setCustomers(cusData || [])
     setProjects(projData || [])
     setUsers(usrData || [])
     setTiers(tierData || [])
-    // Next ID
+
+    // Build payment map by customer_id (first pending/overdue installment per customer)
+    const map: Record<string, PaymentSummary | null> = {}
+    for (const p of (paymentsData || []) as any[]) {
+      if (!map[p.customer_id]) {
+        map[p.customer_id] = {
+          installment_name: p.installment_name,
+          status: p.status,
+          amount: p.amount,
+          due_date: p.due_date,
+        }
+      }
+    }
+    setPaymentMap(map)
+
     const ids = (jobsData || []).map((j: Job) => parseInt(j.id.replace('JOB-', '')) || 0)
     const maxId = ids.length ? Math.max(...ids) : 0
     setNextId(`JOB-${String(maxId + 1).padStart(3, '0')}`)
@@ -150,15 +192,34 @@ export default function JobsPage() {
     setEditing(e => ({ ...e, revenue_ex_vat: val, commission_rate: rate, commission_amount: amount }))
   }
 
+  // ─── Project select → load leads ───
+  function handleProjectSelect(projectId: string) {
+    setEditing(e => ({ ...e, project_id: projectId, lead_id: null, room_no: '', customer_name: '' }))
+    loadLeads(projectId)
+  }
+
+  // ─── Lead (room) select → auto-fill ───
+  function handleLeadSelect(leadId: string) {
+    const lead = leads.find(l => String(l.id) === leadId)
+    setEditing(e => ({
+      ...e,
+      lead_id: lead ? lead.id : null,
+      room_no: lead?.room_no || '',
+      customer_name: lead?.customer_name || '',
+    }))
+  }
+
   // ─── Open Add ───
   function openAdd() {
     setEditing({ ...emptyJob(), id: nextId, sales_id: myId })
+    setLeads([])
     setOpen(true)
   }
 
   // ─── Open Edit ───
   function openEdit(j: Job) {
     setEditing({ ...j })
+    if (j.project_id) loadLeads(j.project_id)
     setOpen(true)
   }
 
@@ -166,10 +227,19 @@ export default function JobsPage() {
   async function save() {
     if (!editing.id) return
     setSaving(true)
-    const payload = { ...editing }
-    delete (payload as any).customers
-    delete (payload as any).projects
-    delete (payload as any).sales
+    const payload: any = { ...editing }
+    delete payload.customers
+    delete payload.projects
+    delete payload.sales
+    delete payload.condo_leads
+    // null-ify empty optionals
+    payload.lead_id = payload.lead_id || null
+    payload.customer_id = payload.customer_id || null
+    payload.project_id = payload.project_id || null
+    payload.order_date = payload.order_date || null
+    payload.expected_finish_date = payload.expected_finish_date || null
+    payload.actual_deliver_date = payload.actual_deliver_date || null
+    payload.commission_month = payload.commission_month || null
     const isNew = !jobs.find(j => j.id === editing.id)
     if (isNew) {
       await supabase.from('jobs').insert([payload])
@@ -184,11 +254,9 @@ export default function JobsPage() {
   // ─── Filter ───
   const filtered = jobs.filter(j => {
     const s = search.toLowerCase()
-    const matchSearch = !s || [j.po_no, j.so_no, j.id,
-      (j.customers as any)?.customer_name,
-      (j.projects as any)?.name,
-      j.room_no,
-    ].some(v => v?.toLowerCase().includes(s))
+    const name = (j.condo_leads as any)?.customer_name || j.customer_name || (j.customers as any)?.customer_name || ''
+    const matchSearch = !s || [j.po_no, j.so_no, j.id, name, (j.projects as any)?.name, j.room_no]
+      .some(v => v?.toLowerCase().includes(s))
     const matchProj = !filterProject || j.project_id === filterProject
     const matchStatus = !filterStatus || j.working_status === filterStatus
     const matchSales = !filterSales || j.sales_id === filterSales
@@ -199,17 +267,6 @@ export default function JobsPage() {
   const totalRevenue = filtered.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const totalCommission = filtered.reduce((s, j) => s + (j.commission_amount || 0), 0)
   const totalCost = filtered.reduce((s, j) => s + (j.cost || 0), 0)
-
-  // ─── Form customer auto-fill ───
-  function handleCustomerSelect(customerId: string) {
-    const c = customers.find(x => x.id === customerId)
-    setEditing(e => ({
-      ...e,
-      customer_id: customerId,
-      project_id: c?.project_id || e.project_id,
-      room_no: c?.room_no || e.room_no,
-    }))
-  }
 
   const profit = (editing.revenue_ex_vat || 0) - (editing.cost || 0)
   const gpPct = (editing.revenue_ex_vat || 0) > 0
@@ -228,8 +285,8 @@ export default function JobsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>ทะเบียนงาน (Jobs)</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>บันทึก PO/SO ต่องาน · เทียบเท่า Sheet ลค. Event</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Wyde Clients</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>บันทึก PO/SO ต่องาน · ติดตามงวดการเก็บเงิน</p>
         </div>
         {canWrite && (
           <button onClick={openAdd}
@@ -287,7 +344,7 @@ export default function JobsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              {['Job ID','ลูกค้า','โครงการ / ห้อง','PO','SO','ประเภทงาน','Revenue','Cost','GP%','Commission','สถานะ','Sales','ส่งมอบ'].map(h => (
+              {['Job ID','ลูกค้า','โครงการ / ห้อง','PO','SO','ประเภทงาน','Revenue','GP%','Commission','สถานะ','การเก็บเงิน','Sales','ส่งมอบ'].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold"
                   style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
@@ -297,8 +354,12 @@ export default function JobsPage() {
             {filtered.length === 0 ? (
               <tr><td colSpan={13} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
             ) : filtered.map(j => {
-              const profit = (j.revenue_ex_vat || 0) - (j.cost || 0)
-              const gp = (j.revenue_ex_vat || 0) > 0 ? (profit / j.revenue_ex_vat * 100).toFixed(0) : '—'
+              const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
+              const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(0) : '—'
+              const displayName = (j.condo_leads as any)?.customer_name || j.customer_name || (j.customers as any)?.customer_name || '—'
+              const payment = j.customer_id ? paymentMap[j.customer_id] : null
+              const today = new Date().toISOString().slice(0, 10)
+              const isOverdue = payment?.due_date && payment.due_date < today && payment.status !== 'paid'
               return (
                 <tr key={j.id}
                   onClick={() => canWrite && openEdit(j)}
@@ -308,7 +369,7 @@ export default function JobsPage() {
                   style={{ borderBottom: '1px solid var(--divider)' }}>
                   <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--accent)' }}>{j.id}</td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-1)' }}>
-                    <div className="font-medium">{(j.customers as any)?.customer_name || '—'}</div>
+                    <div className="font-medium">{displayName}</div>
                     <div className="text-xs" style={{ color: 'var(--text-3)' }}>{j.customer_type}</div>
                   </td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
@@ -325,10 +386,7 @@ export default function JobsPage() {
                   <td className="px-4 py-3 font-semibold text-right" style={{ color: '#4ade80' }}>
                     {j.revenue_ex_vat ? f(j.revenue_ex_vat) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-right" style={{ color: '#f87171' }}>
-                    {j.cost ? f(j.cost) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right" style={{ color: profit >= 0 ? '#4ade80' : '#f87171' }}>
+                  <td className="px-4 py-3 text-right" style={{ color: profitAmt >= 0 ? '#4ade80' : '#f87171' }}>
                     {gp !== '—' ? gp + '%' : '—'}
                   </td>
                   <td className="px-4 py-3 text-right" style={{ color: '#fbbf24' }}>
@@ -345,6 +403,32 @@ export default function JobsPage() {
                       }}>
                       {j.working_status}
                     </span>
+                  </td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    {payment ? (
+                      <div className="flex items-center gap-1.5">
+                        <div>
+                          <div className="text-xs font-medium" style={{ color: isOverdue ? '#f87171' : 'var(--text-1)', whiteSpace: 'nowrap' }}>
+                            {payment.installment_name}
+                          </div>
+                          <div className="text-xs" style={{ color: isOverdue ? '#f87171' : 'var(--text-3)' }}>
+                            {isOverdue ? 'เกินกำหนด · ' : 'ค้าง · '}{f(payment.amount)}
+                          </div>
+                        </div>
+                        <Link href="/dashboard/payments"
+                          className="ml-1 p-1 rounded-lg flex-shrink-0"
+                          style={{ color: 'var(--accent)' }}
+                          title="ดูการเก็บเงิน">
+                          <Receipt size={13} />
+                        </Link>
+                      </div>
+                    ) : (
+                      <Link href="/dashboard/payments"
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg"
+                        style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
+                        <Receipt size={11} /> ดูงวด
+                      </Link>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>
                     {(j.sales as any)?.name || '—'}
@@ -384,6 +468,7 @@ export default function JobsPage() {
             <section>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--accent)' }}>ลูกค้า & ห้อง</p>
               <div className="grid grid-cols-2 gap-3">
+                {/* B2C / B2B toggle */}
                 <div className="col-span-2">
                   <label className="field-label">ประเภทลูกค้า</label>
                   <div className="flex gap-2 mt-1">
@@ -397,36 +482,75 @@ export default function JobsPage() {
                     ))}
                   </div>
                 </div>
-                <div className="col-span-2">
-                  <label className="field-label">ลูกค้า</label>
-                  <select value={editing.customer_id || ''} onChange={e => handleCustomerSelect(e.target.value)}
-                    className="field-input w-full mt-1">
-                    <option value="">— เลือกลูกค้า —</option>
-                    {customers.map(c => (
-                      <option key={c.id} value={c.id}>{c.customer_name} ({c.project_name || c.project_id} · {c.room_no || 'ไม่มีห้อง'})</option>
-                    ))}
-                  </select>
-                </div>
-                {editing.customer_type === 'B2B' && (
-                  <div className="col-span-2">
-                    <label className="field-label">ชื่อบริษัท</label>
-                    <input value={editing.company_name || ''} onChange={e => setEditing(e2 => ({ ...e2, company_name: e.target.value }))}
-                      className="field-input w-full mt-1" placeholder="บริษัท..." />
-                  </div>
+
+                {editing.customer_type === 'B2C' ? (
+                  <>
+                    {/* Step 1: โครงการ */}
+                    <div>
+                      <label className="field-label">โครงการ</label>
+                      <select value={editing.project_id || ''}
+                        onChange={e => handleProjectSelect(e.target.value)}
+                        className="field-input w-full mt-1">
+                        <option value="">— เลือกโครงการ —</option>
+                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Step 2: เลขห้อง (from condo_leads) */}
+                    <div>
+                      <label className="field-label">เลขห้อง</label>
+                      <select value={editing.lead_id ? String(editing.lead_id) : ''}
+                        onChange={e => handleLeadSelect(e.target.value)}
+                        className="field-input w-full mt-1"
+                        disabled={!editing.project_id}>
+                        <option value="">— เลือกห้อง —</option>
+                        {leads.map(l => (
+                          <option key={l.id} value={String(l.id)}>{l.room_no}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Auto-filled customer info */}
+                    {editing.customer_name && (
+                      <div className="col-span-2 rounded-xl px-4 py-3 flex items-center gap-3"
+                        style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                          {editing.customer_name[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{editing.customer_name}</p>
+                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                            {leads.find(l => l.id === editing.lead_id)?.phone || 'ไม่มีเบอร์'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* B2B: manual entry */}
+                    <div className="col-span-2">
+                      <label className="field-label">ชื่อบริษัท / ลูกค้า B2B</label>
+                      <input value={editing.company_name || ''} onChange={e => setEditing(e2 => ({ ...e2, company_name: e.target.value }))}
+                        className="field-input w-full mt-1" placeholder="บริษัท..." />
+                    </div>
+                    <div>
+                      <label className="field-label">โครงการ</label>
+                      <select value={editing.project_id || ''}
+                        onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
+                        className="field-input w-full mt-1">
+                        <option value="">— เลือกโครงการ —</option>
+                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="field-label">เลขห้อง / สถานที่</label>
+                      <input value={editing.room_no || ''} onChange={e => setEditing(e2 => ({ ...e2, room_no: e.target.value }))}
+                        className="field-input w-full mt-1" placeholder="เช่น A201 หรือ ชั้น 3" />
+                    </div>
+                  </>
                 )}
-                <div>
-                  <label className="field-label">โครงการ</label>
-                  <select value={editing.project_id || ''} onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
-                    className="field-input w-full mt-1">
-                    <option value="">— เลือกโครงการ —</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">เลขห้อง</label>
-                  <input value={editing.room_no || ''} onChange={e => setEditing(e2 => ({ ...e2, room_no: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="เช่น A201" />
-                </div>
               </div>
             </section>
 

@@ -32,11 +32,19 @@ const NAV = [
       { href: '/dashboard/customers', icon: Users, label: 'Prospects' },
       { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects (Kanban)' },
       { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
-      { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/payments', icon: Receipt, label: 'การเก็บเงิน' },
+      { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },
       { href: '/dashboard/daily-report', icon: ClipboardList, label: 'Daily Report' },
+    ],
+  },
+  {
+    label: 'SALES MGR',
+    color: 'text-sky-400 dark:text-sky-400',
+    dot: 'bg-sky-400',
+    items: [
       { href: '/dashboard/commission', icon: DollarSign, label: 'Commission' },
+      { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้ส่งมอบ' },
     ],
   },
   {
@@ -53,7 +61,6 @@ const NAV = [
     color: 'text-amber-400 dark:text-amber-400',
     dot: 'bg-amber-400',
     items: [
-      { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้ส่งมอบ' },
       { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
       { href: '/dashboard/finance', icon: Wallet, label: 'Finance & Ledger' },
     ],

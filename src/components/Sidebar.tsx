@@ -117,7 +117,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>
-              Wyde Sales
+              Super Sales
             </p>
             <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>
               WydEInt Interior

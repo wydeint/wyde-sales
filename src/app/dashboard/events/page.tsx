@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react'
+import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp, UserPlus, CheckCircle2 } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -89,6 +89,7 @@ export default function EventsPage() {
   const [form, setForm] = useState(emptyEvent)
   const [custForm, setCustForm] = useState(emptyCust)
   const [saving, setSaving] = useState(false)
+  const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set())
 
   async function load() {
     setLoading(true)
@@ -170,6 +171,35 @@ export default function EventsPage() {
     setSaving(false); setOpenCustomer(false)
     setCustForm(emptyCust); setEventLeads([])
     loadCustomers(selectedEvent.id)
+  }
+
+  async function promoteToProspect(c: EventCustomer) {
+    if (promotedIds.has(c.id)) return
+    // Check if already exists by lead_id or name+project
+    const { data: existing } = await supabase.from('customers')
+      .select('id')
+      .eq('lead_id', c.lead_id ?? -1)
+      .maybeSingle()
+    if (existing) {
+      setPromotedIds(prev => new Set(prev).add(c.id))
+      return
+    }
+    const newId = 'PROS-' + c.id.slice(0, 8).toUpperCase()
+    await supabase.from('customers').insert({
+      id: newId,
+      customer_name: c.customer_name,
+      phone: c.phone || null,
+      email: c.email || null,
+      project_id: c.project_id || null,
+      room_no: c.room_no || null,
+      lead_id: c.lead_id || null,
+      event_customer_id: c.id,
+      source_event_id: selectedEvent?.id || null,
+      source: 'event',
+      status: 'booked',
+      booking_date: c.booked_date || null,
+    })
+    setPromotedIds(prev => new Set(prev).add(c.id))
   }
 
   async function updateCustomerStatus(id: string, status: string) {
@@ -346,10 +376,13 @@ export default function EventsPage() {
                             <th className="text-right px-3 py-2 text-[#484f58] text-xs">BOOKED VALUE</th>
                             <th className="text-right px-3 py-2 text-[#484f58] text-xs">มัดจำ (เงินสด)</th>
                             <th className="text-left px-3 py-2 text-[#484f58] text-xs">ประเภท</th>
+                            <th className="px-3 py-2 text-[#484f58] text-xs">Prospects</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {customers.map((c, idx) => (
+                          {customers.map((c, idx) => {
+                            const promoted = promotedIds.has(c.id)
+                            return (
                             <tr key={c.id} className="border-b border-[#21262d] hover:bg-[#1c2128]">
                               <td className="px-3 py-2 text-[#484f58] text-xs">{idx + 1}</td>
                               <td className="px-3 py-2 text-[#8b949e] text-xs">{projects.find(p => p.id === c.project_id)?.name || '—'}</td>
@@ -371,8 +404,26 @@ export default function EventsPage() {
                               <td className="px-3 py-2">
                                 <span className="text-xs bg-[#21262d] text-[#8b949e] px-2 py-0.5 rounded">{c.booking_type || 'Event'}</span>
                               </td>
+                              <td className="px-3 py-2">
+                                {c.status === 'booked' ? (
+                                  promoted ? (
+                                    <span className="flex items-center gap-1 text-xs text-emerald-400">
+                                      <CheckCircle2 size={12} /> เพิ่มแล้ว
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => promoteToProspect(c)}
+                                      className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-[#1d6fa5]/20 text-[#58a6ff] hover:bg-[#1d6fa5]/40 transition-colors"
+                                      title="เพิ่มเป็น Prospect"
+                                    >
+                                      <UserPlus size={11} /> → Prospects
+                                    </button>
+                                  )
+                                ) : <span className="text-[#484f58] text-xs">—</span>}
+                              </td>
                             </tr>
-                          ))}
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>

@@ -192,7 +192,7 @@ export default function PaymentsPage() {
       }
     }
 
-    const rows: JobRow[] = ((jobsData as RawJob[]) || []).map(j => {
+    const rows: JobRow[] = ((jobsData as unknown as RawJob[]) || []).map(j => {
       const pmts = pmtByJob[j.id] || (j.customer_id ? pmtByCustomer[j.customer_id] : []) || []
       let deposit: Milestone | null = null
       let first50: Milestone | null = null

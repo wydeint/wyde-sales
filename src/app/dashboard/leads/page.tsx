@@ -186,7 +186,21 @@ export default function LeadsPage() {
     let done = 0, skipped = 0, dup = importRows.filter(r => r._dup).length
     for (const row of valid) {
       const { _valid, _error, _dup, ...data } = row
-      const { error } = await supabase.from('condo_leads').insert(data)
+      const payload = {
+        ...data,
+        project_id: data.project_id || null,
+        transfer_date: data.transfer_date || null,
+        booking_date: data.booking_date || null,
+        model_id: data.model_id || null,
+        phone: data.phone || null,
+        email: data.email || null,
+        consent: data.consent || null,
+        origin_sales: data.origin_sales || null,
+        contract_price: data.contract_price || null,
+        s00_budget: data.s00_budget || null,
+        total_payment: data.total_payment || null,
+      }
+      const { error } = await supabase.from('condo_leads').insert(payload)
       if (error) skipped++; else done++
     }
     setImporting(false)

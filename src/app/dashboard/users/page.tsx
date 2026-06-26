@@ -82,12 +82,13 @@ export default function UsersPage() {
     if (!form.email || !form.name) return
     setSaving(true)
     setSaveError('')
+    const payload = { ...form, manager_id: form.manager_id || null }
     if (editing) {
-      const { error } = await supabase.from('users').update(form).eq('id', editing.id)
+      const { error } = await supabase.from('users').update(payload).eq('id', editing.id)
       if (error) { setSaveError(error.message); setSaving(false); return }
     } else {
       const id = genId(form.name)
-      const { error } = await supabase.from('users').insert({ id, ...form })
+      const { error } = await supabase.from('users').insert({ id, ...payload })
       if (error) { setSaveError(error.message); setSaving(false); return }
     }
     setSaving(false)

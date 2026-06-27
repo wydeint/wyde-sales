@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp, UserPlus, CheckCircle2, Smartphone } from 'lucide-react'
+import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp, UserPlus, CheckCircle2, Smartphone, Save } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
@@ -94,6 +94,9 @@ export default function EventsPage() {
   const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set())
   const [promotingAll, setPromotingAll] = useState(false)
   const [fetchError, setFetchError] = useState('')
+  const [editingCustomer, setEditingCustomer] = useState<EventCustomer | null>(null)
+  const [editCustForm, setEditCustForm] = useState(emptyCust)
+  const [editSaving, setEditSaving] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -216,7 +219,7 @@ export default function EventsPage() {
         phone: c.phone || null,
         email: c.email || null,
         project_id: c.project_id || null,
-        room_no: c.room_no || null,
+        interested_room: c.room_no || null,
         lead_id: c.lead_id || null,
         event_customer_id: c.id,
         source_event_id: selectedEvent?.id || null,
@@ -263,7 +266,7 @@ export default function EventsPage() {
       phone: c.phone || null,
       email: c.email || null,
       project_id: c.project_id || null,
-      room_no: c.room_no || null,
+      interested_room: c.room_no || null,
       lead_id: c.lead_id || null,
       event_customer_id: c.id,
       source_event_id: selectedEvent?.id || null,
@@ -298,6 +301,26 @@ export default function EventsPage() {
   async function toggleLineAdded(id: string, current: boolean) {
     await supabase.from('event_customers').update({ line_added: !current }).eq('id', id)
     if (selectedEvent) loadCustomers(selectedEvent.id)
+  }
+
+  async function saveEditCustomer() {
+    if (!editingCustomer || !selectedEvent) return
+    setEditSaving(true)
+    await supabase.from('event_customers').update({
+      customer_name: editCustForm.customer_name,
+      phone: editCustForm.phone || null,
+      room_no: editCustForm.room_no || null,
+      sales_id: editCustForm.sales_id || null,
+      status: editCustForm.status,
+      booked_date: editCustForm.booked_date || null,
+      booked_value: Number(editCustForm.booked_value) || 0,
+      deposit_amount: Number(editCustForm.deposit_amount) || 0,
+      booking_type: editCustForm.booking_type,
+      notes: editCustForm.notes || null,
+    }).eq('id', editingCustomer.id)
+    setEditSaving(false)
+    setEditingCustomer(null)
+    loadCustomers(selectedEvent.id)
   }
 
   function toggleExpand(ev: Event) {
@@ -495,6 +518,7 @@ export default function EventsPage() {
                             <th className="text-left px-3 py-2 text-[#484f58] text-xs">วัน BOOKED</th>
                             <th className="text-right px-3 py-2 text-[#484f58] text-xs">BOOKED VALUE</th>
                             <th className="text-right px-3 py-2 text-[#484f58] text-xs">มัดจำ</th>
+                            <th className="px-3 py-2 text-[#484f58] text-xs">แก้ไข</th>
                             <th className="px-3 py-2 text-[#484f58] text-xs">นำเข้าระบบ</th>
                           </tr>
                         </thead>
@@ -530,6 +554,32 @@ export default function EventsPage() {
                                 <td className="px-3 py-2 text-[#c9d1d9] text-xs">{dateStr(c.booked_date)}</td>
                                 <td className="px-3 py-2 text-right text-emerald-400 text-sm font-semibold">{fmtBaht(c.booked_value)}</td>
                                 <td className="px-3 py-2 text-right text-purple-400 text-sm">{fmtBaht(c.deposit_amount)}</td>
+                                <td className="px-3 py-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingCustomer(c)
+                                      setEditCustForm({
+                                        project_id: c.project_id || '',
+                                        lead_id: String(c.lead_id || ''),
+                                        sales_id: c.sales_id || '',
+                                        room_no: c.room_no || '',
+                                        customer_name: c.customer_name,
+                                        phone: c.phone || '',
+                                        email: c.email || '',
+                                        status: c.status,
+                                        booked_date: c.booked_date || '',
+                                        booked_value: String(c.booked_value || ''),
+                                        deposit_amount: String(c.deposit_amount || ''),
+                                        booking_type: c.booking_type || 'Event',
+                                        notes: c.notes || '',
+                                      })
+                                    }}
+                                    className="text-[#484f58] hover:text-[#8b949e] p-1.5 transition-colors"
+                                    title="แก้ไข"
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                </td>
                                 <td className="px-3 py-2">
                                   {c.status === 'not_interested' ? (
                                     <span className="text-[#484f58] text-xs">ไม่โปรโมท</span>
@@ -584,6 +634,42 @@ export default function EventsPage() {
           <button onClick={() => setOpenEvent(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
           <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+        </div>
+      </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)} title={`แก้ไขข้อมูล — ${editingCustomer?.customer_name || ''}`} size="lg">
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="ชื่อลูกค้า *" value={editCustForm.customer_name}
+            onChange={e => setEditCustForm({ ...editCustForm, customer_name: e.target.value })} />
+          <Input label="เบอร์โทร" value={editCustForm.phone}
+            onChange={e => setEditCustForm({ ...editCustForm, phone: e.target.value })} />
+          <Input label="เลขห้อง" value={editCustForm.room_no}
+            onChange={e => setEditCustForm({ ...editCustForm, room_no: e.target.value })}
+            placeholder="เช่น Z-501" />
+          <Select label="Sales" value={editCustForm.sales_id}
+            onChange={e => setEditCustForm({ ...editCustForm, sales_id: e.target.value })}
+            options={salesOptions} />
+          <Select label="STATUS" value={editCustForm.status}
+            onChange={e => setEditCustForm({ ...editCustForm, status: e.target.value })}
+            options={CUST_STATUS.map(s => ({ value: s.value, label: s.label }))} />
+          <Input label="วัน BOOKED" type="date" value={editCustForm.booked_date}
+            onChange={e => setEditCustForm({ ...editCustForm, booked_date: e.target.value })} />
+          <Input label="BOOKED VALUE (บาท)" type="number" value={editCustForm.booked_value}
+            onChange={e => setEditCustForm({ ...editCustForm, booked_value: e.target.value })} />
+          <Input label="มัดจำ เงินสด (บาท)" type="number" value={editCustForm.deposit_amount}
+            onChange={e => setEditCustForm({ ...editCustForm, deposit_amount: e.target.value })} />
+          <div className="col-span-2">
+            <TextArea label="หมายเหตุ" value={editCustForm.notes}
+              onChange={e => setEditCustForm({ ...editCustForm, notes: e.target.value })} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-5">
+          <button onClick={() => setEditingCustomer(null)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={saveEditCustomer} disabled={editSaving || !editCustForm.customer_name}
+            className="flex items-center gap-2 px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            <Save size={14} />{editSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
       </Modal>

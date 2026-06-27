@@ -38,14 +38,38 @@ const fmtDate = (d: string | null) =>
 function Sheet({ open, onClose, title, children }: {
   open: boolean; onClose: () => void; title: string; children: React.ReactNode
 }) {
+  const [bottomOffset, setBottomOffset] = useState(0)
+
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') { setBottomOffset(0); return }
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      setBottomOffset(offset)
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+  }, [open])
+
   if (!open) return null
   return (
     <div className="fixed inset-0 z-[200] flex flex-col justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
       <div
-        className="relative rounded-t-3xl max-h-[90vh] flex flex-col"
+        className="relative w-full rounded-t-3xl max-h-[88vh] flex flex-col"
         onClick={e => e.stopPropagation()}
-        style={{ background: 'var(--sidebar-bg)', borderTop: '1px solid var(--glass-border)', paddingBottom: 'env(safe-area-inset-bottom)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+        style={{
+          background: 'var(--sidebar-bg)',
+          borderTop: '1px solid var(--glass-border)',
+          paddingBottom: `max(env(safe-area-inset-bottom), ${bottomOffset}px)`,
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          transform: bottomOffset > 0 ? `translateY(-${bottomOffset}px)` : 'none',
+          transition: 'transform 0.25s ease',
+        }}
       >
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 rounded-full" style={{ background: 'var(--glass-border)' }} />
@@ -233,9 +257,9 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     setLoading(true)
     const { data } = await supabase
       .from('customers')
-      .select('id, name, phone, room_no, status, follow_up_date, projects:project_id(name), sales:sales_id(name)')
-      .or(`name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
-      .order('name')
+      .select('id, customer_name, phone, interested_room, status, follow_up_date, projects:project_id(name), assigned:assigned_to(name)')
+      .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,interested_room.ilike.%${q}%`)
+      .order('customer_name')
       .limit(12)
     setResults(data || [])
     setLoading(false)
@@ -272,13 +296,13 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
             return (
               <div key={c.id} className="bg-[#21262d] rounded-2xl p-4">
                 <div className="flex justify-between items-start mb-1">
-                  <p className="text-white font-semibold">{c.name}</p>
+                  <p className="text-white font-semibold">{c.customer_name}</p>
                   <span className={`text-xs font-medium ${s.color}`}>{s.label}</span>
                 </div>
-                <p className="text-[#8b949e] text-xs">{(c.projects as any)?.name || '—'} · ห้อง {c.room_no || '—'}</p>
+                <p className="text-[#8b949e] text-xs">{(c.projects as any)?.name || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {c.phone}</p>}
                 {c.follow_up_date && <p className="text-[#484f58] text-xs mt-1">นัดติดตาม: {fmtDate(c.follow_up_date)}</p>}
-                <p className="text-[#484f58] text-[10px] mt-1">Sales: {(c.sales as any)?.name || '—'}</p>
+                <p className="text-[#484f58] text-[10px] mt-1">Sales: {(c.assigned as any)?.name || '—'}</p>
               </div>
             )
           })}

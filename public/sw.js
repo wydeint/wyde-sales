@@ -1,9 +1,11 @@
 // WydEInt Super Sales — Service Worker
+// This file is intentionally minimal — content changes trigger SW update detection
 
-const CACHE = 'wyde-sales-v2'
+const CACHE = 'wyde-sales-v3'
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])))
+self.addEventListener('install', () => {
+  // Skip waiting immediately so new SW activates as soon as all tabs close
+  self.skipWaiting()
 })
 
 self.addEventListener('activate', e => {
@@ -16,21 +18,18 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = e.request.url
-
-  // Skip non-http(s) schemes (chrome-extension://, data:, etc.)
   if (!url.startsWith('http')) return
 
-  // Always network-first for Supabase and API calls
+  // Always network-first for auth, API, Supabase
   if (url.includes('supabase') || url.includes('/api/') || url.includes('auth')) {
     e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })))
     return
   }
 
-  // Network-first with cache fallback for everything else
+  // Network-first with cache fallback
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        // Only cache valid same-origin or CORS responses
         if (res.ok && (res.type === 'basic' || res.type === 'cors')) {
           const clone = res.clone()
           caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {})

@@ -212,7 +212,7 @@ function QuickLookupSheet({ open, onClose }: { open: boolean; onClose: () => voi
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   async function doSearch(q: string) {
     if (!q.trim()) { setResults([]); return }

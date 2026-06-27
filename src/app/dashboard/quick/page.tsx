@@ -505,7 +505,8 @@ function QuickPaySheet({ open, onClose, jobs }: {
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null)
   const [installments, setInstallments] = useState<any[]>([])
   const [selectedInst, setSelectedInst] = useState<any | null>(null)
-  const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10))
+  const [paidDate, setPaidDate] = useState('')
+  useEffect(() => { setPaidDate(new Date().toISOString().slice(0, 10)) }, [])
   const [fileUrls, setFileUrls] = useState<string[]>([''])
   const [saving, setSaving] = useState(false)
 
@@ -904,7 +905,8 @@ function DeliverSheet({ open, onClose, jobs }: {
   const [step, setStep] = useState<'job' | 'confirm'>('job')
   const [search, setSearch] = useState('')
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null)
-  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0, 10))
+  const [deliveryDate, setDeliveryDate] = useState('')
+  useEffect(() => { setDeliveryDate(new Date().toISOString().slice(0, 10)) }, [])
   const [fileUrl, setFileUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [canDeliver, setCanDeliver] = useState(false)
@@ -1396,11 +1398,14 @@ export default function QuickPage() {
   const [activeEvents, setActiveEvents] = useState<EventOption[]>([])
   const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('')
+  const [todayTH, setTodayTH] = useState('')
   const [openSheet, setOpenSheet] = useState<string | null>(null)
 
   useEffect(() => {
-    const h = new Date().getHours()
+    const now = new Date()
+    const h = now.getHours()
     setGreeting(h < 12 ? 'อรุณสวัสดิ์' : h < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น')
+    setTodayTH(now.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' }))
   }, [])
 
   const load = useCallback(async () => {
@@ -1480,8 +1485,6 @@ export default function QuickPage() {
     if (btn.sheet) setOpenSheet(btn.sheet)
     else if (btn.href) router.push(btn.href)
   }
-
-  const todayTH = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'var(--bg-gradient)', backgroundAttachment: 'fixed', paddingBottom: 'env(safe-area-inset-bottom)' }}>

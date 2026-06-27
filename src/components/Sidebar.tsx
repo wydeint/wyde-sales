@@ -36,6 +36,7 @@ const NAV = [
       { href: '/dashboard/payments', icon: Receipt, label: 'สถานะการชำระเงิน' },
       { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },
+      { href: '/dashboard/documents', icon: FileText, label: 'เอกสารลูกค้า' },
       { href: '/dashboard/daily-report', icon: ClipboardList, label: 'Daily Report' },
     ],
   },
@@ -49,11 +50,10 @@ const NAV = [
     ],
   },
   {
-    label: 'ADMIN SALES',
+    label: 'AFTER SALE SERVICE',
     color: 'text-violet-400 dark:text-violet-400',
     dot: 'bg-violet-400',
     items: [
-      { href: '/dashboard/documents', icon: FileText, label: 'เอกสาร' },
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
     ],
   },

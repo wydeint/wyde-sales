@@ -1214,6 +1214,142 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
   )
 }
 
+// ─── Documents Sheet ──────────────────────────────────────
+function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const supabase = createClient()
+  const [search, setSearch] = useState('')
+  const [jobs, setJobs] = useState<any[]>([])
+  const [selectedJob, setSelectedJob] = useState<any | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Doc fields: [key, label, column_in_jobs]
+  const DOC_FIELDS = [
+    { key: 'quotation1_url', label: 'ใบเสนอราคา 1' },
+    { key: 'quotation2_url', label: 'ใบเสนอราคา 2' },
+    { key: 'id_card_url',    label: 'บัตรประชาชนลูกค้า' },
+    { key: 'sale_slip_url',  label: 'สลิปโอนเงิน' },
+    { key: 'sale_receipt_url', label: 'ใบเสร็จรับเงิน' },
+    { key: 'delivery_doc_url', label: 'ใบส่งมอบงาน' },
+    { key: 'satisfaction_url', label: 'แบบประเมินความพึงพอใจ' },
+  ]
+
+  const [urls, setUrls] = useState<Record<string, string>>({})
+
+  async function doSearch(q: string) {
+    if (!q.trim()) { setJobs([]); return }
+    setLoading(true)
+    const { data } = await supabase.from('jobs')
+      .select('id, customer_name, room_no, projects:project_id(name), quotation1_url, quotation2_url, id_card_url, sale_slip_url, sale_receipt_url, delivery_doc_url, satisfaction_url')
+      .or(`customer_name.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .not('working_status', 'eq', 'ยกเลิก')
+      .order('customer_name').limit(10)
+    setJobs(data || [])
+    setLoading(false)
+  }
+
+  function handleSearch(v: string) {
+    setSearch(v)
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => doSearch(v), 300)
+  }
+
+  function selectJob(job: any) {
+    setSelectedJob(job)
+    const u: Record<string, string> = {}
+    DOC_FIELDS.forEach(f => { u[f.key] = job[f.key] || '' })
+    setUrls(u)
+  }
+
+  async function saveUrls() {
+    if (!selectedJob) return
+    setSaving(true)
+    const update: Record<string, string | null> = {}
+    DOC_FIELDS.forEach(f => { update[f.key] = urls[f.key]?.trim() || null })
+    await supabase.from('jobs').update(update).eq('id', selectedJob.id)
+    setSaving(false)
+    setSelectedJob(null)
+    setSearch('')
+    setJobs([])
+    onClose()
+    alert('บันทึกเอกสารเรียบร้อย ✅')
+  }
+
+  function resetAndClose() {
+    setSelectedJob(null); setSearch(''); setJobs([]); setUrls({}); onClose()
+  }
+
+  return (
+    <Sheet open={open} onClose={resetAndClose} title="📋 เอกสารลูกค้า">
+      {!selectedJob ? (
+        <div className="p-4">
+          <div className="relative mb-4">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7a93]" />
+            <input autoFocus value={search} onChange={e => handleSearch(e.target.value)}
+              placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
+              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-white placeholder-[#6b7a93] focus:outline-none focus:border-[#58a6ff]"
+              style={{ fontSize: 16 }} />
+          </div>
+          {loading && <p className="text-center text-[#94a3b8] py-4 text-sm">กำลังค้นหา...</p>}
+          <div className="space-y-2">
+            {jobs.map((j: any) => {
+              const filled = DOC_FIELDS.filter(f => j[f.key]).length
+              return (
+                <button key={j.id} onClick={() => selectJob(j)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 bg-[#21262d] rounded-xl text-left">
+                  <div>
+                    <p className="text-white font-medium text-sm">{j.customer_name}</p>
+                    <p className="text-[#94a3b8] text-xs mt-0.5">{j.room_no} · {(j.projects as any)?.name}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium ${filled === DOC_FIELDS.length ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {filled}/{DOC_FIELDS.length}
+                    </span>
+                    <ChevronRight size={16} className="text-[#6b7a93]" />
+                  </div>
+                </button>
+              )
+            })}
+            {!loading && search && jobs.length === 0 && (
+              <p className="text-center text-[#94a3b8] py-6 text-sm">ไม่พบข้อมูล</p>
+            )}
+            {!search && <p className="text-center text-[#6b7a93] py-8 text-sm">พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
+          </div>
+        </div>
+      ) : (
+        <div className="p-4">
+          <button onClick={() => setSelectedJob(null)} className="text-[#58a6ff] text-sm mb-4 flex items-center gap-1">
+            <ArrowLeft size={14} /> {selectedJob.customer_name} · {selectedJob.room_no}
+          </button>
+          <p className="text-[#94a3b8] text-xs mb-4">แนบ Google Drive URL สำหรับแต่ละเอกสาร</p>
+          <div className="space-y-3 mb-6">
+            {DOC_FIELDS.map(f => (
+              <div key={f.key}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${urls[f.key] ? 'bg-emerald-400' : 'bg-[#30363d]'}`} />
+                  <label className="text-xs text-[#94a3b8]">{f.label}</label>
+                </div>
+                <input
+                  value={urls[f.key] || ''}
+                  onChange={e => setUrls(prev => ({ ...prev, [f.key]: e.target.value }))}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#6b7a93] focus:outline-none focus:border-[#58a6ff]"
+                  style={{ fontSize: 14 }}
+                />
+              </div>
+            ))}
+          </div>
+          <button onClick={saveUrls} disabled={saving}
+            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors">
+            {saving ? 'กำลังบันทึก...' : '💾 บันทึกเอกสาร'}
+          </button>
+        </div>
+      )}
+    </Sheet>
+  )
+}
+
 // ─── Main Quick Page ───────────────────────────────────────
 export default function QuickPage() {
   const router = useRouter()
@@ -1287,7 +1423,7 @@ export default function QuickPage() {
       header: 'การเงิน & งาน', color: 'text-amber-400',
       buttons: [
         { key: 'pay',      icon: '💰', label: 'บันทึก\nรับเงิน',  color: 'text-amber-300',  bg: 'bg-amber-500/10 border-amber-500/25',   badge: widgets.pendingInstallments, sheet: 'pay' },
-        { key: 'plan',     icon: '📊', label: 'ตั้งแผน\nชำระ',   color: 'text-purple-300', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'plan' },
+        { key: 'docs',     icon: '📋', label: 'เอกสาร\nลูกค้า',  color: 'text-purple-300', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'docs' },
         { key: 'deliver',  icon: '🚚', label: 'บันทึก\nส่งมอบ',  color: 'text-green-300',  bg: 'bg-green-500/10 border-green-500/25',   badge: widgets.readyToDeliver, sheet: 'deliver' },
         { key: 'handover', icon: '🏗️', label: 'สถานะ\nงาน',      color: 'text-sky-300',    bg: 'bg-sky-500/10 border-sky-500/25',       sheet: 'handover' },
       ]
@@ -1323,17 +1459,17 @@ export default function QuickPage() {
             <span className="text-indigo-400 text-sm font-bold tracking-wide">QUICK MODE</span>
           </div>
           <button onClick={() => router.push('/dashboard')}
-            className="text-[#484f58] p-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            className="text-[#94a3b8] p-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={20} />
           </button>
         </div>
         <h1 className="text-white text-2xl font-bold">{greeting} 👋</h1>
-        <p className="text-[#484f58] text-sm mt-0.5">{todayTH}</p>
+        <p className="text-[#6b7a93] text-sm mt-0.5">{todayTH}</p>
       </div>
 
       {/* Widgets 2×2 */}
       <div className="px-5 mb-5">
-        <p className="text-[#484f58] text-[10px] font-bold uppercase tracking-widest mb-3">ภาพรวม</p>
+        <p className="text-[#6b7a93] text-[10px] font-bold uppercase tracking-widest mb-3">ภาพรวม</p>
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-[#161b22] rounded-2xl animate-pulse border border-[#21262d]" />)}
@@ -1344,10 +1480,10 @@ export default function QuickPage() {
               { label: 'งานกำลังทำ', value: widgets.inProgressJobs, sub: `${widgets.overdueJobs > 0 ? widgets.overdueJobs + ' เกินกำหนด' : 'ปกติทุกงาน'}`, color: 'text-amber-400', bg: 'bg-amber-500/8 border-amber-500/20' },
               { label: 'งวดรอชำระ', value: widgets.pendingInstallments, sub: fmtBaht(widgets.pendingAmount), color: 'text-blue-400', bg: 'bg-blue-500/8 border-blue-500/20' },
               { label: 'รอส่งมอบ', value: widgets.readyToDeliver, sub: 'งานเสร็จแล้ว', color: 'text-green-400', bg: 'bg-green-500/8 border-green-500/20' },
-              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', color: widgets.overdueJobs > 0 ? 'text-red-400' : 'text-[#484f58]', bg: widgets.overdueJobs > 0 ? 'bg-red-500/8 border-red-500/20' : 'bg-[#161b22] border-[#30363d]' },
+              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', color: widgets.overdueJobs > 0 ? 'text-red-400' : 'text-[#6b7a93]', bg: widgets.overdueJobs > 0 ? 'bg-red-500/8 border-red-500/20' : 'bg-[#161b22] border-[#30363d]' },
             ].map(w => (
               <div key={w.label} className={`rounded-2xl p-4 border ${w.bg}`}>
-                <p className="text-[#484f58] text-xs mb-1">{w.label}</p>
+                <p className="text-[#6b7a93] text-xs mb-1">{w.label}</p>
                 <p className={`text-3xl font-bold ${w.color}`}>{w.value}</p>
                 <p className={`text-xs mt-1 ${w.color} opacity-60`}>{w.sub}</p>
               </div>
@@ -1394,6 +1530,7 @@ export default function QuickPage() {
       <QuickHandoverSheet open={openSheet === 'handover'} onClose={() => { setOpenSheet(null); load() }} jobs={allJobs} />
       <OverdueSheet open={openSheet === 'overdue'} onClose={() => setOpenSheet(null)} />
       <CommissionSheet open={openSheet === 'commission'} onClose={() => setOpenSheet(null)} />
+      <DocumentsSheet open={openSheet === 'docs'} onClose={() => setOpenSheet(null)} />
     </div>
   )
 }

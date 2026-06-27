@@ -23,9 +23,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="th"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
       <head>
+        {/* Inline script runs BEFORE React hydrates — prevents dark/light flash */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('wyde-theme')||'light';document.documentElement.classList.toggle('dark',t==='dark')}catch(e){}})()` }} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

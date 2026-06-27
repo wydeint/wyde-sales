@@ -3,22 +3,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { RefreshCw, X } from 'lucide-react'
 
-const POLL_INTERVAL = 5 * 60 * 1000 // 5 minutes
+const POLL_INTERVAL = 5 * 60 * 1000
 const VERSION_KEY = 'wyde_app_version'
 
 export default function PwaUpdateBanner() {
   const [show, setShow] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const pollRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const latestVersionRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // ── 1. Register Service Worker ──────────────────────────
+    // ── Service Worker registration ─────────────────────────
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {})
 
-      // SW waiting already (e.g. user came back after long time)
       navigator.serviceWorker.ready.then(reg => {
         if (reg.waiting) setShow(true)
         reg.addEventListener('updatefound', () => {
@@ -30,13 +29,13 @@ export default function PwaUpdateBanner() {
         })
       })
 
-      // Reload when new SW takes control
+      // Reload when new SW takes control — no stale closure needed
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (updating) window.location.reload()
+        window.location.reload()
       })
     }
 
-    // ── 2. Version polling — detects Vercel re-deploys ──────
+    // ── Version polling ─────────────────────────────────────
     async function checkVersion() {
       try {
         const res = await fetch('/api/version', { cache: 'no-store' })
@@ -44,46 +43,43 @@ export default function PwaUpdateBanner() {
         const { version } = await res.json()
         if (!version || version === 'dev') return
 
+        latestVersionRef.current = version // always keep latest in ref
+
         const stored = localStorage.getItem(VERSION_KEY)
         if (!stored) {
-          // First visit — store current version
           localStorage.setItem(VERSION_KEY, version)
           return
         }
-        if (stored !== version) {
-          // New version deployed
-          setShow(true)
-        }
-      } catch {
-        // Network error — ignore silently
-      }
+        if (stored !== version) setShow(true)
+      } catch { /* ignore network errors */ }
     }
 
     checkVersion()
-    pollRef.current = setInterval(checkVersion, POLL_INTERVAL)
-
-    return () => clearInterval(pollRef.current)
+    const timer = setInterval(checkVersion, POLL_INTERVAL)
+    return () => clearInterval(timer)
   }, [])
 
   function applyUpdate() {
     setUpdating(true)
-    // Update stored version
-    fetch('/api/version', { cache: 'no-store' })
-      .then(r => r.json())
-      .then(({ version }) => { if (version) localStorage.setItem(VERSION_KEY, version) })
-      .catch(() => {})
+    setShow(false) // hide banner immediately
 
-    // Tell waiting SW to activate
+    // Save new version NOW (before reload) so banner doesn't re-appear
+    if (latestVersionRef.current) {
+      localStorage.setItem(VERSION_KEY, latestVersionRef.current)
+    }
+
+    // Tell waiting SW to activate (if any)
     navigator.serviceWorker?.ready.then(reg => {
       if (reg.waiting) {
         reg.waiting.postMessage('skipWaiting')
+        // controllerchange event will trigger reload
       } else {
         window.location.reload()
       }
     }).catch(() => window.location.reload())
 
-    // Fallback reload after 1s if controllerchange doesn't fire
-    setTimeout(() => window.location.reload(), 1200)
+    // Hard fallback in case SW events don't fire
+    setTimeout(() => window.location.reload(), 1500)
   }
 
   if (!show) return null

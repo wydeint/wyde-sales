@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Search, X, Calculator, Briefcase, Receipt } from 'lucide-react'
+import { Plus, Search, X, Calculator, Briefcase, Receipt, LayoutList, BarChart2, ChevronDown, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 // ─────────────────────────────────────────
@@ -115,6 +115,11 @@ export default function JobsPage() {
   const [myRole, setMyRole] = useState('')
   const [myId, setMyId] = useState('')
   const [loading, setLoading] = useState(true)
+
+  // View toggle
+  const [view, setView] = useState<'list' | 'summary'>('list')
+  const [expandedProj, setExpandedProj] = useState<Set<string>>(new Set())
+  const [expandedStatus, setExpandedStatus] = useState<Set<string>>(new Set())
 
   // Filters
   const [search, setSearch] = useState('')
@@ -263,6 +268,32 @@ export default function JobsPage() {
     return matchSearch && matchProj && matchStatus && matchSales
   })
 
+  // ─── Project Summary ───
+  const projectSummary = useMemo(() => {
+    const map = new Map<string, { projectId: string; projectName: string; jobs: Job[] }>()
+    for (const j of jobs.filter(j => j.working_status !== 'ยกเลิก')) {
+      const pid = j.project_id || '__none__'
+      const pname = (j.projects as any)?.name || 'ไม่ระบุโครงการ'
+      if (!map.has(pid)) map.set(pid, { projectId: pid, projectName: pname, jobs: [] })
+      map.get(pid)!.jobs.push(j)
+    }
+    return Array.from(map.values()).sort((a, b) => b.jobs.length - a.jobs.length)
+  }, [jobs])
+
+  const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+    'ดำเนินการ':   { label: 'ดำเนินการอยู่', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24' },
+    'รอเอกสาร':   { label: 'รอเอกสาร',      color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   dot: '#60a5fa' },
+    'ส่งมอบแล้ว': { label: 'ส่งมอบแล้ว',    color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   dot: '#4ade80' },
+  }
+
+  function toggleProj(id: string) {
+    setExpandedProj(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setExpandedStatus(new Set()) // reset inner accordions
+  }
+  function toggleStatus(key: string) {
+    setExpandedStatus(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
+
   // ─── Summary ───
   const totalRevenue = filtered.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const totalCommission = filtered.reduce((s, j) => s + (j.commission_amount || 0), 0)
@@ -283,18 +314,33 @@ export default function JobsPage() {
   return (
     <div className="p-6 space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Wyde Clients</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>บันทึก PO/SO ต่องาน · ติดตามงวดการเก็บเงิน</p>
         </div>
-        {canWrite && (
-          <button onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
-            <Plus size={15} /> เพิ่มงาน
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
+            <button onClick={() => setView('list')}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors"
+              style={{ background: view === 'list' ? 'var(--accent)' : 'var(--glass-bg)', color: view === 'list' ? '#fff' : 'var(--text-2)' }}>
+              <LayoutList size={13} />ตาราง
+            </button>
+            <button onClick={() => setView('summary')}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors"
+              style={{ background: view === 'summary' ? 'var(--accent)' : 'var(--glass-bg)', color: view === 'summary' ? '#fff' : 'var(--text-2)' }}>
+              <BarChart2 size={13} />สรุปโครงการ
+            </button>
+          </div>
+          {canWrite && (
+            <button onClick={openAdd}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              <Plus size={15} /> เพิ่มงาน
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Summary KPI */}
@@ -339,8 +385,149 @@ export default function JobsPage() {
         </select>
       </div>
 
+      {/* ─── Project Summary View ─── */}
+      {view === 'summary' && (
+        <div className="space-y-4">
+          {projectSummary.length === 0 && (
+            <div className="glass-card p-12 text-center text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</div>
+          )}
+          {projectSummary.map(proj => {
+            const isOpen = expandedProj.has(proj.projectId)
+            const byStatus: Record<string, Job[]> = {}
+            for (const j of proj.jobs) {
+              const s = j.working_status || 'ดำเนินการ'
+              if (!byStatus[s]) byStatus[s] = []
+              byStatus[s].push(j)
+            }
+            const totalRev = proj.jobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+            const statuses = ['ดำเนินการ', 'รอเอกสาร', 'ส่งมอบแล้ว']
+
+            return (
+              <div key={proj.projectId} className="glass-card overflow-hidden">
+                {/* Project header row */}
+                <button
+                  className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
+                  style={{ background: isOpen ? 'var(--hover-bg)' : 'transparent' }}
+                  onClick={() => toggleProj(proj.projectId)}
+                >
+                  <div className="flex items-center gap-3">
+                    {isOpen ? <ChevronDown size={16} style={{ color: 'var(--accent)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-3)' }} />}
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{proj.projectName}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Revenue: <span style={{ color: '#4ade80' }}>{f(totalRev)}</span></p>
+                    </div>
+                  </div>
+                  {/* Status chips summary */}
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
+                      ทั้งหมด {proj.jobs.length}
+                    </span>
+                    {statuses.map(s => {
+                      const cnt = byStatus[s]?.length || 0
+                      if (!cnt) return null
+                      const cfg = STATUS_CFG[s]
+                      return (
+                        <span key={s} className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
+                          {cfg.label} {cnt}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </button>
+
+                {/* Expanded: per-status name lists */}
+                {isOpen && (
+                  <div style={{ borderTop: '1px solid var(--divider)' }}>
+                    {/* All-clients table */}
+                    <div className="px-5 pt-4 pb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>รายชื่อลูกค้าทั้งหมด ({proj.jobs.length} ราย)</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                        {statuses.flatMap(s => (byStatus[s] || []).map(j => {
+                          const cfg = STATUS_CFG[s]
+                          const name = (j.condo_leads as any)?.customer_name || j.customer_name || '—'
+                          return (
+                            <div key={j.id}
+                              onClick={() => canWrite && openEdit(j)}
+                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
+                              style={{ background: 'var(--hover-bg)' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = cfg.bg)}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                            >
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{name}</p>
+                                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'} · {j.id}</p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
+                                {j.revenue_ex_vat ? <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{f(j.revenue_ex_vat)}</p> : null}
+                              </div>
+                            </div>
+                          )
+                        }))}
+                      </div>
+                    </div>
+
+                    {/* Status breakdown accordions */}
+                    <div className="px-5 pb-4 mt-2 space-y-2">
+                      {statuses.map(s => {
+                        const list = byStatus[s] || []
+                        if (!list.length) return null
+                        const cfg = STATUS_CFG[s]
+                        const key = `${proj.projectId}:${s}`
+                        const open = expandedStatus.has(key)
+                        return (
+                          <div key={s} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${cfg.color}30` }}>
+                            <button
+                              className="w-full flex items-center justify-between px-4 py-2.5 text-left"
+                              style={{ background: cfg.bg }}
+                              onClick={() => toggleStatus(key)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full" style={{ background: cfg.dot }} />
+                                <span className="text-sm font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+                                <span className="text-xs px-1.5 py-0.5 rounded-md font-bold" style={{ background: cfg.color + '25', color: cfg.color }}>{list.length}</span>
+                              </div>
+                              {open ? <ChevronDown size={14} style={{ color: cfg.color }} /> : <ChevronRight size={14} style={{ color: cfg.color }} />}
+                            </button>
+                            {open && (
+                              <div className="px-4 py-3 space-y-1.5">
+                                {list.map(j => {
+                                  const name = (j.condo_leads as any)?.customer_name || j.customer_name || '—'
+                                  return (
+                                    <div key={j.id}
+                                      onClick={() => canWrite && openEdit(j)}
+                                      className="flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-colors"
+                                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                      <div>
+                                        <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{name}</span>
+                                        <span className="ml-2 text-xs" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {j.revenue_ex_vat ? <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>{f(j.revenue_ex_vat)}</span> : null}
+                                        <span className="text-[10px] font-mono" style={{ color: 'var(--text-3)' }}>{j.id}</span>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* Table */}
-      <div className="glass-card overflow-x-auto">
+      {view === 'list' && <div className="glass-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -445,6 +632,7 @@ export default function JobsPage() {
           {filtered.length} รายการ
         </div>
       </div>
+      }
 
       {/* ─── Add/Edit Modal ─── */}
       {open && (

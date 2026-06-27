@@ -50,10 +50,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       {/* ── Main content ────────────────────────────── */}
       <main className="flex-1 overflow-y-auto min-w-0">
 
-        {/* Mobile top bar — z-60 so it always sits above the sidebar overlay */}
+        {/* Mobile top bar — hidden on Quick Mode (which has its own full-screen header) */}
         <div
           data-topbar
-          className="lg:hidden sticky top-0 z-[60] flex items-center gap-3 px-4 h-14 flex-shrink-0"
+          className={`sticky top-0 z-[60] flex items-center gap-3 px-4 h-14 flex-shrink-0 ${pathname === '/dashboard/quick' ? 'hidden' : 'lg:hidden'}`}
           style={{
             background: 'var(--sidebar-bg)',
             borderBottom: '1px solid var(--sidebar-border)',

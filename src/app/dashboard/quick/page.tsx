@@ -38,49 +38,82 @@ const fmtDate = (d: string | null) =>
 function Sheet({ open, onClose, title, children }: {
   open: boolean; onClose: () => void; title: string; children: React.ReactNode
 }) {
-  const [bottomOffset, setBottomOffset] = useState(0)
+  // Track visual viewport so overlay always matches the VISIBLE area (handles keyboard on iOS)
+  const [vpTop, setVpTop] = useState(0)
+  const [vpH, setVpH] = useState(0)
 
   useEffect(() => {
-    if (!open || typeof window === 'undefined') { setBottomOffset(0); return }
+    if (typeof window === 'undefined') return
     const vv = window.visualViewport
-    if (!vv) return
-    const update = () => {
-      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
-      setBottomOffset(offset)
+
+    function update() {
+      if (vv) {
+        setVpTop(Math.round(vv.offsetTop))
+        setVpH(Math.round(vv.height))
+      } else {
+        setVpTop(0)
+        setVpH(window.innerHeight)
+      }
     }
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
+
     update()
-    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
-  }, [open])
+    if (vv) {
+      vv.addEventListener('resize', update)
+      vv.addEventListener('scroll', update)
+    }
+    window.addEventListener('resize', update)
+    return () => {
+      if (vv) { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+      window.removeEventListener('resize', update)
+    }
+  }, [])
 
   if (!open) return null
+
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col justify-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        left: 0, right: 0,
+        top: vpTop,
+        height: vpH || '100dvh',
+        zIndex: 200,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+      }}
+    >
+      {/* backdrop */}
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
+
+      {/* sheet panel */}
       <div
-        className="relative w-full rounded-t-3xl max-h-[88vh] flex flex-col"
+        className="relative w-full flex flex-col"
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--sidebar-bg)',
           borderTop: '1px solid var(--glass-border)',
-          paddingBottom: `max(env(safe-area-inset-bottom), ${bottomOffset}px)`,
+          borderRadius: '24px 24px 0 0',
+          maxHeight: '90%',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          transform: bottomOffset > 0 ? `translateY(-${bottomOffset}px)` : 'none',
-          transition: 'transform 0.25s ease',
+          paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--glass-border)' }} />
+        {/* drag handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
+          <div style={{ width: 40, height: 4, borderRadius: 9999, background: 'var(--glass-border)' }} />
         </div>
-        <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
-          <h3 className="font-semibold text-base" style={{ color: 'var(--text-1)' }}>{title}</h3>
-          <button onClick={onClose} className="p-2 -mr-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)' }}>
+        {/* title bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 12px', borderBottom: '1px solid var(--divider)', flexShrink: 0 }}>
+          <h3 style={{ fontWeight: 600, fontSize: 16, color: 'var(--text-1)', margin: 0 }}>{title}</h3>
+          <button onClick={onClose} style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>
             <X size={18} />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1">{children}</div>
+        {/* scrollable content */}
+        <div style={{ overflowY: 'auto', flex: 1 }}>{children}</div>
       </div>
     </div>
   )

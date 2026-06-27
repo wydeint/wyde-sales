@@ -1,7 +1,7 @@
 // WydEInt Super Sales — Service Worker
 // This file is intentionally minimal — content changes trigger SW update detection
 
-const CACHE = 'wyde-sales-v3'
+const CACHE = 'wyde-sales-v4'
 
 self.addEventListener('install', () => {
   // Skip waiting immediately so new SW activates as soon as all tabs close
@@ -20,8 +20,13 @@ self.addEventListener('fetch', e => {
   const url = e.request.url
   if (!url.startsWith('http')) return
 
-  // Always network-first for auth, API, Supabase
-  if (url.includes('supabase') || url.includes('/api/') || url.includes('auth')) {
+  // Always network-only (no caching) for dynamic/critical resources
+  if (
+    url.includes('supabase') ||
+    url.includes('/api/') ||
+    url.includes('auth') ||
+    url.endsWith('.webmanifest')
+  ) {
     e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })))
     return
   }
@@ -36,7 +41,7 @@ self.addEventListener('fetch', e => {
         }
         return res
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(e.request).then(r => r || Response.error()))
   )
 })
 

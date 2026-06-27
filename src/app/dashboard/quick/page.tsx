@@ -40,7 +40,8 @@ function Sheet({ open, onClose, title, children }: {
 }) {
   if (!open) return null
 
-  const PAD = 16 // ~5mm
+  const PAD = 16   // ~5mm side/bottom gap
+  const TOP = 72   // mobile header (56px) + 5mm gap
 
   return (
     <div
@@ -50,13 +51,13 @@ function Sheet({ open, onClose, title, children }: {
       {/* backdrop */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
 
-      {/* floating card — fills viewport minus 5mm on all sides */}
+      {/* floating card — starts below mobile header */}
       <div
         className="flex flex-col"
         onClick={e => e.stopPropagation()}
         style={{
           position: 'absolute',
-          top: PAD,
+          top: TOP,
           left: PAD,
           right: PAD,
           bottom: PAD,

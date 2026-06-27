@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useId } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Users, Pencil, Search, AlertCircle } from 'lucide-react'
+import { Plus, Users, Pencil, Search, AlertCircle, Trash2 } from 'lucide-react'
 import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
@@ -70,6 +70,7 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [fetchError, setFetchError] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const searchId = useId()
   const [filterStatus, setFilterStatus] = useState('')
@@ -123,6 +124,16 @@ export default function CustomersPage() {
     }
     setSaving(false)
     setOpen(false)
+    load()
+  }
+
+  async function deleteCustomer(c: Customer) {
+    if (!confirm(`ลบลูกค้า "${c.customer_name}" ?\nข้อมูลการชำระเงินที่เชื่อมกับลูกค้านี้จะถูกลบด้วย`)) return
+    setDeletingId(c.id)
+    // Delete related payments first (FK constraint)
+    await supabase.from('payments').delete().eq('customer_id', c.id)
+    await supabase.from('customers').delete().eq('id', c.id)
+    setDeletingId(null)
     load()
   }
 
@@ -250,13 +261,23 @@ export default function CustomersPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button onClick={() => {
-                      setEditing(c)
-                      setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: c.notes })
-                      setOpen(true)
-                    }} className="text-[#8b949e] hover:text-white transition-colors">
-                      <Pencil size={14} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => {
+                        setEditing(c)
+                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: c.notes })
+                        setOpen(true)
+                      }} className="text-[#8b949e] hover:text-white transition-colors">
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => deleteCustomer(c)}
+                        disabled={deletingId === c.id}
+                        className="text-[#8b949e] hover:text-red-400 transition-colors disabled:opacity-40"
+                        title="ลบลูกค้า"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )

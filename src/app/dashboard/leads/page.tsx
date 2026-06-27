@@ -6,6 +6,7 @@ import {
   Search, Upload, CheckCircle, XCircle, AlertCircle,
   UserPlus, Users, RefreshCw, ChevronDown, ChevronUp, Filter
 } from 'lucide-react'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 
 interface Lead {
   id: number
@@ -121,14 +122,17 @@ export default function LeadsPage() {
   const [importResult, setImportResult] = useState<{ done: number; skipped: number; dup: number } | null>(null)
   const [addingId, setAddingId] = useState<number | null>(null)
   const [addError, setAddError] = useState<string>('')
+  const [fetchError, setFetchError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: l }, { data: p }, { data: u }] = await Promise.all([
+    setFetchError('')
+    const [{ data: l, error: e1 }, { data: p }, { data: u }] = await Promise.all([
       supabase.from('condo_leads').select('*, projects(name)').order('tower').order('room_no'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).order('name'),
     ])
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     setLeads((l as any) || [])
     setProjects(p || [])
     setUsers(u || [])
@@ -420,9 +424,8 @@ export default function LeadsPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && (
-              <tr><td colSpan={8} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</td></tr>
-            )}
+            {loading && <TableSpinner colSpan={8} />}
+            {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
             {!loading && filtered.length === 0 && (
               <tr><td colSpan={8} className="text-center py-12">
                 <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />

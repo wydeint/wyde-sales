@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Target, Pencil } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select } from '@/components/ui/Input'
 
@@ -73,6 +74,7 @@ export default function TargetsPage() {
   const [editing, setEditing] = useState<SalesTarget | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [fetchError, setFetchError] = useState('')
   const [filterYear, setFilterYear] = useState(thisYear)
   const [viewPeriod, setViewPeriod] = useState<ViewPeriod>('month')
 
@@ -82,11 +84,13 @@ export default function TargetsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: t }, { data: u }, { data: p }] = await Promise.all([
+    setFetchError('')
+    const [{ data: t, error: e1 }, { data: u, error: e2 }, { data: p, error: e3 }] = await Promise.all([
       supabase.from('sales_targets').select('*, users(name), projects(name)').order('year', { ascending: false }).order('month', { ascending: false }),
       supabase.from('users').select('id,name').eq('active', true).order('name'),
       supabase.from('projects').select('id,name').order('name'),
     ])
+    if (e1 || e2 || e3) { setFetchError((e1 ?? e2 ?? e3)!.message); setLoading(false); return }
     setTargets(t || [])
     setUsers(u || [])
     setProjects(p || [])
@@ -222,7 +226,9 @@ export default function TargetsPage() {
 
       {/* Targets grid */}
       {loading ? (
-        <div className="text-center py-12 text-[#8b949e]">กำลังโหลด...</div>
+        <div className="flex justify-center py-12"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>
+      ) : fetchError ? (
+        <div className="flex flex-col items-center gap-2 py-12"><PageError message={fetchError} onRetry={load} /></div>
       ) : grouped.length === 0 ? (
         <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
           <Target size={32} className="mx-auto text-[#484f58] mb-2" />

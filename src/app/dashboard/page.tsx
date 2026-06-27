@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Users, TrendingUp, PhoneCall, DollarSign, Target, Award } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 const STATUS_LABEL: Record<string, string> = {
   new: 'ใหม่', interested: 'สนใจ', quoted: 'เสนอราคา',
@@ -21,6 +22,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
   const [userRole, setUserRole] = useState('')
+
+  const [fetchError, setFetchError] = useState('')
 
   // KPIs
   const [totalCustomers, setTotalCustomers] = useState(0)
@@ -43,20 +46,31 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      let currentUserName = ''
-      if (user) {
-        const { data: u } = await supabase.from('users').select('name, role').eq('email', user.email!).single()
-        if (u) { setUserName(u.name); setUserRole(u.role); currentUserName = u.name }
-      }
-
+      setFetchError('')
       const now = new Date()
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
 
-      const [{ data: customers }, { data: reports }] = await Promise.all([
+      // Fire all queries in parallel — no sequential waterfall
+      const [
+        { data: { user } },
+        { data: customers, error: custErr },
+        { data: reports, error: repErr },
+      ] = await Promise.all([
+        supabase.auth.getUser(),
         supabase.from('customers').select('status, budget, created_at, assigned_to'),
         supabase.from('daily_reports').select('*, users(name)').gte('date', monthStart).order('date', { ascending: false }),
       ])
+
+      if (custErr || repErr) {
+        setFetchError((custErr ?? repErr)!.message)
+        setLoading(false)
+        return
+      }
+
+      if (user) {
+        const { data: u } = await supabase.from('users').select('name, role').eq('email', user.email!).single()
+        if (u) { setUserName(u.name); setUserRole(u.role) }
+      }
 
       const c = customers || []
       const r = reports || []
@@ -105,16 +119,8 @@ export default function DashboardPage() {
   const greeting = hour < 12 ? 'อรุณสวัสดิ์' : hour < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น'
   const rankIcon = (i: number) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center" style={{ color: 'var(--text-3)' }}>
-          <div className="text-2xl mb-2">⏳</div>
-          <p className="text-sm">กำลังโหลด...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <div className="flex items-center justify-center h-full"><PageSpinner /></div>
+  if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
   return (
     <div className="p-6 space-y-6">

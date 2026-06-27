@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import {
   Plus, Wallet, Pencil, AlertCircle, TrendingUp,
   TrendingDown, DollarSign, Activity, Trash2
@@ -116,18 +117,21 @@ export default function FinancePage() {
   const [entryMonth, setEntryMonth] = useState('')
 
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [period, setPeriod] = useState<Period>('month')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: p }, { data: c }, { data: pr }, { data: e }] = await Promise.all([
+    setFetchError('')
+    const [{ data: p, error: e1 }, { data: c }, { data: pr }, { data: e }] = await Promise.all([
       supabase.from('payments').select('*, customers(name,phone), projects(name)').order('due_date'),
       supabase.from('customers').select('id,name').order('name'),
       supabase.from('projects').select('id,name').order('name'),
       supabase.from('finance_entries').select('*').order('entry_date', { ascending: false }),
     ])
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     setPayments(p || [])
     setCustomers(c || [])
     setProjects(pr || [])
@@ -394,7 +398,8 @@ export default function FinancePage() {
                 </tr>
               </thead>
               <tbody>
-                {loading && <tr><td colSpan={7} className="text-center py-10 text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</td></tr>}
+                {loading && <TableSpinner colSpan={7} />}
+                {!loading && fetchError && <TableError colSpan={7} message={fetchError} onRetry={load} />}
                 {!loading && filteredEntries.length === 0 && (
                   <tr><td colSpan={7} className="text-center py-10">
                     <DollarSign size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
@@ -488,7 +493,8 @@ export default function FinancePage() {
                 </tr>
               </thead>
               <tbody>
-                {loading && <tr><td colSpan={8} className="text-center py-10 text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</td></tr>}
+                {loading && <TableSpinner colSpan={8} />}
+                {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
                 {!loading && payBase.length === 0 && (
                   <tr><td colSpan={8} className="text-center py-10">
                     <Wallet size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />

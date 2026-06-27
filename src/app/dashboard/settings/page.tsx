@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Settings2, Save, RefreshCw } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 type Tier = {
   id: number
@@ -23,20 +24,23 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [fetchError, setFetchError] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: u } = await supabase.from('users').select('role').eq('email', user.email!).single()
-        if (u) setMyRole(u.role)
-      }
-      const { data } = await supabase.from('commission_settings').select('*').order('sort_order')
-      setTiers(data || [])
-      setLoading(false)
+  async function load() {
+    setLoading(true)
+    setFetchError('')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: u } = await supabase.from('users').select('role').eq('email', user.email!).single()
+      if (u) setMyRole(u.role)
     }
-    load()
-  }, [])
+    const { data, error } = await supabase.from('commission_settings').select('*').order('sort_order')
+    if (error) { setFetchError(error.message); setLoading(false); return }
+    setTiers(data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
 
   function updateTier(id: number, field: keyof Tier, value: any) {
     setTiers(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t))
@@ -61,11 +65,8 @@ export default function SettingsPage() {
 
   const isAdmin = myRole === 'admin'
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-3)' }}>
-      <p className="text-sm">กำลังโหลด...</p>
-    </div>
-  )
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
     <div className="p-6 space-y-6 max-w-2xl">

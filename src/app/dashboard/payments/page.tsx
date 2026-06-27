@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, CheckCircle2, Circle, Plus, X, Paperclip, ChevronDown, ChevronUp, Settings2, AlertCircle } from 'lucide-react'
+import { PageError } from '@/components/ui/StateUI'
 
 // ─── Types ────────────────────────────────────────────────
 type ClientType = 'B2C' | 'B2B'
@@ -460,10 +461,12 @@ export default function PaymentsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [planJob, setPlanJob] = useState<Job | null>(null)
   const [recordInstallment, setRecordInstallment] = useState<Installment | null>(null)
+  const [fetchError, setFetchError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data: jobsData } = await supabase
+    setFetchError('')
+    const { data: jobsData, error: e1 } = await supabase
       .from('jobs')
       .select('*, condo_leads:lead_id(customer_name), projects:project_id(name), sales:sales_id(name)')
       .not('working_status', 'eq', 'ยกเลิก')
@@ -518,6 +521,7 @@ export default function PaymentsPage() {
       })),
     }))
 
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     setJobs(mapped)
     setLoading(false)
   }, [supabase])
@@ -585,7 +589,8 @@ export default function PaymentsPage() {
       </div>
 
       {/* Job list */}
-      {loading && <div className="text-center py-16 text-[#8b949e]">กำลังโหลด...</div>}
+      {loading && <div className="flex justify-center py-16"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
+      {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
       <div className="space-y-3">
         {filtered.map(job => {
           const expanded = expandedId === job.id

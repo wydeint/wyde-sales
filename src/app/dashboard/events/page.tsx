@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp, UserPlus, CheckCircle2, Smartphone } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -92,14 +93,17 @@ export default function EventsPage() {
   const [saving, setSaving] = useState(false)
   const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set())
   const [promotingAll, setPromotingAll] = useState(false)
+  const [fetchError, setFetchError] = useState('')
 
   async function load() {
     setLoading(true)
-    const [{ data: ev }, { data: pr }, { data: u }] = await Promise.all([
+    setFetchError('')
+    const [{ data: ev, error: e1 }, { data: pr }, { data: u }] = await Promise.all([
       supabase.from('events').select('*').order('event_date', { ascending: false }),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).order('name'),
     ])
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     setEvents(ev || [])
     setProjects(pr || [])
     setSalesUsers(u || [])
@@ -351,7 +355,8 @@ export default function EventsPage() {
       </div>
 
       <div className="space-y-3">
-        {loading && <div className="text-center py-12 text-[#8b949e]">กำลังโหลด...</div>}
+        {loading && <div className="flex justify-center py-12"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
+        {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
         {!loading && events.length === 0 && (
           <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
             <CalendarDays size={32} className="mx-auto text-[#484f58] mb-2" />

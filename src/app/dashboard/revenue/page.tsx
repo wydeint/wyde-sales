@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -92,6 +93,7 @@ export default function RevenuePage() {
   const [allJobs, setAllJobs] = useState<DeliveredJob[]>([])
   const [targets, setTargets] = useState<{ user_id: string; year: number; month: number; target_revenue: number }[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState('')
 
   // Period state
   const [period, setPeriod] = useState<Period>('month')
@@ -112,7 +114,9 @@ export default function RevenuePage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: jobsData }, { data: targetsData }] = await Promise.all([
+      setLoading(true)
+      setFetchError('')
+      const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }] = await Promise.all([
         supabase.from('jobs')
           .select('id,project_id,room_no,work_type,package_type,revenue_ex_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,customers(customer_name),projects(name),sales:users!jobs_sales_id_fkey(name)')
           .eq('working_status', 'ส่งมอบแล้ว')
@@ -120,6 +124,7 @@ export default function RevenuePage() {
           .order('actual_deliver_date', { ascending: false }),
         supabase.from('sales_targets').select('user_id,year,month,target_revenue'),
       ])
+      if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllJobs((jobsData as unknown as DeliveredJob[]) || [])
       setTargets(targetsData || [])
       setLoading(false)
@@ -204,11 +209,8 @@ export default function RevenuePage() {
 
   const trendMax = Math.max(...monthlyTrend.map(t => t.revenue), 1)
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-3)' }}>
-      <p className="text-sm">กำลังโหลด...</p>
-    </div>
-  )
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
   return (
     <div className="p-6 space-y-5">

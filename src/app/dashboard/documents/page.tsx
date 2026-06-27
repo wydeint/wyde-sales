@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, CheckCircle2, Circle, ExternalLink, Plus, X, ChevronDown } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -133,12 +134,14 @@ export default function DocumentsPage() {
   const [projectFilter, setProjectFilter] = useState('')
   const [expandedJob, setExpandedJob] = useState<string | null>(null)
   const [urlModal, setUrlModal] = useState<{ jobId: string; field: string; label: string; current: string } | null>(null)
+  const [fetchError, setFetchError] = useState('')
 
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
-    const [{ data: jobsData }, { data: paymentsData }, { data: projData }] = await Promise.all([
+    setFetchError('')
+    const [{ data: jobsData, error: e1 }, { data: paymentsData }, { data: projData }] = await Promise.all([
       supabase.from('jobs').select(`
         id, customer_name, room_no, project_id, order_date,
         quotation1_url, quotation2_url, id_card_url, sale_slip_url, sale_receipt_url,
@@ -149,6 +152,7 @@ export default function DocumentsPage() {
       supabase.from('projects').select('id, name').order('name'),
     ])
 
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     const payMap = new Map<string, Payment[]>()
     for (const p of (paymentsData || []) as any[]) {
       if (!payMap.has(p.job_id)) payMap.set(p.job_id, [])
@@ -231,8 +235,11 @@ export default function DocumentsPage() {
         </select>
       </div>
 
+      {loading && <div className="flex justify-center py-16"><PageSpinner /></div>}
+      {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
+
       {/* Stats */}
-      {!loading && (
+      {!loading && !fetchError && (
         <div className="grid grid-cols-3 gap-3 mb-5">
           {[
             { label: 'ทั้งหมด', value: filtered.length },

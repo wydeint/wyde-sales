@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Users, Pencil, Search, AlertCircle } from 'lucide-react'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -28,13 +29,13 @@ interface Project { id: string; name: string }
 interface User { id: string; name: string }
 
 const STATUS_LIST = [
-  { value: 'new', label: 'ใหม่', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'interested', label: 'สนใจ', color: 'bg-cyan-500/20 text-cyan-400' },
-  { value: 'quoted', label: 'เสนอราคาแล้ว', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'booked', label: 'จอง', color: 'bg-orange-500/20 text-orange-400' },
-  { value: 'close_pending', label: 'รอปิด', color: 'bg-purple-500/20 text-purple-400' },
-  { value: 'closed', label: 'ปิดแล้ว', color: 'bg-green-500/20 text-green-400' },
-  { value: 'lost', label: 'หลุด', color: 'bg-red-500/20 text-red-400' },
+  { value: 'new', label: 'ใหม่', icon: '●', color: 'bg-blue-500/20 text-blue-400' },
+  { value: 'interested', label: 'สนใจ', icon: '◉', color: 'bg-cyan-500/20 text-cyan-400' },
+  { value: 'quoted', label: 'เสนอราคาแล้ว', icon: '◈', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'booked', label: 'จอง', icon: '★', color: 'bg-orange-500/20 text-orange-400' },
+  { value: 'close_pending', label: 'รอปิด', icon: '◷', color: 'bg-purple-500/20 text-purple-400' },
+  { value: 'closed', label: 'ปิดแล้ว', icon: '✓', color: 'bg-green-500/20 text-green-400' },
+  { value: 'lost', label: 'หลุด', icon: '✕', color: 'bg-red-500/20 text-red-400' },
 ]
 
 const SOURCE_OPTIONS = [
@@ -68,17 +69,29 @@ export default function CustomersPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [fetchError, setFetchError] = useState('')
   const [search, setSearch] = useState('')
+  const searchId = useId()
   const [filterStatus, setFilterStatus] = useState('')
   const [filterProject, setFilterProject] = useState('')
 
   async function load() {
     setLoading(true)
-    const [{ data: c }, { data: p }, { data: u }] = await Promise.all([
+    setFetchError('')
+    const [
+      { data: c, error: cErr },
+      { data: p, error: pErr },
+      { data: u, error: uErr },
+    ] = await Promise.all([
       supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, projects(name), users!customers_assigned_to_fkey(name)').order('created_at', { ascending: false }),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).order('name'),
     ])
+    if (cErr || pErr || uErr) {
+      setFetchError((cErr ?? pErr ?? uErr)!.message)
+      setLoading(false)
+      return
+    }
     setCustomers((c as any) || [])
     setProjects(p || [])
     setUsers(u || [])
@@ -144,21 +157,27 @@ export default function CustomersPage() {
 
       {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap">
-        <div className="flex items-center gap-2 bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 flex-1 min-w-[200px]">
-          <Search size={14} className="text-[#484f58]" />
+        <label htmlFor={searchId} className="sr-only">ค้นหาลูกค้า</label>
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2 flex-1 min-w-[200px]"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <Search size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} aria-hidden="true" />
           <input
+            id={searchId}
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อ เบอร์ ห้อง..."
-            className="bg-transparent text-white text-sm placeholder-[#484f58] outline-none flex-1"
+            className="bg-transparent text-sm outline-none flex-1"
+            style={{ color: 'var(--text-1)' }}
           />
         </div>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white outline-none">
+        <label htmlFor="filter-status" className="sr-only">กรองตามสถานะ</label>
+        <select id="filter-status" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="field-input rounded-lg px-3 py-2 text-sm outline-none">
           {statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white outline-none">
+        <label htmlFor="filter-project" className="sr-only">กรองตามโครงการ</label>
+        <select id="filter-project" value={filterProject} onChange={e => setFilterProject(e.target.value)}
+          className="field-input rounded-lg px-3 py-2 text-sm outline-none">
           {projectFilterOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
@@ -181,19 +200,20 @@ export default function CustomersPage() {
       <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#21262d]">
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs font-medium">ลูกค้า</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs font-medium">เบอร์ / LINE</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs font-medium">โครงการ / ห้อง</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs font-medium">ช่องทาง</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs font-medium">Sales</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs font-medium">สถานะ</th>
-              <th className="px-4 py-3" />
+            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
+              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>เบอร์ / LINE</th>
+              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
+              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
+              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>Sales</th>
+              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>สถานะ</th>
+              <th scope="col" className="px-4 py-3"><span className="sr-only">แก้ไข</span></th>
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={7} className="text-center py-12 text-[#8b949e]">กำลังโหลด...</td></tr>}
-            {!loading && filtered.length === 0 && (
+            {loading && <TableSpinner colSpan={7} />}
+            {!loading && fetchError && <TableError colSpan={7} message={fetchError} onRetry={load} />}
+            {!loading && !fetchError && filtered.length === 0 && (
               <tr><td colSpan={7} className="text-center py-12">
                 <Users size={32} className="mx-auto text-[#484f58] mb-2" />
                 <p className="text-[#8b949e] text-sm">ไม่พบลูกค้า</p>
@@ -225,7 +245,9 @@ export default function CustomersPage() {
                   <td className="px-4 py-3 text-[#8b949e] text-sm capitalize">{c.source || '-'}</td>
                   <td className="px-4 py-3 text-[#c9d1d9] text-sm">{(c as any).users?.name || '-'}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${st.color}`}>{st.label}</span>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${st.color}`}>
+                      <span aria-hidden="true">{st.icon}</span>{st.label}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={() => {
@@ -252,11 +274,17 @@ export default function CustomersPage() {
 
       {/* Modal */}
       <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'} size="lg">
+        {/* Error banner at top — visible without scrolling */}
+        {saveError && (
+          <div role="alert" className="flex items-center gap-2 mb-4 p-3 rounded-xl text-xs" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+            <AlertCircle size={14} aria-hidden="true" />{saveError}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <Input label="ชื่อ-นามสกุล *" value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} placeholder="ชื่อ-นามสกุล" />
+            <Input label="ชื่อ-นามสกุล" required value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} placeholder="ชื่อ-นามสกุล" />
           </div>
-          <Input label="เบอร์โทร" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="08x-xxx-xxxx" />
+          <Input label="เบอร์โทร" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="08x-xxx-xxxx" />
           <Input label="LINE ID" value={form.line_id} onChange={e => setForm({ ...form, line_id: e.target.value })} placeholder="@lineid" />
           <div className="col-span-2">
             <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
@@ -264,22 +292,19 @@ export default function CustomersPage() {
           <Select label="โครงการที่สนใจ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
           <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm({ ...form, interested_room: e.target.value })} placeholder="เช่น A-1201" />
           <Select label="ช่องทาง" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} options={SOURCE_OPTIONS} />
-          <Input label="งบประมาณ (บาท)" type="number" value={form.budget} onChange={e => setForm({ ...form, budget: Number(e.target.value) })} />
+          <Input label="งบประมาณ (บาท)" type="number" min={0} step={1000} value={form.budget} onChange={e => setForm({ ...form, budget: Number(e.target.value) })} />
           <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
-            options={STATUS_LIST.map(s => ({ value: s.value, label: s.label }))} />
+            options={STATUS_LIST.map(s => ({ value: s.value, label: `${s.icon} ${s.label}` }))} />
           <Select label="มอบหมายให้ Sales" value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} options={userOptions} />
           <div className="col-span-2">
             <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="บันทึกเพิ่มเติม..." />
           </div>
         </div>
-        {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
-            <AlertCircle size={14} />{saveError}
-          </div>
-        )}
         <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.customer_name} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
+          <button onClick={save} disabled={saving || !form.customer_name}
+            className="px-4 py-2 text-white text-sm rounded-xl transition-colors disabled:opacity-50"
+            style={{ background: 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

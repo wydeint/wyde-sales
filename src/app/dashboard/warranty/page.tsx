@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, ShieldCheck, Pencil, AlertTriangle } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -55,14 +56,17 @@ export default function WarrantyPage() {
   const [editing, setEditing] = useState<Warranty | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [fetchError, setFetchError] = useState('')
 
   async function load() {
     setLoading(true)
-    const [{ data: w }, { data: c }, { data: p }] = await Promise.all([
+    setFetchError('')
+    const [{ data: w, error: e1 }, { data: c, error: e2 }, { data: p, error: e3 }] = await Promise.all([
       supabase.from('warranties').select('*, customers(name,phone), projects(name)').order('warranty_end', { ascending: true }),
       supabase.from('customers').select('id,name').order('name'),
       supabase.from('projects').select('id,name').order('name'),
     ])
+    if (e1 || e2 || e3) { setFetchError((e1 ?? e2 ?? e3)!.message); setLoading(false); return }
     setWarranties(w || [])
     setCustomers(c || [])
     setProjects(p || [])
@@ -113,6 +117,9 @@ export default function WarrantyPage() {
   const active = warranties.filter(w => w.status === 'active' || w.status === 'expiring_soon')
   const expired = warranties.filter(w => w.status === 'expired')
   const expiringSoon = warranties.filter(w => w.status === 'expiring_soon')
+
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
     <div className="p-6">

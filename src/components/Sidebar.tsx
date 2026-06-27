@@ -102,6 +102,7 @@ export default function Sidebar() {
   }, [])
 
   async function signOut() {
+    if (!window.confirm('ออกจากระบบ?')) return
     await supabase.auth.signOut()
     router.push('/login')
   }
@@ -204,7 +205,7 @@ export default function Sidebar() {
         {/* Theme toggle icon-only */}
         <button
           onClick={toggle}
-          title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          aria-label={theme === 'dark' ? 'เปลี่ยนเป็น Light Mode' : 'เปลี่ยนเป็น Dark Mode'}
           className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
           style={{ color: 'var(--text-3)' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
@@ -216,7 +217,7 @@ export default function Sidebar() {
         {/* Sign out icon-only */}
         <button
           onClick={signOut}
-          title="ออกจากระบบ"
+          aria-label="ออกจากระบบ"
           className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
           style={{ color: 'var(--text-3)' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, DollarSign, Pencil, CheckCircle } from 'lucide-react'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -56,15 +57,21 @@ export default function CommissionPage() {
   const [editing, setEditing] = useState<Commission | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [fetchError, setFetchError] = useState('')
 
   async function load() {
     setLoading(true)
-    const [{ data: com }, { data: cust }, { data: u }, { data: p }] = await Promise.all([
+    setFetchError('')
+    const [
+      { data: com, error: e1 }, { data: cust, error: e2 },
+      { data: u, error: e3 }, { data: p, error: e4 },
+    ] = await Promise.all([
       supabase.from('commissions').select('*, customers(name), users!commissions_sales_person_id_fkey(name), projects(name)').order('created_at', { ascending: false }),
       supabase.from('customers').select('id,name').eq('status', 'closed').order('name'),
       supabase.from('users').select('id,name').eq('active', true).order('name'),
       supabase.from('projects').select('id,name').order('name'),
     ])
+    if (e1 || e2 || e3 || e4) { setFetchError((e1 ?? e2 ?? e3 ?? e4)!.message); setLoading(false); return }
     setCommissions(com || [])
     setCustomers(cust || [])
     setUsers(u || [])
@@ -170,7 +177,8 @@ export default function CommissionPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={10} className="text-center py-12 text-[#8b949e]">กำลังโหลด...</td></tr>}
+            {loading && <TableSpinner colSpan={10} />}
+            {!loading && fetchError && <TableError colSpan={10} message={fetchError} onRetry={load} />}
             {!loading && commissions.length === 0 && (
               <tr><td colSpan={10} className="text-center py-12">
                 <DollarSign size={32} className="mx-auto text-[#484f58] mb-2" />

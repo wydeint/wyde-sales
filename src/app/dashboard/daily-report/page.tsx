@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ClipboardList, Plus, CheckCircle } from 'lucide-react'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import { Input, TextArea } from '@/components/ui/Input'
 
 interface DailyReport {
@@ -32,20 +33,24 @@ export default function DailyReportPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [todayDone, setTodayDone] = useState(false)
+  const [fetchError, setFetchError] = useState('')
 
   async function load() {
     setLoading(true)
+    setFetchError('')
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const { data: u } = await supabase.from('users').select('id,name').eq('email', user.email!).single()
+      const { data: u, error: uErr } = await supabase.from('users').select('id,name').eq('email', user.email!).single()
+      if (uErr) { setFetchError(uErr.message); setLoading(false); return }
       if (u) {
         setCurrentUser(u)
         const today = new Date().toISOString().slice(0, 10)
-        const { data: reps } = await supabase
+        const { data: reps, error: rErr } = await supabase
           .from('daily_reports')
           .select('*, users(name)')
           .order('date', { ascending: false })
           .limit(30)
+        if (rErr) { setFetchError(rErr.message); setLoading(false); return }
         setReports(reps || [])
         const done = (reps || []).some(r => r.date === today && r.sales_person_id === u.id)
         setTodayDone(done)
@@ -143,7 +148,8 @@ export default function DailyReportPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={9} className="text-center py-12 text-[#8b949e]">กำลังโหลด...</td></tr>}
+            {loading && <TableSpinner colSpan={9} />}
+            {!loading && fetchError && <TableError colSpan={9} message={fetchError} onRetry={load} />}
             {!loading && reports.length === 0 && (
               <tr><td colSpan={9} className="text-center py-12">
                 <ClipboardList size={32} className="mx-auto text-[#484f58] mb-2" />

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Users, DollarSign } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 interface Customer {
   id: string; status: string; budget: number; project_id: string
@@ -38,18 +39,22 @@ export default function ExecutivePage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [reports, setReports] = useState<DailyReport[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState('')
   const [period, setPeriod] = useState(30)
 
   useEffect(() => {
     async function load() {
+      setLoading(true)
+      setFetchError('')
       const cutoff = new Date()
       cutoff.setDate(cutoff.getDate() - period)
       const dateStr = cutoff.toISOString().slice(0, 10)
 
-      const [{ data: c }, { data: r }] = await Promise.all([
+      const [{ data: c, error: e1 }, { data: r, error: e2 }] = await Promise.all([
         supabase.from('customers').select('*, users!customers_assigned_to_fkey(name), projects(name)'),
         supabase.from('daily_reports').select('*, users(name)').gte('date', dateStr).order('date', { ascending: false }),
       ])
+      if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setCustomers(c || [])
       setReports(r || [])
       setLoading(false)
@@ -99,7 +104,8 @@ export default function ExecutivePage() {
   })
   const byProject = Object.values(projMap).sort((a, b) => b.value - a.value)
 
-  if (loading) return <div className="p-6 text-[#8b949e]">กำลังโหลด...</div>
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
   return (
     <div className="p-6">

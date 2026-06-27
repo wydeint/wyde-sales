@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Building2, Pencil, ToggleLeft, ToggleRight, AlertCircle } from 'lucide-react'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, TextArea } from '@/components/ui/Input'
 
@@ -30,10 +31,13 @@ export default function ProjectsPage() {
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [fetchError, setFetchError] = useState('')
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase.from('projects').select('*').order('id')
+    setFetchError('')
+    const { data, error } = await supabase.from('projects').select('*').order('id')
+    if (error) { setFetchError(error.message); setLoading(false); return }
     setProjects(data || [])
     setLoading(false)
   }
@@ -106,9 +110,8 @@ export default function ProjectsPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && (
-              <tr><td colSpan={8} className="text-center py-12 text-[#8b949e]">กำลังโหลด...</td></tr>
-            )}
+            {loading && <TableSpinner colSpan={8} />}
+            {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
             {!loading && projects.length === 0 && (
               <tr><td colSpan={8} className="text-center py-12">
                 <Building2 size={32} className="mx-auto text-[#484f58] mb-2" />

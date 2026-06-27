@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CheckCircle2, Clock, Truck, AlertTriangle, Paperclip, X, Plus, Search } from 'lucide-react'
+import { PageError } from '@/components/ui/StateUI'
 
 // ─── Types ────────────────────────────────────────────────
 type WorkStatus = 'in_progress' | 'ready_to_deliver' | 'delivered'
@@ -199,18 +200,21 @@ export default function HandoverPage() {
   const [filterStatus, setFilterStatus] = useState<WorkStatus | 'all'>('all')
   const [deliveryTarget, setDeliveryTarget] = useState<HandoverJob | null>(null)
   const [hPeriod, setHPeriod] = useState<HPeriod>('month')
+  const [fetchError, setFetchError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
+    setFetchError('')
 
     // Jobs that have started work (work_start_date is set)
-    const { data: jobsData } = await supabase
+    const { data: jobsData, error: e1 } = await supabase
       .from('jobs')
       .select('*, projects:project_id(name), sales:sales_id(name)')
       .not('work_start_date', 'is', null)
       .not('working_status', 'eq', 'ยกเลิก')
       .order('work_start_date')
 
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     const jobIds = (jobsData || []).map((j: any) => j.id)
 
     // Handover records for these jobs
@@ -417,7 +421,8 @@ export default function HandoverPage() {
       </div>
 
       {/* Job cards */}
-      {loading && <div className="text-center py-16 text-[#8b949e]">กำลังโหลด...</div>}
+      {loading && <div className="flex justify-center py-16"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
+      {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
       {!loading && filtered.length === 0 && (
         <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
           <p className="text-[#8b949e]">ไม่พบข้อมูล</p>

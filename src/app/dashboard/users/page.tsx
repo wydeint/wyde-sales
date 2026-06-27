@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, UserCog, Pencil, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select } from '@/components/ui/Input'
 
@@ -54,10 +55,13 @@ export default function UsersPage() {
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [fetchError, setFetchError] = useState('')
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase.from('users').select('*').order('name')
+    setFetchError('')
+    const { data, error } = await supabase.from('users').select('*').order('name')
+    if (error) { setFetchError(error.message); setLoading(false); return }
     setUsers(data || [])
     setLoading(false)
   }
@@ -127,7 +131,8 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={7} className="text-center py-12 text-[#8b949e]">กำลังโหลด...</td></tr>}
+            {loading && <TableSpinner colSpan={7} />}
+            {!loading && fetchError && <TableError colSpan={7} message={fetchError} onRetry={load} />}
             {!loading && users.length === 0 && (
               <tr><td colSpan={7} className="text-center py-12">
                 <UserCog size={32} className="mx-auto text-[#484f58] mb-2" />

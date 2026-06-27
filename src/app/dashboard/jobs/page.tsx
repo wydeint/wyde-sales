@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Search, X, Calculator, Briefcase, Receipt, LayoutList, BarChart2, ChevronDown, ChevronRight } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Link from 'next/link'
 
 // ─────────────────────────────────────────
@@ -132,6 +133,7 @@ export default function JobsPage() {
   const [editing, setEditing] = useState<Partial<Job>>(emptyJob())
   const [saving, setSaving] = useState(false)
   const [nextId, setNextId] = useState('JOB-001')
+  const [fetchError, setFetchError] = useState('')
 
   // ─── Load leads by project ───
   const loadLeads = useCallback(async (projectId: string) => {
@@ -146,13 +148,15 @@ export default function JobsPage() {
 
   // ─── Load ───
   const load = useCallback(async () => {
+    setLoading(true)
+    setFetchError('')
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       const { data: u } = await supabase.from('users').select('id, role').eq('email', user.email!).single()
       if (u) { setMyRole(u.role); setMyId(u.id) }
     }
     const [
-      { data: jobsData },
+      { data: jobsData, error: e1 },
       { data: projData },
       { data: usrData },
       { data: tierData },
@@ -164,6 +168,7 @@ export default function JobsPage() {
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
     ])
+    if (e1) { setFetchError(e1.message); setLoading(false); return }
     setJobs((jobsData as Job[]) || [])
     setProjects(projData || [])
     setUsers(usrData || [])
@@ -305,11 +310,8 @@ export default function JobsPage() {
 
   const canWrite = ['admin', 'admin_sales', 'sales'].includes(myRole)
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-3)' }}>
-      <p className="text-sm">กำลังโหลด...</p>
-    </div>
-  )
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
     <div className="p-6 space-y-5">

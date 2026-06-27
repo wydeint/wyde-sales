@@ -26,7 +26,7 @@
   --divider: rgba(199, 210, 254, 0.35);
   --text-1: #1e1b4b;
   --text-2: #4c5a7a;
-  --text-3: #6b7890;   /* bumped from #8b95b0 → better contrast on white glass */
+  --text-3: #576074;   /* ≥4.5:1 on white glass — WCAG AA */
   --card-bg: rgba(255,255,255,0.55);
   --card-border: rgba(199,210,254,0.45);
   --accent: #6366f1;
@@ -50,7 +50,7 @@
   --divider: rgba(255, 255, 255, 0.07);
   --text-1: #f1f5f9;
   --text-2: #94a3b8;
-  --text-3: #6b7a93;   /* bumped from #4b5a72 → contrast ≥3:1 on dark bg */
+  --text-3: #7d8fa8;   /* ≥4.5:1 on dark glass — WCAG AA */
   --card-bg: rgba(255,255,255,0.04);
   --card-border: rgba(255,255,255,0.08);
   --accent: #818cf8;
@@ -146,9 +146,8 @@ html:not(.dark) .text-\[\#8b949e\] { color: var(--text-2) !important; }
 html:not(.dark) .text-\[\#484f58\] { color: var(--text-3) !important; }
 
 /* Text — dark mode: lift near-invisible greys to readable level */
-/* #484f58 on #0d1117 bg ≈ 2.1:1 contrast — lift to #6b7a93 (≥3.5:1) */
-.dark .text-\[\#484f58\] { color: #6b7a93 !important; }
-/* section/caption text used on dark glass sheets */
+/* lift near-invisible greys to WCAG AA level on dark glass */
+.dark .text-\[\#484f58\] { color: #7d8fa8 !important; }
 .dark .text-\[\#8b949e\] { color: #94a3b8 !important; }
 
 /* Table rows */
@@ -175,7 +174,7 @@ html:not(.dark) thead tr {
 ══════════════════════════════════════════ */
 .field-label {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.75rem;  /* 12px minimum — WCAG readability */
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -196,7 +195,7 @@ html:not(.dark) thead tr {
   border-color: var(--accent);
 }
 .field-input::placeholder { color: var(--text-3); }
-.field-input option { background: #1e1b4b; color: #f1f5f9; }
+.field-input option { background: var(--card-bg, #fff); color: var(--text-1, #1e1b4b); }
 
 /* ══════════════════════════════════════════
    Transitions

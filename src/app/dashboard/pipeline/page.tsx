@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 interface Customer {
   id: string; customer_name: string; phone: string
@@ -28,26 +29,30 @@ export default function PipelinePage() {
   const supabase = createClient()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase
-        .from('customers')
-        .select('id, customer_name, phone, project_id, interested_room, budget, status, assigned_to, created_at, projects(name), users!customers_assigned_to_fkey(name)')
-        .neq('status', 'lost')
-        .order('created_at', { ascending: false })
-      setCustomers((data as any) || [])
-      setLoading(false)
-    }
-    load()
-  }, [])
+  async function load() {
+    setLoading(true)
+    setFetchError('')
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id, customer_name, phone, project_id, interested_room, budget, status, assigned_to, created_at, projects(name), users!customers_assigned_to_fkey(name)')
+      .neq('status', 'lost')
+      .order('created_at', { ascending: false })
+    if (error) { setFetchError(error.message); setLoading(false); return }
+    setCustomers((data as any) || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
 
   async function updateStatus(id: string, status: string) {
     await supabase.from('customers').update({ status }).eq('id', id)
     setCustomers(prev => prev.map(c => c.id === id ? { ...c, status } : c))
   }
 
-  if (loading) return <div className="p-6 text-[#8b949e]">กำลังโหลด...</div>
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
     <div className="p-6">

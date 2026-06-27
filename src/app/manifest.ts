@@ -2,7 +2,6 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: '/dashboard',
     name: 'WydEInt Super Sales',
     short_name: 'Super Sales',
     description: 'WydEInt Interior CRM',

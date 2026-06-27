@@ -38,36 +38,6 @@ const fmtDate = (d: string | null) =>
 function Sheet({ open, onClose, title, children }: {
   open: boolean; onClose: () => void; title: string; children: React.ReactNode
 }) {
-  // Track visual viewport so overlay always matches the VISIBLE area (handles keyboard on iOS)
-  const [vpTop, setVpTop] = useState(0)
-  const [vpH, setVpH] = useState(0)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const vv = window.visualViewport
-
-    function update() {
-      if (vv) {
-        setVpTop(Math.round(vv.offsetTop))
-        setVpH(Math.round(vv.height))
-      } else {
-        setVpTop(0)
-        setVpH(window.innerHeight)
-      }
-    }
-
-    update()
-    if (vv) {
-      vv.addEventListener('resize', update)
-      vv.addEventListener('scroll', update)
-    }
-    window.addEventListener('resize', update)
-    return () => {
-      if (vv) { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
-      window.removeEventListener('resize', update)
-    }
-  }, [])
-
   if (!open) return null
 
   const PAD = 16 // ~5mm
@@ -75,13 +45,7 @@ function Sheet({ open, onClose, title, children }: {
   return (
     <div
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        top: vpTop || 0,
-        height: vpH || undefined,
-        zIndex: 200,
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 200 }}
     >
       {/* backdrop */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />

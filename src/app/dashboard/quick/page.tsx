@@ -45,14 +45,14 @@ function Sheet({ open, onClose, title, children }: {
       <div
         className="relative rounded-t-3xl max-h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()}
-        style={{ background: '#161b22', borderTop: '1px solid #30363d', paddingBottom: 'env(safe-area-inset-bottom)', colorScheme: 'dark' }}
+        style={{ background: 'var(--sidebar-bg)', borderTop: '1px solid var(--glass-border)', paddingBottom: 'env(safe-area-inset-bottom)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
       >
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: '#30363d' }} />
+          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--glass-border)' }} />
         </div>
-        <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid #21262d' }}>
-          <h3 className="font-semibold text-base" style={{ color: '#f1f5f9' }}>{title}</h3>
-          <button onClick={onClose} className="p-2 -mr-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7a93' }}>
+        <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <h3 className="font-semibold text-base" style={{ color: 'var(--text-1)' }}>{title}</h3>
+          <button onClick={onClose} className="p-2 -mr-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)' }}>
             <X size={18} />
           </button>
         </div>
@@ -1447,8 +1447,7 @@ export default function QuickPage() {
   const todayTH = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    // Force dark theme always — inline style bypasses the light-mode CSS overrides
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#0d1117', paddingBottom: 'env(safe-area-inset-bottom)', colorScheme: 'dark' }}>
+    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'var(--bg-gradient)', backgroundAttachment: 'fixed', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Header */}
       <div className="px-5 pt-5 pb-3" style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between mb-4">
@@ -1511,7 +1510,7 @@ export default function QuickPage() {
                     </div>
                   )}
                   <span className="text-xl leading-none">{btn.icon}</span>
-                  <span className="text-[11px] font-bold text-center leading-tight" style={{ whiteSpace: 'pre-line', color: 'rgba(255,255,255,0.90)' }}>{btn.label}</span>
+                  <span className="text-[11px] font-bold text-center leading-tight" style={{ whiteSpace: 'pre-line', color: 'var(--text-1)' }}>{btn.label}</span>
                 </button>
               ))}
             </div>

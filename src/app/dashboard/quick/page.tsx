@@ -38,10 +38,25 @@ const fmtDate = (d: string | null) =>
 function Sheet({ open, onClose, title, children }: {
   open: boolean; onClose: () => void; title: string; children: React.ReactNode
 }) {
+  const [cardTop, setCardTop] = useState(72)
+
+  useEffect(() => {
+    if (!open) return
+    // Measure actual bottom of the visible top banner
+    // data-topbar-quick = Quick Mode's own header (always present)
+    // data-topbar = DashboardShell mobile header (only on small screens)
+    const dashBar = document.querySelector('[data-topbar]') as HTMLElement | null
+    const quickBar = document.querySelector('[data-topbar-quick]') as HTMLElement | null
+    const bar = dashBar ?? quickBar
+    if (bar) {
+      const bottom = bar.getBoundingClientRect().bottom
+      setCardTop(Math.round(bottom) + 16) // 16px (~5mm) gap below banner
+    }
+  }, [open])
+
   if (!open) return null
 
   const PAD = 16   // ~5mm side/bottom gap
-  const TOP = 72   // mobile header (56px) + 5mm gap
 
   return (
     <div
@@ -51,13 +66,13 @@ function Sheet({ open, onClose, title, children }: {
       {/* backdrop */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
 
-      {/* floating card — starts below mobile header */}
+      {/* floating card — 5mm below the top banner, measured live */}
       <div
         className="flex flex-col"
         onClick={e => e.stopPropagation()}
         style={{
           position: 'absolute',
-          top: TOP,
+          top: cardTop,
           left: PAD,
           right: PAD,
           bottom: PAD,
@@ -1471,7 +1486,7 @@ export default function QuickPage() {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'var(--bg-gradient)', backgroundAttachment: 'fixed', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Header */}
-      <div className="px-5 pt-5 pb-3" style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+      <div data-topbar-quick className="px-5 pt-5 pb-3" style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">

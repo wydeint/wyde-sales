@@ -52,6 +52,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         {/* Mobile top bar — z-60 so it always sits above the sidebar overlay */}
         <div
+          data-topbar
           className="lg:hidden sticky top-0 z-[60] flex items-center gap-3 px-4 h-14 flex-shrink-0"
           style={{
             background: 'var(--sidebar-bg)',

@@ -26,7 +26,9 @@
   --divider: rgba(199, 210, 254, 0.35);
   --text-1: #1e1b4b;
   --text-2: #4c5a7a;
-  --text-3: #8b95b0;
+  --text-3: #6b7890;   /* bumped from #8b95b0 → better contrast on white glass */
+  --card-bg: rgba(255,255,255,0.55);
+  --card-border: rgba(199,210,254,0.45);
   --accent: #6366f1;
   --accent-green: #059669;
   --accent-purple: #7c3aed;
@@ -48,7 +50,9 @@
   --divider: rgba(255, 255, 255, 0.07);
   --text-1: #f1f5f9;
   --text-2: #94a3b8;
-  --text-3: #4b5a72;
+  --text-3: #6b7a93;   /* bumped from #4b5a72 → contrast ≥3:1 on dark bg */
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
   --accent: #818cf8;
   --accent-green: #34d399;
   --accent-purple: #a78bfa;
@@ -135,11 +139,17 @@ html:not(.dark) .border-\[\#21262d\] {
   border-color: rgba(199, 210, 254, 0.30) !important;
 }
 
-/* Text */
+/* Text — light mode remapping */
 html:not(.dark) .text-white { color: var(--text-1) !important; }
 html:not(.dark) .text-\[\#c9d1d9\] { color: var(--text-2) !important; }
 html:not(.dark) .text-\[\#8b949e\] { color: var(--text-2) !important; }
 html:not(.dark) .text-\[\#484f58\] { color: var(--text-3) !important; }
+
+/* Text — dark mode: lift near-invisible greys to readable level */
+/* #484f58 on #0d1117 bg ≈ 2.1:1 contrast — lift to #6b7a93 (≥3.5:1) */
+.dark .text-\[\#484f58\] { color: #6b7a93 !important; }
+/* section/caption text used on dark glass sheets */
+.dark .text-\[\#8b949e\] { color: #94a3b8 !important; }
 
 /* Table rows */
 html:not(.dark) thead tr {

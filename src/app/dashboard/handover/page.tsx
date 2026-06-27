@@ -58,6 +58,29 @@ const STATUS_CONFIG: Record<WorkStatus, { label: string; color: string; bg: stri
   delivered:        { label: 'ส่งมอบแล้ว',          color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/20',  icon: <Truck size={14} className="text-green-400" /> },
 }
 
+// ─── Period Helper ─────────────────────────────────────────
+type HPeriod = 'week' | 'month' | 'quarter' | 'year'
+function getHPeriodRange(p: HPeriod): { start: string; end: string; label: string } {
+  const now = new Date()
+  const y = now.getFullYear(), m = now.getMonth(), dw = now.getDay()
+  if (p === 'week') {
+    const mon = new Date(now); mon.setDate(now.getDate() - ((dw + 6) % 7)); mon.setHours(0,0,0,0)
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+    return { start: mon.toISOString().slice(0,10), end: sun.toISOString().slice(0,10), label: 'สัปดาห์นี้' }
+  }
+  if (p === 'month') {
+    const start = new Date(y, m, 1); const end = new Date(y, m+1, 0)
+    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10), label: 'เดือนนี้' }
+  }
+  if (p === 'quarter') {
+    const q = Math.floor(m / 3)
+    const start = new Date(y, q*3, 1); const end = new Date(y, q*3+3, 0)
+    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10), label: `Q${q+1}` }
+  }
+  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${y+543}` }
+}
+const fmtBahtH = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '฿0'
+
 // ─── Delivery Modal ────────────────────────────────────────
 function DeliveryModal({
   job, open, onClose, onSaved
@@ -175,6 +198,7 @@ export default function HandoverPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<WorkStatus | 'all'>('all')
   const [deliveryTarget, setDeliveryTarget] = useState<HandoverJob | null>(null)
+  const [hPeriod, setHPeriod] = useState<HPeriod>('month')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -323,6 +347,56 @@ export default function HandoverPage() {
           </div>
         ))}
       </div>
+
+      {/* Period Revenue Panel */}
+      {(() => {
+        const { start, end, label } = getHPeriodRange(hPeriod)
+        const todayStr = new Date().toISOString().slice(0,10)
+        // Expected: jobs whose workEndDate is in period (not yet delivered)
+        const expected = jobs.filter(j => j.workStatus !== 'delivered' && j.workEndDate && j.workEndDate >= start && j.workEndDate <= end)
+        // Delivered: jobs actually delivered in period
+        const deliveredInPeriod = jobs.filter(j => j.workStatus === 'delivered' && j.deliveryDate && j.deliveryDate >= start && j.deliveryDate <= end)
+        // Overdue rolling: workEndDate already past, not delivered yet — show in current period
+        const overdueRolling = jobs.filter(j => j.workStatus !== 'delivered' && j.workEndDate && j.workEndDate < todayStr)
+
+        const expectedRev = expected.reduce((s, j) => s + j.revenueExVat, 0)
+        const deliveredRev = deliveredInPeriod.reduce((s, j) => s + j.revenueExVat, 0)
+        const overdueRev = overdueRolling.reduce((s, j) => s + j.revenueExVat, 0)
+
+        return (
+          <div className="mb-5 rounded-2xl p-4 bg-[#161b22] border border-[#30363d]">
+            {/* Period pills */}
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <span className="text-[#8b949e] text-xs font-semibold">รายได้ตามช่วงเวลา:</span>
+              {(['week','month','quarter','year'] as HPeriod[]).map(p => (
+                <button key={p} onClick={() => setHPeriod(p)}
+                  className="px-3 py-1 rounded-full text-xs font-semibold transition-colors"
+                  style={{ background: hPeriod === p ? '#6366f1' : 'rgba(255,255,255,0.05)', color: hPeriod === p ? '#fff' : '#8b949e', border: `1px solid ${hPeriod === p ? '#6366f1' : '#30363d'}` }}>
+                  {p === 'week' ? 'สัปดาห์' : p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
+                </button>
+              ))}
+              <span className="text-[#484f58] text-xs ml-1">{label}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-[#0d1117] rounded-xl p-3">
+                <p className="text-[#484f58] text-[10px] mb-1">คาดว่าจะส่งมอบ</p>
+                <p className="text-blue-400 font-bold text-base">{fmtBahtH(expectedRev)}</p>
+                <p className="text-[#484f58] text-[10px]">{expected.length} ห้อง</p>
+              </div>
+              <div className="bg-[#0d1117] rounded-xl p-3">
+                <p className="text-[#484f58] text-[10px] mb-1">ส่งมอบแล้ว</p>
+                <p className="text-green-400 font-bold text-base">{fmtBahtH(deliveredRev)}</p>
+                <p className="text-[#484f58] text-[10px]">{deliveredInPeriod.length} ห้อง</p>
+              </div>
+              <div className="bg-[#0d1117] rounded-xl p-3">
+                <p className="text-[#484f58] text-[10px] mb-1">เกินกำหนด (ทบ)</p>
+                <p className="text-red-400 font-bold text-base">{fmtBahtH(overdueRev)}</p>
+                <p className="text-[#484f58] text-[10px]">{overdueRolling.length} ห้อง</p>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Search + Filter */}
       <div className="flex gap-3 mb-4 flex-wrap">

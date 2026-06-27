@@ -62,6 +62,28 @@ const emptyEntry: { type: EntryType; category: string; amount: number; entry_dat
 const f = (v: number) => '฿' + (v || 0).toLocaleString()
 const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'
 
+type Period = 'week' | 'month' | 'quarter' | 'year'
+
+function getPeriodRange(p: Period): { start: string; end: string; label: string } {
+  const now = new Date()
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDay()
+  if (p === 'week') {
+    const mon = new Date(now); mon.setDate(now.getDate() - ((d + 6) % 7)); mon.setHours(0,0,0,0)
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+    return { start: mon.toISOString().slice(0,10), end: sun.toISOString().slice(0,10), label: 'สัปดาห์นี้' }
+  }
+  if (p === 'month') {
+    const start = new Date(y, m, 1); const end = new Date(y, m+1, 0)
+    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10), label: 'เดือนนี้' }
+  }
+  if (p === 'quarter') {
+    const q = Math.floor(m / 3); const start = new Date(y, q*3, 1); const end = new Date(y, q*3+3, 0)
+    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10), label: `ไตรมาส ${q+1}` }
+  }
+  // year
+  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${y+543}` }
+}
+
 function last6Months() {
   const months = []
   for (let i = 5; i >= 0; i--) {
@@ -96,6 +118,7 @@ export default function FinancePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [period, setPeriod] = useState<Period>('month')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -169,9 +192,16 @@ export default function FinancePage() {
     expense: entries.filter(e => e.type === 'expense' && e.entry_date.startsWith(m.key)).reduce((s, e) => s + e.amount, 0),
   }))
 
-  const thisMonthIncome = entries.filter(e => e.type === 'income' && e.entry_date.startsWith(thisMonth)).reduce((s, e) => s + e.amount, 0)
-  const thisMonthExpense = entries.filter(e => e.type === 'expense' && e.entry_date.startsWith(thisMonth)).reduce((s, e) => s + e.amount, 0)
-  const thisMonthProfit = thisMonthIncome - thisMonthExpense
+  // Period-filtered KPIs
+  const { start: pStart, end: pEnd, label: pLabel } = getPeriodRange(period)
+  const periodEntries = entries.filter(e => e.entry_date >= pStart && e.entry_date <= pEnd)
+  const periodIncome = periodEntries.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0)
+  const periodExpense = periodEntries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
+  const periodProfit = periodIncome - periodExpense
+
+  const thisMonthIncome = periodIncome
+  const thisMonthExpense = periodExpense
+  const thisMonthProfit = periodProfit
 
   const totalIncome = entries.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0)
   const totalExpense = entries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
@@ -237,6 +267,18 @@ export default function FinancePage() {
       {/* ── Tab: Overview ─────────────────────────────────── */}
       {tab === 'overview' && (
         <>
+          {/* Period filter */}
+          <div className="flex gap-2 mb-5 flex-wrap">
+            {(['week', 'month', 'quarter', 'year'] as Period[]).map(p => (
+              <button key={p} onClick={() => setPeriod(p)}
+                className="px-4 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
+                {p === 'week' ? 'สัปดาห์' : p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
+              </button>
+            ))}
+            <span className="self-center text-xs ml-1" style={{ color: 'var(--text-3)' }}>{pLabel}</span>
+          </div>
+
           {overdue.length > 0 && (
             <div className="flex items-center gap-3 p-3 rounded-xl mb-4 text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
               <AlertCircle size={15} />มี {overdue.length} งวดเกินกำหนด รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
@@ -246,9 +288,9 @@ export default function FinancePage() {
           {/* KPI cards */}
           <div className="grid grid-cols-2 gap-3 mb-5 md:grid-cols-4">
             {[
-              { label: 'รายรับเดือนนี้', value: thisMonthIncome, color: '#34d399', icon: TrendingUp },
-              { label: 'รายจ่ายเดือนนี้', value: thisMonthExpense, color: '#f87171', icon: TrendingDown },
-              { label: 'กำไรเดือนนี้', value: thisMonthProfit, color: thisMonthProfit >= 0 ? '#34d399' : '#f87171', icon: Activity },
+              { label: `รายรับ${pLabel}`, value: thisMonthIncome, color: '#34d399', icon: TrendingUp },
+              { label: `รายจ่าย${pLabel}`, value: thisMonthExpense, color: '#f87171', icon: TrendingDown },
+              { label: `กำไร${pLabel}`, value: thisMonthProfit, color: thisMonthProfit >= 0 ? '#34d399' : '#f87171', icon: Activity },
               { label: 'ยอดค้างรับ', value: outstanding.reduce((s, p) => s + p.amount, 0), color: '#fbbf24', icon: Wallet },
             ].map(card => {
               const Icon = card.icon

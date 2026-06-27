@@ -70,43 +70,42 @@ function Sheet({ open, onClose, title, children }: {
 
   if (!open) return null
 
+  const PAD = 16 // ~5mm
+
   return (
     <div
       onClick={onClose}
       style={{
         position: 'fixed',
-        left: 0, right: 0,
-        top: vpTop,
-        height: vpH || '100dvh',
+        inset: 0,
+        top: vpTop || 0,
+        height: vpH || undefined,
         zIndex: 200,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
       }}
     >
       {/* backdrop */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
 
-      {/* sheet panel */}
+      {/* floating card — fills viewport minus 5mm on all sides */}
       <div
-        className="relative w-full flex flex-col"
+        className="flex flex-col"
         onClick={e => e.stopPropagation()}
         style={{
+          position: 'absolute',
+          top: PAD,
+          left: PAD,
+          right: PAD,
+          bottom: PAD,
           background: 'var(--sidebar-bg)',
-          borderTop: '1px solid var(--glass-border)',
-          borderRadius: '24px 24px 0 0',
-          maxHeight: '90%',
+          border: '1px solid var(--glass-border)',
+          borderRadius: 20,
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
+          overflow: 'hidden',
         }}
       >
-        {/* drag handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 9999, background: 'var(--glass-border)' }} />
-        </div>
         {/* title bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 12px', borderBottom: '1px solid var(--divider)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--divider)', flexShrink: 0 }}>
           <h3 style={{ fontWeight: 600, fontSize: 16, color: 'var(--text-1)', margin: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>
             <X size={18} />
@@ -130,12 +129,13 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
   async function doSearch(q: string) {
     if (!q.trim()) { setResults([]); return }
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('condo_leads')
       .select('id, name, phone, room_no, status, projects:project_id(name)')
       .or(`name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
       .order('name')
       .limit(15)
+    if (error) console.error('OriginPoolSheet search error:', error)
     setResults(data || [])
     setLoading(false)
   }
@@ -288,12 +288,13 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
   async function doSearch(q: string) {
     if (!q.trim()) { setResults([]); return }
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('customers')
-      .select('id, customer_name, phone, interested_room, status, follow_up_date, projects:project_id(name), assigned:assigned_to(name)')
+      .select('id, customer_name, phone, interested_room, status, follow_up_date, projects:project_id(name)')
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,interested_room.ilike.%${q}%`)
       .order('customer_name')
       .limit(12)
+    if (error) console.error('ProspectsSheet search error:', error)
     setResults(data || [])
     setLoading(false)
   }
@@ -335,7 +336,6 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 <p className="text-[#8b949e] text-xs">{(c.projects as any)?.name || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {c.phone}</p>}
                 {c.follow_up_date && <p className="text-[#484f58] text-xs mt-1">นัดติดตาม: {fmtDate(c.follow_up_date)}</p>}
-                <p className="text-[#484f58] text-[10px] mt-1">Sales: {(c.assigned as any)?.name || '—'}</p>
               </div>
             )
           })}

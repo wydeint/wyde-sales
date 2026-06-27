@@ -2,489 +2,472 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, ArrowRightLeft, Pencil, CheckCircle, Clock, Shield, AlertTriangle } from 'lucide-react'
-import Modal from '@/components/ui/Modal'
-import { Input, Select, TextArea } from '@/components/ui/Input'
+import { CheckCircle2, Clock, Truck, AlertTriangle, Paperclip, X, Plus, Search } from 'lucide-react'
 
-interface Handover {
-  id: string
-  customer_id: string | null
-  lead_id: number | null
-  project_id: string | null
-  room: string
-  client_type: 'B2C' | 'B2B'
-  total_amount: number | null
-  job_start_date: string | null
-  work_days: number | null
-  expected_completion: string | null
-  final_payment_date: string | null
-  handover_date: string | null
-  sales_sign_date: string | null
-  customer_sign_date: string | null
-  defect_noted: boolean
-  defect_details: string
-  warranty_days: number | null
-  warranty_end: string | null
-  status: string
-  notes: string
-  customers?: { name: string; phone: string } | null
-  projects?: { name: string } | null
-  condo_leads?: { customer_name: string; phone: string; tower: string; room_no: string } | null
+// ─── Types ────────────────────────────────────────────────
+type WorkStatus = 'in_progress' | 'ready_to_deliver' | 'delivered'
+
+interface HandoverJob {
+  // from jobs
+  jobId: string
+  customerId: string | null
+  projectId: string
+  projectName: string
+  roomNo: string
+  customerName: string
+  salesName: string
+  clientType: 'B2C' | 'B2B'
+  revenueExVat: number
+  workDays: number | null
+  workStartDate: string | null
+  workEndDate: string | null
+  // from handover record (may not exist yet)
+  handoverId: string | null
+  workStatus: WorkStatus
+  deliveryDate: string | null
+  deliveryFileUrl: string | null
+  commissionTriggered: boolean
+  // computed
+  daysOverdue: number
+  lastInstallmentPaid: boolean
+  hasDeliveryFile: boolean
 }
 
-interface Project { id: string; name: string }
-interface Lead { id: number; tower: string; room_no: string; customer_name: string; phone: string }
+// ─── Helpers ──────────────────────────────────────────────
+const today = new Date()
+today.setHours(0, 0, 0, 0)
 
-const STATUS = [
-  { value: 'scheduled', label: 'นัดหมายแล้ว', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'in_progress', label: 'กำลังดำเนินการ', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'completed', label: 'ส่งมอบแล้ว', color: 'bg-green-500/20 text-green-400' },
-]
-
-const WORK_DAYS_OPTS = [
-  { value: '', label: '— ระยะเวลา —' },
-  { value: '15', label: '15 วัน' },
-  { value: '30', label: '30 วัน' },
-  { value: '45', label: '45 วัน' },
-  { value: '60', label: '60 วัน' },
-  { value: '90', label: '90 วัน' },
-]
-
-const emptyForm = {
-  client_type: 'B2C' as 'B2C' | 'B2B',
-  project_id: '', lead_id: '',
-  room: '', total_amount: '',
-  job_start_date: '', work_days: '',
-  final_payment_date: '', handover_date: '',
-  sales_sign_date: '', customer_sign_date: '',
-  defect_noted: false, defect_details: '',
-  warranty_days: '', status: 'scheduled', notes: '',
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
 }
 
+function daysDiff(from: string): number {
+  const d = new Date(from)
+  d.setHours(0, 0, 0, 0)
+  return Math.floor((today.getTime() - d.getTime()) / 86400000)
+}
+
+const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
+const fmtBaht = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '—'
+
+const STATUS_CONFIG: Record<WorkStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+  in_progress:      { label: 'กำลังดำเนินการ',     color: 'text-amber-400',  bg: 'bg-amber-500/10 border-amber-500/20',  icon: <Clock size={14} className="text-amber-400" /> },
+  ready_to_deliver: { label: 'งานเสร็จ รอส่งมอบ',  color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20',    icon: <CheckCircle2 size={14} className="text-blue-400" /> },
+  delivered:        { label: 'ส่งมอบแล้ว',          color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/20',  icon: <Truck size={14} className="text-green-400" /> },
+}
+
+// ─── Delivery Modal ────────────────────────────────────────
+function DeliveryModal({
+  job, open, onClose, onSaved
+}: {
+  job: HandoverJob | null; open: boolean; onClose: () => void; onSaved: () => void
+}) {
+  const supabase = createClient()
+  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0, 10))
+  const [fileUrls, setFileUrls] = useState<string[]>([''])
+  const [saving, setSaving] = useState(false)
+
+  function addUrl() { if (fileUrls.length < 5) setFileUrls([...fileUrls, '']) }
+  function removeUrl(i: number) { setFileUrls(fileUrls.filter((_, idx) => idx !== i)) }
+  function updateUrl(i: number, v: string) { const n = [...fileUrls]; n[i] = v; setFileUrls(n) }
+
+  async function save() {
+    if (!job) return
+    setSaving(true)
+    const mainUrl = fileUrls.find(u => u.trim()) || null
+
+    if (job.handoverId) {
+      await supabase.from('handovers').update({
+        work_status: 'delivered',
+        delivery_date: deliveryDate,
+        delivery_file_url: mainUrl,
+        commission_triggered: true,
+        handover_date: deliveryDate,
+      }).eq('id', job.handoverId)
+    } else {
+      const newId = `HOV-${job.jobId}`
+      await supabase.from('handovers').insert({
+        id: newId,
+        customer_id: job.customerId,
+        project_id: job.projectId,
+        room: job.roomNo,
+        job_id: job.jobId,
+        work_status: 'delivered',
+        delivery_date: deliveryDate,
+        delivery_file_url: mainUrl,
+        commission_triggered: true,
+        handover_date: deliveryDate,
+        status: 'completed',
+      })
+    }
+
+    // Update job working_status
+    await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว' }).eq('id', job.jobId)
+
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  if (!open || !job) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative w-full max-w-md bg-[#161b22] border border-[#30363d] rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-[#21262d]">
+          <div>
+            <h3 className="text-white font-semibold">บันทึกส่งมอบงาน</h3>
+            <p className="text-[#8b949e] text-xs mt-0.5">{job.customerName} · {job.roomNo}</p>
+          </div>
+          <button onClick={onClose} className="text-[#8b949e] hover:text-white"><X size={18} /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="text-xs text-[#8b949e] mb-1.5 block">วันที่ส่งมอบจริง</label>
+            <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
+              className="w-full bg-[#21262d] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#58a6ff]" />
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-[#8b949e]">แนบใบส่งมอบที่ลูกค้าเซ็น (Google Drive URL)</label>
+              {fileUrls.length < 5 && (
+                <button onClick={addUrl} className="text-xs text-[#58a6ff] flex items-center gap-1"><Plus size={12} />เพิ่ม</button>
+              )}
+            </div>
+            <div className="space-y-2">
+              {fileUrls.map((url, i) => (
+                <div key={i} className="flex gap-2">
+                  <input value={url} onChange={e => updateUrl(i, e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    className="flex-1 bg-[#21262d] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#58a6ff]" />
+                  {fileUrls.length > 1 && (
+                    <button onClick={() => removeUrl(i)} className="text-[#484f58] hover:text-red-400 p-2"><X size={14} /></button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-[#484f58] text-[10px] mt-1">รองรับ jpg, pdf — ไม่เกิน 5 ไฟล์</p>
+          </div>
+          <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
+            <p className="text-indigo-300 text-xs">⚡ เมื่อบันทึกส่งมอบแล้ว — Commission จะถูก trigger อัตโนมัติ</p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 p-5 border-t border-[#21262d]">
+          <button onClick={onClose} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm">ยกเลิก</button>
+          <button onClick={save} disabled={saving}
+            className="px-5 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white text-sm rounded-xl font-medium">
+            {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ─────────────────────────────────────────────
 export default function HandoverPage() {
   const supabase = createClient()
-  const [handovers, setHandovers] = useState<Handover[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
-  const [leads, setLeads] = useState<Lead[]>([])
+  const [jobs, setJobs] = useState<HandoverJob[]>([])
   const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState<Handover | null>(null)
-  const [form, setForm] = useState(emptyForm)
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
+  const [search, setSearch] = useState('')
+  const [filterStatus, setFilterStatus] = useState<WorkStatus | 'all'>('all')
+  const [deliveryTarget, setDeliveryTarget] = useState<HandoverJob | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: h }, { data: p }] = await Promise.all([
-      supabase.from('handovers').select('*, customers(name,phone), projects(name), condo_leads(customer_name,phone,tower,room_no)')
-        .order('handover_date', { ascending: true }),
-      supabase.from('projects').select('id,name').eq('active', true).order('name'),
-    ])
-    setHandovers((h as any) || [])
-    setProjects(p || [])
+
+    // Jobs that have started work (work_start_date is set)
+    const { data: jobsData } = await supabase
+      .from('jobs')
+      .select('*, projects:project_id(name), sales:sales_id(name)')
+      .not('work_start_date', 'is', null)
+      .not('working_status', 'eq', 'ยกเลิก')
+      .order('work_start_date')
+
+    const jobIds = (jobsData || []).map((j: any) => j.id)
+
+    // Handover records for these jobs
+    const { data: handoverData } = await supabase
+      .from('handovers')
+      .select('*')
+      .in('job_id', jobIds.length > 0 ? jobIds : ['__none__'])
+
+    // Final payments status per job
+    const { data: paymentsData } = await supabase
+      .from('payments')
+      .select('job_id, status, is_final')
+      .in('job_id', jobIds.length > 0 ? jobIds : ['__none__'])
+      .eq('is_final', true)
+
+    const handoverMap = new Map<string, any>()
+    for (const h of (handoverData || [])) {
+      if (h.job_id) handoverMap.set(h.job_id, h)
+    }
+
+    const finalPayMap = new Map<string, boolean>()
+    for (const p of (paymentsData || [])) {
+      if (p.job_id) finalPayMap.set(p.job_id, p.status === 'paid')
+    }
+
+    const mapped: HandoverJob[] = (jobsData || []).map((j: any) => {
+      const hov = handoverMap.get(j.id)
+      const workEndDate = j.work_start_date && j.work_days
+        ? addDays(j.work_start_date, j.work_days)
+        : null
+      const overdue = workEndDate ? Math.max(0, daysDiff(workEndDate)) : 0
+
+      const workStatus: WorkStatus = hov?.work_status || 'in_progress'
+      const lastInstallmentPaid = finalPayMap.get(j.id) || false
+
+      return {
+        jobId: j.id,
+        customerId: j.customer_id,
+        projectId: j.project_id,
+        projectName: j.projects?.name || '—',
+        roomNo: j.room_no,
+        customerName: j.customer_name || '—',
+        salesName: j.sales?.name || '—',
+        clientType: j.customer_type || 'B2C',
+        revenueExVat: j.revenue_ex_vat || 0,
+        workDays: j.work_days,
+        workStartDate: j.work_start_date,
+        workEndDate,
+        handoverId: hov?.id || null,
+        workStatus,
+        deliveryDate: hov?.delivery_date || null,
+        deliveryFileUrl: hov?.delivery_file_url || null,
+        commissionTriggered: hov?.commission_triggered || false,
+        daysOverdue: overdue,
+        lastInstallmentPaid,
+        hasDeliveryFile: !!(hov?.delivery_file_url),
+      }
+    })
+
+    setJobs(mapped)
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => { load() }, [load])
 
-  async function loadLeads(projectId: string) {
-    if (!projectId) { setLeads([]); return }
-    const { data } = await supabase.from('condo_leads')
-      .select('id,tower,room_no,customer_name,phone')
-      .eq('project_id', projectId)
-      .order('tower').order('room_no')
-    setLeads((data as any) || [])
-  }
-
-  function genId() {
-    const nums = handovers.map(h => parseInt(h.id.replace('HOV-', ''))).filter(n => !isNaN(n))
-    return 'HOV-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(3, '0')
-  }
-
-  function calcDate(startDate: string, days: string) {
-    if (!startDate || !days) return null
-    const d = new Date(startDate)
-    d.setDate(d.getDate() + parseInt(days))
-    return d.toISOString().split('T')[0]
-  }
-
-  async function save() {
-    setSaving(true); setSaveError('')
-    const payload: any = {
-      client_type: form.client_type,
-      project_id: form.project_id || null,
-      lead_id: form.client_type === 'B2C' ? (Number(form.lead_id) || null) : null,
-      customer_id: null,
-      room: form.room,
-      total_amount: Number(form.total_amount) || null,
-      job_start_date: form.job_start_date || null,
-      work_days: form.work_days ? parseInt(form.work_days) : null,
-      expected_completion: calcDate(form.job_start_date, form.work_days),
-      final_payment_date: form.final_payment_date || null,
-      handover_date: form.handover_date || null,
-      sales_sign_date: form.sales_sign_date || null,
-      customer_sign_date: form.customer_sign_date || null,
-      defect_noted: form.defect_noted,
-      defect_details: form.defect_details || null,
-      warranty_days: form.warranty_days ? parseInt(form.warranty_days) : null,
-      warranty_end: calcDate(form.handover_date, form.warranty_days),
-      status: form.status,
-      notes: form.notes || null,
+  async function updateStatus(job: HandoverJob, status: WorkStatus) {
+    if (status === 'delivered') {
+      // Check conditions
+      if (!job.lastInstallmentPaid) {
+        alert('ยังไม่ได้เก็บเงินงวดสุดท้าย — กรุณาบันทึกในหน้าสถานะการชำระเงินก่อน')
+        return
+      }
+      setDeliveryTarget(job)
+      return
     }
-    if (editing) {
-      const { error } = await supabase.from('handovers').update(payload).eq('id', editing.id)
-      if (error) { setSaveError(error.message); setSaving(false); return }
+
+    if (job.handoverId) {
+      await supabase.from('handovers').update({ work_status: status }).eq('id', job.handoverId)
     } else {
-      const { error } = await supabase.from('handovers').insert({ id: genId(), ...payload })
-      if (error) { setSaveError(error.message); setSaving(false); return }
+      await supabase.from('handovers').insert({
+        id: `HOV-${job.jobId}`,
+        customer_id: job.customerId,
+        project_id: job.projectId,
+        room: job.roomNo,
+        job_id: job.jobId,
+        work_status: status,
+        status: 'scheduled',
+      })
     }
-    setSaving(false); setOpen(false); load()
+    await load()
   }
 
-  function openEdit(h: Handover) {
-    setEditing(h)
-    setForm({
-      client_type: h.client_type || 'B2C',
-      project_id: h.project_id || '',
-      lead_id: h.lead_id ? String(h.lead_id) : '',
-      room: h.room || '',
-      total_amount: h.total_amount ? String(h.total_amount) : '',
-      job_start_date: h.job_start_date || '',
-      work_days: h.work_days ? String(h.work_days) : '',
-      final_payment_date: h.final_payment_date || '',
-      handover_date: h.handover_date || '',
-      sales_sign_date: h.sales_sign_date || '',
-      customer_sign_date: h.customer_sign_date || '',
-      defect_noted: h.defect_noted,
-      defect_details: h.defect_details || '',
-      warranty_days: h.warranty_days ? String(h.warranty_days) : '',
-      status: h.status,
-      notes: h.notes || '',
-    })
-    if (h.project_id) loadLeads(h.project_id)
-    setOpen(true)
-  }
+  const filtered = jobs.filter(j => {
+    if (filterStatus !== 'all' && j.workStatus !== filterStatus) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return j.customerName.toLowerCase().includes(q) ||
+      j.roomNo.toLowerCase().includes(q) ||
+      j.projectName.toLowerCase().includes(q)
+  })
 
-  const clientName = (h: Handover) =>
-    (h.condo_leads as any)?.customer_name || (h.customers as any)?.name || '—'
-  const clientPhone = (h: Handover) =>
-    (h.condo_leads as any)?.phone || (h.customers as any)?.phone || ''
-  const dateStr = (d: string | null) =>
-    d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
-  const fmtBaht = (n: number | null) => n ? n.toLocaleString('th-TH') : '—'
+  // Summary
+  const inProgress = jobs.filter(j => j.workStatus === 'in_progress').length
+  const ready = jobs.filter(j => j.workStatus === 'ready_to_deliver').length
+  const delivered = jobs.filter(j => j.workStatus === 'delivered').length
+  const overdue = jobs.filter(j => j.workStatus !== 'delivered' && j.daysOverdue > 0).length
 
-  const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
-  const leadOptions = [
-    { value: '', label: '— เลือกห้อง —' },
-    ...leads.map(l => ({ value: String(l.id), label: `${l.tower}-${l.room_no} — ${l.customer_name}` }))
+  const STATUS_FILTERS: { key: WorkStatus | 'all'; label: string; count: number }[] = [
+    { key: 'all',             label: 'ทั้งหมด',           count: jobs.length },
+    { key: 'in_progress',     label: 'กำลังดำเนินการ',     count: inProgress },
+    { key: 'ready_to_deliver',label: 'งานเสร็จ รอส่งมอบ',  count: ready },
+    { key: 'delivered',       label: 'ส่งมอบแล้ว',          count: delivered },
   ]
 
-  const upcoming = handovers.filter(h => h.status !== 'completed')
-  const done = handovers.filter(h => h.status === 'completed')
-
-  const kpi = {
-    scheduled: handovers.filter(h => h.status === 'scheduled').length,
-    inProgress: handovers.filter(h => h.status === 'in_progress').length,
-    completed: handovers.filter(h => h.status === 'completed').length,
-  }
-
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-white text-xl font-bold">Handover — ส่งมอบงานตกแต่ง</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">ติดตามการส่งมอบงาน เก็บเงินงวดสุดท้าย และประกัน</p>
-        </div>
-        <button onClick={() => { setEditing(null); setForm(emptyForm); setLeads([]); setSaveError(''); setOpen(true) }}
-          className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} />เพิ่มรายการส่งมอบ
-        </button>
+    <div className="p-4 md:p-6">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-white text-xl font-bold">Handover</h1>
+        <p className="text-[#8b949e] text-sm mt-0.5">ติดตามงาน · วันส่งมอบ · Commission</p>
       </div>
 
-      {/* KPI */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-          <p className="text-[#8b949e] text-xs mb-1">นัดหมายแล้ว</p>
-          <p className="text-blue-400 text-2xl font-bold">{kpi.scheduled}</p>
+      {/* KPI bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        {[
+          { label: 'กำลังดำเนินการ', value: inProgress, color: 'text-amber-400' },
+          { label: 'งานเสร็จ รอส่งมอบ', value: ready, color: 'text-blue-400' },
+          { label: 'ส่งมอบแล้ว', value: delivered, color: 'text-green-400' },
+          { label: 'เกินกำหนด', value: overdue, color: 'text-red-400' },
+        ].map(k => (
+          <div key={k.label} className="bg-[#161b22] border border-[#30363d] rounded-xl p-3">
+            <p className="text-[#484f58] text-xs mb-1">{k.label}</p>
+            <p className={`text-2xl font-bold ${k.color}`}>{k.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex gap-3 mb-4 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="ค้นหาชื่อ, ห้อง, โครงการ..."
+            className="w-full bg-[#161b22] border border-[#30363d] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]" />
         </div>
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-          <p className="text-[#8b949e] text-xs mb-1">กำลังดำเนินการ</p>
-          <p className="text-yellow-400 text-2xl font-bold">{kpi.inProgress}</p>
-        </div>
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-          <p className="text-[#8b949e] text-xs mb-1">ส่งมอบแล้ว</p>
-          <p className="text-green-400 text-2xl font-bold">{kpi.completed}</p>
+        <div className="flex gap-2">
+          {STATUS_FILTERS.map(f => (
+            <button key={f.key} onClick={() => setFilterStatus(f.key)}
+              className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' : 'bg-[#161b22] border-[#30363d] text-[#8b949e] hover:border-[#484f58]'}`}>
+              {f.label} <span className="ml-1 opacity-60">{f.count}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Pending */}
-      {upcoming.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-[#8b949e] text-xs font-bold uppercase tracking-widest mb-3">รอดำเนินการ ({upcoming.length})</h2>
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#21262d]">
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">โครงการ / ห้อง</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ประเภท</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">มูลค่า</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">เริ่มงาน</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">กำหนดเสร็จ</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">วันส่งมอบ</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">เก็บเงินครั้งสุดท้าย</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">สถานะ</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {upcoming.map((h, i) => {
-                  const st = STATUS.find(s => s.value === h.status) || STATUS[0]
-                  const overdue = h.expected_completion && !h.handover_date && new Date(h.expected_completion) < new Date()
-                  return (
-                    <tr key={h.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
-                      <td className="px-4 py-3">
-                        <p className="text-white text-sm">{clientName(h)}</p>
-                        <p className="text-[#484f58] text-xs">{clientPhone(h)}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-[#c9d1d9] text-sm">{(h.projects as any)?.name || '—'}</p>
-                        <p className="text-[#58a6ff] text-xs">{h.room || '—'}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded ${h.client_type === 'B2C' ? 'bg-purple-500/20 text-purple-400' : 'bg-orange-500/20 text-orange-400'}`}>
-                          {h.client_type || 'B2C'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{fmtBaht(h.total_amount)}</td>
-                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{dateStr(h.job_start_date)}</td>
-                      <td className="px-4 py-3">
-                        {h.expected_completion
-                          ? <span className={`text-sm flex items-center gap-1 ${overdue ? 'text-red-400' : 'text-[#c9d1d9]'}`}>
-                              {overdue && <AlertTriangle size={12} />}
-                              {dateStr(h.expected_completion)}
-                            </span>
-                          : <span className="text-[#484f58] text-sm">—</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {h.handover_date
-                          ? <span className="text-green-400 text-xs flex items-center gap-1"><CheckCircle size={12} />{dateStr(h.handover_date)}</span>
-                          : <span className="text-[#484f58] text-xs flex items-center gap-1"><Clock size={12} />รอ</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {h.final_payment_date
-                          ? <span className="text-green-400 text-xs flex items-center gap-1"><CheckCircle size={12} />{dateStr(h.final_payment_date)}</span>
-                          : <span className="text-[#484f58] text-xs">รอ</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => openEdit(h)} className="text-[#8b949e] hover:text-white transition-colors">
-                          <Pencil size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Completed */}
-      {done.length > 0 && (
-        <div>
-          <h2 className="text-[#8b949e] text-xs font-bold uppercase tracking-widest mb-3">ส่งมอบแล้ว ({done.length})</h2>
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#21262d]">
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">โครงการ / ห้อง</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">มูลค่า</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">วันส่งมอบ</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">เก็บเงินสุดท้าย</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ประกัน</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">Defect</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {done.map((h, i) => {
-                  const today = new Date()
-                  const warrantyActive = h.warranty_end ? new Date(h.warranty_end) > today : false
-                  return (
-                    <tr key={h.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
-                      <td className="px-4 py-3">
-                        <p className="text-white text-sm">{clientName(h)}</p>
-                        <p className="text-[#484f58] text-xs">{clientPhone(h)}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-[#c9d1d9] text-sm">{(h.projects as any)?.name || '—'}</p>
-                        <p className="text-[#58a6ff] text-xs">{h.room || '—'}</p>
-                      </td>
-                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{fmtBaht(h.total_amount)}</td>
-                      <td className="px-4 py-3 text-green-400 text-sm">{dateStr(h.handover_date)}</td>
-                      <td className="px-4 py-3 text-green-400 text-sm">{dateStr(h.final_payment_date)}</td>
-                      <td className="px-4 py-3">
-                        {h.warranty_end
-                          ? <span className={`text-xs flex items-center gap-1 ${warrantyActive ? 'text-green-400' : 'text-[#484f58]'}`}>
-                              <Shield size={12} />
-                              {warrantyActive ? `ถึง ${dateStr(h.warranty_end)}` : 'หมดประกัน'}
-                            </span>
-                          : <span className="text-[#484f58] text-xs">—</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {h.defect_noted
-                          ? <span className="text-red-400 text-xs">มี Defect</span>
-                          : <span className="text-green-400 text-xs">ไม่มี</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => openEdit(h)} className="text-[#8b949e] hover:text-white transition-colors">
-                          <Pencil size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {!loading && handovers.length === 0 && (
+      {/* Job cards */}
+      {loading && <div className="text-center py-16 text-[#8b949e]">กำลังโหลด...</div>}
+      {!loading && filtered.length === 0 && (
         <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
-          <ArrowRightLeft size={32} className="mx-auto text-[#484f58] mb-2" />
-          <p className="text-[#8b949e] text-sm">ยังไม่มีรายการส่งมอบ</p>
+          <p className="text-[#8b949e]">ไม่พบข้อมูล</p>
         </div>
       )}
 
-      {/* Modal */}
-      <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไขรายการส่งมอบ' : 'เพิ่มรายการส่งมอบ'} size="lg">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-3">
+        {filtered.map(job => {
+          const cfg = STATUS_CONFIG[job.workStatus]
+          const canDeliver = job.lastInstallmentPaid
+          const isOverdue = job.workStatus !== 'delivered' && job.daysOverdue > 0
 
-          {/* Client type */}
-          <div className="col-span-2">
-            <p className="text-[#8b949e] text-xs mb-2">ประเภทลูกค้า</p>
-            <div className="flex gap-3">
-              {(['B2C', 'B2B'] as const).map(t => (
-                <button key={t}
-                  onClick={() => { setForm({ ...form, client_type: t, lead_id: '' }); if (t === 'B2C') loadLeads(form.project_id) }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${form.client_type === t ? 'bg-[#1f6feb] border-[#1f6feb] text-white' : 'border-[#30363d] text-[#8b949e] hover:text-white'}`}>
-                  {t === 'B2C' ? 'B2C — รายบุคคล / Condo' : 'B2B — องค์กร'}
-                </button>
-              ))}
-            </div>
-          </div>
+          return (
+            <div key={job.jobId} className={`bg-[#161b22] border rounded-xl overflow-hidden ${isOverdue && job.workStatus !== 'delivered' ? 'border-red-500/30' : 'border-[#30363d]'}`}>
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  {/* Status icon */}
+                  <div className={`mt-0.5 p-2 rounded-xl border ${cfg.bg}`}>
+                    {cfg.icon}
+                  </div>
 
-          {/* Project + room */}
-          <Select label="โครงการ" value={form.project_id}
-            onChange={e => {
-              setForm({ ...form, project_id: e.target.value, lead_id: '' })
-              if (form.client_type === 'B2C') loadLeads(e.target.value)
-            }}
-            options={projOptions} />
+                  {/* Main info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-white font-semibold">{job.customerName}</span>
+                      <span className="text-[#58a6ff] text-xs font-mono">{job.roomNo}</span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${job.clientType === 'B2B' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
+                        {job.clientType}
+                      </span>
+                      {isOverdue && (
+                        <span className="flex items-center gap-1 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+                          <AlertTriangle size={10} />เกิน {job.daysOverdue} วัน
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-[#8b949e] flex-wrap">
+                      <span>{job.projectName}</span>
+                      <span>· {job.salesName}</span>
+                      <span className="text-white font-medium">{fmtBaht(job.revenueExVat)}</span>
+                    </div>
 
-          {form.client_type === 'B2C' ? (
-            <Select label="ห้อง (จาก Origin Pool)" value={form.lead_id}
-              onChange={e => {
-                const lead = leads.find(l => String(l.id) === e.target.value)
-                setForm({ ...form, lead_id: e.target.value, room: lead ? `${lead.tower}-${lead.room_no}` : form.room })
-              }}
-              options={leadOptions} />
-          ) : (
-            <Input label="ห้อง / สถานที่" value={form.room}
-              onChange={e => setForm({ ...form, room: e.target.value })}
-              placeholder="เช่น ชั้น 3 อาคาร A" />
-          )}
+                    {/* Timeline bar */}
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-[#0d1117] rounded-lg p-2">
+                        <p className="text-[#484f58] text-[9px] mb-0.5">วันเริ่มงาน</p>
+                        <p className={`font-medium ${job.workStartDate ? 'text-amber-300' : 'text-[#484f58]'}`}>
+                          {fmtDate(job.workStartDate)}
+                        </p>
+                      </div>
+                      <div className="bg-[#0d1117] rounded-lg p-2">
+                        <p className="text-[#484f58] text-[9px] mb-0.5">วันครบสัญญา ({job.workDays} วัน)</p>
+                        <p className={`font-medium ${isOverdue ? 'text-red-400' : job.workEndDate ? 'text-[#c9d1d9]' : 'text-[#484f58]'}`}>
+                          {fmtDate(job.workEndDate)}
+                        </p>
+                      </div>
+                      <div className="bg-[#0d1117] rounded-lg p-2">
+                        <p className="text-[#484f58] text-[9px] mb-0.5">วันส่งมอบจริง</p>
+                        <p className={`font-medium ${job.deliveryDate ? 'text-green-400' : 'text-[#484f58]'}`}>
+                          {fmtDate(job.deliveryDate)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-          <Input label="มูลค่างาน (บาท)" type="number" value={form.total_amount}
-            onChange={e => setForm({ ...form, total_amount: e.target.value })} />
-          <Select label="สถานะ" value={form.status}
-            onChange={e => setForm({ ...form, status: e.target.value })}
-            options={STATUS.map(s => ({ value: s.value, label: s.label }))} />
+                  {/* Right: status + actions */}
+                  <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                    <span className={`text-xs px-2.5 py-1 rounded-lg border font-medium ${cfg.bg} ${cfg.color}`}>
+                      {cfg.label}
+                    </span>
 
-          {/* Timeline */}
-          <div className="col-span-2 border-t border-[#21262d] pt-4 mt-1">
-            <p className="text-[#8b949e] text-xs font-semibold uppercase tracking-widest mb-3">ระยะเวลางาน</p>
-          </div>
-          <Input label="วันเริ่มงาน" type="date" value={form.job_start_date}
-            onChange={e => setForm({ ...form, job_start_date: e.target.value })} />
-          <Select label="ระยะเวลางาน" value={form.work_days}
-            onChange={e => setForm({ ...form, work_days: e.target.value })}
-            options={WORK_DAYS_OPTS} />
-          {form.job_start_date && form.work_days && (
-            <div className="col-span-2 text-xs text-[#8b949e] -mt-2 px-1">
-              กำหนดแล้วเสร็จ: <span className="text-white">{calcDate(form.job_start_date, form.work_days) || '—'}</span>
-            </div>
-          )}
+                    {job.deliveryFileUrl && (
+                      <a href={job.deliveryFileUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-[#58a6ff] hover:underline">
+                        <Paperclip size={11} />ใบส่งมอบ
+                      </a>
+                    )}
 
-          {/* Delivery */}
-          <div className="col-span-2 border-t border-[#21262d] pt-4 mt-1">
-            <p className="text-[#8b949e] text-xs font-semibold uppercase tracking-widest mb-3">การส่งมอบ & เก็บเงิน</p>
-          </div>
-          <Input label="วันเก็บเงินงวดสุดท้าย (รับรู้รายได้)" type="date" value={form.final_payment_date}
-            onChange={e => setForm({ ...form, final_payment_date: e.target.value })} />
-          <Input label="วันส่งมอบงาน" type="date" value={form.handover_date}
-            onChange={e => setForm({ ...form, handover_date: e.target.value })} />
-          <Input label="วันที่ Sales เซ็น" type="date" value={form.sales_sign_date}
-            onChange={e => setForm({ ...form, sales_sign_date: e.target.value })} />
-          <Input label="วันที่ลูกค้าเซ็น" type="date" value={form.customer_sign_date}
-            onChange={e => setForm({ ...form, customer_sign_date: e.target.value })} />
-
-          {/* Warranty */}
-          {form.handover_date && (
-            <>
-              <div className="col-span-2 border-t border-[#21262d] pt-4 mt-1">
-                <p className="text-[#8b949e] text-xs font-semibold uppercase tracking-widest mb-3">ประกัน</p>
-              </div>
-              <Input label="ระยะประกัน (วัน)" type="number" value={form.warranty_days}
-                onChange={e => setForm({ ...form, warranty_days: e.target.value })}
-                placeholder="เช่น 365" />
-              {form.warranty_days && (
-                <div className="flex items-center text-xs text-[#8b949e] px-1">
-                  ประกันสิ้นสุด: <span className="text-green-400 ml-1">{calcDate(form.handover_date, form.warranty_days) || '—'}</span>
+                    {job.commissionTriggered && (
+                      <span className="text-[9px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                        ⚡ Commission triggered
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
-            </>
-          )}
 
-          {/* Defect */}
-          <div className="col-span-2 flex items-center gap-3 border-t border-[#21262d] pt-4 mt-1">
-            <input type="checkbox" id="defect" checked={form.defect_noted}
-              onChange={e => setForm({ ...form, defect_noted: e.target.checked })}
-              className="w-4 h-4 accent-red-500" />
-            <label htmlFor="defect" className="text-[#c9d1d9] text-sm">มี Defect</label>
-          </div>
-          {form.defect_noted && (
-            <div className="col-span-2">
-              <TextArea label="รายละเอียด Defect" value={form.defect_details}
-                onChange={e => setForm({ ...form, defect_details: e.target.value })}
-                placeholder="ระบุรายละเอียด..." />
+                {/* Status toggle buttons */}
+                {job.workStatus !== 'delivered' && (
+                  <div className="mt-3 pt-3 border-t border-[#21262d] flex items-center gap-2 flex-wrap">
+                    <span className="text-[#484f58] text-xs">เปลี่ยนสถานะ:</span>
+                    {((['in_progress', 'ready_to_deliver', 'delivered'] as WorkStatus[])).map(s => {
+                      const c = STATUS_CONFIG[s]
+                      const isActive = job.workStatus === s
+                      const isDeliverLocked = s === 'delivered' && !canDeliver
+                      return (
+                        <button key={s}
+                          onClick={() => !isActive && !isDeliverLocked && updateStatus(job, s)}
+                          disabled={isActive || isDeliverLocked}
+                          title={isDeliverLocked ? 'ยังไม่ได้เก็บเงินงวดสุดท้าย' : undefined}
+                          className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                            isActive
+                              ? `${c.bg} ${c.color} cursor-default`
+                              : isDeliverLocked
+                                ? 'bg-[#21262d] border-[#30363d] text-[#484f58] cursor-not-allowed opacity-40'
+                                : `bg-[#21262d] border-[#30363d] text-[#8b949e] hover:${c.bg} hover:${c.color} hover:border-current`
+                          }`}>
+                          {c.icon}{c.label}
+                          {isDeliverLocked && s === 'delivered' && <span className="text-[9px] opacity-60">(ล็อก)</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-          <div className="col-span-2">
-            <TextArea label="หมายเหตุ" value={form.notes}
-              onChange={e => setForm({ ...form, notes: e.target.value })} />
-          </div>
-        </div>
+          )
+        })}
+      </div>
 
-        {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
-            {saveError}
-          </div>
-        )}
-        <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
-          <button onClick={save} disabled={saving}
-            className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
-            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
-          </button>
-        </div>
-      </Modal>
+      <DeliveryModal
+        job={deliveryTarget}
+        open={!!deliveryTarget}
+        onClose={() => setDeliveryTarget(null)}
+        onSaved={() => { load(); setDeliveryTarget(null) }}
+      />
     </div>
   )
 }

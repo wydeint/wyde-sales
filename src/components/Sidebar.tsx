@@ -7,7 +7,7 @@ import {
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
   Target, LogOut, Sun, Moon, ChevronRight, CreditCard,
-  Briefcase, Settings2, TrendingDown, Database, Receipt
+  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -21,6 +21,7 @@ const NAV = [
     dot: null,
     items: [
       { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/dashboard/quick', icon: Zap, label: '⚡ Quick Mode' },
     ],
   },
   {
@@ -32,7 +33,7 @@ const NAV = [
       { href: '/dashboard/customers', icon: Users, label: 'Prospects' },
       { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects (Kanban)' },
       { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
-      { href: '/dashboard/payments', icon: Receipt, label: 'การเก็บเงิน' },
+      { href: '/dashboard/payments', icon: Receipt, label: 'สถานะการชำระเงิน' },
       { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },
       { href: '/dashboard/daily-report', icon: ClipboardList, label: 'Daily Report' },

@@ -97,6 +97,18 @@ function Sheet({ open, onClose, title, children }: {
   )
 }
 
+// ─── Shared themed input/card styles ──────────────────────
+const sheetInput = "w-full rounded-xl pl-9 pr-4 py-3 text-base focus:outline-none"
+const sheetInputStyle: React.CSSProperties = {
+  background: 'var(--input-bg)', border: '1px solid var(--divider)',
+  color: 'var(--text-1)', fontSize: 16,
+}
+const sheetCard: React.CSSProperties = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', borderRadius: 16, padding: '12px 16px' }
+const sheetCardDark: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 12, padding: '8px 12px' }
+const t1: React.CSSProperties = { color: 'var(--text-1)' }
+const t2: React.CSSProperties = { color: 'var(--text-2)' }
+const t3: React.CSSProperties = { color: 'var(--text-3)' }
+
 // ─── Origin Pool Search Sheet ──────────────────────────────
 function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const supabase = createClient()
@@ -136,29 +148,24 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
     <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="🔍 ค้นหาลูกค้า (Origin Pool)">
       <div className="p-4">
         <div className="relative mb-4">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
           <input autoFocus value={search} onChange={e => handleChange(e.target.value)}
             placeholder="ชื่อ / เบอร์โทร / เลขห้อง..."
-            className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-base text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-            style={{ fontSize: 16 }} />
+            className={sheetInput} style={sheetInputStyle} />
         </div>
-        {loading && <p className="text-center text-[#8b949e] py-4 text-sm">กำลังค้นหา...</p>}
+        {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
         <div className="space-y-2">
           {results.map((r: any) => (
-            <div key={r.id} className="bg-[#21262d] rounded-2xl p-4">
-              <p className="text-white font-semibold mb-1">{r.customer_name}</p>
-              <p className="text-[#8b949e] text-xs">
+            <div key={r.id} style={sheetCard}>
+              <p className="font-semibold mb-1" style={t1}>{r.customer_name}</p>
+              <p className="text-xs" style={t2}>
                 {projectsMap[r.project_id] || '—'} · {r.tower ? `${r.tower}-` : ''}ห้อง {r.room_no || '—'}
               </p>
-              {r.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {r.phone}</p>}
+              {r.phone && <p className="text-xs mt-1" style={{ color: 'var(--accent-blue)' }}>📞 {r.phone}</p>}
             </div>
           ))}
-          {!loading && search && results.length === 0 && (
-            <p className="text-center text-[#8b949e] py-6 text-sm">ไม่พบข้อมูล</p>
-          )}
-          {!search && (
-            <p className="text-center text-[#484f58] py-8 text-sm">พิมพ์ชื่อหรือเบอร์โทรเพื่อค้นหา</p>
-          )}
+          {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+          {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อหรือเบอร์โทรเพื่อค้นหา</p>}
         </div>
       </div>
     </Sheet>
@@ -207,50 +214,47 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
     <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="👔 Wyde Clients">
       <div className="p-4">
         <div className="relative mb-4">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
           <input autoFocus value={search} onChange={e => handleChange(e.target.value)}
             placeholder="ชื่อลูกค้า / เลขห้อง..."
-            className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-base text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-            style={{ fontSize: 16 }} />
+            className={sheetInput} style={sheetInputStyle} />
         </div>
-        {loading && <p className="text-center text-[#8b949e] py-4 text-sm">กำลังค้นหา...</p>}
+        {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
         <div className="space-y-3">
           {results.map((j: any) => {
             const end = calcEndDate(j.work_start_date, j.work_days)
             const over = daysOverdue(end)
             return (
-              <div key={j.id} className="bg-[#21262d] rounded-2xl p-4">
+              <div key={j.id} style={sheetCard}>
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-white font-semibold">{j.customer_name}</p>
-                    <p className="text-[#8b949e] text-xs mt-0.5">{j.room_no} · {(j.projects as any)?.name}</p>
+                    <p className="font-semibold" style={t1}>{j.customer_name}</p>
+                    <p className="text-xs mt-0.5" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                   </div>
-                  <span className="text-emerald-400 font-bold text-sm">{fmtBaht(j.revenue_ex_vat || 0)}</span>
+                  <span className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(j.revenue_ex_vat || 0)}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-[#161b22] rounded-xl p-2 text-center">
-                    <p className="text-[#484f58] text-[9px] mb-0.5">สถานะ</p>
-                    <p className="text-xs text-amber-300 font-medium truncate">{j.working_status || '—'}</p>
+                  <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
+                    <p className="text-[9px] mb-0.5" style={t3}>สถานะ</p>
+                    <p className="text-xs font-medium truncate" style={{ color: '#d97706' }}>{j.working_status || '—'}</p>
                   </div>
-                  <div className="bg-[#161b22] rounded-xl p-2 text-center">
-                    <p className="text-[#484f58] text-[9px] mb-0.5">เริ่มงาน</p>
-                    <p className="text-xs text-white">{fmtDate(j.work_start_date)}</p>
+                  <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
+                    <p className="text-[9px] mb-0.5" style={t3}>เริ่มงาน</p>
+                    <p className="text-xs" style={t1}>{fmtDate(j.work_start_date)}</p>
                   </div>
-                  <div className={`rounded-xl p-2 text-center ${over > 0 ? 'bg-red-500/10' : 'bg-[#161b22]'}`}>
-                    <p className="text-[#484f58] text-[9px] mb-0.5">ครบสัญญา</p>
-                    <p className={`text-xs font-medium ${over > 0 ? 'text-red-400' : 'text-white'}`}>
+                  <div className="rounded-xl p-2 text-center" style={over > 0 ? { ...sheetCardDark, background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)' } : sheetCardDark}>
+                    <p className="text-[9px] mb-0.5" style={t3}>ครบสัญญา</p>
+                    <p className={`text-xs font-medium`} style={{ color: over > 0 ? '#dc2626' : 'var(--text-1)' }}>
                       {over > 0 ? `เกิน ${over}ว` : fmtDate(end)}
                     </p>
                   </div>
                 </div>
-                <p className="text-[#484f58] text-[10px] mt-2">Sales: {(j.sales as any)?.name || '—'} · {j.id}</p>
+                <p className="text-[10px] mt-2" style={t3}>Sales: {(j.sales as any)?.name || '—'}</p>
               </div>
             )
           })}
-          {!loading && search && results.length === 0 && (
-            <p className="text-center text-[#8b949e] py-6 text-sm">ไม่พบข้อมูล</p>
-          )}
-          {!search && <p className="text-center text-[#484f58] py-8 text-sm">พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
+          {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+          {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
         </div>
       </div>
     </Sheet>
@@ -300,36 +304,39 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     booked: { label: 'จอง', color: 'text-purple-400' },
   }
 
+  const STATUS_COLOR: Record<string, string> = {
+    new: '#2563eb', following: '#d97706', interested: '#16a34a',
+    not_interested: '#dc2626', booked: '#7c3aed',
+  }
+
   return (
     <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="👥 Prospects">
       <div className="p-4">
         <div className="relative mb-4">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
           <input autoFocus value={search} onChange={e => handleChange(e.target.value)}
             placeholder="ชื่อ / เบอร์โทร / เลขห้อง..."
-            className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-base text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-            style={{ fontSize: 16 }} />
+            className={sheetInput} style={sheetInputStyle} />
         </div>
-        {loading && <p className="text-center text-[#8b949e] py-4 text-sm">กำลังค้นหา...</p>}
+        {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
         <div className="space-y-2">
           {results.map((c: any) => {
-            const s = STATUS_LABEL[c.status] || { label: c.status || '—', color: 'text-[#8b949e]' }
+            const s = STATUS_LABEL[c.status] || { label: c.status || '—', color: '' }
+            const sColor = STATUS_COLOR[c.status] || 'var(--text-2)'
             return (
-              <div key={c.id} className="bg-[#21262d] rounded-2xl p-4">
+              <div key={c.id} style={sheetCard}>
                 <div className="flex justify-between items-start mb-1">
-                  <p className="text-white font-semibold">{c.customer_name}</p>
-                  <span className={`text-xs font-medium ${s.color}`}>{s.label}</span>
+                  <p className="font-semibold" style={t1}>{c.customer_name}</p>
+                  <span className="text-xs font-medium" style={{ color: sColor }}>{s.label}</span>
                 </div>
-                <p className="text-[#8b949e] text-xs">{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
-                {c.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {c.phone}</p>}
-                {c.notes && <p className="text-[#484f58] text-xs mt-1 truncate">{c.notes}</p>}
+                <p className="text-xs" style={t2}>{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
+                {c.phone && <p className="text-xs mt-1" style={{ color: 'var(--accent-blue)' }}>📞 {c.phone}</p>}
+                {c.notes && <p className="text-xs mt-1 truncate" style={t3}>{c.notes}</p>}
               </div>
             )
           })}
-          {!loading && search && results.length === 0 && (
-            <p className="text-center text-[#8b949e] py-6 text-sm">ไม่พบข้อมูล</p>
-          )}
-          {!search && <p className="text-center text-[#484f58] py-8 text-sm">พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
+          {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+          {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
         </div>
       </div>
     </Sheet>
@@ -360,11 +367,12 @@ function EventAddSheet({ open, onClose, events }: {
   }, [])
 
   async function searchLeads(q: string) {
-    if (!q.trim()) { setLeads([]); return }
+    if (!selectedEvent || !q.trim()) { setLeads([]); return }
     setLoading(true)
     const { data, error } = await supabase
       .from('condo_leads')
       .select('id, customer_name, phone, room_no, tower, project_id')
+      .eq('project_id', selectedEvent.projectId)
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
       .order('customer_name')
       .limit(15)
@@ -410,30 +418,30 @@ function EventAddSheet({ open, onClose, events }: {
   }
 
   const STATUS_OPTIONS = [
-    { value: 'new', label: 'ใหม่' },
-    { value: 'interested', label: 'สนใจ ติดตามต่อ' },
-    { value: 'booked', label: 'Booked' },
-    { value: 'not_interested', label: 'ไม่สนใจ' },
-    { value: 'not_met', label: 'ไม่ได้พบ' },
+    { value: 'interested',    label: 'สนใจ ติดตามต่อ', activeColor: '#16a34a', activeBg: '#dcfce7' },
+    { value: 'booked',        label: 'Booked',           activeColor: '#1d4ed8', activeBg: '#dbeafe' },
+    { value: 'not_interested',label: 'ไม่สนใจ',         activeColor: '#b91c1c', activeBg: '#fee2e2' },
+    { value: 'not_met',       label: 'ไม่ได้พบ',        activeColor: '#92400e', activeBg: '#fef3c7' },
   ]
 
   return (
     <Sheet open={open} onClose={resetAndClose} title="📅 เพิ่มลูกค้า Event">
       {step === 'event' && (
         <div className="p-4">
-          <p className="text-[#8b949e] text-xs mb-3">เลือก Event</p>
+          <p className="text-xs mb-3" style={t2}>เลือก Event</p>
           {events.length === 0 ? (
-            <p className="text-center text-[#484f58] py-8 text-sm">ไม่มี Event</p>
+            <p className="text-center py-8 text-sm" style={t3}>ไม่มี Event</p>
           ) : (
             <div className="space-y-2">
               {events.map(ev => (
                 <button key={ev.id} onClick={() => { setSelectedEvent(ev); setStep('search') }}
-                  className="w-full flex items-center justify-between px-4 py-4 bg-[#21262d] hover:bg-[#292e36] rounded-xl text-left transition-colors">
+                  className="w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors"
+                  style={sheetCard}>
                   <div>
-                    <p className="text-white font-medium text-sm">{ev.eventName}</p>
-                    <p className="text-[#8b949e] text-xs mt-0.5">{ev.projectName} · {fmtDate(ev.eventDate)}</p>
+                    <p className="font-medium text-sm" style={t1}>{ev.eventName}</p>
+                    <p className="text-xs mt-0.5" style={t2}>{ev.projectName} · {fmtDate(ev.eventDate)}</p>
                   </div>
-                  <ChevronRight size={16} className="text-[#484f58]" />
+                  <ChevronRight size={16} style={t3} />
                 </button>
               ))}
             </div>
@@ -443,30 +451,30 @@ function EventAddSheet({ open, onClose, events }: {
 
       {step === 'search' && selectedEvent && (
         <div className="p-4">
-          <button onClick={() => setStep('event')} className="text-[#58a6ff] text-sm mb-3 flex items-center gap-1">
+          <button onClick={() => setStep('event')} className="text-sm mb-3 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedEvent.eventName}
           </button>
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => handleSearch(e.target.value)}
               placeholder="ค้นหาชื่อ / เบอร์ / เลขห้อง..."
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-              style={{ fontSize: 16 }} />
+              className={sheetInput} style={sheetInputStyle} />
           </div>
-          {loading && <p className="text-center text-[#8b949e] py-4 text-sm">กำลังค้นหา...</p>}
+          {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
           <div className="space-y-2">
             {leads.map((l: any) => (
               <button key={l.id} onClick={() => { setSelectedLead(l); setStep('form') }}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[#21262d] rounded-xl text-left">
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left"
+                style={sheetCard}>
                 <div>
-                  <p className="text-white text-sm font-medium">{l.customer_name}</p>
-                  <p className="text-[#8b949e] text-xs">{projectsMap[l.project_id] || '—'} · {l.tower ? `${l.tower}-` : ''}ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
+                  <p className="text-sm font-medium" style={t1}>{l.customer_name}</p>
+                  <p className="text-xs" style={t2}>{projectsMap[l.project_id] || '—'} · {l.tower ? `${l.tower}-` : ''}ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
                 </div>
-                <ChevronRight size={16} className="text-[#484f58]" />
+                <ChevronRight size={16} style={t3} />
               </button>
             ))}
             {!loading && search && leads.length === 0 && (
-              <p className="text-center text-[#8b949e] py-6 text-sm">ไม่พบข้อมูลใน Origin Pool</p>
+              <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูลใน Origin Pool</p>
             )}
           </div>
         </div>
@@ -474,30 +482,34 @@ function EventAddSheet({ open, onClose, events }: {
 
       {step === 'form' && selectedLead && selectedEvent && (
         <div className="p-4 space-y-4">
-          <button onClick={() => setStep('search')} className="text-[#58a6ff] text-sm flex items-center gap-1">
+          <button onClick={() => setStep('search')} className="text-sm flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedLead.customer_name}
           </button>
-          <div className="bg-[#0d1117] rounded-2xl p-4">
-            <p className="text-white font-semibold">{selectedLead.customer_name}</p>
-            <p className="text-[#8b949e] text-xs mt-1">{selectedLead.tower ? `${selectedLead.tower}-` : ''}ห้อง {selectedLead.room_no || '—'} · {selectedLead.phone || '—'}</p>
-            <p className="text-[#484f58] text-xs mt-0.5">Event: {selectedEvent.eventName}</p>
+          <div style={{ ...sheetCard, borderRadius: 16, padding: '16px' }}>
+            <p className="font-semibold" style={t1}>{selectedLead.customer_name}</p>
+            <p className="text-xs mt-1" style={t2}>{selectedLead.tower ? `${selectedLead.tower}-` : ''}ห้อง {selectedLead.room_no || '—'} · {selectedLead.phone || '—'}</p>
+            <p className="text-xs mt-0.5" style={t3}>Event: {selectedEvent.eventName}</p>
           </div>
           <div>
-            <label className="text-xs text-[#8b949e] mb-2 block">สถานะ</label>
+            <label className="text-xs mb-2 block" style={t3}>สถานะ</label>
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map(s => (
                 <button key={s.value} onClick={() => setStatus(s.value)}
-                  className={`py-3 rounded-xl text-sm font-medium transition-colors ${status === s.value ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/50' : 'bg-[#21262d] text-[#8b949e]'}`}>
+                  className="py-3 rounded-xl text-sm font-semibold transition-all border"
+                  style={status === s.value
+                    ? { background: s.activeBg, color: s.activeColor, borderColor: s.activeColor }
+                    : { background: 'var(--hover-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
                   {s.label}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="text-xs text-[#8b949e] mb-2 block">หมายเหตุ</label>
+            <label className="text-xs mb-2 block" style={t3}>หมายเหตุ</label>
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
               placeholder="บันทึกเพิ่มเติม..."
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff] resize-none" />
+              className="w-full rounded-xl px-4 py-3 text-sm resize-none focus:outline-none"
+              style={{ ...sheetInputStyle, fontSize: 14 }} />
           </div>
           <button onClick={save} disabled={saving}
             className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
@@ -577,21 +589,21 @@ function QuickPaySheet({ open, onClose, jobs }: {
       {step === 'job' && (
         <div className="p-4">
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
               placeholder="พิมพ์ชื่อลูกค้า / ห้อง / โครงการ..."
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-              style={{ fontSize: 16 }} />
+              className={sheetInput} style={sheetInputStyle} />
           </div>
           <div className="space-y-2">
             {filteredJobs.slice(0, 15).map(j => (
               <button key={j.id} onClick={() => selectJob(j)}
-                className="w-full flex items-center justify-between px-4 py-3.5 bg-[#21262d] hover:bg-[#292e36] rounded-xl transition-colors text-left">
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-colors text-left"
+                style={sheetCard}>
                 <div>
-                  <p className="text-white font-medium text-sm">{j.customerName}</p>
-                  <p className="text-[#8b949e] text-xs mt-0.5">{j.roomNo} · {j.projectName}</p>
+                  <p className="font-medium text-sm" style={t1}>{j.customerName}</p>
+                  <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName}</p>
                 </div>
-                <ChevronRight size={16} className="text-[#484f58]" />
+                <ChevronRight size={16} style={t3} />
               </button>
             ))}
           </div>
@@ -601,16 +613,16 @@ function QuickPaySheet({ open, onClose, jobs }: {
       {step === 'no_plan' && selectedJob && (
         <div className="p-6 text-center">
           <AlertCircle size={40} className="mx-auto text-amber-400 mb-4" />
-          <h4 className="text-white font-semibold text-lg mb-2">ยังไม่ได้ตั้งแผนชำระ</h4>
-          <p className="text-[#8b949e] text-sm mb-2">{selectedJob.customerName}</p>
-          <p className="text-[#8b949e] text-sm mb-6">{selectedJob.roomNo} · {selectedJob.projectName}</p>
-          <p className="text-[#484f58] text-xs mb-6">กรุณาตั้งแผนงวดชำระเงินก่อน จึงจะบันทึกรับเงินได้</p>
+          <h4 className="font-semibold text-lg mb-2" style={t1}>ยังไม่ได้ตั้งแผนชำระ</h4>
+          <p className="text-sm mb-2" style={t2}>{selectedJob.customerName}</p>
+          <p className="text-sm mb-6" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
+          <p className="text-xs mb-6" style={t3}>กรุณาตั้งแผนงวดชำระเงินก่อน จึงจะบันทึกรับเงินได้</p>
           <button onClick={() => setStep('job')}
-            className="w-full py-3 bg-[#21262d] text-[#8b949e] rounded-xl mb-3 text-sm">
+            className="w-full py-3 rounded-xl mb-3 text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
             ← เลือกลูกค้าอื่น
           </button>
           <button onClick={resetAndClose}
-            className="w-full py-3 bg-amber-500/20 text-amber-300 rounded-xl text-sm font-medium">
+            className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-xl text-sm font-medium">
             ไปตั้งแผนชำระ →
           </button>
         </div>
@@ -618,23 +630,24 @@ function QuickPaySheet({ open, onClose, jobs }: {
 
       {step === 'installment' && selectedJob && (
         <div className="p-4">
-          <button onClick={() => setStep('job')} className="text-[#58a6ff] text-sm mb-4 flex items-center gap-1">
+          <button onClick={() => setStep('job')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedJob.customerName} · {selectedJob.roomNo}
           </button>
           {installments.length === 0 ? (
-            <div className="text-center py-8 text-[#8b949e]">ชำระครบทุกงวดแล้ว ✅</div>
+            <div className="text-center py-8" style={t2}>ชำระครบทุกงวดแล้ว ✅</div>
           ) : (
             <div className="space-y-2">
-              <p className="text-[#8b949e] text-xs mb-3">เลือกงวดที่ต้องการบันทึก</p>
+              <p className="text-xs mb-3" style={t2}>เลือกงวดที่ต้องการบันทึก</p>
               {installments.map((inst: any) => (
                 <button key={inst.id} onClick={() => { setSelectedInst(inst); setStep('confirm') }}
-                  className="w-full flex items-center justify-between px-4 py-4 bg-[#21262d] hover:bg-[#292e36] rounded-xl transition-colors">
+                  className="w-full flex items-center justify-between px-4 py-4 rounded-xl transition-colors"
+                  style={sheetCard}>
                   <div className="text-left">
-                    <p className="text-white font-medium text-sm">{inst.installment_name}</p>
-                    {inst.is_work_trigger && <p className="text-amber-400 text-xs mt-0.5">⚡ ชำระแล้วเริ่มงาน</p>}
+                    <p className="font-medium text-sm" style={t1}>{inst.installment_name}</p>
+                    {inst.is_work_trigger && <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>⚡ ชำระแล้วเริ่มงาน</p>}
                   </div>
                   <div className="text-right">
-                    <p className="text-emerald-400 font-bold">{fmtBaht(inst.amount)}</p>
+                    <p className="font-bold" style={{ color: 'var(--accent-green)' }}>{fmtBaht(inst.amount)}</p>
                   </div>
                 </button>
               ))}
@@ -645,27 +658,28 @@ function QuickPaySheet({ open, onClose, jobs }: {
 
       {step === 'confirm' && selectedInst && selectedJob && (
         <div className="p-4 space-y-4">
-          <button onClick={() => setStep('installment')} className="text-[#58a6ff] text-sm flex items-center gap-1">
+          <button onClick={() => setStep('installment')} className="text-sm flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedInst.installment_name}
           </button>
-          <div className="bg-[#0d1117] rounded-2xl p-5 text-center">
-            <p className="text-[#8b949e] text-xs mb-1">{selectedJob.customerName} · {selectedJob.roomNo}</p>
-            <p className="text-3xl font-bold text-white mb-1">{fmtBaht(selectedInst.amount)}</p>
-            <p className="text-[#8b949e] text-xs">{selectedInst.installment_name}</p>
+          <div className="rounded-2xl p-5 text-center" style={sheetCard}>
+            <p className="text-xs mb-1" style={t2}>{selectedJob.customerName} · {selectedJob.roomNo}</p>
+            <p className="text-3xl font-bold mb-1" style={t1}>{fmtBaht(selectedInst.amount)}</p>
+            <p className="text-xs" style={t2}>{selectedInst.installment_name}</p>
             {selectedInst.is_work_trigger && (
-              <p className="text-amber-400 text-xs mt-2">⚡ ชำระงวดนี้ → เริ่มนับวันงาน</p>
+              <p className="text-xs mt-2" style={{ color: '#d97706' }}>⚡ ชำระงวดนี้ → เริ่มนับวันงาน</p>
             )}
           </div>
           <div>
-            <label className="text-xs text-[#8b949e] mb-2 block">วันที่ชำระ</label>
+            <label className="text-xs mb-2 block" style={t3}>วันที่ชำระ</label>
             <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#58a6ff]" />
+              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
+              style={sheetInputStyle} />
           </div>
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-xs text-[#8b949e]">Google Drive URL (สลิป/เอกสาร)</label>
+              <label className="text-xs" style={t3}>Google Drive URL (สลิป/เอกสาร)</label>
               {fileUrls.length < 5 && (
-                <button onClick={() => setFileUrls([...fileUrls, ''])} className="text-xs text-[#58a6ff] flex items-center gap-1">
+                <button onClick={() => setFileUrls([...fileUrls, ''])} className="text-xs flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
                   <Plus size={11} />เพิ่ม
                 </button>
               )}
@@ -674,15 +688,16 @@ function QuickPaySheet({ open, onClose, jobs }: {
               <div key={i} className="flex gap-2 mb-2">
                 <input value={url} onChange={e => { const n = [...fileUrls]; n[i] = e.target.value; setFileUrls(n) }}
                   placeholder="https://drive.google.com/..."
-                  className="flex-1 bg-[#21262d] border border-[#30363d] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#58a6ff]" />
+                  className="flex-1 rounded-xl px-3 py-2.5 text-xs focus:outline-none"
+                  style={sheetInputStyle} />
                 {fileUrls.length > 1 && (
-                  <button onClick={() => setFileUrls(fileUrls.filter((_, idx) => idx !== i))} className="text-[#484f58] p-2"><X size={13} /></button>
+                  <button onClick={() => setFileUrls(fileUrls.filter((_, idx) => idx !== i))} className="p-2" style={t3}><X size={13} /></button>
                 )}
               </div>
             ))}
           </div>
           <button onClick={confirmPay} disabled={saving}
-            className="w-full py-4 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
+            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
             {saving ? 'กำลังบันทึก...' : 'ยืนยันรับเงิน'}
           </button>
         </div>
@@ -790,21 +805,20 @@ function PlanSetupSheet({ open, onClose, jobs }: {
       {step === 'job' && (
         <div className="p-4">
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
               placeholder="ค้นหาลูกค้า Wyde..."
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-              style={{ fontSize: 16 }} />
+              className={sheetInput} style={sheetInputStyle} />
           </div>
           <div className="space-y-2">
             {filteredJobs.slice(0, 15).map(j => (
               <button key={j.id} onClick={() => { setSelectedJob(j); setStep('type') }}
-                className="w-full flex items-center justify-between px-4 py-3.5 bg-[#21262d] rounded-xl text-left">
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
-                  <p className="text-white font-medium text-sm">{j.customerName}</p>
-                  <p className="text-[#8b949e] text-xs mt-0.5">{j.roomNo} · {j.projectName} · {fmtBaht(j.revenue)}</p>
+                  <p className="font-medium text-sm" style={t1}>{j.customerName}</p>
+                  <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName} · {fmtBaht(j.revenue)}</p>
                 </div>
-                <ChevronRight size={16} className="text-[#484f58]" />
+                <ChevronRight size={16} style={t3} />
               </button>
             ))}
           </div>
@@ -813,27 +827,27 @@ function PlanSetupSheet({ open, onClose, jobs }: {
 
       {step === 'type' && selectedJob && (
         <div className="p-4">
-          <button onClick={() => setStep('job')} className="text-[#58a6ff] text-sm mb-4 flex items-center gap-1">
+          <button onClick={() => setStep('job')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedJob.customerName}
           </button>
-          <div className="bg-[#21262d] rounded-2xl p-4 mb-5">
-            <p className="text-white font-semibold">{selectedJob.customerName}</p>
-            <p className="text-[#8b949e] text-xs mt-1">{selectedJob.roomNo} · {selectedJob.projectName}</p>
-            <p className="text-emerald-400 font-bold mt-1">{fmtBaht(selectedJob.revenue)}</p>
+          <div className="rounded-2xl p-4 mb-5" style={sheetCard}>
+            <p className="font-semibold" style={t1}>{selectedJob.customerName}</p>
+            <p className="text-xs mt-1" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
+            <p className="font-bold mt-1" style={{ color: 'var(--accent-green)' }}>{fmtBaht(selectedJob.revenue)}</p>
           </div>
-          <p className="text-[#8b949e] text-xs mb-3">ประเภทลูกค้า</p>
+          <p className="text-xs mb-3" style={t2}>ประเภทลูกค้า</p>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setStep('b2c')}
-              className="py-5 bg-blue-500/15 border border-blue-500/30 rounded-2xl text-blue-300 font-semibold text-center">
+              className="py-5 bg-blue-500/15 border border-blue-500/30 rounded-2xl font-semibold text-center" style={{ color: 'var(--accent-blue)' }}>
               <div className="text-2xl mb-1">👤</div>
               B2C
-              <p className="text-xs text-[#8b949e] font-normal mt-1">บุคคลธรรมดา</p>
+              <p className="text-xs font-normal mt-1" style={t3}>บุคคลธรรมดา</p>
             </button>
             <button onClick={() => setStep('b2b')}
-              className="py-5 bg-purple-500/15 border border-purple-500/30 rounded-2xl text-purple-300 font-semibold text-center">
+              className="py-5 bg-purple-500/15 border border-purple-500/30 rounded-2xl font-semibold text-center" style={{ color: 'var(--accent-purple)' }}>
               <div className="text-2xl mb-1">🏢</div>
               B2B
-              <p className="text-xs text-[#8b949e] font-normal mt-1">นิติบุคคล</p>
+              <p className="text-xs font-normal mt-1" style={t3}>นิติบุคคล</p>
             </button>
           </div>
         </div>
@@ -841,7 +855,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
 
       {step === 'b2c' && selectedJob && (
         <div className="p-4">
-          <button onClick={() => setStep('type')} className="text-[#58a6ff] text-sm mb-4 flex items-center gap-1">
+          <button onClick={() => setStep('type')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> เลือกแผน B2C
           </button>
           <div className="space-y-3">
@@ -849,18 +863,18 @@ function PlanSetupSheet({ open, onClose, jobs }: {
               const insts = calcB2CInstallments(plan)
               const labels: Record<string, string> = { A: 'แผน A — จ่ายครั้งเดียว 100%', B: 'แผน B — 50% + 50%', C: 'แผน C — มัดจำ + 50% + 50%' }
               return (
-                <div key={plan} className="bg-[#21262d] rounded-2xl p-4">
-                  <p className="text-white font-semibold mb-3">{labels[plan]}</p>
+                <div key={plan} style={sheetCard}>
+                  <p className="font-semibold mb-3" style={t1}>{labels[plan]}</p>
                   <div className="space-y-1 mb-4">
                     {insts.map(i => (
                       <div key={i.no} className="flex justify-between text-xs">
-                        <span className="text-[#8b949e]">{i.name}</span>
-                        <span className="text-white">{fmtBaht(i.amount)}</span>
+                        <span style={t2}>{i.name}</span>
+                        <span style={t1}>{fmtBaht(i.amount)}</span>
                       </div>
                     ))}
                   </div>
                   <button onClick={() => saveInstallments(insts)} disabled={saving}
-                    className="w-full py-3 bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 rounded-xl text-sm font-semibold disabled:opacity-40">
+                    className="w-full py-3 bg-indigo-500/30 border border-indigo-500/40 rounded-xl text-sm font-semibold disabled:opacity-40" style={{ color: 'var(--accent)' }}>
                     {saving ? 'กำลังบันทึก...' : `เลือกแผน ${plan}`}
                   </button>
                 </div>
@@ -872,15 +886,16 @@ function PlanSetupSheet({ open, onClose, jobs }: {
 
       {step === 'b2b' && selectedJob && (
         <div className="p-4">
-          <button onClick={() => setStep('type')} className="text-[#58a6ff] text-sm mb-4 flex items-center gap-1">
+          <button onClick={() => setStep('type')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> B2B — กำหนดงวด
           </button>
           <div className="mb-4">
-            <label className="text-xs text-[#8b949e] mb-2 block">จำนวนงวด</label>
+            <label className="text-xs mb-2 block" style={t3}>จำนวนงวด</label>
             <div className="flex gap-2">
               {[2, 3, 4, 5, 6].map(n => (
                 <button key={n} onClick={() => selectB2bCount(n)}
-                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${b2bCount === n ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-[#21262d] text-[#8b949e]'}`}>
+                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${b2bCount === n ? 'bg-purple-500/30 border border-purple-500/40' : ''}`}
+                  style={b2bCount === n ? { color: 'var(--accent-purple)' } : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
                   {n}
                 </button>
               ))}
@@ -888,13 +903,14 @@ function PlanSetupSheet({ open, onClose, jobs }: {
           </div>
           <div className="space-y-2 mb-4">
             {b2bPcts.map((pct, i) => (
-              <div key={i} className="flex items-center gap-3 bg-[#21262d] rounded-xl px-4 py-3">
-                <span className="text-[#8b949e] text-xs w-16 flex-shrink-0">งวดที่ {i + 1}</span>
+              <div key={i} className="flex items-center gap-3 rounded-xl px-4 py-3" style={sheetCard}>
+                <span className="text-xs w-16 flex-shrink-0" style={t2}>งวดที่ {i + 1}</span>
                 <input type="number" value={pct}
                   onChange={e => { const n = [...b2bPcts]; n[i] = Number(e.target.value); setB2bPcts(n) }}
-                  className="w-16 bg-[#161b22] border border-[#30363d] rounded-lg px-2 py-1.5 text-sm text-white text-center focus:outline-none" />
-                <span className="text-[#8b949e] text-xs">%</span>
-                <span className="text-white text-xs ml-auto">{fmtBaht(Math.round((pct / 100) * selectedJob.revenue))}</span>
+                  className="w-16 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none"
+                  style={{ ...sheetCardDark, color: 'var(--text-1)', fontSize: 14 }} />
+                <span className="text-xs" style={t2}>%</span>
+                <span className="text-xs ml-auto" style={t1}>{fmtBaht(Math.round((pct / 100) * selectedJob.revenue))}</span>
               </div>
             ))}
           </div>
@@ -986,22 +1002,21 @@ function DeliverSheet({ open, onClose, jobs }: {
       {step === 'job' && (
         <div className="p-4">
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
               placeholder="ค้นหาลูกค้า..."
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-              style={{ fontSize: 16 }} />
+              className={sheetInput} style={sheetInputStyle} />
           </div>
           <div className="space-y-2">
             {filteredJobs.slice(0, 15).map(j => (
               <button key={j.id} onClick={() => selectJob(j)}
-                className="w-full flex items-center justify-between px-4 py-3.5 bg-[#21262d] rounded-xl text-left">
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
-                  <p className="text-white font-medium text-sm">{j.customerName}</p>
-                  <p className="text-[#8b949e] text-xs mt-0.5">{j.roomNo} · {j.projectName}</p>
-                  <p className="text-[#484f58] text-xs">{j.workingStatus}</p>
+                  <p className="font-medium text-sm" style={t1}>{j.customerName}</p>
+                  <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName}</p>
+                  <p className="text-xs" style={t3}>{j.workingStatus}</p>
                 </div>
-                <ChevronRight size={16} className="text-[#484f58]" />
+                <ChevronRight size={16} style={t3} />
               </button>
             ))}
           </div>
@@ -1010,38 +1025,38 @@ function DeliverSheet({ open, onClose, jobs }: {
 
       {step === 'confirm' && selectedJob && (
         <div className="p-4 space-y-4">
-          <button onClick={() => setStep('job')} className="text-[#58a6ff] text-sm flex items-center gap-1">
+          <button onClick={() => setStep('job')} className="text-sm flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedJob.customerName}
           </button>
-          <div className="bg-[#0d1117] rounded-2xl p-4 text-center">
-            <p className="text-white font-semibold text-lg">{selectedJob.customerName}</p>
-            <p className="text-[#8b949e] text-sm mt-1">{selectedJob.roomNo} · {selectedJob.projectName}</p>
-            <p className="text-emerald-400 font-bold mt-2">{fmtBaht(selectedJob.revenue)}</p>
+          <div className="rounded-2xl p-4 text-center" style={sheetCard}>
+            <p className="font-semibold text-lg" style={t1}>{selectedJob.customerName}</p>
+            <p className="text-sm mt-1" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
+            <p className="font-bold mt-2" style={{ color: 'var(--accent-green)' }}>{fmtBaht(selectedJob.revenue)}</p>
           </div>
 
           {checkingPlan ? (
-            <p className="text-center text-[#8b949e] text-sm">กำลังตรวจสอบ...</p>
+            <p className="text-center text-sm" style={t2}>กำลังตรวจสอบ...</p>
           ) : !canDeliver ? (
             <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
               <AlertTriangle size={24} className="mx-auto text-red-400 mb-2" />
               <p className="text-red-400 font-medium text-sm">ยังชำระไม่ครบ</p>
-              <p className="text-[#8b949e] text-xs mt-1">ต้องชำระงวดสุดท้ายก่อนจึงจะส่งมอบได้</p>
+              <p className="text-xs mt-1" style={t2}>ต้องชำระงวดสุดท้ายก่อนจึงจะส่งมอบได้</p>
             </div>
           ) : (
             <>
               <div>
-                <label className="text-xs text-[#8b949e] mb-2 block">วันที่ส่งมอบจริง</label>
+                <label className="text-xs mb-2 block" style={t3}>วันที่ส่งมอบจริง</label>
                 <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
-                  className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#58a6ff]" />
+                  className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <div>
-                <label className="text-xs text-[#8b949e] mb-2 block">เอกสารส่งมอบ (Google Drive URL)</label>
+                <label className="text-xs mb-2 block" style={t3}>เอกสารส่งมอบ (Google Drive URL)</label>
                 <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
                   placeholder="https://drive.google.com/..."
-                  className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]" />
+                  className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <button onClick={saveDelivery} disabled={saving}
-                className="w-full py-4 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
                 {saving ? 'กำลังบันทึก...' : '✅ ยืนยันส่งมอบงาน'}
               </button>
             </>
@@ -1099,28 +1114,28 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
     <Sheet open={open} onClose={() => { setSearch(''); onClose() }} title="🏗️ อัปเดตสถานะงาน">
       <div className="p-4">
         <div className="relative mb-3">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหา..."
-            className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
-            style={{ fontSize: 16 }} />
+            className={sheetInput} style={sheetInputStyle} />
         </div>
         <div className="space-y-2">
           {filtered.slice(0, 12).map(j => (
-            <div key={j.id} className="bg-[#21262d] rounded-xl p-3">
+            <div key={j.id} className="rounded-xl p-3" style={sheetCard}>
               <div className="flex justify-between mb-1">
                 <div>
-                  <p className="text-white text-sm font-medium">{j.customerName}</p>
-                  <p className="text-[#8b949e] text-xs">{j.roomNo} · {j.projectName}</p>
+                  <p className="text-sm font-medium" style={t1}>{j.customerName}</p>
+                  <p className="text-xs" style={t2}>{j.roomNo} · {j.projectName}</p>
                 </div>
-                {saving === j.id && <span className="text-[#8b949e] text-xs">บันทึก...</span>}
+                {saving === j.id && <span className="text-xs" style={t2}>บันทึก...</span>}
               </div>
               {jobStatuses[j.id] && (
-                <p className="text-[#484f58] text-xs mb-2">ปัจจุบัน: {STATUS_OPTIONS.find(s => s.value === jobStatuses[j.id])?.label || jobStatuses[j.id]}</p>
+                <p className="text-xs mb-2" style={t3}>ปัจจุบัน: {STATUS_OPTIONS.find(s => s.value === jobStatuses[j.id])?.label || jobStatuses[j.id]}</p>
               )}
               <div className="flex gap-2">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s.value} onClick={() => updateStatus(j.id, s.value)}
-                    className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors ${jobStatuses[j.id] === s.value ? s.color : 'bg-[#161b22] text-[#8b949e]'}`}>
+                    className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors ${jobStatuses[j.id] === s.value ? s.color : ''}`}
+                    style={jobStatuses[j.id] !== s.value ? { background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' } : undefined}>
                     {s.label}
                   </button>
                 ))}
@@ -1165,22 +1180,22 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <Sheet open={open} onClose={onClose} title="⚠️ งานเกินกำหนด">
       <div className="p-4">
-        {loading ? <p className="text-center text-[#8b949e] py-8">กำลังโหลด...</p>
+        {loading ? <p className="text-center py-8 text-sm" style={t2}>กำลังโหลด...</p>
           : items.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle2 size={32} className="mx-auto text-green-500/50 mb-3" />
-              <p className="text-[#8b949e]">ไม่มีงานเกินกำหนด 🎉</p>
+              <p style={t2}>ไม่มีงานเกินกำหนด 🎉</p>
             </div>
           ) : items.map((j: any) => (
             <div key={j.id} className="bg-red-500/8 border border-red-500/20 rounded-xl p-3 mb-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-white font-medium text-sm">{j.customer_name}</p>
-                  <p className="text-[#8b949e] text-xs">{j.room_no} · {(j.projects as any)?.name}</p>
+                  <p className="font-medium text-sm" style={t1}>{j.customer_name}</p>
+                  <p className="text-xs" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                 </div>
                 <span className="text-red-400 font-bold text-sm">เกิน {j.daysOverdue} วัน</span>
               </div>
-              <p className="text-[#484f58] text-xs mt-1.5">ครบ {fmtDate(j.endDate)} · {(j.sales as any)?.name || '—'}</p>
+              <p className="text-xs mt-1.5" style={t3}>ครบ {fmtDate(j.endDate)} · {(j.sales as any)?.name || '—'}</p>
             </div>
           ))}
       </div>
@@ -1227,38 +1242,38 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
   return (
     <Sheet open={open} onClose={onClose} title="💎 Commission ของฉัน">
       <div className="p-4">
-        {loading ? <p className="text-center text-[#8b949e] py-8">กำลังโหลด...</p> : (
+        {loading ? <p className="text-center py-8 text-sm" style={t2}>กำลังโหลด...</p> : (
           <>
             <div className="grid grid-cols-3 gap-2 mb-5">
-              <div className="bg-[#21262d] rounded-2xl p-3 text-center">
-                <p className="text-[#484f58] text-[9px] mb-1">รวมทั้งหมด</p>
-                <p className="text-white font-bold text-sm">{fmtBaht(summary.total)}</p>
+              <div className="rounded-2xl p-3 text-center" style={sheetCard}>
+                <p className="text-[9px] mb-1" style={t3}>รวมทั้งหมด</p>
+                <p className="font-bold text-sm" style={t1}>{fmtBaht(summary.total)}</p>
               </div>
               <div className="bg-amber-500/10 rounded-2xl p-3 text-center">
-                <p className="text-[#484f58] text-[9px] mb-1">รอยืนยัน</p>
+                <p className="text-[9px] mb-1" style={t3}>รอยืนยัน</p>
                 <p className="text-amber-400 font-bold text-sm">{fmtBaht(summary.pending)}</p>
               </div>
               <div className="bg-emerald-500/10 rounded-2xl p-3 text-center">
-                <p className="text-[#484f58] text-[9px] mb-1">อนุมัติแล้ว</p>
-                <p className="text-emerald-400 font-bold text-sm">{fmtBaht(summary.approved)}</p>
+                <p className="text-[9px] mb-1" style={t3}>อนุมัติแล้ว</p>
+                <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(summary.approved)}</p>
               </div>
             </div>
             <div className="space-y-2">
               {items.map((c: any) => (
-                <div key={c.id} className="bg-[#21262d] rounded-xl p-3">
+                <div key={c.id} className="rounded-xl p-3" style={sheetCard}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-white text-sm font-medium">{(c.jobs as any)?.customer_name || '—'}</p>
-                      <p className="text-[#8b949e] text-xs">{(c.jobs as any)?.room_no} · {((c.jobs as any)?.projects as any)?.name}</p>
+                      <p className="text-sm font-medium" style={t1}>{(c.jobs as any)?.customer_name || '—'}</p>
+                      <p className="text-xs" style={t2}>{(c.jobs as any)?.room_no} · {((c.jobs as any)?.projects as any)?.name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-white font-semibold text-sm">{fmtBaht(c.amount || 0)}</p>
-                      <p className={`text-xs ${STATUS_STYLE[c.status] || 'text-[#8b949e]'}`}>{c.status}</p>
+                      <p className="font-semibold text-sm" style={t1}>{fmtBaht(c.amount || 0)}</p>
+                      <p className={`text-xs ${STATUS_STYLE[c.status] || ''}`} style={!STATUS_STYLE[c.status] ? t2 : undefined}>{c.status}</p>
                     </div>
                   </div>
                 </div>
               ))}
-              {items.length === 0 && <p className="text-center text-[#484f58] py-6 text-sm">ยังไม่มีข้อมูล commission</p>}
+              {items.length === 0 && <p className="text-center py-6 text-sm" style={t3}>ยังไม่มีข้อมูล commission</p>}
             </div>
           </>
         )}
@@ -1338,57 +1353,55 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
       {!selectedJob ? (
         <div className="p-4">
           <div className="relative mb-4">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7a93]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => handleSearch(e.target.value)}
               placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-white placeholder-[#6b7a93] focus:outline-none focus:border-[#58a6ff]"
-              style={{ fontSize: 16 }} />
+              className={sheetInput} style={sheetInputStyle} />
           </div>
-          {loading && <p className="text-center text-[#94a3b8] py-4 text-sm">กำลังค้นหา...</p>}
+          {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
           <div className="space-y-2">
             {jobs.map((j: any) => {
               const filled = DOC_FIELDS.filter(f => j[f.key]).length
               return (
                 <button key={j.id} onClick={() => selectJob(j)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 bg-[#21262d] rounded-xl text-left">
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                   <div>
-                    <p className="text-white font-medium text-sm">{j.customer_name}</p>
-                    <p className="text-[#94a3b8] text-xs mt-0.5">{j.room_no} · {(j.projects as any)?.name}</p>
+                    <p className="font-medium text-sm" style={t1}>{j.customer_name}</p>
+                    <p className="text-xs mt-0.5" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-medium ${filled === DOC_FIELDS.length ? 'text-emerald-400' : 'text-amber-400'}`}>
                       {filled}/{DOC_FIELDS.length}
                     </span>
-                    <ChevronRight size={16} className="text-[#6b7a93]" />
+                    <ChevronRight size={16} style={t3} />
                   </div>
                 </button>
               )
             })}
-            {!loading && search && jobs.length === 0 && (
-              <p className="text-center text-[#94a3b8] py-6 text-sm">ไม่พบข้อมูล</p>
-            )}
-            {!search && <p className="text-center text-[#6b7a93] py-8 text-sm">พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
+            {!loading && search && jobs.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+            {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
           </div>
         </div>
       ) : (
         <div className="p-4">
-          <button onClick={() => setSelectedJob(null)} className="text-[#58a6ff] text-sm mb-4 flex items-center gap-1">
+          <button onClick={() => setSelectedJob(null)} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedJob.customer_name} · {selectedJob.room_no}
           </button>
-          <p className="text-[#94a3b8] text-xs mb-4">แนบ Google Drive URL สำหรับแต่ละเอกสาร</p>
+          <p className="text-xs mb-4" style={t2}>แนบ Google Drive URL สำหรับแต่ละเอกสาร</p>
           <div className="space-y-3 mb-6">
             {DOC_FIELDS.map(f => (
               <div key={f.key}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${urls[f.key] ? 'bg-emerald-400' : 'bg-[#30363d]'}`} />
-                  <label className="text-xs text-[#94a3b8]">{f.label}</label>
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${urls[f.key] ? 'bg-emerald-400' : ''}`}
+                    style={!urls[f.key] ? { background: 'var(--divider)' } : undefined} />
+                  <label className="text-xs" style={t2}>{f.label}</label>
                 </div>
                 <input
                   value={urls[f.key] || ''}
                   onChange={e => setUrls(prev => ({ ...prev, [f.key]: e.target.value }))}
                   placeholder="https://drive.google.com/..."
-                  className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#6b7a93] focus:outline-none focus:border-[#58a6ff]"
-                  style={{ fontSize: 14 }}
+                  className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+                  style={{ ...sheetInputStyle, fontSize: 14 }}
                 />
               </div>
             ))}
@@ -1488,7 +1501,7 @@ export default function QuickPage() {
     {
       header: 'ส่วนตัว', color: 'text-rose-400',
       buttons: [
-        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: '#dc2626', bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : 'bg-[#21262d] border-[#30363d]', badge: widgets.overdueJobs, sheet: 'overdue' },
+        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: '#dc2626', bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : '', badge: widgets.overdueJobs, sheet: 'overdue' },
         { key: 'report',     icon: ClipboardList,   label: 'Daily\nReport',   iconColor: '#6366f1', bg: 'bg-indigo-500/10 border-indigo-500/25', href: '/dashboard/daily-report' },
         { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: '#ca8a04', bg: 'bg-yellow-500/10 border-yellow-500/25', sheet: 'commission' },
         { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: '#64748b', bg: 'bg-slate-500/10 border-slate-500/25',   href: '/dashboard' },
@@ -1514,20 +1527,20 @@ export default function QuickPage() {
             </div>
           </div>
           <button onClick={() => router.push('/dashboard')}
-            className="text-[#94a3b8] p-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)' }}>
             <X size={20} />
           </button>
         </div>
-        <h1 className="text-white text-2xl font-bold">{greeting} 👋</h1>
-        <p className="text-[#6b7a93] text-sm mt-0.5">{todayTH}</p>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{greeting} 👋</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>{todayTH}</p>
       </div>
 
       {/* Widgets 2×2 */}
       <div className="px-5 mb-5">
-        <p className="text-[#6b7a93] text-[10px] font-bold uppercase tracking-widest mb-3">ภาพรวม</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>ภาพรวม</p>
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-[#161b22] rounded-2xl animate-pulse border border-[#21262d]" />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />)}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -1535,12 +1548,13 @@ export default function QuickPage() {
               { label: 'งานกำลังทำ', value: widgets.inProgressJobs, sub: `${widgets.overdueJobs > 0 ? widgets.overdueJobs + ' เกินกำหนด' : 'ปกติทุกงาน'}`, color: 'text-amber-400', bg: 'bg-amber-500/8 border-amber-500/20' },
               { label: 'งวดรอชำระ', value: widgets.pendingInstallments, sub: fmtBaht(widgets.pendingAmount), color: 'text-blue-400', bg: 'bg-blue-500/8 border-blue-500/20' },
               { label: 'รอส่งมอบ', value: widgets.readyToDeliver, sub: 'งานเสร็จแล้ว', color: 'text-green-400', bg: 'bg-green-500/8 border-green-500/20' },
-              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', color: widgets.overdueJobs > 0 ? 'text-red-400' : 'text-[#6b7a93]', bg: widgets.overdueJobs > 0 ? 'bg-red-500/8 border-red-500/20' : 'bg-[#161b22] border-[#30363d]' },
+              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', color: widgets.overdueJobs > 0 ? 'text-red-400' : '', bg: widgets.overdueJobs > 0 ? 'bg-red-500/8 border-red-500/20' : '' },
             ].map(w => (
-              <div key={w.label} className={`rounded-2xl p-4 border ${w.bg}`}>
-                <p className="text-[#6b7a93] text-xs mb-1">{w.label}</p>
-                <p className={`text-3xl font-bold ${w.color}`}>{w.value}</p>
-                <p className={`text-xs mt-1 ${w.color} opacity-60`}>{w.sub}</p>
+              <div key={w.label} className={`rounded-2xl p-4 border ${w.bg}`}
+                style={!w.bg ? { background: 'var(--card-bg)', borderColor: 'var(--divider)' } : undefined}>
+                <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{w.label}</p>
+                <p className={`text-3xl font-bold ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.value}</p>
+                <p className={`text-xs mt-1 opacity-60 ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.sub}</p>
               </div>
             ))}
           </div>
@@ -1558,7 +1572,7 @@ export default function QuickPage() {
                   key={btn.key}
                   onClick={() => handleAction(btn)}
                   className={`relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all active:scale-95 ${btn.bg}`}
-                  style={{ minHeight: 80 }}
+                  style={{ minHeight: 80, ...(!btn.bg ? { background: 'var(--card-bg)', borderColor: 'var(--divider)' } : {}) }}
                 >
                   {btn.badge !== undefined && btn.badge > 0 && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold z-10">

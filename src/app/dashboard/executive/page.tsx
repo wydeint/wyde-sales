@@ -184,14 +184,14 @@ export default function ExecutivePage() {
       {/* Header + Period Selector */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-white text-xl font-bold">Executive Report</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">{range.label}</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Executive Report</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>{range.label}</p>
         </div>
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #30363d' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
           {PERIODS.map(p => (
             <button key={p.key} onClick={() => setPeriod(p.key)}
               className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-              style={{ background: period === p.key ? '#f97316' : 'transparent', color: period === p.key ? '#fff' : '#8b949e' }}>
+              style={{ background: period === p.key ? '#f97316' : 'transparent', color: period === p.key ? '#fff' : 'var(--text-3)' }}>
               {p.label}
             </button>
           ))}
@@ -207,15 +207,15 @@ export default function ExecutivePage() {
           </div>
           <div className="flex gap-6">
             <div>
-              <p className="text-[#8b949e] text-[10px]">เป้ายอดขาย</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>เป้ายอดขาย</p>
               <p className="text-emerald-400 font-bold text-sm">{f(orgTarget.sales)}</p>
               <div className="mt-1 h-1.5 w-36 rounded-full bg-white/10">
                 <div className="h-1.5 rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(pct(totalBookingValue, orgTarget.sales), 100)}%` }} />
               </div>
-              <p className="text-[#484f58] text-[10px] mt-0.5">จริง {f(totalBookingValue)} ({pct(totalBookingValue, orgTarget.sales)}%)</p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(totalBookingValue)} ({pct(totalBookingValue, orgTarget.sales)}%)</p>
             </div>
             <div>
-              <p className="text-[#8b949e] text-[10px]">เป้าส่งมอบ</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>เป้าส่งมอบ</p>
               <p className="text-blue-400 font-bold text-sm">{f(orgTarget.delivery)}</p>
             </div>
           </div>
@@ -225,24 +225,24 @@ export default function ExecutivePage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { icon: <Users size={14} />, label: `ลูกค้าใหม่ (${range.label})`, value: newCustomers, sub: `ปิดแล้ว ${closedCount} | หลุด ${lostCount}`, color: 'text-white' },
+          { icon: <Users size={14} />, label: `ลูกค้าใหม่ (${range.label})`, value: newCustomers, sub: `ปิดแล้ว ${closedCount} | หลุด ${lostCount}`, color: '' },
           { icon: <DollarSign size={14} />, label: 'Booking Value', value: f(totalBookingValue), color: 'text-green-400' },
           { icon: <TrendingUp size={14} />, label: 'โทรหาลูกค้า', value: totalCalls.toLocaleString(), sub: `เยี่ยม ${totalVisits} ครั้ง`, color: 'text-blue-400' },
           { icon: <BarChart3 size={14} />, label: 'Conversion Rate', value: `${pct(closedCount, customers.length)}%`, sub: `${closedCount} จาก ${customers.length} ราย`, color: 'text-orange-400' },
         ].map((k, i) => (
-          <div key={i} className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2 text-[#8b949e]">{k.icon}<p className="text-xs">{k.label}</p></div>
-            <p className={`text-2xl font-bold ${k.color}`}>{k.value}</p>
-            {k.sub && <p className="text-[#484f58] text-xs mt-1">{k.sub}</p>}
+          <div key={i} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+            <div className="flex items-center gap-2 mb-2" style={{ color: 'var(--text-2)' }}>{k.icon}<p className="text-xs">{k.label}</p></div>
+            <p className={`text-2xl font-bold ${k.color}`} style={!k.color ? { color: 'var(--text-1)' } : undefined}>{k.value}</p>
+            {k.sub && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>}
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Pipeline Funnel (all customers) */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h2 className="text-white font-medium mb-1">Pipeline Funnel</h2>
-          <p className="text-[#484f58] text-xs mb-4">สถานะลูกค้าทั้งหมดในระบบ</p>
+        <div className="rounded-xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+          <h2 className="font-medium mb-1" style={{ color: 'var(--text-1)' }}>Pipeline Funnel</h2>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>สถานะลูกค้าทั้งหมดในระบบ</p>
           <div className="space-y-2">
             {funnelData.map((s, i) => {
               const maxCount = Math.max(...funnelData.map(x => x.count), 1)
@@ -251,13 +251,13 @@ export default function ExecutivePage() {
               return (
                 <div key={s.status}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[#8b949e] text-xs">{s.label}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-2)' }}>{s.label}</span>
                     <div className="text-right">
-                      <span className="text-white text-xs font-medium">{s.count}</span>
-                      {s.value > 0 && <span className="text-[#484f58] text-xs ml-2">{f(s.value)}</span>}
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{s.count}</span>
+                      {s.value > 0 && <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>{f(s.value)}</span>}
                     </div>
                   </div>
-                  <div className="h-2 bg-[#21262d] rounded-full overflow-hidden">
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--hover-bg)' }}>
                     <div className={`h-full rounded-full ${colors[i]} transition-all duration-500`} style={{ width: width + '%' }} />
                   </div>
                 </div>
@@ -267,60 +267,63 @@ export default function ExecutivePage() {
         </div>
 
         {/* By Project (period) */}
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-          <h2 className="text-white font-medium mb-1">ยอดขายตามโครงการ</h2>
-          <p className="text-[#484f58] text-xs mb-4">{range.label}</p>
+        <div className="rounded-xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+          <h2 className="font-medium mb-1" style={{ color: 'var(--text-1)' }}>ยอดขายตามโครงการ</h2>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>{range.label}</p>
           <div className="space-y-3">
             {byProject.map(p => (
               <div key={p.name} className="flex items-center justify-between">
                 <div>
-                  <p className="text-white text-sm">{p.name}</p>
-                  <p className="text-[#484f58] text-xs">{p.total} ราย | ปิด {p.closed}</p>
+                  <p className="text-sm" style={{ color: 'var(--text-1)' }}>{p.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.total} ราย | ปิด {p.closed}</p>
                 </div>
                 <p className="text-green-400 text-sm font-medium">{f(p.value)}</p>
               </div>
             ))}
-            {byProject.length === 0 && <p className="text-[#484f58] text-sm text-center py-4">ไม่มีข้อมูล</p>}
+            {byProject.length === 0 && <p className="text-sm text-center py-4" style={{ color: 'var(--text-3)' }}>ไม่มีข้อมูล</p>}
           </div>
         </div>
       </div>
 
       {/* Sales Ranking */}
-      <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
-        <h2 className="text-white font-medium mb-1">Sales Ranking</h2>
-        <p className="text-[#484f58] text-xs mb-4">{range.label}</p>
+      <div className="rounded-xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+        <h2 className="font-medium mb-1" style={{ color: 'var(--text-1)' }}>Sales Ranking</h2>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>{range.label}</p>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#21262d]">
+              <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                 {['#','Sales','ลูกค้าใหม่','ปิดแล้ว','โทร','เยี่ยม','Booking Value'].map((h, i) => (
-                  <th key={h} className={`py-2 text-[#8b949e] text-xs ${i > 1 ? 'text-center' : 'text-left'} ${i === 6 ? 'text-right' : ''}`}>{h}</th>
+                  <th key={h} className={`py-2 text-xs ${i > 1 ? 'text-center' : 'text-left'} ${i === 6 ? 'text-right' : ''}`} style={{ color: 'var(--text-2)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {salesRanking.map((s, i) => (
-                <tr key={s.name} className="border-b border-[#21262d] hover:bg-[#1c2128]">
+                <tr key={s.name} style={{ borderBottom: '1px solid var(--divider)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                   <td className="py-3 pr-4">
-                    <span className={`text-sm font-bold ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-orange-400' : 'text-[#484f58]'}`}>#{i + 1}</span>
+                    <span className={`text-sm font-bold ${i === 0 ? 'text-yellow-400' : i === 2 ? 'text-orange-400' : ''}`}
+                      style={i === 1 ? { color: 'var(--text-2)' } : i > 2 ? { color: 'var(--text-3)' } : undefined}>#{i + 1}</span>
                   </td>
                   <td className="py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#30363d] flex items-center justify-center">
-                        <span className="text-white text-xs">{s.name[0]}</span>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+                        <span className="text-xs" style={{ color: 'var(--text-1)' }}>{s.name[0]}</span>
                       </div>
-                      <span className="text-white text-sm">{s.name}</span>
+                      <span className="text-sm" style={{ color: 'var(--text-1)' }}>{s.name}</span>
                     </div>
                   </td>
-                  <td className="py-3 text-center text-[#c9d1d9] text-sm">{s.total}</td>
+                  <td className="py-3 text-center text-sm" style={{ color: 'var(--text-1)' }}>{s.total}</td>
                   <td className="py-3 text-center text-green-400 text-sm font-medium">{s.closed}</td>
-                  <td className="py-3 text-center text-[#c9d1d9] text-sm">{s.calls}</td>
-                  <td className="py-3 text-center text-[#c9d1d9] text-sm">{s.visits}</td>
+                  <td className="py-3 text-center text-sm" style={{ color: 'var(--text-1)' }}>{s.calls}</td>
+                  <td className="py-3 text-center text-sm" style={{ color: 'var(--text-1)' }}>{s.visits}</td>
                   <td className="py-3 text-right text-green-400 text-sm font-medium">{f(s.booking_value)}</td>
                 </tr>
               ))}
               {salesRanking.length === 0 && (
-                <tr><td colSpan={7} className="py-8 text-center text-[#484f58] text-sm">ไม่มีข้อมูลในช่วงนี้</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-sm" style={{ color: 'var(--text-3)' }}>ไม่มีข้อมูลในช่วงนี้</td></tr>
               )}
             </tbody>
           </table>

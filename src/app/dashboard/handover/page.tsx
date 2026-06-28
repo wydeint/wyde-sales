@@ -178,7 +178,7 @@ function DeliveryModal({
             <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>รองรับ jpg, pdf — ไม่เกิน 5 ไฟล์</p>
           </div>
           <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
-            <p className="text-indigo-300 text-xs">⚡ เมื่อบันทึกส่งมอบแล้ว — Commission จะถูก trigger อัตโนมัติ</p>
+            <p className="text-indigo-600 dark:text-indigo-300 text-xs">⚡ เมื่อบันทึกส่งมอบแล้ว — Commission จะถูก trigger อัตโนมัติ</p>
           </div>
         </div>
         <div className="flex justify-end gap-3 p-5" style={{ borderTop: '1px solid var(--divider)' }}>

@@ -49,7 +49,7 @@ const CUST_STATUS = [
   { value: 'booked',          label: 'Booked',                    color: 'bg-green-500/20 text-green-400' },
   { value: 'interested',      label: 'สนใจ ติดตามต่อ',            color: 'bg-yellow-500/20 text-yellow-400' },
   { value: 'not_interested',  label: 'ไม่สนใจ',                   color: 'bg-red-500/20 text-red-400' },
-  { value: 'not_met',         label: 'ไม่ได้พบ ติดตามภายหลัง',   color: 'bg-[#30363d] text-[#8b949e]' },
+  { value: 'not_met',         label: 'ไม่ได้พบ ติดตามภายหลัง',   color: 'bg-slate-500/15 text-slate-400' },
 ]
 
 const BOOKING_TYPES = [
@@ -333,7 +333,7 @@ export default function EventsPage() {
     }
   }
 
-  const stColor = (s: string) => CUST_STATUS.find(x => x.value === s)?.color || 'bg-[#30363d] text-[#8b949e]'
+  const stColor = (s: string) => CUST_STATUS.find(x => x.value === s)?.color || 'bg-slate-500/15 text-slate-400'
   const stLabel = (s: string) => CUST_STATUS.find(x => x.value === s)?.label || s
   const typeLabel = (t: string) => EVENT_TYPES.find(e => e.value === t)?.label || t
 

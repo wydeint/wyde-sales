@@ -241,8 +241,8 @@ export default function TargetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-white text-xl font-bold">Sales Targets</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">กำหนดและติดตามเป้าหมายการขาย</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Sales Targets</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>กำหนดและติดตามเป้าหมายการขาย</p>
         </div>
         <div className="flex gap-2">
           {tab === 'org' && (
@@ -263,25 +263,25 @@ export default function TargetsPage() {
       {/* Tab + Period row */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #30363d' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
           <button onClick={() => setTab('org')}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'org' ? '#f97316' : 'transparent', color: tab === 'org' ? '#fff' : '#8b949e' }}>
+            style={{ background: tab === 'org' ? '#f97316' : 'transparent', color: tab === 'org' ? '#fff' : 'var(--text-2)' }}>
             <Building2 size={12} />เป้าองค์กร
           </button>
           <button onClick={() => setTab('sales')}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'sales' ? '#6366f1' : 'transparent', color: tab === 'sales' ? '#fff' : '#8b949e' }}>
+            style={{ background: tab === 'sales' ? '#6366f1' : 'transparent', color: tab === 'sales' ? '#fff' : 'var(--text-2)' }}>
             <Users size={12} />เป้า Sales
           </button>
         </div>
 
         {/* Period pills */}
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #30363d' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
           {(['month','quarter','year'] as ViewPeriod[]).map(p => (
             <button key={p} onClick={() => setViewPeriod(p)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-              style={{ background: viewPeriod === p ? (tab === 'org' ? '#f97316' : '#6366f1') : 'transparent', color: viewPeriod === p ? '#fff' : '#8b949e' }}>
+              style={{ background: viewPeriod === p ? (tab === 'org' ? '#f97316' : '#6366f1') : 'transparent', color: viewPeriod === p ? '#fff' : 'var(--text-2)' }}>
               {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
             </button>
           ))}
@@ -289,12 +289,12 @@ export default function TargetsPage() {
 
         {/* Year */}
         <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))}
-          className="bg-[#161b22] border border-[#30363d] rounded-lg px-3 py-2 text-white text-sm outline-none">
+          className="rounded-lg px-3 py-2 text-sm outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
           {[thisYear - 1, thisYear, thisYear + 1].map(y => (
             <option key={y} value={y}>{y + 543} (พ.ศ.)</option>
           ))}
         </select>
-        <span className="text-[#484f58] text-sm">{periodLabel}</span>
+        <span className="text-sm" style={{ color: 'var(--text-3)' }}>{periodLabel}</span>
       </div>
 
       {loading ? (
@@ -316,14 +316,14 @@ export default function TargetsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[#8b949e] text-xs mb-1">เป้ายอดขายรวมทั้งปี</p>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>เป้ายอดขายรวมทั้งปี</p>
                     <p className="text-emerald-400 font-bold text-xl">{f(orgAllSales)}</p>
-                    <p className="text-[#484f58] text-xs mt-0.5">จริง ({periodLabel}): <span className="text-white">{f(orgActualSales)}</span></p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>จริง ({periodLabel}): <span style={{ color: 'var(--text-1)' }}>{f(orgActualSales)}</span></p>
                   </div>
                   <div>
-                    <p className="text-[#8b949e] text-xs mb-1">เป้าส่งมอบรวมทั้งปี</p>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>เป้าส่งมอบรวมทั้งปี</p>
                     <p className="text-blue-400 font-bold text-xl">{f(orgAllDeliv)}</p>
-                    <p className="text-[#484f58] text-xs mt-0.5">จริง ({periodLabel}): <span className="text-white">{f(orgActualDeliv)}</span></p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>จริง ({periodLabel}): <span style={{ color: 'var(--text-1)' }}>{f(orgActualDeliv)}</span></p>
                   </div>
                 </div>
                 {/* Period breakdown progress */}
@@ -331,19 +331,19 @@ export default function TargetsPage() {
                   <div className="mt-4 pt-4 border-t border-orange-500/20 grid grid-cols-2 gap-4">
                     <div>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-[#8b949e]">เป้า{periodLabel}</span>
+                        <span style={{ color: 'var(--text-2)' }}>เป้า{periodLabel}</span>
                         <span className="text-emerald-400">{pct(orgActualSales, orgTotalSales)}%</span>
                       </div>
                       <ProgressBar value={orgActualSales} max={orgTotalSales} color="#34d399" />
-                      <p className="text-[#484f58] text-[10px] mt-0.5">เป้า {f(orgTotalSales)}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalSales)}</p>
                     </div>
                     <div>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-[#8b949e]">ส่งมอบ{periodLabel}</span>
+                        <span style={{ color: 'var(--text-2)' }}>ส่งมอบ{periodLabel}</span>
                         <span className="text-blue-400">{pct(orgActualDeliv, orgTotalDeliv)}%</span>
                       </div>
                       <ProgressBar value={orgActualDeliv} max={orgTotalDeliv} color="#60a5fa" />
-                      <p className="text-[#484f58] text-[10px] mt-0.5">เป้า {f(orgTotalDeliv)}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalDeliv)}</p>
                     </div>
                   </div>
                 )}
@@ -351,32 +351,32 @@ export default function TargetsPage() {
 
               {/* Sales team vs Org gap */}
               {orgTotalSales > 0 && salesTeamSalesTarget > 0 && (
-                <div className="rounded-xl p-4" style={{ background: '#161b22', border: '1px solid #30363d' }}>
-                  <p className="text-[#8b949e] text-xs font-semibold mb-3">เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
+                <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                  <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-2)' }}>เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[#484f58] text-[10px]">ยอดขาย</p>
+                      <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยอดขาย</p>
                       <div className="flex items-end gap-2">
                         <span className="text-orange-400 text-sm font-bold">{f(orgTotalSales)}</span>
-                        <span className="text-[#484f58] text-xs">เป้าองค์กร</span>
+                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
                       </div>
                       <div className="flex items-end gap-2 mt-0.5">
                         <span className="text-indigo-400 text-sm font-bold">{f(salesTeamSalesTarget)}</span>
-                        <span className="text-[#484f58] text-xs">เป้าทีม</span>
+                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamSalesTarget < orgTotalSales && (
                         <p className="text-red-400 text-[10px] mt-1">ขาด {f(orgTotalSales - salesTeamSalesTarget)}</p>
                       )}
                     </div>
                     <div>
-                      <p className="text-[#484f58] text-[10px]">ส่งมอบ</p>
+                      <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
                       <div className="flex items-end gap-2">
                         <span className="text-orange-400 text-sm font-bold">{f(orgTotalDeliv)}</span>
-                        <span className="text-[#484f58] text-xs">เป้าองค์กร</span>
+                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
                       </div>
                       <div className="flex items-end gap-2 mt-0.5">
                         <span className="text-indigo-400 text-sm font-bold">{f(salesTeamDelivTarget)}</span>
-                        <span className="text-[#484f58] text-xs">เป้าทีม</span>
+                        <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamDelivTarget < orgTotalDeliv && (
                         <p className="text-red-400 text-[10px] mt-1">ขาด {f(orgTotalDeliv - salesTeamDelivTarget)}</p>
@@ -387,16 +387,16 @@ export default function TargetsPage() {
               )}
 
               {/* Monthly breakdown table */}
-              <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-                <div className="px-5 py-3 border-b border-[#30363d] flex justify-between items-center">
-                  <h3 className="text-white font-medium text-sm">เป้ารายเดือน ปี {filterYear + 543}</h3>
+              <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                <div className="px-5 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--divider)' }}>
+                  <h3 className="font-medium text-sm" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-[#21262d]">
+                      <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         {['เดือน','เป้ายอดขาย','จริง (ขาย)','%','เป้าส่งมอบ','จริง (ส่งมอบ)','%',''].map((h, i) => (
-                          <th key={i} className={`py-2 px-4 text-[#8b949e] text-xs font-medium ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
+                          <th key={i} className={`py-2 px-4 text-xs font-medium ${i === 0 ? 'text-left' : 'text-right'}`} style={{ color: 'var(--text-2)' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -407,36 +407,41 @@ export default function TargetsPage() {
                         const actD = actualDelivByMonth[m] || 0
                         const isCurrentMonth = m === thisMonth && filterYear === thisYear
                         return (
-                          <tr key={m} className={`border-b border-[#21262d] hover:bg-[#1c2128] ${isCurrentMonth ? 'bg-[#1a1f28]' : ''}`}>
+                          <tr key={m}
+                            style={{ borderBottom: '1px solid var(--divider)', background: isCurrentMonth ? 'var(--hover-bg)' : 'transparent' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = isCurrentMonth ? 'var(--hover-bg)' : 'transparent')}>
                             <td className="py-2.5 px-4 text-sm">
-                              <span className={isCurrentMonth ? 'text-orange-400 font-bold' : 'text-[#c9d1d9]'}>
+                              <span className={isCurrentMonth ? 'text-orange-400 font-bold' : ''} style={isCurrentMonth ? {} : { color: 'var(--text-2)' }}>
                                 {MONTHS_FULL[m - 1]}
                               </span>
                             </td>
-                            <td className="py-2.5 px-4 text-right text-sm text-emerald-400">{ot ? f(ot.target_sales_value) : <span className="text-[#484f58]">—</span>}</td>
-                            <td className="py-2.5 px-4 text-right text-sm text-white">{actS > 0 ? f(actS) : <span className="text-[#484f58]">—</span>}</td>
+                            <td className="py-2.5 px-4 text-right text-sm text-emerald-400">{ot ? f(ot.target_sales_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
+                            <td className="py-2.5 px-4 text-right text-sm" style={{ color: 'var(--text-1)' }}>{actS > 0 ? f(actS) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                             <td className="py-2.5 px-4 text-right text-xs">
                               {ot && ot.target_sales_value > 0 ? (
-                                <span className={pct(actS, ot.target_sales_value) >= 100 ? 'text-emerald-400' : 'text-[#8b949e]'}>
+                                <span className={pct(actS, ot.target_sales_value) >= 100 ? 'text-emerald-400' : ''} style={pct(actS, ot.target_sales_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
                                   {pct(actS, ot.target_sales_value)}%
                                 </span>
-                              ) : <span className="text-[#484f58]">—</span>}
+                              ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                             </td>
-                            <td className="py-2.5 px-4 text-right text-sm text-blue-400">{ot ? f(ot.target_delivery_value) : <span className="text-[#484f58]">—</span>}</td>
-                            <td className="py-2.5 px-4 text-right text-sm text-white">{actD > 0 ? f(actD) : <span className="text-[#484f58]">—</span>}</td>
+                            <td className="py-2.5 px-4 text-right text-sm text-blue-400">{ot ? f(ot.target_delivery_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
+                            <td className="py-2.5 px-4 text-right text-sm" style={{ color: 'var(--text-1)' }}>{actD > 0 ? f(actD) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                             <td className="py-2.5 px-4 text-right text-xs">
                               {ot && ot.target_delivery_value > 0 ? (
-                                <span className={pct(actD, ot.target_delivery_value) >= 100 ? 'text-blue-400' : 'text-[#8b949e]'}>
+                                <span className={pct(actD, ot.target_delivery_value) >= 100 ? 'text-blue-400' : ''} style={pct(actD, ot.target_delivery_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
                                   {pct(actD, ot.target_delivery_value)}%
                                 </span>
-                              ) : <span className="text-[#484f58]">—</span>}
+                              ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                             </td>
                             <td className="py-2.5 px-4 text-right">
                               <button onClick={() => {
                                 if (ot) { setEditingOrg(ot); setOrgForm({ year: ot.year, month: ot.month, target_sales_value: ot.target_sales_value, target_delivery_value: ot.target_delivery_value }) }
                                 else setOrgForm({ year: filterYear, month: m, target_sales_value: 0, target_delivery_value: 0 })
                                 setOrgModalOpen(true)
-                              }} className="text-[#8b949e] hover:text-white transition-colors">
+                              }} className="transition-colors" style={{ color: 'var(--text-2)' }}
+                                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+                                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>
                                 <Pencil size={12} />
                               </button>
                             </td>
@@ -445,16 +450,16 @@ export default function TargetsPage() {
                       })}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t-2 border-[#30363d]">
-                        <td className="py-3 px-4 text-[#8b949e] text-xs font-semibold">รวมทั้งปี</td>
+                      <tr style={{ borderTop: '2px solid var(--divider)' }}>
+                        <td className="py-3 px-4 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวมทั้งปี</td>
                         <td className="py-3 px-4 text-right text-emerald-400 font-bold text-sm">{f(orgAllSales)}</td>
-                        <td className="py-3 px-4 text-right text-white font-bold text-sm">{f(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0))}</td>
-                        <td className="py-3 px-4 text-right text-xs text-[#8b949e]">
+                        <td className="py-3 px-4 text-right font-bold text-sm" style={{ color: 'var(--text-1)' }}>{f(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0))}</td>
+                        <td className="py-3 px-4 text-right text-xs" style={{ color: 'var(--text-2)' }}>
                           {orgAllSales > 0 ? `${pct(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0), orgAllSales)}%` : '—'}
                         </td>
                         <td className="py-3 px-4 text-right text-blue-400 font-bold text-sm">{f(orgAllDeliv)}</td>
-                        <td className="py-3 px-4 text-right text-white font-bold text-sm">{f(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0))}</td>
-                        <td className="py-3 px-4 text-right text-xs text-[#8b949e]">
+                        <td className="py-3 px-4 text-right font-bold text-sm" style={{ color: 'var(--text-1)' }}>{f(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0))}</td>
+                        <td className="py-3 px-4 text-right text-xs" style={{ color: 'var(--text-2)' }}>
                           {orgAllDeliv > 0 ? `${pct(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0), orgAllDeliv)}%` : '—'}
                         </td>
                         <td />
@@ -470,9 +475,9 @@ export default function TargetsPage() {
           {tab === 'sales' && (
             <div className="space-y-4">
               {grouped.length === 0 ? (
-                <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
-                  <Target size={32} className="mx-auto text-[#484f58] mb-2" />
-                  <p className="text-[#8b949e] text-sm">ยังไม่มีเป้าหมายสำหรับช่วงนี้</p>
+                <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                  <Target size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                  <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีเป้าหมายสำหรับช่วงนี้</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -480,15 +485,15 @@ export default function TargetsPage() {
                     const actS = getUserActual(t.user_id, 'sales')
                     const actD = getUserActual(t.user_id, 'deliv')
                     return (
-                      <div key={t.user_id} className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+                      <div key={t.user_id} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#21262d' }}>
-                              <span className="text-white text-sm font-bold">{t.users?.name?.[0] || '?'}</span>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
+                              <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{t.users?.name?.[0] || '?'}</span>
                             </div>
                             <div>
-                              <p className="text-white text-sm font-semibold">{t.users?.name || '-'}</p>
-                              {t.projects?.name && <p className="text-[#484f58] text-xs">{t.projects.name}</p>}
+                              <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{t.users?.name || '-'}</p>
+                              {t.projects?.name && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t.projects.name}</p>}
                             </div>
                           </div>
                           <button onClick={() => {
@@ -498,23 +503,25 @@ export default function TargetsPage() {
                               setSalesForm({ user_id: r.user_id, project_id: r.project_id || '', year: r.year, month: r.month, target_calls: r.target_calls, target_visits: r.target_visits, target_leads: r.target_leads, target_bookings: r.target_bookings, target_booking_value: r.target_booking_value, target_closed: r.target_closed, target_sales_value: r.target_sales_value || 0, target_delivery_value: r.target_delivery_value || 0 })
                               setSalesModalOpen(true)
                             }
-                          }} className="text-[#8b949e] hover:text-white transition-colors p-1">
+                          }} className="transition-colors p-1" style={{ color: 'var(--text-2)' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>
                             <Pencil size={14} />
                           </button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-3">
-                          <div className="bg-[#0d1117] rounded-xl p-3">
-                            <p className="text-[#484f58] text-[10px] mb-1">เป้ายอดขาย</p>
+                          <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
                             <p className="text-emerald-400 font-bold text-base">{f(t.target_sales_value)}</p>
-                            <p className="text-[#484f58] text-[10px] mt-1">จริง <span className="text-white">{f(actS)}</span></p>
+                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actS)}</span></p>
                             <ProgressBar value={actS} max={t.target_sales_value} color="#34d399" />
                             <p className="text-emerald-400 text-[10px] mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
                           </div>
-                          <div className="bg-[#0d1117] rounded-xl p-3">
-                            <p className="text-[#484f58] text-[10px] mb-1">เป้าส่งมอบ</p>
+                          <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
                             <p className="text-blue-400 font-bold text-base">{f(t.target_delivery_value)}</p>
-                            <p className="text-[#484f58] text-[10px] mt-1">จริง <span className="text-white">{f(actD)}</span></p>
+                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>
                             <ProgressBar value={actD} max={t.target_delivery_value} color="#60a5fa" />
                             <p className="text-blue-400 text-[10px] mt-0.5 text-right">{pct(actD, t.target_delivery_value)}%</p>
                           </div>
@@ -529,8 +536,8 @@ export default function TargetsPage() {
                             { label: 'ปิดขาย', v: t.target_closed, c: '#34d399' },
                             { label: 'BK Value', v: null, d: f(t.target_booking_value), c: '#fb923c' },
                           ].map(item => (
-                            <div key={item.label} className="bg-[#0d1117] rounded-lg p-2">
-                              <p className="text-[#484f58] text-[10px]">{item.label}</p>
+                            <div key={item.label} className="rounded-lg p-2" style={{ background: 'var(--card-bg)' }}>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{item.label}</p>
                               <p className="text-xs font-medium mt-0.5" style={{ color: item.c }}>{item.d ?? item.v}</p>
                             </div>
                           ))}
@@ -554,7 +561,9 @@ export default function TargetsPage() {
           <Input label="เป้าส่งมอบ (บาท)" type="number" value={orgForm.target_delivery_value} onChange={e => setOrgForm({ ...orgForm, target_delivery_value: Number(e.target.value) })} />
         </div>
         <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOrgModalOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={() => setOrgModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
           <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {orgSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
@@ -568,14 +577,14 @@ export default function TargetsPage() {
           <Select label="โครงการ" value={salesForm.project_id} onChange={e => setSalesForm({ ...salesForm, project_id: e.target.value })} options={projOptions} />
           <Select label="ปี" value={String(salesForm.year)} onChange={e => setSalesForm({ ...salesForm, year: Number(e.target.value) })} options={yearOptions} />
           <Select label="เดือน" value={String(salesForm.month)} onChange={e => setSalesForm({ ...salesForm, month: Number(e.target.value) })} options={monthOptions} />
-          <div className="col-span-2 border-t border-[#30363d] pt-3">
-            <p className="text-[#8b949e] text-xs font-semibold mb-2">เป้ายอดเงิน</p>
+          <div className="col-span-2 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
+            <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>เป้ายอดเงิน</p>
           </div>
           <Input label="เป้ายอดขาย (บาท)" type="number" value={salesForm.target_sales_value} onChange={e => setSalesForm({ ...salesForm, target_sales_value: Number(e.target.value) })} />
           <Input label="เป้าส่งมอบ (บาท)" type="number" value={salesForm.target_delivery_value} onChange={e => setSalesForm({ ...salesForm, target_delivery_value: Number(e.target.value) })} />
           <Input label="เป้า Booking Value (บาท)" type="number" value={salesForm.target_booking_value} onChange={e => setSalesForm({ ...salesForm, target_booking_value: Number(e.target.value) })} />
-          <div className="col-span-2 border-t border-[#30363d] pt-3">
-            <p className="text-[#8b949e] text-xs font-semibold mb-2">เป้ากิจกรรม</p>
+          <div className="col-span-2 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
+            <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>เป้ากิจกรรม</p>
           </div>
           <Input label="เป้าโทร (ครั้ง)" type="number" value={salesForm.target_calls} onChange={e => setSalesForm({ ...salesForm, target_calls: Number(e.target.value) })} />
           <Input label="เป้าเยี่ยม (ครั้ง)" type="number" value={salesForm.target_visits} onChange={e => setSalesForm({ ...salesForm, target_visits: Number(e.target.value) })} />
@@ -584,7 +593,9 @@ export default function TargetsPage() {
           <Input label="เป้าปิดการขาย" type="number" value={salesForm.target_closed} onChange={e => setSalesForm({ ...salesForm, target_closed: Number(e.target.value) })} />
         </div>
         <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setSalesModalOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={() => setSalesModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
           <button onClick={saveSales} disabled={salesSaving || !salesForm.user_id} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {salesSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>

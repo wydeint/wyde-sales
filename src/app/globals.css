@@ -140,7 +140,7 @@ html:not(.dark) .border-\[\#21262d\] {
 }
 
 /* Text — light mode remapping */
-html:not(.dark) .text-white { color: var(--text-1) !important; }
+html:not(.dark) :not(button):not(a).text-white { color: var(--text-1) !important; }
 html:not(.dark) .text-\[\#c9d1d9\] { color: var(--text-2) !important; }
 html:not(.dark) .text-\[\#8b949e\] { color: var(--text-2) !important; }
 html:not(.dark) .text-\[\#484f58\] { color: var(--text-3) !important; }

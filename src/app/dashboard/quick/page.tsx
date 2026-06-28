@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import {
   Search, X, Plus, CheckCircle2, ChevronRight, AlertTriangle,
-  Zap, Calendar, AlertCircle, ArrowLeft
+  Calendar, AlertCircle, ArrowLeft
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────
@@ -100,14 +100,21 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [projectsMap, setProjectsMap] = useState<Record<string, string>>({})
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  useEffect(() => {
+    supabase.from('projects').select('id, name').then(({ data }) => {
+      if (data) setProjectsMap(Object.fromEntries(data.map((p: any) => [p.id, p.name])))
+    })
+  }, [])
 
   async function doSearch(q: string) {
     if (!q.trim()) { setResults([]); return }
     setLoading(true)
     const { data, error } = await supabase
       .from('condo_leads')
-      .select('id, name, phone, room_no, status, projects:project_id(name)')
+      .select('id, name, phone, room_no, status, project_id')
       .or(`name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
       .order('name')
       .limit(15)
@@ -145,7 +152,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
                 <p className="text-white font-semibold">{r.name}</p>
                 <span className={`text-xs font-medium ${STATUS_COLOR[r.status] || 'text-[#8b949e]'}`}>{r.status || '—'}</span>
               </div>
-              <p className="text-[#8b949e] text-xs">{(r.projects as any)?.name || '—'} · ห้อง {r.room_no || '—'}</p>
+              <p className="text-[#8b949e] text-xs">{projectsMap[r.project_id] || '—'} · ห้อง {r.room_no || '—'}</p>
               {r.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {r.phone}</p>}
             </div>
           ))}
@@ -259,14 +266,21 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [projectsMap, setProjectsMap] = useState<Record<string, string>>({})
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  useEffect(() => {
+    supabase.from('projects').select('id, name').then(({ data }) => {
+      if (data) setProjectsMap(Object.fromEntries(data.map((p: any) => [p.id, p.name])))
+    })
+  }, [])
 
   async function doSearch(q: string) {
     if (!q.trim()) { setResults([]); return }
     setLoading(true)
     const { data, error } = await supabase
       .from('customers')
-      .select('id, customer_name, phone, interested_room, status, follow_up_date, projects:project_id(name)')
+      .select('id, customer_name, phone, interested_room, status, follow_up_date, project_id')
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,interested_room.ilike.%${q}%`)
       .order('customer_name')
       .limit(12)
@@ -309,7 +323,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   <p className="text-white font-semibold">{c.customer_name}</p>
                   <span className={`text-xs font-medium ${s.color}`}>{s.label}</span>
                 </div>
-                <p className="text-[#8b949e] text-xs">{(c.projects as any)?.name || '—'} · ห้อง {c.interested_room || '—'}</p>
+                <p className="text-[#8b949e] text-xs">{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {c.phone}</p>}
                 {c.follow_up_date && <p className="text-[#484f58] text-xs mt-1">นัดติดตาม: {fmtDate(c.follow_up_date)}</p>}
               </div>
@@ -339,18 +353,25 @@ function EventAddSheet({ open, onClose, events }: {
   const [status, setStatus] = useState('new')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [projectsMap, setProjectsMap] = useState<Record<string, string>>({})
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
+  useEffect(() => {
+    supabase.from('projects').select('id, name').then(({ data }) => {
+      if (data) setProjectsMap(Object.fromEntries(data.map((p: any) => [p.id, p.name])))
+    })
+  }, [])
+
   async function searchLeads(q: string) {
-    if (!selectedEvent || !q.trim()) { setLeads([]); return }
+    if (!q.trim()) { setLeads([]); return }
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('condo_leads')
-      .select('id, name, phone, room_no')
-      .eq('project_id', selectedEvent.projectId)
+      .select('id, name, phone, room_no, project_id')
       .or(`name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
       .order('name')
-      .limit(10)
+      .limit(15)
+    if (error) console.error('EventAddSheet search error:', error)
     setLeads(data || [])
     setLoading(false)
   }
@@ -431,7 +452,7 @@ function EventAddSheet({ open, onClose, events }: {
           <div className="relative mb-3">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
             <input autoFocus value={search} onChange={e => handleSearch(e.target.value)}
-              placeholder="ค้นหาลูกค้าในโครงการ..."
+              placeholder="ค้นหาชื่อ / เบอร์ / เลขห้อง..."
               className="w-full bg-[#21262d] border border-[#30363d] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]"
               style={{ fontSize: 16 }} />
           </div>
@@ -442,13 +463,13 @@ function EventAddSheet({ open, onClose, events }: {
                 className="w-full flex items-center justify-between px-4 py-3 bg-[#21262d] rounded-xl text-left">
                 <div>
                   <p className="text-white text-sm font-medium">{l.name}</p>
-                  <p className="text-[#8b949e] text-xs">ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
+                  <p className="text-[#8b949e] text-xs">{projectsMap[l.project_id] || '—'} · ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
                 </div>
                 <ChevronRight size={16} className="text-[#484f58]" />
               </button>
             ))}
             {!loading && search && leads.length === 0 && (
-              <p className="text-center text-[#8b949e] py-6 text-sm">ไม่พบในโครงการนี้</p>
+              <p className="text-center text-[#8b949e] py-6 text-sm">ไม่พบข้อมูลใน Origin Pool</p>
             )}
           </div>
         </div>
@@ -1487,11 +1508,12 @@ export default function QuickPage() {
       {/* Header — sticky so it stays visible when scrolling */}
       <div data-topbar-quick className="px-5 pb-3 sticky top-0 z-10" style={{ paddingTop: 'max(20px, env(safe-area-inset-top))', background: 'var(--bg-gradient)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-              <Zap size={15} className="text-indigo-400" />
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.svg" alt="WydE" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
+            <div>
+              <p className="text-white text-xs font-semibold leading-tight">Super Sales</p>
+              <p className="text-indigo-400 text-[10px] font-bold tracking-widest uppercase leading-tight">Quick Mode</p>
             </div>
-            <span className="text-indigo-400 text-sm font-bold tracking-wide">QUICK MODE</span>
           </div>
           <button onClick={() => router.push('/dashboard')}
             className="text-[#94a3b8] p-2" style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

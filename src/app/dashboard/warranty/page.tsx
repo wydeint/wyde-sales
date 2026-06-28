@@ -138,7 +138,7 @@ export default function WarrantyPage() {
       {expiringSoon.length > 0 && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-center gap-3">
           <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0" />
-          <p className="text-yellow-300 text-sm">มี {expiringSoon.length} รายการที่ประกันจะหมดภายใน 30 วัน</p>
+          <p className="text-yellow-700 dark:text-yellow-300 text-sm">มี {expiringSoon.length} รายการที่ประกันจะหมดภายใน 30 วัน</p>
         </div>
       )}
 

@@ -452,7 +452,7 @@ export default function EventsPage() {
                           { label: 'สนใจ ติดตามต่อ', value: perf.interested, colorClass: 'text-yellow-400' },
                           { label: 'ไม่สนใจ', value: perf.notInterested, colorClass: 'text-red-400' },
                           { label: 'ไม่ได้พบ', value: perf.notMet, color: 'var(--text-3)' },
-                          { label: 'Add LINE', value: perf.lineAdds, colorClass: 'text-green-300' },
+                          { label: 'Add LINE', value: perf.lineAdds, colorClass: 'text-green-600 dark:text-green-300' },
                           { label: 'Conv%', value: perf.conv + '%', colorClass: perf.conv >= 20 ? 'text-green-400' : 'text-yellow-400' },
                         ].map(k => (
                           <div key={k.label} className="rounded-xl p-3 text-center" style={{ background: 'var(--card-bg)' }}>
@@ -490,7 +490,7 @@ export default function EventsPage() {
                       <button
                         onClick={promoteAll}
                         disabled={promotingAll}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors font-medium disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/30 transition-colors font-medium disabled:opacity-50"
                       >
                         <UserPlus size={12} />
                         {promotingAll ? 'กำลังนำเข้า...' : 'นำรายชื่อเข้าระบบ'}
@@ -594,7 +594,7 @@ export default function EventsPage() {
                                       onClick={() => promoteCustomer(c)}
                                       className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${
                                         c.status === 'booked'
-                                          ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
+                                          ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-500/30'
                                           : 'bg-[#1d6fa5]/20 text-[#58a6ff] hover:bg-[#1d6fa5]/40'
                                       }`}
                                     >

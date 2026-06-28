@@ -240,7 +240,7 @@ function PlanSetupModal({
             <div className="grid grid-cols-2 gap-2">
               {(['B2C', 'B2B'] as ClientType[]).map(t => (
                 <button key={t} onClick={() => setClientType(t)}
-                  className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${clientType === t ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300' : ''}`}
+                  className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${clientType === t ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-700 dark:text-indigo-300' : ''}`}
                   style={clientType !== t ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : undefined}>
                   {t}
                 </button>
@@ -255,7 +255,7 @@ function PlanSetupModal({
               <div className="space-y-2">
                 {B2C_PLANS.map(p => (
                   <button key={p.value} onClick={() => setPlan(p.value)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${plan === p.value ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : ''}`}
+                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${plan === p.value ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-200' : ''}`}
                     style={plan !== p.value ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : undefined}>
                     <p className="text-sm font-medium">{p.label}</p>
                     <p className="text-xs opacity-60 mt-0.5">{p.desc}</p>
@@ -282,7 +282,7 @@ function PlanSetupModal({
                 <div className="flex gap-2">
                   {[2, 3, 4, 5, 6].map(n => (
                     <button key={n} onClick={() => updateB2bCount(n)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all ${b2bCount === n ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : ''}`}
+                      className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all ${b2bCount === n ? 'bg-blue-500/20 border-blue-500/40 text-blue-700 dark:text-blue-300' : ''}`}
                       style={b2bCount !== n ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : undefined}>
                       {n}
                     </button>
@@ -333,12 +333,12 @@ function PlanSetupModal({
                 {preview.map((p, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${p.trigger ? 'bg-amber-500/20 text-amber-300' : p.final ? 'bg-green-500/20 text-green-400' : ''}`}
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${p.trigger ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300' : p.final ? 'bg-green-500/20 text-green-400' : ''}`}
                         style={!p.trigger && !p.final ? { background: 'var(--divider)', color: 'var(--text-2)' } : undefined}>
                         {p.no}
                       </div>
                       <span className="text-xs" style={{ color: 'var(--text-2)' }}>{p.name}</span>
-                      {p.trigger && <span className="text-[9px] bg-amber-500/15 text-amber-300 px-1.5 py-0.5 rounded">▶ เริ่มงาน</span>}
+                      {p.trigger && <span className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded">▶ เริ่มงาน</span>}
                       {p.final && <span className="text-[9px] bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">⚑ สุดท้าย</span>}
                     </div>
                     <div className="text-right">
@@ -640,7 +640,7 @@ export default function PaymentsPage() {
                   {!hasPlan ? (
                     <button
                       onClick={e => { e.stopPropagation(); setPlanJob(job) }}
-                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20 transition-colors"
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/20 transition-colors"
                     >
                       <Settings2 size={12} />ตั้งแผนงวด
                     </button>
@@ -673,7 +673,7 @@ export default function PaymentsPage() {
                       <AlertCircle size={28} className="mx-auto text-amber-500/50 mb-3" />
                       <p className="text-sm mb-3" style={{ color: 'var(--text-2)' }}>ยังไม่ได้ตั้งแผนการชำระเงิน</p>
                       <button onClick={() => setPlanJob(job)}
-                        className="flex items-center gap-2 mx-auto px-4 py-2 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/20 rounded-xl text-sm transition-colors">
+                        className="flex items-center gap-2 mx-auto px-4 py-2 bg-amber-500/15 text-amber-600 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/20 rounded-xl text-sm transition-colors">
                         <Settings2 size={14} />ตั้งแผนงวดการชำระเงิน
                       </button>
                     </div>
@@ -713,7 +713,7 @@ export default function PaymentsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
-                              {inst.is_work_trigger && <span className="text-[9px] bg-amber-500/15 text-amber-300 px-1.5 py-0.5 rounded">▶ เริ่มงาน</span>}
+                              {inst.is_work_trigger && <span className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded">▶ เริ่มงาน</span>}
                               {inst.is_final && <span className="text-[9px] bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">⚑ สุดท้าย</span>}
                             </div>
                             <div className="flex items-center gap-3 mt-0.5 text-xs" style={{ color: 'var(--text-2)' }}>

@@ -416,7 +416,7 @@ export default function HandoverPage() {
         <div className="flex gap-2">
           {STATUS_FILTERS.map(f => (
             <button key={f.key} onClick={() => setFilterStatus(f.key)}
-              className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' : ''}`}
+              className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-700 dark:text-indigo-300' : ''}`}
               style={filterStatus !== f.key ? { background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-2)' } : undefined}>
               {f.label} <span className="ml-1 opacity-60">{f.count}</span>
             </button>
@@ -473,7 +473,7 @@ export default function HandoverPage() {
                     <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                       <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
                         <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันเริ่มงาน</p>
-                        <p className={`font-medium ${job.workStartDate ? 'text-amber-300' : ''}`} style={!job.workStartDate ? { color: 'var(--text-3)' } : undefined}>
+                        <p className={`font-medium ${job.workStartDate ? 'text-amber-600 dark:text-amber-300' : ''}`} style={!job.workStartDate ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.workStartDate)}
                         </p>
                       </div>

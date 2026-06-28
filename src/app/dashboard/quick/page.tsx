@@ -1476,28 +1476,28 @@ export default function QuickPage() {
     {
       header: 'ลูกค้า', color: 'text-blue-400',
       buttons: [
-        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: '#93c5fd', bg: 'bg-blue-500/10 border-blue-500/25',       sheet: 'clients' },
-        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: '#a5b4fc', bg: 'bg-indigo-500/10 border-indigo-500/25',   sheet: 'prospects' },
-        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: '#6ee7b7', bg: 'bg-emerald-500/10 border-emerald-500/25',  sheet: 'event' },
-        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: '#67e8f9', bg: 'bg-cyan-500/10 border-cyan-500/25',        sheet: 'lookup' },
+        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: '#2563eb', bg: 'bg-blue-500/10 border-blue-500/25',       sheet: 'clients' },
+        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: '#4f46e5', bg: 'bg-indigo-500/10 border-indigo-500/25',   sheet: 'prospects' },
+        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: '#059669', bg: 'bg-emerald-500/10 border-emerald-500/25',  sheet: 'event' },
+        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: '#0891b2', bg: 'bg-cyan-500/10 border-cyan-500/25',        sheet: 'lookup' },
       ]
     },
     {
       header: 'การเงิน & งาน', color: 'text-amber-400',
       buttons: [
-        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: '#fcd34d', bg: 'bg-amber-500/10 border-amber-500/25',   badge: widgets.pendingInstallments, sheet: 'pay' },
-        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: '#d8b4fe', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'docs' },
-        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: '#86efac', bg: 'bg-green-500/10 border-green-500/25',   badge: widgets.readyToDeliver, sheet: 'deliver' },
-        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: '#7dd3fc', bg: 'bg-sky-500/10 border-sky-500/25',       sheet: 'handover' },
+        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: '#d97706', bg: 'bg-amber-500/10 border-amber-500/25',   badge: widgets.pendingInstallments, sheet: 'pay' },
+        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: '#7c3aed', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'docs' },
+        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: '#16a34a', bg: 'bg-green-500/10 border-green-500/25',   badge: widgets.readyToDeliver, sheet: 'deliver' },
+        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: '#0284c7', bg: 'bg-sky-500/10 border-sky-500/25',       sheet: 'handover' },
       ]
     },
     {
       header: 'ส่วนตัว', color: 'text-rose-400',
       buttons: [
-        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: '#fca5a5', bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : 'bg-[#21262d] border-[#30363d]', badge: widgets.overdueJobs, sheet: 'overdue' },
-        { key: 'report',     icon: ClipboardList,   label: 'Daily\nReport',   iconColor: '#94a3b8', bg: 'bg-[#21262d] border-[#30363d]', href: '/dashboard/daily-report' },
-        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: '#fde68a', bg: 'bg-yellow-500/10 border-yellow-500/25', sheet: 'commission' },
-        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: '#6b7a93', bg: 'bg-[#161b22] border-[#30363d]', href: '/dashboard' },
+        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: '#dc2626', bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : 'bg-[#21262d] border-[#30363d]', badge: widgets.overdueJobs, sheet: 'overdue' },
+        { key: 'report',     icon: ClipboardList,   label: 'Daily\nReport',   iconColor: '#6366f1', bg: 'bg-indigo-500/10 border-indigo-500/25', href: '/dashboard/daily-report' },
+        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: '#ca8a04', bg: 'bg-yellow-500/10 border-yellow-500/25', sheet: 'commission' },
+        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: '#64748b', bg: 'bg-slate-500/10 border-slate-500/25',   href: '/dashboard' },
       ]
     }
   ]

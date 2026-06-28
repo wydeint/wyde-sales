@@ -5,7 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import {
   Search, X, Plus, CheckCircle2, ChevronRight, AlertTriangle,
-  Calendar, AlertCircle, ArrowLeft
+  Calendar, AlertCircle, ArrowLeft,
+  Briefcase, Users, CalendarDays, Database,
+  Receipt, FileText, ArrowRightLeft, ClipboardList,
+  DollarSign, LayoutDashboard, type LucideIcon
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────
@@ -1466,34 +1469,35 @@ export default function QuickPage() {
   useEffect(() => { load() }, [load])
 
   // ─── Button layout: 3 rows × 4 cols = 12 buttons ──────
-  type Row = { header: string; color: string; buttons: { key: string; icon: string; label: string; color: string; bg: string; badge?: number; sheet?: string; href?: string }[] }
+  type Btn = { key: string; icon: LucideIcon; label: string; iconColor: string; bg: string; badge?: number; sheet?: string; href?: string }
+  type Row = { header: string; color: string; buttons: Btn[] }
 
   const ROWS: Row[] = [
     {
       header: 'ลูกค้า', color: 'text-blue-400',
       buttons: [
-        { key: 'clients',   icon: '👔', label: 'Wyde\nClients',    color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/25',      sheet: 'clients' },
-        { key: 'prospects', icon: '👥', label: 'Prospects',         color: 'text-indigo-300',  bg: 'bg-indigo-500/10 border-indigo-500/25',  sheet: 'prospects' },
-        { key: 'event',     icon: '📅', label: 'ลูกค้า\nEvent',    color: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/25', sheet: 'event' },
-        { key: 'lookup',    icon: '🔍', label: 'ค้นหา\nลูกค้า',   color: 'text-cyan-300',    bg: 'bg-cyan-500/10 border-cyan-500/25',       sheet: 'lookup' },
+        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: '#93c5fd', bg: 'bg-blue-500/10 border-blue-500/25',       sheet: 'clients' },
+        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: '#a5b4fc', bg: 'bg-indigo-500/10 border-indigo-500/25',   sheet: 'prospects' },
+        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: '#6ee7b7', bg: 'bg-emerald-500/10 border-emerald-500/25',  sheet: 'event' },
+        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: '#67e8f9', bg: 'bg-cyan-500/10 border-cyan-500/25',        sheet: 'lookup' },
       ]
     },
     {
       header: 'การเงิน & งาน', color: 'text-amber-400',
       buttons: [
-        { key: 'pay',      icon: '💰', label: 'บันทึก\nรับเงิน',  color: 'text-amber-300',  bg: 'bg-amber-500/10 border-amber-500/25',   badge: widgets.pendingInstallments, sheet: 'pay' },
-        { key: 'docs',     icon: '📋', label: 'เอกสาร\nลูกค้า',  color: 'text-purple-300', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'docs' },
-        { key: 'deliver',  icon: '🚚', label: 'บันทึก\nส่งมอบ',  color: 'text-green-300',  bg: 'bg-green-500/10 border-green-500/25',   badge: widgets.readyToDeliver, sheet: 'deliver' },
-        { key: 'handover', icon: '🏗️', label: 'สถานะ\nงาน',      color: 'text-sky-300',    bg: 'bg-sky-500/10 border-sky-500/25',       sheet: 'handover' },
+        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: '#fcd34d', bg: 'bg-amber-500/10 border-amber-500/25',   badge: widgets.pendingInstallments, sheet: 'pay' },
+        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: '#d8b4fe', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'docs' },
+        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: '#86efac', bg: 'bg-green-500/10 border-green-500/25',   badge: widgets.readyToDeliver, sheet: 'deliver' },
+        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: '#7dd3fc', bg: 'bg-sky-500/10 border-sky-500/25',       sheet: 'handover' },
       ]
     },
     {
       header: 'ส่วนตัว', color: 'text-rose-400',
       buttons: [
-        { key: 'overdue',    icon: '⚠️', label: 'งานเกิน\nกำหนด',  color: 'text-red-300',    bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : 'bg-[#21262d] border-[#30363d]', badge: widgets.overdueJobs, sheet: 'overdue' },
-        { key: 'report',     icon: '📝', label: 'Daily\nReport',    color: 'text-[#8b949e]',  bg: 'bg-[#21262d] border-[#30363d]', href: '/dashboard/daily-report' },
-        { key: 'commission', icon: '💎', label: 'Commission',       color: 'text-yellow-300', bg: 'bg-yellow-500/10 border-yellow-500/25', sheet: 'commission' },
-        { key: 'home',       icon: '🏠', label: 'หน้าหลัก',        color: 'text-[#484f58]',  bg: 'bg-[#161b22] border-[#30363d]', href: '/dashboard' },
+        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: '#fca5a5', bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : 'bg-[#21262d] border-[#30363d]', badge: widgets.overdueJobs, sheet: 'overdue' },
+        { key: 'report',     icon: ClipboardList,   label: 'Daily\nReport',   iconColor: '#94a3b8', bg: 'bg-[#21262d] border-[#30363d]', href: '/dashboard/daily-report' },
+        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: '#fde68a', bg: 'bg-yellow-500/10 border-yellow-500/25', sheet: 'commission' },
+        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: '#6b7a93', bg: 'bg-[#161b22] border-[#30363d]', href: '/dashboard' },
       ]
     }
   ]
@@ -1567,7 +1571,7 @@ export default function QuickPage() {
                       {btn.badge > 9 ? '9+' : btn.badge}
                     </div>
                   )}
-                  <span className="text-xl leading-none">{btn.icon}</span>
+                  <btn.icon size={24} color={btn.iconColor} strokeWidth={1.75} />
                   <span className="text-[11px] font-bold text-center leading-tight" style={{ whiteSpace: 'pre-line', color: 'var(--text-1)' }}>{btn.label}</span>
                 </button>
               ))}

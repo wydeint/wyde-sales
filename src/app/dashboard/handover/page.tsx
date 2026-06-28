@@ -140,23 +140,24 @@ function DeliveryModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md bg-[#161b22] border border-[#30363d] rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-[#21262d]">
+      <div className="relative w-full max-w-md rounded-2xl shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
-            <h3 className="text-white font-semibold">บันทึกส่งมอบงาน</h3>
-            <p className="text-[#8b949e] text-xs mt-0.5">{job.customerName} · {job.roomNo}</p>
+            <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>บันทึกส่งมอบงาน</h3>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{job.customerName} · {job.roomNo}</p>
           </div>
-          <button onClick={onClose} className="text-[#8b949e] hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-xs text-[#8b949e] mb-1.5 block">วันที่ส่งมอบจริง</label>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-2)' }}>วันที่ส่งมอบจริง</label>
             <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
-              className="w-full bg-[#21262d] border border-[#30363d] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#58a6ff]" />
+              className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-[#8b949e]">แนบใบส่งมอบที่ลูกค้าเซ็น (Google Drive URL)</label>
+              <label className="text-xs" style={{ color: 'var(--text-2)' }}>แนบใบส่งมอบที่ลูกค้าเซ็น (Google Drive URL)</label>
               {fileUrls.length < 5 && (
                 <button onClick={addUrl} className="text-xs text-[#58a6ff] flex items-center gap-1"><Plus size={12} />เพิ่ม</button>
               )}
@@ -166,21 +167,22 @@ function DeliveryModal({
                 <div key={i} className="flex gap-2">
                   <input value={url} onChange={e => updateUrl(i, e.target.value)}
                     placeholder="https://drive.google.com/..."
-                    className="flex-1 bg-[#21262d] border border-[#30363d] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#58a6ff]" />
+                    className="flex-1 rounded-lg px-3 py-2 text-xs focus:outline-none"
+                    style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                   {fileUrls.length > 1 && (
-                    <button onClick={() => removeUrl(i)} className="text-[#484f58] hover:text-red-400 p-2"><X size={14} /></button>
+                    <button onClick={() => removeUrl(i)} className="hover:text-red-400 p-2" style={{ color: 'var(--text-3)' }}><X size={14} /></button>
                   )}
                 </div>
               ))}
             </div>
-            <p className="text-[#484f58] text-[10px] mt-1">รองรับ jpg, pdf — ไม่เกิน 5 ไฟล์</p>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>รองรับ jpg, pdf — ไม่เกิน 5 ไฟล์</p>
           </div>
           <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
             <p className="text-indigo-300 text-xs">⚡ เมื่อบันทึกส่งมอบแล้ว — Commission จะถูก trigger อัตโนมัติ</p>
           </div>
         </div>
-        <div className="flex justify-end gap-3 p-5 border-t border-[#21262d]">
-          <button onClick={onClose} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm">ยกเลิก</button>
+        <div className="flex justify-end gap-3 p-5" style={{ borderTop: '1px solid var(--divider)' }}>
+          <button onClick={onClose} className="px-4 py-2 text-sm" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving}
             className="px-5 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white text-sm rounded-xl font-medium">
             {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
@@ -333,8 +335,8 @@ export default function HandoverPage() {
     <div className="p-4 md:p-6">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-white text-xl font-bold">Handover</h1>
-        <p className="text-[#8b949e] text-sm mt-0.5">ติดตามงาน · วันส่งมอบ · Commission</p>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Handover</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามงาน · วันส่งมอบ · Commission</p>
       </div>
 
       {/* KPI bar */}
@@ -345,8 +347,8 @@ export default function HandoverPage() {
           { label: 'ส่งมอบแล้ว', value: delivered, color: 'text-green-400' },
           { label: 'เกินกำหนด', value: overdue, color: 'text-red-400' },
         ].map(k => (
-          <div key={k.label} className="bg-[#161b22] border border-[#30363d] rounded-xl p-3">
-            <p className="text-[#484f58] text-xs mb-1">{k.label}</p>
+          <div key={k.label} className="rounded-xl p-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
             <p className={`text-2xl font-bold ${k.color}`}>{k.value}</p>
           </div>
         ))}
@@ -368,34 +370,34 @@ export default function HandoverPage() {
         const overdueRev = overdueRolling.reduce((s, j) => s + j.revenueExVat, 0)
 
         return (
-          <div className="mb-5 rounded-2xl p-4 bg-[#161b22] border border-[#30363d]">
+          <div className="mb-5 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             {/* Period pills */}
             <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <span className="text-[#8b949e] text-xs font-semibold">รายได้ตามช่วงเวลา:</span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รายได้ตามช่วงเวลา:</span>
               {(['week','month','quarter','year'] as HPeriod[]).map(p => (
                 <button key={p} onClick={() => setHPeriod(p)}
                   className="px-3 py-1 rounded-full text-xs font-semibold transition-colors"
-                  style={{ background: hPeriod === p ? '#6366f1' : 'rgba(255,255,255,0.05)', color: hPeriod === p ? '#fff' : '#8b949e', border: `1px solid ${hPeriod === p ? '#6366f1' : '#30363d'}` }}>
+                  style={{ background: hPeriod === p ? '#6366f1' : 'rgba(255,255,255,0.05)', color: hPeriod === p ? '#fff' : 'var(--text-2)', border: `1px solid ${hPeriod === p ? '#6366f1' : 'var(--divider)'}` }}>
                   {p === 'week' ? 'สัปดาห์' : p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
                 </button>
               ))}
-              <span className="text-[#484f58] text-xs ml-1">{label}</span>
+              <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>{label}</span>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-[#0d1117] rounded-xl p-3">
-                <p className="text-[#484f58] text-[10px] mb-1">คาดว่าจะส่งมอบ</p>
+              <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
+                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>คาดว่าจะส่งมอบ</p>
                 <p className="text-blue-400 font-bold text-base">{fmtBahtH(expectedRev)}</p>
-                <p className="text-[#484f58] text-[10px]">{expected.length} ห้อง</p>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{expected.length} ห้อง</p>
               </div>
-              <div className="bg-[#0d1117] rounded-xl p-3">
-                <p className="text-[#484f58] text-[10px] mb-1">ส่งมอบแล้ว</p>
+              <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
+                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</p>
                 <p className="text-green-400 font-bold text-base">{fmtBahtH(deliveredRev)}</p>
-                <p className="text-[#484f58] text-[10px]">{deliveredInPeriod.length} ห้อง</p>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{deliveredInPeriod.length} ห้อง</p>
               </div>
-              <div className="bg-[#0d1117] rounded-xl p-3">
-                <p className="text-[#484f58] text-[10px] mb-1">เกินกำหนด (ทบ)</p>
+              <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
+                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด (ทบ)</p>
                 <p className="text-red-400 font-bold text-base">{fmtBahtH(overdueRev)}</p>
-                <p className="text-[#484f58] text-[10px]">{overdueRolling.length} ห้อง</p>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{overdueRolling.length} ห้อง</p>
               </div>
             </div>
           </div>
@@ -405,15 +407,17 @@ export default function HandoverPage() {
       {/* Search + Filter */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 min-w-48">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#484f58]" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อ, ห้อง, โครงการ..."
-            className="w-full bg-[#161b22] border border-[#30363d] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff]" />
+            className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
         <div className="flex gap-2">
           {STATUS_FILTERS.map(f => (
             <button key={f.key} onClick={() => setFilterStatus(f.key)}
-              className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' : 'bg-[#161b22] border-[#30363d] text-[#8b949e] hover:border-[#484f58]'}`}>
+              className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' : ''}`}
+              style={filterStatus !== f.key ? { background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-2)' } : undefined}>
               {f.label} <span className="ml-1 opacity-60">{f.count}</span>
             </button>
           ))}
@@ -424,8 +428,8 @@ export default function HandoverPage() {
       {loading && <div className="flex justify-center py-16"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
       {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
       {!loading && filtered.length === 0 && (
-        <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
-          <p className="text-[#8b949e]">ไม่พบข้อมูล</p>
+        <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <p style={{ color: 'var(--text-2)' }}>ไม่พบข้อมูล</p>
         </div>
       )}
 
@@ -436,7 +440,8 @@ export default function HandoverPage() {
           const isOverdue = job.workStatus !== 'delivered' && job.daysOverdue > 0
 
           return (
-            <div key={job.jobId} className={`bg-[#161b22] border rounded-xl overflow-hidden ${isOverdue && job.workStatus !== 'delivered' ? 'border-red-500/30' : 'border-[#30363d]'}`}>
+            <div key={job.jobId} className={`rounded-xl overflow-hidden ${isOverdue && job.workStatus !== 'delivered' ? 'border border-red-500/30' : ''}`}
+              style={!(isOverdue && job.workStatus !== 'delivered') ? { background: 'var(--card-bg)', border: '1px solid var(--card-border)' } : { background: 'var(--card-bg)' }}>
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   {/* Status icon */}
@@ -447,7 +452,7 @@ export default function HandoverPage() {
                   {/* Main info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-white font-semibold">{job.customerName}</span>
+                      <span className="font-semibold" style={{ color: 'var(--text-1)' }}>{job.customerName}</span>
                       <span className="text-[#58a6ff] text-xs font-mono">{job.roomNo}</span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${job.clientType === 'B2B' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
                         {job.clientType}
@@ -458,29 +463,29 @@ export default function HandoverPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-[#8b949e] flex-wrap">
+                    <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: 'var(--text-2)' }}>
                       <span>{job.projectName}</span>
                       <span>· {job.salesName}</span>
-                      <span className="text-white font-medium">{fmtBaht(job.revenueExVat)}</span>
+                      <span className="font-medium" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenueExVat)}</span>
                     </div>
 
                     {/* Timeline bar */}
                     <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                      <div className="bg-[#0d1117] rounded-lg p-2">
-                        <p className="text-[#484f58] text-[9px] mb-0.5">วันเริ่มงาน</p>
-                        <p className={`font-medium ${job.workStartDate ? 'text-amber-300' : 'text-[#484f58]'}`}>
+                      <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
+                        <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันเริ่มงาน</p>
+                        <p className={`font-medium ${job.workStartDate ? 'text-amber-300' : ''}`} style={!job.workStartDate ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.workStartDate)}
                         </p>
                       </div>
-                      <div className="bg-[#0d1117] rounded-lg p-2">
-                        <p className="text-[#484f58] text-[9px] mb-0.5">วันครบสัญญา ({job.workDays} วัน)</p>
-                        <p className={`font-medium ${isOverdue ? 'text-red-400' : job.workEndDate ? 'text-[#c9d1d9]' : 'text-[#484f58]'}`}>
+                      <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
+                        <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันครบสัญญา ({job.workDays} วัน)</p>
+                        <p className={`font-medium ${isOverdue ? 'text-red-400' : ''}`} style={!isOverdue && job.workEndDate ? { color: 'var(--text-2)' } : !isOverdue ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.workEndDate)}
                         </p>
                       </div>
-                      <div className="bg-[#0d1117] rounded-lg p-2">
-                        <p className="text-[#484f58] text-[9px] mb-0.5">วันส่งมอบจริง</p>
-                        <p className={`font-medium ${job.deliveryDate ? 'text-green-400' : 'text-[#484f58]'}`}>
+                      <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
+                        <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันส่งมอบจริง</p>
+                        <p className={`font-medium ${job.deliveryDate ? 'text-green-400' : ''}`} style={!job.deliveryDate ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.deliveryDate)}
                         </p>
                       </div>
@@ -510,8 +515,8 @@ export default function HandoverPage() {
 
                 {/* Status toggle buttons */}
                 {job.workStatus !== 'delivered' && (
-                  <div className="mt-3 pt-3 border-t border-[#21262d] flex items-center gap-2 flex-wrap">
-                    <span className="text-[#484f58] text-xs">เปลี่ยนสถานะ:</span>
+                  <div className="mt-3 pt-3 flex items-center gap-2 flex-wrap" style={{ borderTop: '1px solid var(--divider)' }}>
+                    <span className="text-xs" style={{ color: 'var(--text-3)' }}>เปลี่ยนสถานะ:</span>
                     {((['in_progress', 'ready_to_deliver', 'delivered'] as WorkStatus[])).map(s => {
                       const c = STATUS_CONFIG[s]
                       const isActive = job.workStatus === s
@@ -525,9 +530,10 @@ export default function HandoverPage() {
                             isActive
                               ? `${c.bg} ${c.color} cursor-default`
                               : isDeliverLocked
-                                ? 'bg-[#21262d] border-[#30363d] text-[#484f58] cursor-not-allowed opacity-40'
-                                : `bg-[#21262d] border-[#30363d] text-[#8b949e] hover:${c.bg} hover:${c.color} hover:border-current`
-                          }`}>
+                                ? 'cursor-not-allowed opacity-40'
+                                : ''
+                          }`}
+                          style={(!isActive && !isDeliverLocked) ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : isDeliverLocked ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-3)' } : undefined}>
                           {c.icon}{c.label}
                           {isDeliverLocked && s === 'delivered' && <span className="text-[9px] opacity-60">(ล็อก)</span>}
                         </button>

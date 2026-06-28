@@ -125,8 +125,8 @@ export default function WarrantyPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-xl font-bold">Warranty</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">ติดตามระยะเวลาประกันผลงาน</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Warranty</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามระยะเวลาประกันผลงาน</p>
         </div>
         <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
           className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -145,8 +145,8 @@ export default function WarrantyPage() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {STATUS.map(s => (
-          <div key={s.value} className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-            <p className="text-[#8b949e] text-xs mb-1">{s.label}</p>
+          <div key={s.value} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{s.label}</p>
             <p className={`text-2xl font-bold ${s.color.split(' ')[1]}`}>{warranties.filter(w => w.status === s.value).length}</p>
           </div>
         ))}
@@ -155,17 +155,17 @@ export default function WarrantyPage() {
       {/* Active warranties */}
       {active.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-[#8b949e] text-xs font-bold mb-3">อยู่ในประกัน ({active.length})</h2>
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+          <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>อยู่ในประกัน ({active.length})</h2>
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">โครงการ / ห้อง</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">เริ่มประกัน</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">หมดประกัน</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">คงเหลือ</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">สถานะ</th>
+                <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>โครงการ / ห้อง</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>เริ่มประกัน</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>หมดประกัน</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>คงเหลือ</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>สถานะ</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -174,17 +174,17 @@ export default function WarrantyPage() {
                   const st = STATUS.find(s => s.value === w.status) || STATUS[0]
                   const days = daysLeft(w.warranty_end)
                   return (
-                    <tr key={w.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
+                    <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
                       <td className="px-4 py-3">
-                        <p className="text-white text-sm">{(w as any).customers?.name || '-'}</p>
-                        <p className="text-[#484f58] text-xs">{(w as any).customers?.phone}</p>
+                        <p className="text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.name || '-'}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{(w as any).customers?.phone}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-[#c9d1d9] text-sm">{(w as any).projects?.name || '-'}</p>
+                        <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(w as any).projects?.name || '-'}</p>
                         <p className="text-[#58a6ff] text-xs">{w.room}</p>
                       </td>
-                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{dateStr(w.warranty_start)}</td>
-                      <td className="px-4 py-3 text-[#c9d1d9] text-sm">{dateStr(w.warranty_end)}</td>
+                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_start)}</td>
+                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_end)}</td>
                       <td className="px-4 py-3">
                         {days !== null && (
                           <span className={`text-sm font-medium ${days <= 30 ? 'text-yellow-400' : 'text-green-400'}`}>
@@ -200,7 +200,7 @@ export default function WarrantyPage() {
                           setEditing(w)
                           setForm({ customer_id: w.customer_id, project_id: w.project_id, room: w.room, handover_date: w.handover_date || '', warranty_start: w.warranty_start || '', warranty_end: w.warranty_end || '', warranty_months: w.warranty_months, status: w.status, notes: w.notes || '' })
                           setOpen(true)
-                        }} className="text-[#8b949e] hover:text-white transition-colors">
+                        }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                           <Pencil size={14} />
                         </button>
                       </td>
@@ -216,23 +216,23 @@ export default function WarrantyPage() {
       {/* Expired */}
       {expired.length > 0 && (
         <div>
-          <h2 className="text-[#8b949e] text-xs font-bold mb-3">หมดประกันแล้ว ({expired.length})</h2>
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden opacity-60">
+          <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>หมดประกันแล้ว ({expired.length})</h2>
+          <div className="rounded-xl overflow-hidden opacity-60" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#21262d]">
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">โครงการ / ห้อง</th>
-                  <th className="text-left px-4 py-3 text-[#8b949e] text-xs">หมดประกัน</th>
+                <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>โครงการ / ห้อง</th>
+                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>หมดประกัน</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
                 {expired.map((w, i) => (
-                  <tr key={w.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
-                    <td className="px-4 py-3 text-white text-sm">{(w as any).customers?.name || '-'}</td>
+                  <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+                    <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.name || '-'}</td>
                     <td className="px-4 py-3">
-                      <p className="text-[#c9d1d9] text-sm">{(w as any).projects?.name || '-'}</p>
+                      <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(w as any).projects?.name || '-'}</p>
                       <p className="text-[#58a6ff] text-xs">{w.room}</p>
                     </td>
                     <td className="px-4 py-3 text-red-400 text-sm">{dateStr(w.warranty_end)}</td>
@@ -241,7 +241,7 @@ export default function WarrantyPage() {
                         setEditing(w)
                         setForm({ customer_id: w.customer_id, project_id: w.project_id, room: w.room, handover_date: w.handover_date || '', warranty_start: w.warranty_start || '', warranty_end: w.warranty_end || '', warranty_months: w.warranty_months, status: w.status, notes: w.notes || '' })
                         setOpen(true)
-                      }} className="text-[#8b949e] hover:text-white transition-colors">
+                      }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                         <Pencil size={14} />
                       </button>
                     </td>
@@ -254,9 +254,9 @@ export default function WarrantyPage() {
       )}
 
       {!loading && warranties.length === 0 && (
-        <div className="text-center py-16 bg-[#161b22] border border-[#30363d] rounded-xl">
-          <ShieldCheck size={32} className="mx-auto text-[#484f58] mb-2" />
-          <p className="text-[#8b949e] text-sm">ยังไม่มีข้อมูลประกัน</p>
+        <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <ShieldCheck size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีข้อมูลประกัน</p>
         </div>
       )}
 
@@ -269,9 +269,9 @@ export default function WarrantyPage() {
           <Input label="วัน Handover" type="date" value={form.handover_date} onChange={e => setForm({ ...form, handover_date: e.target.value })} />
           <Input label="วันเริ่มประกัน" type="date" value={form.warranty_start} onChange={e => updateStart(e.target.value)} />
           <Input label="ระยะเวลาประกัน (เดือน)" type="number" value={form.warranty_months} onChange={e => updateMonths(Number(e.target.value))} />
-          <div className="col-span-2 bg-[#0d1117] rounded-lg p-3">
-            <p className="text-[#8b949e] text-xs mb-1">วันหมดประกัน (คำนวณอัตโนมัติ)</p>
-            <p className="text-white font-medium">{form.warranty_end ? dateStr(form.warranty_end) : '-'}</p>
+          <div className="col-span-2 rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>วันหมดประกัน (คำนวณอัตโนมัติ)</p>
+            <p className="font-medium" style={{ color: 'var(--text-1)' }}>{form.warranty_end ? dateStr(form.warranty_end) : '-'}</p>
           </div>
           <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={statusOptions} />
           <div className="col-span-2">
@@ -279,7 +279,7 @@ export default function WarrantyPage() {
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving || !form.customer_id} className="px-4 py-2 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>

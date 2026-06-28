@@ -131,8 +131,8 @@ export default function CommissionPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-xl font-bold">Commission</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">ติดตามค่าคอมมิชชั่นทีมขาย</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Commission</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามค่าคอมมิชชั่นทีมขาย</p>
         </div>
         <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
           className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -142,37 +142,37 @@ export default function CommissionPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-          <p className="text-[#8b949e] text-xs mb-1">รอดำเนินการ</p>
+        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>รอดำเนินการ</p>
           <p className="text-yellow-400 text-xl font-bold">{f(totalPending)}</p>
-          <p className="text-[#484f58] text-xs mt-1">{commissions.filter(c => c.status === 'pending').length} รายการ</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{commissions.filter(c => c.status === 'pending').length} รายการ</p>
         </div>
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-          <p className="text-[#8b949e] text-xs mb-1">อนุมัติแล้ว</p>
+        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>อนุมัติแล้ว</p>
           <p className="text-blue-400 text-xl font-bold">{f(totalApproved)}</p>
-          <p className="text-[#484f58] text-xs mt-1">{commissions.filter(c => c.status === 'approved').length} รายการ</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{commissions.filter(c => c.status === 'approved').length} รายการ</p>
         </div>
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-          <p className="text-[#8b949e] text-xs mb-1">จ่ายแล้ว</p>
+        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>จ่ายแล้ว</p>
           <p className="text-green-400 text-xl font-bold">{f(totalPaid)}</p>
-          <p className="text-[#484f58] text-xs mt-1">{commissions.filter(c => c.status === 'paid').length} รายการ</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{commissions.filter(c => c.status === 'paid').length} รายการ</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#21262d]">
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ID</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">ลูกค้า / ห้อง</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">Sales</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">ราคาขาย</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Rate</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Commission</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Bonus</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">รวม</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">สถานะ</th>
+            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ID</th>
+              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า / ห้อง</th>
+              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Sales</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ราคาขาย</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Rate</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Commission</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Bonus</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>รวม</th>
+              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>สถานะ</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -181,23 +181,23 @@ export default function CommissionPage() {
             {!loading && fetchError && <TableError colSpan={10} message={fetchError} onRetry={load} />}
             {!loading && commissions.length === 0 && (
               <tr><td colSpan={10} className="text-center py-12">
-                <DollarSign size={32} className="mx-auto text-[#484f58] mb-2" />
-                <p className="text-[#8b949e] text-sm">ยังไม่มี Commission</p>
+                <DollarSign size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มี Commission</p>
               </td></tr>
             )}
             {commissions.map((c, i) => {
               const st = STATUS.find(s => s.value === c.status) || STATUS[0]
               return (
-                <tr key={c.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
+                <tr key={c.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
                   <td className="px-4 py-3 text-[#58a6ff] text-xs font-mono">{c.id}</td>
                   <td className="px-4 py-3">
-                    <p className="text-white text-sm">{(c as any).customers?.name || '-'}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-1)' }}>{(c as any).customers?.name || '-'}</p>
                     <p className="text-[#58a6ff] text-xs">{c.room || '-'}</p>
                   </td>
-                  <td className="px-4 py-3 text-[#c9d1d9] text-sm">{(c as any).users?.name || '-'}</td>
-                  <td className="px-4 py-3 text-right text-[#c9d1d9] text-sm">{f(c.sale_price)}</td>
-                  <td className="px-4 py-3 text-right text-[#8b949e] text-sm">{pct(c.commission_rate)}</td>
-                  <td className="px-4 py-3 text-right text-[#c9d1d9] text-sm">{f(c.commission_amount)}</td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
+                  <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{f(c.sale_price)}</td>
+                  <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{pct(c.commission_rate)}</td>
+                  <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{f(c.commission_amount)}</td>
                   <td className="px-4 py-3 text-right text-yellow-400 text-sm">{c.bonus > 0 ? f(c.bonus) : '-'}</td>
                   <td className="px-4 py-3 text-right text-green-400 text-sm font-medium">{f(c.total_commission)}</td>
                   <td className="px-4 py-3">
@@ -208,7 +208,7 @@ export default function CommissionPage() {
                       setEditing(c)
                       setForm({ customer_id: c.customer_id, sales_person_id: c.sales_person_id, project_id: c.project_id, room: c.room, sale_price: c.sale_price, commission_rate: c.commission_rate, commission_amount: c.commission_amount, bonus: c.bonus, total_commission: c.total_commission, status: c.status, paid_date: c.paid_date || '', notes: c.notes })
                       setOpen(true)
-                    }} className="text-[#8b949e] hover:text-white transition-colors">
+                    }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                       <Pencil size={14} />
                     </button>
                   </td>
@@ -228,18 +228,19 @@ export default function CommissionPage() {
           <Input label="ห้อง" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} placeholder="A-1201" />
           <Input label="ราคาขาย (บาท)" type="number" value={form.sale_price} onChange={e => updatePrice(Number(e.target.value))} />
           <Input label="Commission Rate (%)" type="number" value={form.commission_rate} onChange={e => updateRate(Number(e.target.value))} />
-          <div className="col-span-2 bg-[#0d1117] rounded-lg p-3 grid grid-cols-3 gap-3">
+          <div className="col-span-2 rounded-lg p-3 grid grid-cols-3 gap-3" style={{ background: 'var(--hover-bg)' }}>
             <div>
-              <p className="text-[#8b949e] text-xs mb-1">Commission</p>
-              <p className="text-white font-medium">{f(form.commission_amount)}</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Commission</p>
+              <p className="font-medium" style={{ color: 'var(--text-1)' }}>{f(form.commission_amount)}</p>
             </div>
             <div>
-              <p className="text-[#8b949e] text-xs mb-1">Bonus</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Bonus</p>
               <input type="number" value={form.bonus} onChange={e => updateBonus(Number(e.target.value))}
-                className="bg-transparent text-yellow-400 font-medium text-sm w-full outline-none border-b border-[#30363d] pb-0.5" />
+                className="bg-transparent text-yellow-400 font-medium text-sm w-full outline-none pb-0.5"
+                style={{ borderBottom: '1px solid var(--divider)' }} />
             </div>
             <div>
-              <p className="text-[#8b949e] text-xs mb-1">รวมทั้งหมด</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>รวมทั้งหมด</p>
               <p className="text-green-400 font-bold">{f(form.total_commission)}</p>
             </div>
           </div>
@@ -252,7 +253,7 @@ export default function CommissionPage() {
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+          <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving || !form.customer_id || !form.sales_person_id} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>

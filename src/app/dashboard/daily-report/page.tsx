@@ -86,8 +86,8 @@ export default function DailyReportPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-xl font-bold">Daily Report</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">รายงานการทำงานประจำวัน</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Daily Report</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายงานการทำงานประจำวัน</p>
         </div>
         {!todayDone && (
           <button onClick={() => setShowForm(!showForm)}
@@ -104,8 +104,8 @@ export default function DailyReportPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 mb-6">
-          <h2 className="text-white font-medium mb-4">บันทึกรายงานวันที่ {new Date(form.date).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h2>
+        <div className="rounded-xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <h2 className="font-medium mb-4" style={{ color: 'var(--text-1)' }}>บันทึกรายงานวันที่ {new Date(form.date).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <Input label="โทรหาลูกค้า (ครั้ง)" type="number" value={form.calls} onChange={e => setForm({ ...form, calls: Number(e.target.value) })} />
             <Input label="เยี่ยมลูกค้า (ครั้ง)" type="number" value={form.visits} onChange={e => setForm({ ...form, visits: Number(e.target.value) })} />
@@ -120,7 +120,7 @@ export default function DailyReportPage() {
             <TextArea label="หมายเหตุ / สรุปวันนี้" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="สรุปกิจกรรมวันนี้..." />
           </div>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-[#8b949e] hover:text-white text-sm transition-colors">ยกเลิก</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
             <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
               {saving ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
@@ -129,22 +129,22 @@ export default function DailyReportPage() {
       )}
 
       {/* History */}
-      <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#21262d]">
-          <p className="text-[#8b949e] text-xs font-medium">ประวัติรายงาน 30 วันล่าสุด</p>
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>ประวัติรายงาน 30 วันล่าสุด</p>
         </div>
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#21262d]">
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">วันที่</th>
-              <th className="text-left px-4 py-3 text-[#8b949e] text-xs">Sales</th>
-              <th className="text-center px-4 py-3 text-[#8b949e] text-xs">โทร</th>
-              <th className="text-center px-4 py-3 text-[#8b949e] text-xs">เยี่ยม</th>
-              <th className="text-center px-4 py-3 text-[#8b949e] text-xs">Follow</th>
-              <th className="text-center px-4 py-3 text-[#8b949e] text-xs">ใบเสนอ</th>
-              <th className="text-center px-4 py-3 text-[#8b949e] text-xs">Lead</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">มูลค่าใบเสนอ</th>
-              <th className="text-right px-4 py-3 text-[#8b949e] text-xs">Booking</th>
+            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>วันที่</th>
+              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Sales</th>
+              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>โทร</th>
+              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>เยี่ยม</th>
+              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Follow</th>
+              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ใบเสนอ</th>
+              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Lead</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>มูลค่าใบเสนอ</th>
+              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Booking</th>
             </tr>
           </thead>
           <tbody>
@@ -152,22 +152,22 @@ export default function DailyReportPage() {
             {!loading && fetchError && <TableError colSpan={9} message={fetchError} onRetry={load} />}
             {!loading && reports.length === 0 && (
               <tr><td colSpan={9} className="text-center py-12">
-                <ClipboardList size={32} className="mx-auto text-[#484f58] mb-2" />
-                <p className="text-[#8b949e] text-sm">ยังไม่มีรายงาน</p>
+                <ClipboardList size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีรายงาน</p>
               </td></tr>
             )}
             {reports.map((r, i) => (
-              <tr key={r.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm">
+              <tr key={r.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+                <td className="px-4 py-2.5 text-sm" style={{ color: 'var(--text-2)' }}>
                   {new Date(r.date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
                 </td>
-                <td className="px-4 py-2.5 text-white text-sm">{(r as any).users?.name || '-'}</td>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm text-center">{r.calls}</td>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm text-center">{r.visits}</td>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm text-center">{r.follow_ups}</td>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm text-center">{r.quotations_sent}</td>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm text-center">{r.leads_created}</td>
-                <td className="px-4 py-2.5 text-[#c9d1d9] text-sm text-right">{f(r.quotation_value)}</td>
+                <td className="px-4 py-2.5 text-sm" style={{ color: 'var(--text-1)' }}>{(r as any).users?.name || '-'}</td>
+                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.calls}</td>
+                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.visits}</td>
+                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.follow_ups}</td>
+                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.quotations_sent}</td>
+                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.leads_created}</td>
+                <td className="px-4 py-2.5 text-sm text-right" style={{ color: 'var(--text-2)' }}>{f(r.quotation_value)}</td>
                 <td className="px-4 py-2.5 text-green-400 text-sm text-right font-medium">{f(r.booking_value)}</td>
               </tr>
             ))}

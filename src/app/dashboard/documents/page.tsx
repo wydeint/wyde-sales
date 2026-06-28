@@ -86,16 +86,17 @@ function UrlModal({ open, label, initialUrl, onSave, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-[#161b22] border border-[#30363d] rounded-2xl p-5 w-full max-w-md" onClick={e => e.stopPropagation()}>
+      <div className="relative rounded-2xl p-5 w-full max-w-md" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-white font-semibold text-sm">{label}</h3>
-          <button onClick={onClose} className="text-[#484f58] hover:text-white"><X size={16} /></button>
+          <h3 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{label}</h3>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={16} /></button>
         </div>
         <input value={url} onChange={e => setUrl(e.target.value)}
           placeholder="https://drive.google.com/..."
-          className="w-full bg-[#21262d] border border-[#30363d] rounded-xl px-4 py-3 text-sm text-white placeholder-[#484f58] focus:outline-none focus:border-[#58a6ff] mb-4" />
+          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none mb-4"
+          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-3 bg-[#21262d] text-[#8b949e] rounded-xl text-sm">ยกเลิก</button>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={() => { onSave(url); onClose() }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold">บันทึก</button>
         </div>
       </div>
@@ -111,7 +112,7 @@ function DocBadge({ hasUrl, url, onClick }: { hasUrl: boolean; url?: string | nu
         {hasUrl ? (
           <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />
         ) : (
-          <Circle size={16} className="text-[#484f58] flex-shrink-0 group-hover:text-[#8b949e]" />
+          <Circle size={16} className="flex-shrink-0" style={{ color: 'var(--text-3)' }} />
         )}
       </button>
       {hasUrl && url && (
@@ -279,7 +280,7 @@ export default function DocumentsPage() {
                   {/* Progress circle */}
                   <div className="relative flex-shrink-0 w-10 h-10">
                     <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-                      <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" className="text-[#21262d]" />
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" style={{ color: 'var(--divider)' }} />
                       <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3"
                         strokeDasharray={`${pct * 0.942} 100`}
                         className={allDone ? 'text-emerald-400' : 'text-amber-400'} />
@@ -338,7 +339,7 @@ export default function DocumentsPage() {
                                 <div key={pay.id} className="space-y-2">
                                   <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
                                     งวด {pay.installment_no}: {pay.installment_name}
-                                    <span className={`ml-2 text-[10px] ${pay.status === 'paid' ? 'text-emerald-400' : 'text-[#484f58]'}`}>
+                                    <span className={`ml-2 text-[10px] ${pay.status === 'paid' ? 'text-emerald-400' : ''}`} style={pay.status !== 'paid' ? { color: 'var(--text-3)' } : undefined}>
                                       ({pay.status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'})
                                     </span>
                                   </p>

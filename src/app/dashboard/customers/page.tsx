@@ -155,8 +155,8 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-xl font-bold">ลูกค้า Condo Origin</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">รายชื่อลูกค้าและ Pipeline การขาย</p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>ลูกค้า Condo Origin</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าและ Pipeline การขาย</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setEditing(null); setForm(emptyForm); setSaveError(''); setOpen(true) }}
@@ -208,7 +208,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden">
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -226,35 +226,35 @@ export default function CustomersPage() {
             {!loading && fetchError && <TableError colSpan={7} message={fetchError} onRetry={load} />}
             {!loading && !fetchError && filtered.length === 0 && (
               <tr><td colSpan={7} className="text-center py-12">
-                <Users size={32} className="mx-auto text-[#484f58] mb-2" />
-                <p className="text-[#8b949e] text-sm">ไม่พบลูกค้า</p>
+                <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบลูกค้า</p>
               </td></tr>
             )}
             {filtered.map((c, i) => {
               const st = statusInfo(c.status)
               return (
-                <tr key={c.id} className={`border-b border-[#21262d] hover:bg-[#1c2128] transition-colors ${i % 2 === 0 ? '' : 'bg-[#0d1117]/30'}`}>
+                <tr key={c.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-[#30363d] flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs font-medium">{c.customer_name[0]}</span>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--divider)' }}>
+                        <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{c.customer_name[0]}</span>
                       </div>
                       <div>
-                        <p className="text-white text-sm font-medium">{c.customer_name}</p>
-                        <p className="text-[#484f58] text-xs font-mono">{c.id}</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
+                        <p className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{c.id}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-[#c9d1d9] text-sm">{c.phone || '-'}</p>
-                    {c.line_id && <p className="text-[#484f58] text-xs">LINE: {c.line_id}</p>}
+                    <p className="text-sm" style={{ color: 'var(--text-2)' }}>{c.phone || '-'}</p>
+                    {c.line_id && <p className="text-xs" style={{ color: 'var(--text-3)' }}>LINE: {c.line_id}</p>}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-[#c9d1d9] text-sm">{(c as any).projects?.name || '-'}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).projects?.name || '-'}</p>
                     {c.interested_room && <p className="text-[#58a6ff] text-xs">ห้อง {c.interested_room}</p>}
                   </td>
-                  <td className="px-4 py-3 text-[#8b949e] text-sm capitalize">{c.source || '-'}</td>
-                  <td className="px-4 py-3 text-[#c9d1d9] text-sm">{(c as any).users?.name || '-'}</td>
+                  <td className="px-4 py-3 text-sm capitalize" style={{ color: 'var(--text-2)' }}>{c.source || '-'}</td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${st.color}`}>
                       <span aria-hidden="true">{st.icon}</span>{st.label}
@@ -266,13 +266,14 @@ export default function CustomersPage() {
                         setEditing(c)
                         setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: c.notes })
                         setOpen(true)
-                      }} className="text-[#8b949e] hover:text-white transition-colors">
+                      }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                         <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => deleteCustomer(c)}
                         disabled={deletingId === c.id}
-                        className="text-[#8b949e] hover:text-red-400 transition-colors disabled:opacity-40"
+                        className="hover:text-red-400 transition-colors disabled:opacity-40"
+                        style={{ color: 'var(--text-2)' }}
                         title="ลบลูกค้า"
                       >
                         <Trash2 size={14} />
@@ -285,7 +286,7 @@ export default function CustomersPage() {
           </tbody>
         </table>
         {!loading && (
-          <div className="px-4 py-2 border-t border-[#21262d] text-[#484f58] text-xs">
+          <div className="px-4 py-2 text-xs" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
             แสดง {filtered.length} จาก {customers.length} ราย
           </div>
         )}

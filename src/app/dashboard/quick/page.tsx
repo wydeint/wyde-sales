@@ -117,7 +117,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
     setLoading(true)
     const { data, error } = await supabase
       .from('condo_leads')
-      .select('id, customer_name, phone, room_no, tower, status, project_id')
+      .select('id, customer_name, phone, room_no, tower, project_id')
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
       .order('customer_name')
       .limit(15)
@@ -130,11 +130,6 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
     setSearch(v)
     clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => doSearch(v), 300)
-  }
-
-  const STATUS_COLOR: Record<string, string> = {
-    new: 'text-blue-400', contacted: 'text-yellow-400', interested: 'text-emerald-400',
-    not_interested: 'text-red-400', booked: 'text-purple-400', converted: 'text-green-400',
   }
 
   return (
@@ -151,10 +146,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
         <div className="space-y-2">
           {results.map((r: any) => (
             <div key={r.id} className="bg-[#21262d] rounded-2xl p-4">
-              <div className="flex justify-between items-start mb-1">
-                <p className="text-white font-semibold">{r.customer_name}</p>
-                <span className={`text-xs font-medium ${STATUS_COLOR[r.status] || 'text-[#8b949e]'}`}>{r.status || '—'}</span>
-              </div>
+              <p className="text-white font-semibold mb-1">{r.customer_name}</p>
               <p className="text-[#8b949e] text-xs">
                 {projectsMap[r.project_id] || '—'} · {r.tower ? `${r.tower}-` : ''}ห้อง {r.room_no || '—'}
               </p>

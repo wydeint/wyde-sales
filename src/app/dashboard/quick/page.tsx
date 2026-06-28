@@ -117,9 +117,9 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
     setLoading(true)
     const { data, error } = await supabase
       .from('condo_leads')
-      .select('id, name, phone, room_no, status, project_id')
-      .or(`name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
-      .order('name')
+      .select('id, customer_name, phone, room_no, tower, status, project_id')
+      .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .order('customer_name')
       .limit(15)
     if (error) console.error('OriginPoolSheet search error:', error)
     setResults(data || [])
@@ -152,10 +152,12 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
           {results.map((r: any) => (
             <div key={r.id} className="bg-[#21262d] rounded-2xl p-4">
               <div className="flex justify-between items-start mb-1">
-                <p className="text-white font-semibold">{r.name}</p>
+                <p className="text-white font-semibold">{r.customer_name}</p>
                 <span className={`text-xs font-medium ${STATUS_COLOR[r.status] || 'text-[#8b949e]'}`}>{r.status || '—'}</span>
               </div>
-              <p className="text-[#8b949e] text-xs">{projectsMap[r.project_id] || '—'} · ห้อง {r.room_no || '—'}</p>
+              <p className="text-[#8b949e] text-xs">
+                {projectsMap[r.project_id] || '—'} · {r.tower ? `${r.tower}-` : ''}ห้อง {r.room_no || '—'}
+              </p>
               {r.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {r.phone}</p>}
             </div>
           ))}
@@ -283,7 +285,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     setLoading(true)
     const { data, error } = await supabase
       .from('customers')
-      .select('id, customer_name, phone, interested_room, status, follow_up_date, project_id')
+      .select('id, customer_name, phone, interested_room, status, project_id, notes, created_at')
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,interested_room.ilike.%${q}%`)
       .order('customer_name')
       .limit(12)
@@ -328,7 +330,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 </div>
                 <p className="text-[#8b949e] text-xs">{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-[#58a6ff] text-xs mt-1">📞 {c.phone}</p>}
-                {c.follow_up_date && <p className="text-[#484f58] text-xs mt-1">นัดติดตาม: {fmtDate(c.follow_up_date)}</p>}
+                {c.notes && <p className="text-[#484f58] text-xs mt-1 truncate">{c.notes}</p>}
               </div>
             )
           })}
@@ -370,9 +372,9 @@ function EventAddSheet({ open, onClose, events }: {
     setLoading(true)
     const { data, error } = await supabase
       .from('condo_leads')
-      .select('id, name, phone, room_no, project_id')
-      .or(`name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
-      .order('name')
+      .select('id, customer_name, phone, room_no, tower, project_id')
+      .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .order('customer_name')
       .limit(15)
     if (error) console.error('EventAddSheet search error:', error)
     setLeads(data || [])
@@ -397,7 +399,7 @@ function EventAddSheet({ open, onClose, events }: {
       await supabase.from('event_customers').insert({
         event_id: selectedEvent.id,
         lead_id: selectedLead.id,
-        customer_name: selectedLead.name,
+        customer_name: selectedLead.customer_name,
         phone: selectedLead.phone,
         room_no: selectedLead.room_no,
         status,
@@ -465,8 +467,8 @@ function EventAddSheet({ open, onClose, events }: {
               <button key={l.id} onClick={() => { setSelectedLead(l); setStep('form') }}
                 className="w-full flex items-center justify-between px-4 py-3 bg-[#21262d] rounded-xl text-left">
                 <div>
-                  <p className="text-white text-sm font-medium">{l.name}</p>
-                  <p className="text-[#8b949e] text-xs">{projectsMap[l.project_id] || '—'} · ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
+                  <p className="text-white text-sm font-medium">{l.customer_name}</p>
+                  <p className="text-[#8b949e] text-xs">{projectsMap[l.project_id] || '—'} · {l.tower ? `${l.tower}-` : ''}ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
                 </div>
                 <ChevronRight size={16} className="text-[#484f58]" />
               </button>
@@ -481,11 +483,11 @@ function EventAddSheet({ open, onClose, events }: {
       {step === 'form' && selectedLead && selectedEvent && (
         <div className="p-4 space-y-4">
           <button onClick={() => setStep('search')} className="text-[#58a6ff] text-sm flex items-center gap-1">
-            <ArrowLeft size={14} /> {selectedLead.name}
+            <ArrowLeft size={14} /> {selectedLead.customer_name}
           </button>
           <div className="bg-[#0d1117] rounded-2xl p-4">
-            <p className="text-white font-semibold">{selectedLead.name}</p>
-            <p className="text-[#8b949e] text-xs mt-1">ห้อง {selectedLead.room_no || '—'} · {selectedLead.phone || '—'}</p>
+            <p className="text-white font-semibold">{selectedLead.customer_name}</p>
+            <p className="text-[#8b949e] text-xs mt-1">{selectedLead.tower ? `${selectedLead.tower}-` : ''}ห้อง {selectedLead.room_no || '—'} · {selectedLead.phone || '—'}</p>
             <p className="text-[#484f58] text-xs mt-0.5">Event: {selectedEvent.eventName}</p>
           </div>
           <div>

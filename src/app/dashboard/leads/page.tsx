@@ -419,69 +419,74 @@ export default function LeadsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
-        <table className="w-full">
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              {['ตึก-ห้อง / Model', 'ชื่อลูกค้า', 'เบอร์โทร', 'ราคาสัญญา', 'S00 (งบตกแต่ง)', 'วันโอน', 'สถานะ', ''].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading && <TableSpinner colSpan={8} />}
-            {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
-            {!loading && filtered.length === 0 && (
-              <tr><td colSpan={8} className="text-center py-12">
-                <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-                <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-                  {leads.length === 0 ? 'ยังไม่มีข้อมูล — กด "นำเข้า xlsx" เพื่อเริ่มต้น' : 'ไม่พบ lead ที่ตรงกับการค้นหา'}
-                </p>
-              </td></tr>
-            )}
-            {filtered.map((l, i) => (
-              <tr key={l.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
-                <td className="px-4 py-3">
-                  <p className="text-sm font-mono font-medium" style={{ color: 'var(--accent)' }}>{l.tower}-{l.room_no}</p>
-                  <p className="text-xs" style={{ color: 'var(--text-3)' }}>{l.model_name || '—'}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{l.customer_name}</p>
-                  {l.email && <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{l.email}</p>}
-                </td>
-                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
-                <td className="px-4 py-3 text-sm text-right" style={{ color: 'var(--text-2)' }}>{fmtBaht(l.contract_price)}</td>
-                <td className="px-4 py-3 text-sm text-right font-semibold" style={{ color: l.s00_budget ? '#34d399' : 'var(--text-3)' }}>
-                  {fmtBaht(l.s00_budget)}
-                </td>
-                <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>
-                <td className="px-4 py-3">
-                  {l.customer_id
-                    ? <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>
-                        <CheckCircle size={10} />เข้า Pipeline แล้ว
-                      </span>
-                    : <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
-                        ยังไม่ได้ติดต่อ
-                      </span>
-                  }
-                </td>
-                <td className="px-4 py-3">
-                  {!l.customer_id && (
-                    <button
-                      onClick={() => addToPipeline(l)}
-                      disabled={addingId === l.id}
-                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium disabled:opacity-50 transition-colors"
-                      style={{ background: 'var(--accent)', color: '#fff' }}
-                    >
-                      <UserPlus size={12} />
-                      {addingId === l.id ? '...' : 'เข้า Pipeline'}
-                    </button>
-                  )}
-                </td>
+      <div className="rounded-2xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+        <div className="overflow-x-auto">
+          <table className="w-full" style={{ minWidth: 780 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                {['โครงการ', 'ตึก-ห้อง / Model', 'ชื่อลูกค้า', 'เบอร์โทร', 'ราคาสัญญา', 'S00 (งบตกแต่ง)', 'วันโอน', 'สถานะ', ''].map(h => (
+                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading && <TableSpinner colSpan={9} />}
+              {!loading && fetchError && <TableError colSpan={9} message={fetchError} onRetry={load} />}
+              {!loading && filtered.length === 0 && (
+                <tr><td colSpan={9} className="text-center py-12">
+                  <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+                  <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+                    {leads.length === 0 ? 'ยังไม่มีข้อมูล — กด "นำเข้า xlsx" เพื่อเริ่มต้น' : 'ไม่พบ lead ที่ตรงกับการค้นหา'}
+                  </p>
+                </td></tr>
+              )}
+              {filtered.map((l, i) => (
+                <tr key={l.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
+                  <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
+                    {l.projects?.name || l.project_id || '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="text-sm font-mono font-medium" style={{ color: 'var(--accent)' }}>{l.tower}-{l.room_no}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{l.model_name || '—'}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{l.customer_name}</p>
+                    {l.email && <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{l.email}</p>}
+                  </td>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
+                  <td className="px-4 py-3 text-sm text-right whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{fmtBaht(l.contract_price)}</td>
+                  <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap" style={{ color: l.s00_budget ? '#34d399' : 'var(--text-3)' }}>
+                    {fmtBaht(l.s00_budget)}
+                  </td>
+                  <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>
+                  <td className="px-4 py-3">
+                    {l.customer_id
+                      ? <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>
+                          <CheckCircle size={10} />เข้า Pipeline แล้ว
+                        </span>
+                      : <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+                          ยังไม่ได้ติดต่อ
+                        </span>
+                    }
+                  </td>
+                  <td className="px-4 py-3">
+                    {!l.customer_id && (
+                      <button
+                        onClick={() => addToPipeline(l)}
+                        disabled={addingId === l.id}
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                        style={{ background: 'var(--accent)', color: '#fff' }}
+                      >
+                        <UserPlus size={12} />
+                        {addingId === l.id ? '...' : 'เข้า Pipeline'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {!loading && (
           <div className="px-4 py-2 text-xs" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
             แสดง {filtered.length} จาก {leads.length} lead

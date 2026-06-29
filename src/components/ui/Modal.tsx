@@ -25,6 +25,13 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
   const dialogRef = useRef<HTMLDivElement>(null)
   const previousFocus = useRef<HTMLElement | null>(null)
 
+  // Keep latest onClose in a ref so the focus effect below depends only on
+  // `open`. Callers pass an inline onClose (new identity every render); if it
+  // were an effect dependency, every keystroke-triggered re-render would re-run
+  // the effect's cleanup and steal focus out of the field (one char at a time).
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
   const widths = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl' }
 
   useEffect(() => {
@@ -40,7 +47,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
     })
 
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { onClose(); return }
+      if (e.key === 'Escape') { onCloseRef.current(); return }
       if (e.key !== 'Tab') return
 
       const focusable = Array.from(
@@ -65,7 +72,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
       // Restore focus to triggering element when modal closes
       previousFocus.current?.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 

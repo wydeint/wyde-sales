@@ -135,7 +135,7 @@ export default function CommissionPage() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามค่าคอมมิชชั่นทีมขาย</p>
         </div>
         <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-          className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           <Plus size={16} />บันทึก Commission
         </button>
       </div>
@@ -160,7 +160,7 @@ export default function CommissionPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -189,10 +189,10 @@ export default function CommissionPage() {
               const st = STATUS.find(s => s.value === c.status) || STATUS[0]
               return (
                 <tr key={c.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
-                  <td className="px-4 py-3 text-[#58a6ff] text-xs font-mono">{c.id}</td>
+                  <td className="px-4 py-3 text-accent-blue text-xs font-mono">{c.id}</td>
                   <td className="px-4 py-3">
                     <p className="text-sm" style={{ color: 'var(--text-1)' }}>{(c as any).customers?.name || '-'}</p>
-                    <p className="text-[#58a6ff] text-xs">{c.room || '-'}</p>
+                    <p className="text-accent-blue text-xs">{c.room || '-'}</p>
                   </td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
                   <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{f(c.sale_price)}</td>
@@ -254,7 +254,7 @@ export default function CommissionPage() {
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.customer_id || !form.sales_person_id} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || !form.customer_id || !form.sales_person_id} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

@@ -411,6 +411,8 @@ export default function CustomersPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null)
+  const PAGE_SIZE = 25
+  const [page, setPage] = useState(1)
 
   async function load() {
     setLoading(true)
@@ -487,6 +489,9 @@ export default function CustomersPage() {
   const statusOptions = [{ value: '', label: 'ทุกสถานะ' }, ...STATUS_LIST.map(s => ({ value: s.value, label: s.label }))]
   const projectFilterOptions = [{ value: '', label: 'ทุกโครงการ' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
 
+  // Reset to page 1 whenever filters change
+  useEffect(() => { setPage(1) }, [search, filterStatus, filterProject])
+
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()
     const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || c.interested_room?.toLowerCase().includes(q) || (c as any).projects?.name?.toLowerCase().includes(q)
@@ -494,6 +499,9 @@ export default function CustomersPage() {
     const matchProject = !filterProject || c.project_id === filterProject
     return matchSearch && matchStatus && matchProject
   })
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="p-6">
@@ -505,7 +513,7 @@ export default function CustomersPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setEditing(null); setForm(emptyForm); setSaveError(''); setOpen(true) }}
-            className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             <Plus size={16} />เพิ่มลูกค้า
           </button>
         </div>
@@ -554,7 +562,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -570,13 +578,13 @@ export default function CustomersPage() {
           <tbody>
             {loading && <TableSpinner colSpan={7} />}
             {!loading && fetchError && <TableError colSpan={7} message={fetchError} onRetry={load} />}
-            {!loading && !fetchError && filtered.length === 0 && (
+            {!loading && !fetchError && paginated.length === 0 && (
               <tr><td colSpan={7} className="text-center py-12">
                 <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
                 <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบลูกค้า</p>
               </td></tr>
             )}
-            {filtered.map((c, i) => {
+            {paginated.map((c, i) => {
               const st = statusInfo(c.status)
               return (
                 <tr
@@ -640,8 +648,29 @@ export default function CustomersPage() {
           </tbody>
         </table>
         {!loading && (
-          <div className="px-4 py-2 text-xs" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
-            แสดง {filtered.length} จาก {customers.length} ราย
+          <div className="flex items-center justify-between px-4 py-2 text-xs flex-wrap gap-2" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
+            <span>แสดง {filtered.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0}–{Math.min(page * PAGE_SIZE, filtered.length)} จาก {filtered.length} ราย (ทั้งหมด {customers.length} ราย)</span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  className="px-2 py-1 rounded disabled:opacity-30 transition-colors"
+                  style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>‹</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 1).reduce<(number | '...')[]>((acc, n, idx, arr) => {
+                  if (idx > 0 && n - (arr[idx - 1] as number) > 1) acc.push('...')
+                  acc.push(n)
+                  return acc
+                }, []).map((n, idx) =>
+                  n === '...'
+                    ? <span key={`e${idx}`} className="px-1" style={{ color: 'var(--text-3)' }}>…</span>
+                    : <button key={n} onClick={() => setPage(n as number)}
+                        className="w-7 h-7 rounded text-xs font-medium transition-colors"
+                        style={{ background: page === n ? 'var(--accent)' : 'var(--hover-bg)', color: page === n ? '#fff' : 'var(--text-2)' }}>{n}</button>
+                )}
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="px-2 py-1 rounded disabled:opacity-30 transition-colors"
+                  style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>›</button>
+              </div>
+            )}
           </div>
         )}
       </div>

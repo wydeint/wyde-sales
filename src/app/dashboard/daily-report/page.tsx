@@ -91,7 +91,7 @@ export default function DailyReportPage() {
         </div>
         {!todayDone && (
           <button onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             <Plus size={16} />บันทึกวันนี้
           </button>
         )}
@@ -121,7 +121,7 @@ export default function DailyReportPage() {
           </div>
           <div className="flex justify-end gap-3">
             <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-            <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            <button onClick={save} disabled={saving} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
               {saving ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
@@ -129,7 +129,7 @@ export default function DailyReportPage() {
       )}
 
       {/* History */}
-      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
           <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>ประวัติรายงาน 30 วันล่าสุด</p>
         </div>

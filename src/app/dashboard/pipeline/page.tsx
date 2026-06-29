@@ -97,7 +97,7 @@ export default function PipelinePage() {
                       </div>
                     </div>
                     {(c as any).projects?.name && (
-                      <p className="text-[#58a6ff] text-xs mb-1">{(c as any).projects.name}</p>
+                      <p className="text-accent-blue text-xs mb-1">{(c as any).projects.name}</p>
                     )}
                     {c.interested_room && (
                       <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ห้อง {c.interested_room}</p>

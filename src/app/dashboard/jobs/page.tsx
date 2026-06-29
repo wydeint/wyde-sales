@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Search, X, Calculator, Briefcase, Receipt, LayoutList, BarChart2, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Search, X, Calculator, Briefcase, Receipt, LayoutList, BarChart2, ChevronDown, ChevronRight, Phone, FileDown } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
@@ -122,6 +122,7 @@ export default function JobsPage() {
   const [view, setView] = useState<'list' | 'summary'>('list')
   const [expandedProj, setExpandedProj] = useState<Set<string>>(new Set())
   const [expandedStatus, setExpandedStatus] = useState<Set<string>>(new Set())
+  const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set())
 
   // Filters
   const [search, setSearch] = useState('')
@@ -200,7 +201,7 @@ export default function JobsPage() {
   // ─── Commission auto-calc when revenue changes ───
   function handleRevenueChange(val: number) {
     const { rate, amount } = calcCommission(val, tiers)
-    setEditing(e => ({ ...e, revenue_ex_vat: val, commission_rate: rate, commission_amount: amount }))
+    setEditing(e => ({ ...e, revenue_ex_vat: val, revenue_inc_vat: Math.round(val * 1.07), commission_rate: rate, commission_amount: amount }))
   }
 
   // ─── Project select → load leads ───
@@ -212,12 +213,18 @@ export default function JobsPage() {
   // ─── Lead (room) select → auto-fill ───
   function handleLeadSelect(leadId: string) {
     const lead = leads.find(l => String(l.id) === leadId)
-    setEditing(e => ({
-      ...e,
-      lead_id: lead ? lead.id : null,
-      room_no: lead?.room_no || '',
-      customer_name: lead?.customer_name || '',
-    }))
+    setEditing(e => {
+      const projectId = e.project_id || ''
+      const roomNo = lead?.room_no || ''
+      const customerId = projectId && roomNo ? `${projectId}-${roomNo.trim().toUpperCase()}` : e.customer_id || ''
+      return {
+        ...e,
+        lead_id: lead ? lead.id : null,
+        room_no: roomNo,
+        customer_name: lead?.customer_name || '',
+        customer_id: customerId,
+      }
+    })
   }
 
   // ─── Open Add ───
@@ -286,6 +293,41 @@ export default function JobsPage() {
     return Array.from(map.values()).sort((a, b) => b.jobs.length - a.jobs.length)
   }, [jobs])
 
+  // Group filtered jobs by customer
+  const customerGroups = useMemo(() => {
+    const map = new Map<string, { key: string; jobs: Job[] }>()
+    for (const j of filtered) {
+      const key = j.customer_id || `__job_${j.id}`
+      if (!map.has(key)) map.set(key, { key, jobs: [] })
+      map.get(key)!.jobs.push(j)
+    }
+    return Array.from(map.values())
+  }, [filtered])
+
+  function toggleCustomer(key: string) {
+    setExpandedCustomers(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
+
+  function exportCSV() {
+    const headers = ['ลูกค้า','โครงการ','ห้อง','Job ID','ประเภทงาน','PO','SO','Revenue (Ex.VAT)','Cost','GP%','Commission','Voucher','สถานะ','Sales','วันส่งมอบ']
+    const rows = filtered.map(j => {
+      const name = (j.condo_leads as any)?.customer_name || j.customer_name || ''
+      const project = (j.projects as any)?.name || ''
+      const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
+      const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(1) : ''
+      const sales = (j.sales as any)?.name || ''
+      const deliver = j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH') : ''
+      return [name, project, j.room_no || '', j.id, j.work_type || '', j.po_no || '', j.so_no || '',
+        j.revenue_ex_vat || 0, j.cost || 0, gp, j.commission_amount || 0, j.voucher || 0,
+        j.working_status || '', sales, deliver]
+    })
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'wyde-clients.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
     'ดำเนินการ':   { label: 'ดำเนินการอยู่', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24' },
     'รอเอกสาร':   { label: 'รอเอกสาร',      color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   dot: '#60a5fa' },
@@ -336,6 +378,11 @@ export default function JobsPage() {
               <BarChart2 size={13} />สรุปโครงการ
             </button>
           </div>
+          <button onClick={exportCSV}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
+            <FileDown size={13} /> Export CSV
+          </button>
           {canWrite && (
             <button onClick={openAdd}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
@@ -529,110 +576,186 @@ export default function JobsPage() {
         </div>
       )}
 
-      {/* Table */}
+      {/* ─── Expandable Customer Table ─── */}
       {view === 'list' && <div className="glass-card overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" style={{ minWidth: 700 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              {['Job ID','ลูกค้า','โครงการ / ห้อง','PO','SO','ประเภทงาน','Revenue','GP%','Commission','สถานะ','การเก็บเงิน','Sales','ส่งมอบ'].map(h => (
+              <th className="w-8 px-3 py-3" />
+              {['ลูกค้า','โครงการ / ห้อง','เบอร์โทร','งาน','Revenue รวม','สถานะ'].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold"
                   style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={13} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
-            ) : filtered.map(j => {
-              const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
-              const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(0) : '—'
-              const displayName = (j.condo_leads as any)?.customer_name || j.customer_name || (j.customers as any)?.customer_name || '—'
-              const payment = j.customer_id ? paymentMap[j.customer_id] : null
+            {customerGroups.length === 0 ? (
+              <tr><td colSpan={7} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
+            ) : customerGroups.map(({ key, jobs: cjobs }) => {
+              const rep = cjobs[0]
+              const displayName = (rep.condo_leads as any)?.customer_name || rep.customer_name || (rep.customers as any)?.customer_name || '—'
+              const phone = (rep.condo_leads as any)?.phone || '—'
+              const projectName = (rep.projects as any)?.name || '—'
+              const totalRev = cjobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+              const isOpen = expandedCustomers.has(key)
               const today = new Date().toISOString().slice(0, 10)
-              const isOverdue = payment?.due_date && payment.due_date < today && payment.status !== 'paid'
-              return (
-                <tr key={j.id}
-                  onClick={() => canWrite && openEdit(j)}
+              // status chips for all jobs
+              const statusCount: Record<string, number> = {}
+              cjobs.forEach(j => { const s = j.working_status || 'ดำเนินการ'; statusCount[s] = (statusCount[s] || 0) + 1 })
+              const STATUS_COLOR: Record<string, { color: string; bg: string }> = {
+                'ดำเนินการ': { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
+                'รอเอกสาร':  { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+                'ส่งมอบแล้ว':{ color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
+                'ยกเลิก':    { color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+              }
+
+              return [
+                /* ── Customer summary row ── */
+                <tr key={`cust-${key}`}
+                  onClick={() => toggleCustomer(key)}
                   className="cursor-pointer transition-colors"
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  style={{ borderBottom: '1px solid var(--divider)' }}>
-                  <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--accent)' }}>{j.id}</td>
-                  <td className="px-4 py-3" style={{ color: 'var(--text-1)' }}>
-                    <div className="font-medium">{displayName}</div>
-                    <div className="text-xs" style={{ color: 'var(--text-3)' }}>{j.customer_type}</div>
+                  style={{ borderBottom: isOpen ? 'none' : '1px solid var(--divider)' }}>
+                  <td className="px-3 py-3 text-center">
+                    {isOpen
+                      ? <ChevronDown size={14} style={{ color: 'var(--accent)', margin: 'auto' }} />
+                      : <ChevronRight size={14} style={{ color: 'var(--text-3)', margin: 'auto' }} />}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{displayName}</div>
+                    <div className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{rep.customer_id || '—'}</div>
                   </td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
-                    <div className="text-xs">{(j.projects as any)?.name || '—'}</div>
-                    <div className="font-medium">{j.room_no || '—'}</div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--text-2)' }}>{j.po_no || '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--text-2)' }}>{j.so_no || '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-                      {j.work_type || '—'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-right" style={{ color: '#4ade80' }}>
-                    {j.revenue_ex_vat ? f(j.revenue_ex_vat) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right" style={{ color: profitAmt >= 0 ? '#4ade80' : '#f87171' }}>
-                    {gp !== '—' ? gp + '%' : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right" style={{ color: '#fbbf24' }}>
-                    {j.commission_amount ? f(j.commission_amount) : '—'}
-                    {j.commission_rate ? <div className="text-xs" style={{ color: 'var(--text-3)' }}>{pct(j.commission_rate)}</div> : null}
+                    <div className="text-xs" style={{ color: 'var(--text-3)' }}>{projectName}</div>
+                    <div className="font-medium">{rep.room_no || '—'}</div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium"
-                      style={{
-                        background: j.working_status === 'ส่งมอบแล้ว' ? 'rgba(74,222,128,0.15)' :
-                          j.working_status === 'ยกเลิก' ? 'rgba(248,113,113,0.15)' : 'rgba(251,191,36,0.15)',
-                        color: j.working_status === 'ส่งมอบแล้ว' ? '#4ade80' :
-                          j.working_status === 'ยกเลิก' ? '#f87171' : '#fbbf24',
-                      }}>
-                      {j.working_status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    {payment ? (
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <div className="text-xs font-medium" style={{ color: isOverdue ? '#f87171' : 'var(--text-1)', whiteSpace: 'nowrap' }}>
-                            {payment.installment_name}
-                          </div>
-                          <div className="text-xs" style={{ color: isOverdue ? '#f87171' : 'var(--text-3)' }}>
-                            {isOverdue ? 'เกินกำหนด · ' : 'ค้าง · '}{f(payment.amount)}
-                          </div>
-                        </div>
-                        <Link href="/dashboard/payments"
-                          className="ml-1 p-1 rounded-lg flex-shrink-0"
-                          style={{ color: 'var(--accent)' }}
-                          title="ดูการเก็บเงิน">
-                          <Receipt size={13} />
-                        </Link>
+                    {phone !== '—' ? (
+                      <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-2)' }}>
+                        <Phone size={11} style={{ color: 'var(--text-3)' }} /> {phone}
                       </div>
-                    ) : (
-                      <Link href="/dashboard/payments"
-                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg"
-                        style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
-                        <Receipt size={11} /> ดูงวด
-                      </Link>
-                    )}
+                    ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>—</span>}
                   </td>
-                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>
-                    {(j.sales as any)?.name || '—'}
+                  <td className="px-4 py-3 text-center">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
+                      {cjobs.length}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>
-                    {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) : '—'}
+                  <td className="px-4 py-3 font-bold text-right" style={{ color: '#4ade80' }}>
+                    {totalRev ? f(totalRev) : '—'}
                   </td>
-                </tr>
-              )
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(statusCount).map(([s, cnt]) => {
+                        const cfg = STATUS_COLOR[s] || { color: 'var(--text-2)', bg: 'var(--hover-bg)' }
+                        return (
+                          <span key={s} className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                            style={{ background: cfg.bg, color: cfg.color }}>
+                            {s} {cnt}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </td>
+                </tr>,
+
+                /* ── Expanded jobs sub-rows ── */
+                isOpen && (
+                  <tr key={`exp-${key}`} style={{ borderBottom: '1px solid var(--divider)' }}>
+                    <td colSpan={7} style={{ padding: 0 }}>
+                      <div style={{ background: 'var(--hover-bg)', borderLeft: '3px solid var(--accent)' }}>
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                              {['Job ID','ประเภทงาน','PO','SO','Revenue','GP%','Commission','Voucher','สถานะ','การเก็บเงิน','Sales','ส่งมอบ'].map(h => (
+                                <th key={h} className="text-left px-3 py-2 font-semibold"
+                                  style={{ color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cjobs.map(j => {
+                              const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
+                              const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(0) : '—'
+                              const payment = j.customer_id ? paymentMap[j.customer_id] : null
+                              const isOverdue = payment?.due_date && payment.due_date < today && payment.status !== 'paid'
+                              return (
+                                <tr key={j.id}
+                                  onClick={(e) => { e.stopPropagation(); canWrite && openEdit(j) }}
+                                  className="cursor-pointer transition-colors"
+                                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.06)')}
+                                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                  style={{ borderBottom: '1px solid var(--divider)' }}>
+                                  <td className="px-3 py-2 font-mono" style={{ color: 'var(--accent)' }}>{j.id}</td>
+                                  <td className="px-3 py-2">
+                                    <span className="px-1.5 py-0.5 rounded-full" style={{ background: 'var(--card-bg)', color: 'var(--text-2)' }}>
+                                      {j.work_type || '—'}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-2)' }}>{j.po_no || '—'}</td>
+                                  <td className="px-3 py-2 font-mono" style={{ color: 'var(--text-2)' }}>{j.so_no || '—'}</td>
+                                  <td className="px-3 py-2 font-semibold text-right" style={{ color: '#4ade80' }}>
+                                    {j.revenue_ex_vat ? f(j.revenue_ex_vat) : '—'}
+                                  </td>
+                                  <td className="px-3 py-2 text-right" style={{ color: profitAmt >= 0 ? '#4ade80' : '#f87171' }}>
+                                    {gp !== '—' ? gp + '%' : '—'}
+                                  </td>
+                                  <td className="px-3 py-2 text-right" style={{ color: '#fbbf24' }}>
+                                    {j.commission_amount ? f(j.commission_amount) : '—'}
+                                    {j.commission_rate ? <div style={{ color: 'var(--text-3)' }}>{pct(j.commission_rate)}</div> : null}
+                                  </td>
+                                  <td className="px-3 py-2 text-right" style={{ color: 'var(--text-2)' }}>
+                                    {j.voucher ? f(j.voucher) : '—'}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <span className="px-1.5 py-0.5 rounded-full font-medium"
+                                      style={{
+                                        background: j.working_status === 'ส่งมอบแล้ว' ? 'rgba(74,222,128,0.15)' :
+                                          j.working_status === 'ยกเลิก' ? 'rgba(248,113,113,0.15)' : 'rgba(251,191,36,0.15)',
+                                        color: j.working_status === 'ส่งมอบแล้ว' ? '#4ade80' :
+                                          j.working_status === 'ยกเลิก' ? '#f87171' : '#fbbf24',
+                                      }}>
+                                      {j.working_status}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
+                                    {payment ? (
+                                      <div className="flex items-center gap-1">
+                                        <div>
+                                          <div style={{ color: isOverdue ? '#f87171' : 'var(--text-1)', whiteSpace: 'nowrap' }}>{payment.installment_name}</div>
+                                          <div style={{ color: isOverdue ? '#f87171' : 'var(--text-3)' }}>{isOverdue ? 'เกิน · ' : 'ค้าง · '}{f(payment.amount)}</div>
+                                        </div>
+                                        <Link href="/dashboard/payments" style={{ color: 'var(--accent)' }} title="ดูงวด">
+                                          <Receipt size={11} />
+                                        </Link>
+                                      </div>
+                                    ) : (
+                                      <Link href="/dashboard/payments" className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg"
+                                        style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>
+                                        <Receipt size={10} /> ดูงวด
+                                      </Link>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
+                                  <td className="px-3 py-2" style={{ color: 'var(--text-3)' }}>
+                                    {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) : '—'}
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              ]
             })}
           </tbody>
         </table>
         <div className="px-4 py-2 text-xs" style={{ color: 'var(--text-3)', borderTop: '1px solid var(--divider)' }}>
-          {filtered.length} รายการ
+          {customerGroups.length} ลูกค้า · {filtered.length} งาน
         </div>
       </div>
       }
@@ -801,9 +924,12 @@ export default function JobsPage() {
                     className="field-input w-full mt-1" placeholder="0" />
                 </div>
                 <div>
-                  <label className="field-label">Revenue (Inc.VAT) ฿</label>
-                  <input type="number" value={editing.revenue_inc_vat || ''} onChange={e => setEditing(e2 => ({ ...e2, revenue_inc_vat: +e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="0" />
+                  <label className="field-label">Revenue (Inc.VAT) ฿ <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>auto × 1.07</span></label>
+                  <div className="field-input mt-1 flex items-center gap-2" style={{ background: 'var(--hover-bg)' }}>
+                    <span style={{ color: 'var(--text-1)', fontWeight: 600 }}>
+                      {editing.revenue_inc_vat ? f(editing.revenue_inc_vat) : '—'}
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">ยอดโอน (จาก Origin) ฿</label>

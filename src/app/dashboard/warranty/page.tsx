@@ -129,7 +129,7 @@ export default function WarrantyPage() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามระยะเวลาประกันผลงาน</p>
         </div>
         <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-          className="flex items-center gap-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="flex items-center gap-2 btn-purple text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           <Plus size={16} />เพิ่มประกัน
         </button>
       </div>
@@ -156,7 +156,7 @@ export default function WarrantyPage() {
       {active.length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>อยู่ในประกัน ({active.length})</h2>
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -181,7 +181,7 @@ export default function WarrantyPage() {
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(w as any).projects?.name || '-'}</p>
-                        <p className="text-[#58a6ff] text-xs">{w.room}</p>
+                        <p className="text-accent-blue text-xs">{w.room}</p>
                       </td>
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_start)}</td>
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_end)}</td>
@@ -233,7 +233,7 @@ export default function WarrantyPage() {
                     <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.name || '-'}</td>
                     <td className="px-4 py-3">
                       <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(w as any).projects?.name || '-'}</p>
-                      <p className="text-[#58a6ff] text-xs">{w.room}</p>
+                      <p className="text-accent-blue text-xs">{w.room}</p>
                     </td>
                     <td className="px-4 py-3 text-red-400 text-sm">{dateStr(w.warranty_end)}</td>
                     <td className="px-4 py-3">
@@ -280,7 +280,7 @@ export default function WarrantyPage() {
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.customer_id} className="px-4 py-2 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || !form.customer_id} className="px-4 py-2 btn-purple disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

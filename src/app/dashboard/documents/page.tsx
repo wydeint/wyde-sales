@@ -118,7 +118,7 @@ function DocBadge({ hasUrl, url, onClick }: { hasUrl: boolean; url?: string | nu
       </button>
       {hasUrl && url && (
         <a href={url} target="_blank" rel="noopener noreferrer"
-          className="text-blue-600 dark:text-[#58a6ff] hover:text-blue-800 dark:hover:text-blue-300 p-0.5" onClick={e => e.stopPropagation()}>
+          className="text-blue-600 dark:text-accent-blue hover:text-blue-800 dark:hover:text-blue-300 p-0.5" onClick={e => e.stopPropagation()}>
           <ExternalLink size={12} />
         </a>
       )}

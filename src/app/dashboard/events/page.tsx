@@ -372,7 +372,7 @@ export default function EventsPage() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance</p>
         </div>
         <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
-          className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           <Plus size={16} />เพิ่ม Event
         </button>
       </div>
@@ -397,7 +397,7 @@ export default function EventsPage() {
               <div className="flex items-center gap-4 px-4 py-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-[#58a6ff] text-xs font-mono">{ev.id}</span>
+                    <span className="text-accent-blue text-xs font-mono">{ev.id}</span>
                     <h3 className="font-medium" style={{ color: 'var(--text-1)' }}>{ev.event_name}</h3>
                     {ev.event_type && <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{typeLabel(ev.event_type)}</span>}
                     {ev.project_name && <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{ev.project_name}</span>}
@@ -416,7 +416,7 @@ export default function EventsPage() {
                     if (ev.project_id) loadLeads(ev.project_id)
                     setOpenCustomer(true)
                   }}
-                    className="flex items-center gap-1.5 text-xs bg-[#1d6fa5] hover:bg-[#1f6feb] text-white px-3 py-1.5 rounded-lg transition-colors">
+                    className="flex items-center gap-1.5 text-xs btn-blue text-white px-3 py-1.5 rounded-lg transition-colors">
                     <Users size={13} />เพิ่มลูกค้า
                   </button>
                   <button onClick={() => {
@@ -530,7 +530,7 @@ export default function EventsPage() {
                               <tr key={c.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)' }}>
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>{idx + 1}</td>
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{projects.find(p => p.id === c.project_id)?.name || '—'}</td>
-                                <td className="px-3 py-2 text-[#58a6ff] text-xs font-mono">{c.room_no || '—'}</td>
+                                <td className="px-3 py-2 text-accent-blue text-xs font-mono">{c.room_no || '—'}</td>
                                 <td className="px-3 py-2 text-sm font-medium" style={{ color: 'var(--text-1)' }}>{c.customer_name}</td>
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{(c.users as any)?.name || '—'}</td>
                                 <td className="px-3 py-2">
@@ -595,7 +595,7 @@ export default function EventsPage() {
                                       className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${
                                         c.status === 'booked'
                                           ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-500/30'
-                                          : 'bg-[#1d6fa5]/20 text-[#58a6ff] hover:bg-[#1d6fa5]/40'
+                                          : 'bg-[#1d6fa5]/20 text-accent-blue hover:bg-[#1d6fa5]/40'
                                       }`}
                                     >
                                       <UserPlus size={11} /> {promoteLabel}
@@ -634,7 +634,7 @@ export default function EventsPage() {
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpenEvent(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -670,7 +670,7 @@ export default function EventsPage() {
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setEditingCustomer(null)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={saveEditCustomer} disabled={editSaving || !editCustForm.customer_name}
-            className="flex items-center gap-2 px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            className="flex items-center gap-2 px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             <Save size={14} />{editSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -747,7 +747,7 @@ export default function EventsPage() {
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpenCustomer(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={saveCustomer} disabled={saving || !custForm.customer_name}
-            className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

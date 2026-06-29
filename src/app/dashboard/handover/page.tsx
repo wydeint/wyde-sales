@@ -159,7 +159,7 @@ function DeliveryModal({
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>แนบใบส่งมอบที่ลูกค้าเซ็น (Google Drive URL)</label>
               {fileUrls.length < 5 && (
-                <button onClick={addUrl} className="text-xs text-[#58a6ff] flex items-center gap-1"><Plus size={12} />เพิ่ม</button>
+                <button onClick={addUrl} className="text-xs text-accent-blue flex items-center gap-1"><Plus size={12} />เพิ่ม</button>
               )}
             </div>
             <div className="space-y-2">
@@ -184,7 +184,7 @@ function DeliveryModal({
         <div className="flex justify-end gap-3 p-5" style={{ borderTop: '1px solid var(--divider)' }}>
           <button onClick={onClose} className="px-4 py-2 text-sm" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving}
-            className="px-5 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white text-sm rounded-xl font-medium">
+            className="px-5 py-2 btn-green disabled:opacity-40 text-white text-sm rounded-xl font-medium">
             {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
           </button>
         </div>
@@ -453,7 +453,7 @@ export default function HandoverPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold" style={{ color: 'var(--text-1)' }}>{job.customerName}</span>
-                      <span className="text-[#58a6ff] text-xs font-mono">{job.roomNo}</span>
+                      <span className="text-accent-blue text-xs font-mono">{job.roomNo}</span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${job.clientType === 'B2B' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
                         {job.clientType}
                       </span>
@@ -500,7 +500,7 @@ export default function HandoverPage() {
 
                     {job.deliveryFileUrl && (
                       <a href={job.deliveryFileUrl} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-[#58a6ff] hover:underline">
+                        className="flex items-center gap-1 text-xs text-accent-blue hover:underline">
                         <Paperclip size={11} />ใบส่งมอบ
                       </a>
                     )}

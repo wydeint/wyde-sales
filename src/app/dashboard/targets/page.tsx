@@ -247,13 +247,13 @@ export default function TargetsPage() {
         <div className="flex gap-2">
           {tab === 'org' && (
             <button onClick={() => { setEditingOrg(null); setOrgForm({ ...emptyOrgForm, year: filterYear }); setOrgModalOpen(true) }}
-              className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               <Plus size={16} />ตั้งเป้าองค์กร
             </button>
           )}
           {tab === 'sales' && (
             <button onClick={() => { setEditingSales(null); setSalesForm({ ...emptySalesForm, year: filterYear }); setSalesModalOpen(true) }}
-              className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
@@ -387,7 +387,7 @@ export default function TargetsPage() {
               )}
 
               {/* Monthly breakdown table */}
-              <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+              <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                 <div className="px-5 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--divider)' }}>
                   <h3 className="font-medium text-sm" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
                 </div>
@@ -564,7 +564,7 @@ export default function TargetsPage() {
           <button onClick={() => setOrgModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
-          <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {orgSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -596,7 +596,7 @@ export default function TargetsPage() {
           <button onClick={() => setSalesModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
-          <button onClick={saveSales} disabled={salesSaving || !salesForm.user_id} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveSales} disabled={salesSaving || !salesForm.user_id} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {salesSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

@@ -89,13 +89,13 @@ export default function ProjectsPage() {
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Projects</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการข้อมูลโครงการ</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           <Plus size={16} />เพิ่มโครงการ
         </button>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -120,7 +120,7 @@ export default function ProjectsPage() {
             )}
             {projects.map((p, i) => (
               <tr key={p.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
-                <td className="px-4 py-3 text-[#58a6ff] text-sm font-mono">{p.id}</td>
+                <td className="px-4 py-3 text-accent-blue text-sm font-mono">{p.id}</td>
                 <td className="px-4 py-3 text-sm font-medium" style={{ color: 'var(--text-1)' }}>{p.name}</td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.developer}</td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.location}</td>
@@ -177,7 +177,7 @@ export default function ProjectsPage() {
         )}
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.name} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || !form.name} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

@@ -355,7 +355,7 @@ function PlanSetupModal({
         <div className="flex justify-end gap-3 p-5" style={{ borderTop: '1px solid var(--divider)' }}>
           <button onClick={onClose} className="px-4 py-2 text-sm" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving || (clientType === 'B2B' && !pctValid) || preview.length === 0}
-            className="px-5 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white text-sm rounded-xl font-medium transition-colors">
+            className="px-5 py-2 btn-green disabled:opacity-40 text-white text-sm rounded-xl font-medium transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึกแผน'}
           </button>
         </div>
@@ -430,7 +430,7 @@ function RecordPaymentModal({
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>แนบสลิป/เอกสาร (Google Drive URL)</label>
               {fileUrls.length < 5 && (
-                <button onClick={addFileUrl} className="text-xs text-[#58a6ff] flex items-center gap-1">
+                <button onClick={addFileUrl} className="text-xs text-accent-blue flex items-center gap-1">
                   <Plus size={12} />เพิ่มไฟล์
                 </button>
               )}
@@ -454,7 +454,7 @@ function RecordPaymentModal({
         <div className="flex justify-end gap-3 p-5" style={{ borderTop: '1px solid var(--divider)' }}>
           <button onClick={onClose} className="px-4 py-2 text-sm" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving}
-            className="px-5 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white text-sm rounded-xl font-medium">
+            className="px-5 py-2 btn-green disabled:opacity-40 text-white text-sm rounded-xl font-medium">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -622,7 +622,7 @@ export default function PaymentsPage() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-[#58a6ff] text-xs font-mono">{job.id}</span>
+                    <span className="text-accent-blue text-xs font-mono">{job.id}</span>
                     <span className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{job.customer_name}</span>
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>{job.room_no}</span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${job.customer_type === 'B2B' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
@@ -696,7 +696,7 @@ export default function PaymentsPage() {
                           </span>
                         )}
                         <button onClick={e => { e.stopPropagation(); setPlanJob(job) }}
-                          className="text-xs text-[#58a6ff] flex items-center gap-1 hover:underline">
+                          className="text-xs text-accent-blue flex items-center gap-1 hover:underline">
                           <Settings2 size={11} />แก้ไขแผน
                         </button>
                       </div>
@@ -724,7 +724,7 @@ export default function PaymentsPage() {
                                   : null
                               }
                               {inst.file_urls.length > 0 && (
-                                <span className="flex items-center gap-1 text-[#58a6ff]">
+                                <span className="flex items-center gap-1 text-accent-blue">
                                   <Paperclip size={10} />{inst.file_urls.length} ไฟล์
                                 </span>
                               )}

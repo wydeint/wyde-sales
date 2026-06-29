@@ -198,6 +198,24 @@ html:not(.dark) thead tr {
 .field-input option { background: var(--card-bg, #fff); color: var(--text-1, #1e1b4b); }
 
 /* ══════════════════════════════════════════
+   Action button utilities
+   (replaces scattered hardcoded hex #238636 / #7c3aed / #1f6feb across pages)
+══════════════════════════════════════════ */
+.btn-green  { background: var(--accent-green)  !important; }
+.btn-purple { background: var(--accent-purple) !important; }
+.btn-blue   { background: var(--accent-blue)   !important; }
+.btn-green:hover:not(:disabled),
+.btn-purple:hover:not(:disabled),
+.btn-blue:hover:not(:disabled)  { filter: brightness(1.12); }
+
+/* Accent-blue text — replaces text-[#58a6ff] */
+.text-accent-blue { color: var(--accent-blue); }
+
+/* Responsive table wrapper */
+.tbl-scroll { overflow-x: auto; }
+.tbl-scroll > table { min-width: 640px; }
+
+/* ══════════════════════════════════════════
    Transitions
 ══════════════════════════════════════════ */
 a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }

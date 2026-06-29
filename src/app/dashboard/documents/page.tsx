@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, CheckCircle2, Circle, ExternalLink, Plus, X, ChevronDown } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -226,14 +227,12 @@ export default function DocumentsPage() {
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
-        <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
-          className="px-3 py-2.5 rounded-xl text-sm focus:outline-none min-w-[180px]"
-          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
-          <option value="">ทุกโครงการ</option>
-          {[...projects].sort((a, b) => a.name.localeCompare(b.name)).map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+        <SearchableSelect
+          value={projectFilter}
+          onChange={v => setProjectFilter(v)}
+          options={[{ value: '', label: 'ทุกโครงการ' }, ...[...projects].sort((a, b) => a.name.localeCompare(b.name)).map(p => ({ value: p.id, label: p.name }))]}
+          placeholder="ทุกโครงการ"
+        />
       </div>
 
       {loading && <div className="flex justify-center py-16"><PageSpinner /></div>}

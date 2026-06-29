@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Search, X, Calculator, Briefcase, Receipt, LayoutList, BarChart2, ChevronDown, ChevronRight } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Link from 'next/link'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 // ─────────────────────────────────────────
 // Constants
@@ -367,12 +368,12 @@ export default function JobsPage() {
             placeholder="ค้นหา PO / SO / ลูกค้า..." className="bg-transparent text-sm flex-1 outline-none"
             style={{ color: 'var(--text-1)' }} />
         </div>
-        <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-          <option value="">ทุกโครงการ</option>
-          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+        <SearchableSelect
+          value={filterProject}
+          onChange={v => setFilterProject(v)}
+          options={[{ value: '', label: 'ทุกโครงการ' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
+          placeholder="ทุกโครงการ"
+        />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
           className="rounded-xl px-3 py-2 text-sm outline-none"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>

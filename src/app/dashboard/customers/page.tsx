@@ -10,6 +10,7 @@ import {
 import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 interface Customer {
   id: string
@@ -530,11 +531,12 @@ export default function CustomersPage() {
           className="field-input rounded-lg px-3 py-2 text-sm outline-none">
           {statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <label htmlFor="filter-project" className="sr-only">กรองตามโครงการ</label>
-        <select id="filter-project" value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="field-input rounded-lg px-3 py-2 text-sm outline-none">
-          {projectFilterOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+        <SearchableSelect
+          value={filterProject}
+          onChange={v => setFilterProject(v)}
+          options={projectFilterOptions}
+          placeholder="ทุกโครงการ"
+        />
       </div>
 
       {/* Summary chips */}

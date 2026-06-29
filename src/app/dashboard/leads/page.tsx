@@ -217,12 +217,17 @@ export default function LeadsPage() {
   async function addToPipeline(lead: Lead) {
     setAddingId(lead.id)
     setAddError('')
-    // Generate customer id
-    const { data: existing } = await supabase.from('customers').select('id').order('id', { ascending: false }).limit(1)
-    const lastNum = existing?.[0]?.id ? parseInt(existing[0].id.replace('CST-', '')) : 0
-    const newId = 'CST-' + String(lastNum + 1).padStart(4, '0')
+    // Generate customer id: ProjectCode-Tower-RoomNo (e.g. OPL06-Z-905)
     const projId = lead.project_id || null
     const room = lead.tower && lead.room_no ? `${lead.tower}-${lead.room_no}` : lead.room_no || ''
+    let newId: string
+    if (projId && room) {
+      newId = `${projId}-${room.toUpperCase()}`
+    } else {
+      const { data: existing } = await supabase.from('customers').select('id').order('id', { ascending: false }).limit(1)
+      const lastNum = existing?.[0]?.id ? parseInt(existing[0].id.replace('CST-', '')) : 0
+      newId = 'CST-' + String(lastNum + 1).padStart(4, '0')
+    }
     const { error: ce } = await supabase.from('customers').insert({
       id: newId,
       customer_name: lead.customer_name,

@@ -102,6 +102,9 @@ export default function CustomersPage() {
   useEffect(() => { load() }, [])
 
   function genId() {
+    if (form.project_id && form.interested_room.trim()) {
+      return `${form.project_id}-${form.interested_room.trim().toUpperCase()}`
+    }
     const nums = customers.map(c => parseInt(c.id.replace('CST-', ''))).filter(n => !isNaN(n))
     return 'CST-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(4, '0')
   }
@@ -119,7 +122,13 @@ export default function CustomersPage() {
       const { error } = await supabase.from('customers').update(payload).eq('id', editing.id)
       if (error) { setSaveError(error.message); setSaving(false); return }
     } else {
-      const { error } = await supabase.from('customers').insert({ id: genId(), ...payload })
+      const newId = genId()
+      if (customers.some(c => c.id === newId)) {
+        setSaveError(`ID "${newId}" มีอยู่แล้วในระบบ — กรุณาตรวจสอบโครงการและห้องอีกครั้ง`)
+        setSaving(false)
+        return
+      }
+      const { error } = await supabase.from('customers').insert({ id: newId, ...payload })
       if (error) { setSaveError(error.message); setSaving(false); return }
     }
     setSaving(false)
@@ -312,7 +321,13 @@ export default function CustomersPage() {
             <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
           </div>
           <Select label="โครงการที่สนใจ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
-          <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm({ ...form, interested_room: e.target.value })} placeholder="เช่น A-1201" />
+          <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm({ ...form, interested_room: e.target.value })} placeholder="เช่น Z-905" />
+          {!editing && form.project_id && form.interested_room.trim() && (
+            <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl text-xs" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <span style={{ color: 'var(--text-3)' }}>Customer ID ที่จะถูกสร้าง:</span>
+              <span className="font-mono font-bold" style={{ color: 'var(--accent)' }}>{form.project_id}-{form.interested_room.trim().toUpperCase()}</span>
+            </div>
+          )}
           <Select label="ช่องทาง" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} options={SOURCE_OPTIONS} />
           <Input label="งบประมาณ (บาท)" type="number" min={0} step={1000} value={form.budget} onChange={e => setForm({ ...form, budget: Number(e.target.value) })} />
           <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}

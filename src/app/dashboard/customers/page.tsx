@@ -279,8 +279,7 @@ function CustomerDetail({
                       {/* Job header */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="text-xs font-mono font-bold" style={{ color: 'var(--accent)' }}>{job.id}</p>
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</p>
+                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</p>
                         </div>
                         <span className="text-xs px-2 py-0.5 rounded-full" style={{
                           background: job.working_status === 'ส่งมอบแล้ว' ? 'rgba(52,211,153,0.15)' : 'var(--hover-bg)',
@@ -489,7 +488,7 @@ export default function CustomersPage() {
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()
-    const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || c.interested_room?.toLowerCase().includes(q)
+    const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || c.interested_room?.toLowerCase().includes(q) || (c as any).projects?.name?.toLowerCase().includes(q)
     const matchStatus = !filterStatus || c.status === filterStatus
     const matchProject = !filterProject || c.project_id === filterProject
     return matchSearch && matchStatus && matchProject
@@ -521,7 +520,7 @@ export default function CustomersPage() {
             id={searchId}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="ค้นหาชื่อ เบอร์ ห้อง..."
+            placeholder="ค้นหาชื่อ ห้อง โครงการ เบอร์..."
             className="bg-transparent text-sm outline-none flex-1"
             style={{ color: 'var(--text-1)' }}
           />

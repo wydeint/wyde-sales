@@ -21,7 +21,7 @@ const NAV = [
     dot: null,
     items: [
       { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-      { href: '/dashboard/quick', icon: Zap, label: '⚡ Quick Mode' },
+      { href: '/dashboard/quick', icon: Zap, label: 'Quick Mode' },
     ],
   },
   {

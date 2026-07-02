@@ -104,7 +104,7 @@ export default function EventsPage() {
     const [{ data: ev, error: e1 }, { data: pr }, { data: u }] = await Promise.all([
       supabase.from('events').select('*').order('event_date', { ascending: false }),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
-      supabase.from('users').select('id,name').eq('active', true).order('name'),
+      supabase.from('users').select('id,name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setEvents(ev || [])
@@ -365,15 +365,15 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
+    <div className="p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-6 gap-3">
+        <div className="min-w-0">
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Events</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance</p>
+          <p className="text-sm mt-0.5 hidden sm:block" style={{ color: 'var(--text-2)' }}>จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance</p>
         </div>
         <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
-          className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} />เพิ่ม Event
+          className="flex items-center gap-2 btn-green text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-medium transition-colors flex-shrink-0">
+          <Plus size={16} /><span className="hidden sm:inline">เพิ่ม Event</span><span className="sm:hidden">เพิ่ม</span>
         </button>
       </div>
 
@@ -394,39 +394,42 @@ export default function EventsPage() {
           return (
             <div key={ev.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               {/* Event row */}
-              <div className="flex items-center gap-4 px-4 py-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-accent-blue text-xs font-mono">{ev.id}</span>
-                    <h3 className="font-medium" style={{ color: 'var(--text-1)' }}>{ev.event_name}</h3>
-                    {ev.event_type && <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{typeLabel(ev.event_type)}</span>}
-                    {ev.project_name && <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{ev.project_name}</span>}
+              <div className="flex items-start gap-3 px-4 py-4">
+                <div className="flex-1 min-w-0">
+                  {/* Title + badges */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
+                    <span className="text-accent-blue text-xs font-mono flex-shrink-0">{ev.id}</span>
+                    <h3 className="font-medium text-sm" style={{ color: 'var(--text-1)' }}>{ev.event_name}</h3>
+                    {ev.event_type && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{typeLabel(ev.event_type)}</span>}
+                    {ev.project_name && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{ev.project_name}</span>}
                   </div>
-                  <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-2)' }}>
+                  {/* Meta — wraps on mobile */}
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-2)' }}>
                     {ev.event_date && <span>📅 {new Date(ev.event_date).toLocaleDateString('th-TH')}</span>}
-                    {ev.location && <span>📍 {ev.location}</span>}
-                    <span>👥 {ev.total_attendees} คน</span>
+                    {ev.location && <span className="truncate max-w-[140px]">📍 {ev.location}</span>}
+                    <span>👥 {ev.total_attendees}</span>
                     <span>📲 LINE {ev.line_adds}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                {/* Action buttons — stack tightly */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button onClick={() => {
                     setSelectedEvent(ev)
                     setCustForm({ ...emptyCust, project_id: ev.project_id || '', booked_date: ev.event_date || '' })
                     if (ev.project_id) loadLeads(ev.project_id)
                     setOpenCustomer(true)
                   }}
-                    className="flex items-center gap-1.5 text-xs btn-blue text-white px-3 py-1.5 rounded-lg transition-colors">
-                    <Users size={13} />เพิ่มลูกค้า
+                    className="flex items-center gap-1 text-xs btn-blue text-white px-2.5 py-1.5 rounded-lg transition-colors">
+                    <Users size={12} /><span className="hidden sm:inline">เพิ่มลูกค้า</span><span className="sm:hidden">+</span>
                   </button>
                   <button onClick={() => {
                     setEditingEvent(ev)
                     setForm({ project_id: ev.project_id, project_name: ev.project_name, event_type: ev.event_type || '', event_name: ev.event_name, event_date: ev.event_date, location: ev.location, total_attendees: ev.total_attendees, line_adds: ev.line_adds, notes: ev.notes })
                     setOpenEvent(true)
-                  }} className="p-1.5 transition-colors" style={{ color: 'var(--text-2)' }}>
+                  }} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => toggleExpand(ev)} className="p-1.5 transition-colors" style={{ color: 'var(--text-2)' }}>
+                  <button onClick={() => toggleExpand(ev)} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
                     {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
                 </div>
@@ -445,7 +448,7 @@ export default function EventsPage() {
                       </div>
 
                       {/* KPI row */}
-                      <div className="grid grid-cols-7 gap-2 mb-4">
+                      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-4">
                         {[
                           { label: 'ลูกค้ามา', value: ev.total_attendees, color: 'var(--text-1)' },
                           { label: 'ปิดการขาย', value: perf.booked, colorClass: 'text-green-400' },
@@ -463,7 +466,7 @@ export default function EventsPage() {
                       </div>
 
                       {/* Revenue row */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานรวม (Booked Value)</p>
                           <p className="text-emerald-400 font-bold">{fmtBaht(perf.revenue)}</p>
@@ -503,7 +506,7 @@ export default function EventsPage() {
                   )}
                   {customers.length > 0 && (
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full" style={{ minWidth: 700 }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                             <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>#</th>
@@ -618,8 +621,8 @@ export default function EventsPage() {
 
       {/* Event Modal */}
       <Modal open={openEvent} onClose={() => setOpenEvent(false)} title={editingEvent ? 'แก้ไข Event' : 'เพิ่ม Event ใหม่'}>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
             <Input label="ชื่องาน *" value={form.event_name} onChange={e => setForm({ ...form, event_name: e.target.value })} placeholder="เช่น ORI Sales Event — Origin Place Petchkasem" />
           </div>
           <Select label="ประเภท Event" value={form.event_type} onChange={e => setForm({ ...form, event_type: e.target.value })} options={EVENT_TYPES} />
@@ -628,7 +631,7 @@ export default function EventsPage() {
           <Input label="สถานที่" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="เช่น ล็อบบี้ตึก A" />
           <Input label="จำนวนคนเข้างาน" type="number" value={form.total_attendees} onChange={e => setForm({ ...form, total_attendees: Number(e.target.value) })} />
           <Input label="จำนวน LINE add (รวมทั้งงาน)" type="number" value={form.line_adds} onChange={e => setForm({ ...form, line_adds: Number(e.target.value) })} />
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
           </div>
         </div>
@@ -642,7 +645,7 @@ export default function EventsPage() {
 
       {/* Edit Customer Modal */}
       <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)} title={`แก้ไขข้อมูล — ${editingCustomer?.customer_name || ''}`} size="lg">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="ชื่อลูกค้า *" value={editCustForm.customer_name}
             onChange={e => setEditCustForm({ ...editCustForm, customer_name: e.target.value })} />
           <Input label="เบอร์โทร" value={editCustForm.phone}
@@ -662,7 +665,7 @@ export default function EventsPage() {
             onChange={e => setEditCustForm({ ...editCustForm, booked_value: e.target.value })} />
           <Input label="มัดจำ เงินสด (บาท)" type="number" value={editCustForm.deposit_amount}
             onChange={e => setEditCustForm({ ...editCustForm, deposit_amount: e.target.value })} />
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <TextArea label="หมายเหตุ" value={editCustForm.notes}
               onChange={e => setEditCustForm({ ...editCustForm, notes: e.target.value })} />
           </div>
@@ -678,7 +681,7 @@ export default function EventsPage() {
 
       {/* Add Customer Modal */}
       <Modal open={openCustomer} onClose={() => setOpenCustomer(false)} title={`+ เพิ่มรายชื่อลูกค้า — ${selectedEvent?.event_name || ''}`} size="lg">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>โครงการ</p>
             <div className="rounded-lg px-3 py-2 text-sm" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -699,7 +702,7 @@ export default function EventsPage() {
             }}
             options={leadOptions} />
 
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <Input label="ชื่อลูกค้า *" value={custForm.customer_name}
               onChange={e => setCustForm({ ...custForm, customer_name: e.target.value })}
               placeholder="ดึงอัตโนมัติจากห้อง หรือพิมพ์เอง" />
@@ -739,7 +742,7 @@ export default function EventsPage() {
             </>
           )}
 
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <TextArea label="หมายเหตุ" value={custForm.notes}
               onChange={e => setCustForm({ ...custForm, notes: e.target.value })} />
           </div>

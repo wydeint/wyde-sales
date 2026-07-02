@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import {
   Search, X, Plus, CheckCircle2, ChevronRight, AlertTriangle,
-  Calendar, AlertCircle, ArrowLeft,
+  Calendar, AlertCircle, ArrowLeft, Home,
   Briefcase, Users, CalendarDays, Database,
   Receipt, FileText, ArrowRightLeft, ClipboardList,
   DollarSign, LayoutDashboard, type LucideIcon
@@ -1526,9 +1526,9 @@ export default function QuickPage() {
               <p className="text-indigo-400 text-[10px] font-bold tracking-widest uppercase leading-tight">Quick Mode</p>
             </div>
           </div>
-          <button onClick={() => router.push('/dashboard')}
+          <button onClick={() => router.push('/dashboard')} aria-label="กลับหน้าหลัก"
             style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)' }}>
-            <X size={20} />
+            <Home size={20} />
           </button>
         </div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{greeting} 👋</h1>

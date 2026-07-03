@@ -25,7 +25,7 @@ type DeliveredJob = {
   sales_id: string
   commission_amount: number
   notes: string
-  customers?: { customer_name: string }
+  customer_name?: string
   projects?: { name: string }
   sales?: { name: string }
 }
@@ -123,7 +123,7 @@ export default function RevenuePage() {
       setFetchError('')
       const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }] = await Promise.all([
         supabase.from('jobs')
-          .select('id,project_id,room_no,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,customers(customer_name),projects(name),sales:users!jobs_sales_id_fkey(name)')
+          .select('id,project_id,room_no,customer_name,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,projects(name),sales:users!jobs_sales_id_fkey(name)')
           .eq('working_status', 'ส่งมอบแล้ว')
           .not('actual_deliver_date', 'is', null)
           .order('actual_deliver_date', { ascending: false }),
@@ -532,7 +532,7 @@ export default function RevenuePage() {
                           return (
                             <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                               <td className="px-4 py-2 font-medium" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
-                              <td className="px-4 py-2" style={{ color: 'var(--text-2)' }}>{(j.customers as any)?.customer_name || '—'}</td>
+                              <td className="px-4 py-2" style={{ color: 'var(--text-2)' }}>{j.customer_name || '—'}</td>
                               <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                                 {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                               </td>
@@ -587,7 +587,7 @@ export default function RevenuePage() {
                       {new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
                     </td>
                     <td className="px-3 py-2.5" style={{ color: 'var(--text-1)' }}>
-                      {(j.customers as any)?.customer_name || '—'}
+                      {j.customer_name || '—'}
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</div>

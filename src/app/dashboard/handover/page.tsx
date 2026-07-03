@@ -61,22 +61,23 @@ const STATUS_CONFIG: Record<WorkStatus, { label: string; colorVar: string; bgSty
 
 // ─── Period Helper ─────────────────────────────────────────
 type HPeriod = 'week' | 'month' | 'quarter' | 'year'
+const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 function getHPeriodRange(p: HPeriod): { start: string; end: string; label: string } {
   const now = new Date()
   const y = now.getFullYear(), m = now.getMonth(), dw = now.getDay()
   if (p === 'week') {
     const mon = new Date(now); mon.setDate(now.getDate() - ((dw + 6) % 7)); mon.setHours(0,0,0,0)
     const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-    return { start: mon.toISOString().slice(0,10), end: sun.toISOString().slice(0,10), label: 'สัปดาห์นี้' }
+    return { start: ld(mon), end: ld(sun), label: 'สัปดาห์นี้' }
   }
   if (p === 'month') {
     const start = new Date(y, m, 1); const end = new Date(y, m+1, 0)
-    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10), label: 'เดือนนี้' }
+    return { start: ld(start), end: ld(end), label: 'เดือนนี้' }
   }
   if (p === 'quarter') {
     const q = Math.floor(m / 3)
     const start = new Date(y, q*3, 1); const end = new Date(y, q*3+3, 0)
-    return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10), label: `Q${q+1}` }
+    return { start: ld(start), end: ld(end), label: `Q${q+1}` }
   }
   return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${y+543}` }
 }
@@ -89,7 +90,7 @@ function DeliveryModal({
   job: HandoverJob | null; open: boolean; onClose: () => void; onSaved: () => void
 }) {
   const supabase = createClient()
-  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0, 10))
+  const [deliveryDate, setDeliveryDate] = useState(ld(new Date()))
   const [fileUrls, setFileUrls] = useState<string[]>([''])
   const [saving, setSaving] = useState(false)
 

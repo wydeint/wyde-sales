@@ -41,6 +41,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
+const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 function getPeriodBounds(period: Period, offset = 0): { start: string; end: string; label: string } {
   const now = new Date()
   if (period === 'week') {
@@ -49,20 +50,20 @@ function getPeriodBounds(period: Period, offset = 0): { start: string; end: stri
     const mon = new Date(base); mon.setDate(base.getDate() - dow)
     const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
     const fmt = (d: Date) => `${d.getDate()} ${MONTHS_TH[d.getMonth()]}`
-    return { start: mon.toISOString().slice(0, 10), end: sun.toISOString().slice(0, 10), label: `${fmt(mon)} – ${fmt(sun)}` }
+    return { start: ld(mon), end: ld(sun), label: `${fmt(mon)} – ${fmt(sun)}` }
   }
   if (period === 'month') {
     const y = now.getFullYear(); const m = now.getMonth() + offset
     const d = new Date(y, m, 1)
     const last = new Date(y, m + 1, 0)
-    return { start: d.toISOString().slice(0, 10), end: last.toISOString().slice(0, 10), label: `${MONTHS_TH[d.getMonth()]} ${d.getFullYear()}` }
+    return { start: ld(d), end: ld(last), label: `${MONTHS_TH[d.getMonth()]} ${d.getFullYear()}` }
   }
   if (period === 'quarter') {
     const totalQ = Math.floor(now.getMonth() / 3) + offset
     const y = now.getFullYear() + Math.floor(totalQ / 4)
     const q = ((totalQ % 4) + 4) % 4
     const qs = new Date(y, q * 3, 1); const qe = new Date(y, q * 3 + 3, 0)
-    return { start: qs.toISOString().slice(0, 10), end: qe.toISOString().slice(0, 10), label: `Q${q + 1} ${y}` }
+    return { start: ld(qs), end: ld(qe), label: `Q${q + 1} ${y}` }
   }
   const y = now.getFullYear() + offset
   return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${y}` }
@@ -205,7 +206,7 @@ export default function ExecutivePage() {
     const y = parseInt(start.slice(0, 4))
     return Array.from({ length: 12 }, (_, m) => {
       const ms = `${y}-${String(m + 1).padStart(2, '0')}-01`
-      const me = new Date(y, m + 1, 0).toISOString().slice(0, 10)
+      const me = ld(new Date(y, m + 1, 0))
       const rev = allJobs.filter(j => j.order_date >= ms && j.order_date <= me &&
         (!filterCustType || j.customer_type === filterCustType))
         .reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)

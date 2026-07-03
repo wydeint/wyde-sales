@@ -114,6 +114,7 @@ const fk = (v: number) => {
 }
 const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
+const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 function getPeriodBounds(period: Period, offset: number): { start: string; end: string; label: string } {
   const now = new Date()
   if (period === 'week') {
@@ -122,19 +123,19 @@ function getPeriodBounds(period: Period, offset: number): { start: string; end: 
     const mon = new Date(base); mon.setDate(base.getDate() - dow); mon.setHours(0,0,0,0)
     const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
     const fmt = (d: Date) => `${d.getDate()} ${MONTHS_TH[d.getMonth()]}`
-    return { start: mon.toISOString().slice(0,10), end: sun.toISOString().slice(0,10), label: `${fmt(mon)} – ${fmt(sun)}` }
+    return { start: ld(mon), end: ld(sun), label: `${fmt(mon)} – ${fmt(sun)}` }
   }
   if (period === 'month') {
     const y = now.getFullYear(); const m = now.getMonth() + offset
     const s = new Date(y, m, 1); const e = new Date(y, m+1, 0)
-    return { start: s.toISOString().slice(0,10), end: e.toISOString().slice(0,10), label: `${MONTHS_TH[s.getMonth()]} ${s.getFullYear()}` }
+    return { start: ld(s), end: ld(e), label: `${MONTHS_TH[s.getMonth()]} ${s.getFullYear()}` }
   }
   if (period === 'quarter') {
     const totalQ = Math.floor(now.getMonth()/3) + offset
     const y = now.getFullYear() + Math.floor(totalQ/4)
     const q = ((totalQ%4)+4)%4
     const s = new Date(y, q*3, 1); const e = new Date(y, q*3+3, 0)
-    return { start: s.toISOString().slice(0,10), end: e.toISOString().slice(0,10), label: `Q${q+1} ${y}` }
+    return { start: ld(s), end: ld(e), label: `Q${q+1} ${y}` }
   }
   const y = now.getFullYear() + offset
   return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${y}` }

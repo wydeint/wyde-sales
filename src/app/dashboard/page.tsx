@@ -38,14 +38,14 @@ export default function DashboardPage() {
 
   const monthStart = useMemo(() => {
     const now = new Date()
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
   }, [])
 
   useEffect(() => {
     async function load() {
       setFetchError('')
       const now = new Date()
-      const ms = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+      const ms = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
 
       const [
         { data: { user } },
@@ -101,7 +101,8 @@ export default function DashboardPage() {
 
   const monthEnd = useMemo(() => {
     const now = new Date()
-    return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
+    const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    return `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`
   }, [])
 
   const salesThisMonth = useMemo(() =>

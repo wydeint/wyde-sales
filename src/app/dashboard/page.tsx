@@ -73,7 +73,7 @@ export default function DashboardPage() {
       }
 
       setAllCustomers((customers || []) as Customer[])
-      setAllJobs((jobs || []) as Job[])
+      setAllJobs((jobs || []) as unknown as Job[])
       setReports(reps || [])
       setOrgTarget(ot as OrgTarget | null)
       setLoading(false)

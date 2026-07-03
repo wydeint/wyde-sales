@@ -179,7 +179,7 @@ export default function Sidebar() {
       {/* ── Nav ── */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="เมนูหลัก">
         {NAV.map(section => (
-          <div key={section.label} className="mb-2">
+          <div key={section.label} className="mb-4">
             {/* Section label (lg+ only) */}
             <div className="hidden lg:flex items-center gap-1.5 px-2 mb-1">
               {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
@@ -210,11 +210,11 @@ export default function Sidebar() {
                   onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
                   {/* Icon — centered on < lg, left-aligned on lg+ */}
-                  <span className="flex items-center justify-center w-full lg:w-auto py-2 px-0 lg:px-3">
+                  <span className="flex items-center justify-center w-full lg:w-auto py-2.5 px-0 lg:px-3">
                     <Icon size={16} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)', flexShrink: 0 }} />
                   </span>
                   {/* Label (lg+ only) */}
-                  <span className="hidden lg:inline truncate flex-1 font-medium text-sm">{item.label}</span>
+                  <span className="hidden lg:inline truncate flex-1 text-sm font-normal">{item.label}</span>
                   {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="hidden lg:inline flex-shrink-0 mr-2" />}
                 </Link>
               )

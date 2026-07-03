@@ -187,15 +187,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-3 px-2 lg:px-3 space-y-0.5" aria-label="เมนูหลัก">
         {NAV.map(section => (
           <div key={section.label} className="mb-2 lg:mb-3">
-            {/* Section label — full mode only */}
-            <div className="hidden md:hidden lg:flex items-center gap-1.5 px-2 mb-1">
-              {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
-              <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
-                style={!section.color ? { color: 'var(--text-3)' } : undefined}>
-                {section.label}
-              </span>
-            </div>
-            {/* Section label visible on lg+ */}
+            {/* Section label — overlay mode + lg+ (hidden on md icon-only iPad) */}
             <div className="hidden lg:flex items-center gap-1.5 px-2 mb-1">
               {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
               <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}

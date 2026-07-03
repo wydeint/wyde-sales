@@ -81,11 +81,7 @@ const NAV = [
   },
 ]
 
-interface SidebarProps {
-  onClose?: () => void
-}
-
-export default function Sidebar({ onClose }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -128,13 +124,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
   return (
     <>
     {/*
-      Width responsive:
-        < md  : w-60 (overlay, slides in)
-        md–lg : w-16 (icon-only, always visible)
-        lg+   : w-60 (full, always visible)
+      Width:
+        < lg  : w-[60px]  — icon only
+        lg+   : w-[216px] — full labels
     */}
     <aside
-      className="w-60 md:w-16 lg:w-60 flex-shrink-0 flex flex-col h-screen relative"
+      className="w-[60px] lg:w-[216px] flex-shrink-0 flex flex-col h-screen"
       style={{
         background: 'var(--sidebar-bg)',
         borderRight: '1px solid var(--sidebar-border)',
@@ -142,10 +137,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
         WebkitBackdropFilter: 'blur(28px) saturate(180%)',
       }}
     >
-      {/* ── Logo ──────────────────────────────────── */}
-      <div className="px-4 md:px-2 lg:px-4 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
-        {/* Full logo (overlay + lg+) */}
-        <div className="flex items-center gap-3 md:hidden lg:flex">
+      {/* ── Logo ── */}
+      <div className="px-2 lg:px-4 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+        {/* Full logo (lg+) */}
+        <div className="hidden lg:flex items-center gap-3">
           <div className="flex-shrink-0 flex items-center" style={{ width: 72, height: 32 }}>
             <img src="/logo.svg" alt="WydE Int." style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
           </div>
@@ -154,17 +149,15 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>WydEInt Interior</p>
           </div>
         </div>
-        {/* Mini logo (icon-only iPad) */}
-        <div className="hidden md:flex lg:hidden items-center justify-center">
-          <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/logo.svg" alt="WydE" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          </div>
+        {/* Mini logo (< lg) */}
+        <div className="flex lg:hidden items-center justify-center">
+          <img src="/logo.svg" alt="WydE" style={{ width: 28, height: 28, objectFit: 'contain' }} />
         </div>
       </div>
 
-      {/* ── Search ────────────────────────────────── */}
-      {/* Full search bar (overlay + lg+) */}
-      <div className="md:hidden lg:block px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+      {/* ── Search ── */}
+      {/* Full search bar (lg+) */}
+      <div className="hidden lg:block px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
         <button onClick={() => setSearchOpen(true)}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
@@ -173,8 +166,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
           <kbd className="text-[10px] px-1 rounded" style={{ background: 'var(--card-bg)', color: 'var(--text-3)' }}>⌘K</kbd>
         </button>
       </div>
-      {/* Mini search icon (icon-only iPad) */}
-      <div className="hidden md:flex lg:hidden items-center justify-center py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+      {/* Mini search icon (< lg) */}
+      <div className="flex lg:hidden items-center justify-center py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
         <button onClick={() => setSearchOpen(true)}
           aria-label="ค้นหา"
           className="w-9 h-9 flex items-center justify-center rounded-xl"
@@ -183,11 +176,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
         </button>
       </div>
 
-      {/* ── Nav ───────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 lg:px-3 space-y-0.5" aria-label="เมนูหลัก">
+      {/* ── Nav ── */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="เมนูหลัก">
         {NAV.map(section => (
-          <div key={section.label} className="mb-2 lg:mb-3">
-            {/* Section label — overlay mode + lg+ (hidden on md icon-only iPad) */}
+          <div key={section.label} className="mb-2">
+            {/* Section label (lg+ only) */}
             <div className="hidden lg:flex items-center gap-1.5 px-2 mb-1">
               {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
               <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
@@ -195,9 +188,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 {section.label}
               </span>
             </div>
-
-            {/* Divider instead of label on icon-only iPad */}
-            <div className="hidden md:block lg:hidden mb-1" style={{ height: 1, background: 'var(--divider)', margin: '4px 4px' }} />
+            {/* Divider instead of label (< lg) */}
+            <div className="block lg:hidden mb-1" style={{ height: 1, background: 'var(--divider)', margin: '4px 4px' }} />
 
             {section.items.map(item => {
               const isActive = pathname === item.href
@@ -206,7 +198,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={onClose}
                   title={item.label}
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
@@ -214,19 +205,17 @@ export default function Sidebar({ onClose }: SidebarProps) {
                   style={{
                     background: isActive ? 'var(--active-bg)' : 'transparent',
                     color: isActive ? 'var(--accent)' : 'var(--text-2)',
-                    /* Full mode: normal padding; icon mode: center icon */
-                    padding: undefined,
                   }}
                   onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--hover-bg)' }}
                   onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
-                  {/* Icon — centered on md, left-aligned on lg */}
-                  <span className="flex items-center justify-center md:w-full lg:w-auto md:py-2 lg:py-0 px-2 lg:px-3 py-2">
+                  {/* Icon — centered on < lg, left-aligned on lg+ */}
+                  <span className="flex items-center justify-center w-full lg:w-auto py-2 px-0 lg:px-3">
                     <Icon size={16} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)', flexShrink: 0 }} />
                   </span>
-                  {/* Label — visible on overlay + lg, hidden on md */}
-                  <span className="truncate flex-1 font-medium text-sm md:hidden lg:inline">{item.label}</span>
-                  {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="md:hidden lg:inline flex-shrink-0 mr-2" />}
+                  {/* Label (lg+ only) */}
+                  <span className="hidden lg:inline truncate flex-1 font-medium text-sm">{item.label}</span>
+                  {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="hidden lg:inline flex-shrink-0 mr-2" />}
                 </Link>
               )
             })}
@@ -234,10 +223,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
         ))}
       </nav>
 
-      {/* ── Bottom bar ───────────────────────────── */}
+      {/* ── Bottom bar ── */}
       <div className="flex-shrink-0 px-2 lg:px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
-        {/* Full mode (overlay + lg+): avatar + name + buttons in a row */}
-        <div className="flex items-center gap-1.5 md:hidden lg:flex">
+        {/* Full mode (lg+) */}
+        <div className="hidden lg:flex items-center gap-1.5">
           <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
             style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
             {userInitial}
@@ -262,8 +251,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
           </button>
         </div>
 
-        {/* Icon-only mode (md): stacked icon buttons */}
-        <div className="hidden md:flex lg:hidden flex-col items-center gap-2">
+        {/* Icon-only mode (< lg) */}
+        <div className="flex lg:hidden flex-col items-center gap-2">
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
             style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
             {userInitial}

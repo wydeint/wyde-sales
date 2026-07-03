@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List } from 'lucide-react'
+import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List, ChevronDown } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 // ─────────────────────────────────────────
@@ -104,6 +104,7 @@ export default function RevenuePage() {
   const [filterSales, setFilterSales] = useState('')
   const [filterCustType, setFilterCustType] = useState('')
   const [filterWorkType, setFilterWorkType] = useState('')
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
 
   // Unique users
   const users = useMemo(() => {
@@ -183,12 +184,12 @@ export default function RevenuePage() {
 
   // By project
   const byProject = useMemo(() => {
-    const map = new Map<string, { name: string; revenue: number; units: number }>()
+    const map = new Map<string, { name: string; revenue: number; units: number; jobs: DeliveredJob[] }>()
     periodJobs.forEach(j => {
       const projectData = j.projects as any
       const name = projectData?.name || j.project_id || 'ไม่ระบุ'
-      const cur = map.get(name) || { name, revenue: 0, units: 0 }
-      map.set(name, { name, revenue: cur.revenue + (j.revenue_inc_vat || 0), units: cur.units + 1 })
+      const cur = map.get(name) || { name, revenue: 0, units: 0, jobs: [] }
+      map.set(name, { name, revenue: cur.revenue + (j.revenue_inc_vat || 0), units: cur.units + 1, jobs: [...cur.jobs, j] })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -205,7 +206,6 @@ export default function RevenuePage() {
 
   // Bar chart max
   const salesMax = Math.max(...bySales.map(s => s.revenue), 1)
-  const projMax = Math.max(...byProject.map(p => p.revenue), 1)
 
   // Monthly trend for year view (12 months)
   const monthlyTrend = useMemo(() => {
@@ -477,37 +477,88 @@ export default function RevenuePage() {
 
       {/* ── Project view ── */}
       {view === 'project' && (
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 size={14} style={{ color: '#f97316' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Revenue by Project</h2>
+        <div className="glass-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+            <div className="flex items-center gap-2">
+              <Building2 size={14} style={{ color: '#f97316' }} />
+              <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>รายโครงการ</h2>
+              <span className="text-xs" style={{ color: 'var(--text-3)' }}>{byProject.length} โครงการ · {periodJobs.length} งาน</span>
+            </div>
+            <button className="text-xs px-2 py-1 rounded-lg" style={{ color: 'var(--accent)', background: 'var(--hover-bg)' }}
+              onClick={() => {
+                const allExpanded = byProject.every(p => expandedProjects.has(p.name))
+                setExpandedProjects(allExpanded ? new Set() : new Set(byProject.map(p => p.name)))
+              }}>
+              {byProject.every(p => expandedProjects.has(p.name)) ? 'ย่อทั้งหมด' : 'ขยายทั้งหมด'}
+            </button>
           </div>
           {byProject.length === 0 ? (
             <p className="text-sm text-center py-10" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
-          ) : byProject.map((p, i) => (
-            <div key={p.name} className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-xs font-bold w-5 text-right flex-shrink-0"
-                    style={{ color: 'var(--text-3)' }}>{i + 1}</span>
-                  <span className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{p.name}</span>
-                  <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-3)' }}>{p.units} งาน</span>
-                </div>
-                <div className="text-right flex-shrink-0 ml-4">
-                  <span className="text-sm font-bold" style={{ color: '#4ade80' }}>{fk(p.revenue)}</span>
-                  <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>
-                    {(p.revenue / projMax * 100).toFixed(0)}%
-                  </span>
-                </div>
+          ) : byProject.map((p, i) => {
+            const expanded = expandedProjects.has(p.name)
+            const color = `hsl(${(i * 47) % 360}, 65%, 55%)`
+            return (
+              <div key={p.name} style={{ borderBottom: '1px solid var(--divider)' }}>
+                {/* Project header row */}
+                <button className="w-full flex items-center gap-3 px-5 py-3 text-left"
+                  style={{ background: expanded ? 'var(--hover-bg)' : 'transparent' }}
+                  onClick={() => {
+                    const next = new Set(expandedProjects)
+                    next.has(p.name) ? next.delete(p.name) : next.add(p.name)
+                    setExpandedProjects(next)
+                  }}>
+                  <span className="text-xs font-bold w-5 text-right flex-shrink-0" style={{ color: 'var(--text-3)' }}>{i + 1}</span>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                  <span className="flex-1 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>{p.units} งาน</span>
+                  <span className="text-sm font-bold flex-shrink-0 w-24 text-right" style={{ color: '#4ade80' }}>{fk(p.revenue)}</span>
+                  <ChevronDown size={14} className="flex-shrink-0 transition-transform" style={{ color: 'var(--text-3)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                </button>
+                {/* Expanded job list */}
+                {expanded && (
+                  <div className="overflow-x-auto" style={{ background: 'var(--active-bg)' }}>
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                          {['ห้อง', 'ลูกค้า', 'วันส่งมอบ', 'ประเภท', 'Sales', 'Revenue (Inc.VAT)', 'GP%'].map(h => (
+                            <th key={h} className="text-left px-4 py-2 font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {p.jobs.sort((a, b) => (a.room_no || '').localeCompare(b.room_no || '')).map(j => {
+                          const gp = j.revenue_ex_vat > 0 ? ((j.revenue_ex_vat - j.cost) / j.revenue_ex_vat * 100) : null
+                          return (
+                            <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
+                              <td className="px-4 py-2 font-medium" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
+                              <td className="px-4 py-2" style={{ color: 'var(--text-2)' }}>{(j.customers as any)?.customer_name || '—'}</td>
+                              <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
+                                {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
+                              </td>
+                              <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{j.work_type || '—'}</td>
+                              <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{(j.sales as any)?.name || '—'}</td>
+                              <td className="px-4 py-2 font-bold text-right whitespace-nowrap" style={{ color: '#4ade80' }}>{f(j.revenue_inc_vat || 0)}</td>
+                              <td className="px-4 py-2 text-right whitespace-nowrap" style={{ color: gp !== null ? (gp >= 30 ? '#4ade80' : gp >= 15 ? '#fbbf24' : '#f87171') : 'var(--text-3)' }}>
+                                {gp !== null ? gp.toFixed(1) + '%' : '—'}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ background: 'var(--hover-bg)', borderTop: '2px solid var(--divider)' }}>
+                          <td colSpan={5} className="px-4 py-2 font-semibold" style={{ color: 'var(--text-2)' }}>รวม {p.units} งาน</td>
+                          <td className="px-4 py-2 font-bold text-right" style={{ color: '#4ade80' }}>{f(p.revenue)}</td>
+                          <td />
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
               </div>
-              <div className="h-2 rounded-full overflow-hidden ml-7" style={{ background: 'var(--divider)' }}>
-                <div className="h-full rounded-full" style={{
-                  width: (p.revenue / projMax * 100) + '%',
-                  background: `hsl(${(i * 47) % 360}, 70%, 60%)`,
-                }} />
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

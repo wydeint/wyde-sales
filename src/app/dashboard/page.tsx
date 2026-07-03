@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Users, TrendingUp, PhoneCall, DollarSign, Target, Award, Package } from 'lucide-react'
+import { Users, TrendingUp, PhoneCall, Target, Award, Package, X, ChevronRight } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -18,7 +18,7 @@ const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 const fn = (v: number) => (v || 0).toLocaleString()
 
 type Customer = { status: string; budget: number; customer_type: string }
-type Job = { id: string; order_date: string; work_type: string; customer_type: string; revenue_ex_vat: number; revenue_inc_vat: number; actual_deliver_date: string; working_status: string; sales_id: string }
+type Job = { id: string; order_date: string; work_type: string; customer_type: string; customer_name: string; room_no: string; revenue_ex_vat: number; revenue_inc_vat: number; actual_deliver_date: string; working_status: string; sales_id: string; projects?: { name: string }; sales?: { name: string } }
 type OrgTarget = { target_sales_value: number; target_delivery_value: number }
 
 export default function DashboardPage() {
@@ -34,6 +34,7 @@ export default function DashboardPage() {
 
   const [filterCustType, setFilterCustType] = useState('')
   const [filterWorkType, setFilterWorkType] = useState('')
+  const [deliverDrillOpen, setDeliverDrillOpen] = useState(false)
 
   const monthStart = useMemo(() => {
     const now = new Date()
@@ -55,7 +56,7 @@ export default function DashboardPage() {
       ] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('customers').select('status, budget, customer_type'),
-        supabase.from('jobs').select('id,order_date,work_type,customer_type,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id'),
+        supabase.from('jobs').select('id,order_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
         supabase.from('daily_reports').select('*, users(name)').gte('date', ms).order('date', { ascending: false }),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value').eq('year', now.getFullYear()).eq('month', now.getMonth() + 1).maybeSingle(),
       ])
@@ -150,6 +151,8 @@ export default function DashboardPage() {
   const delivPct = orgTarget?.target_delivery_value ? Math.min(Math.round(actualDeliv / orgTarget.target_delivery_value * 100), 100) : 0
   const currentMonthThai = new Date().toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
 
+  const f2 = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
+
   if (loading) return <div className="flex items-center justify-center h-full"><PageSpinner /></div>
   if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
@@ -219,21 +222,85 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${customers.filter(c => c.status === 'booked').length} · ปิด ${customers.filter(c => c.status === 'closed').length}`, color: '#60a5fa' },
-          { icon: TrendingUp, label: 'ยอดขายเดือนนี้', value: fn(salesThisMonth.length) + ' รายการ', sub: f(salesThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#f97316' },
-          { icon: Package, label: 'ยอดส่งมอบเดือนนี้', value: fn(deliveredThisMonth.length) + ' รายการ', sub: f(deliveredThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#4ade80' },
-          { icon: PhoneCall, label: 'โทร เดือนนี้', value: fn(callsThisMonth), sub: `เยี่ยม ${visitsThisMonth} ครั้ง`, color: '#fbbf24' },
-        ].map(({ icon: Icon, label, value, sub, color }) => (
-          <div key={label} className="glass-card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Icon size={14} style={{ color }} />
-              <span className="text-xs" style={{ color: 'var(--text-3)' }}>{label}</span>
+          { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${customers.filter(c => c.status === 'booked').length} · ปิด ${customers.filter(c => c.status === 'closed').length}`, color: '#60a5fa', onClick: undefined },
+          { icon: TrendingUp, label: 'ยอดขายเดือนนี้', value: fn(salesThisMonth.length) + ' รายการ', sub: f(salesThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#f97316', onClick: undefined },
+          { icon: Package, label: 'ยอดส่งมอบเดือนนี้', value: fn(deliveredThisMonth.length) + ' รายการ', sub: f(deliveredThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#4ade80', onClick: () => setDeliverDrillOpen(true) },
+          { icon: PhoneCall, label: 'โทร เดือนนี้', value: fn(callsThisMonth), sub: `เยี่ยม ${visitsThisMonth} ครั้ง`, color: '#fbbf24', onClick: undefined },
+        ].map(({ icon: Icon, label, value, sub, color, onClick }) => (
+          <div key={label} onClick={onClick}
+            className="glass-card p-4"
+            style={{ cursor: onClick ? 'pointer' : 'default' }}
+            onMouseEnter={e => onClick && (e.currentTarget.style.background = 'var(--active-bg)')}
+            onMouseLeave={e => onClick && (e.currentTarget.style.background = '')}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Icon size={14} style={{ color }} />
+                <span className="text-xs" style={{ color: 'var(--text-3)' }}>{label}</span>
+              </div>
+              {onClick && <ChevronRight size={13} style={{ color: 'var(--text-3)' }} />}
             </div>
             <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{value}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>
           </div>
         ))}
       </div>
+
+      {/* Drill-down modal: delivered this month */}
+      {deliverDrillOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setDeliverDrillOpen(false)}>
+          <div className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl overflow-hidden"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+              <div>
+                <h3 className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>งานส่งมอบเดือนนี้</h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  นับจาก <code className="px-1 rounded" style={{ background: 'var(--hover-bg)' }}>jobs.actual_deliver_date</code> · {deliveredThisMonth.length} รายการ
+                </p>
+              </div>
+              <button onClick={() => setDeliverDrillOpen(false)} style={{ color: 'var(--text-3)' }}><X size={18} /></button>
+            </div>
+            <div className="overflow-y-auto">
+              {deliveredThisMonth.length === 0 ? (
+                <p className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>ไม่มีรายการส่งมอบในเดือนนี้</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
+                      {['Job ID', 'ลูกค้า', 'โครงการ / ห้อง', 'Sales', 'วันส่งมอบ (actual)', 'Revenue (Inc.VAT)'].map(h => (
+                        <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deliveredThisMonth.map(j => (
+                      <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
+                        <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'var(--accent)' }}>{j.id}</td>
+                        <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</div>
+                          <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{j.room_no || '—'}</div>
+                        </td>
+                        <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
+                        <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>
+                          {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-xs font-bold text-right" style={{ color: '#4ade80' }}>{f2(j.revenue_inc_vat || 0)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ background: 'var(--hover-bg)', borderTop: '2px solid var(--divider)' }}>
+                      <td colSpan={5} className="px-4 py-2.5 text-xs font-bold" style={{ color: 'var(--text-2)' }}>รวม {deliveredThisMonth.length} รายการ</td>
+                      <td className="px-4 py-2.5 text-xs font-bold text-right" style={{ color: '#4ade80' }}>{f2(actualDeliv)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

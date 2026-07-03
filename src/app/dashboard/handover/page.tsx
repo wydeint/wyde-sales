@@ -326,6 +326,8 @@ export default function HandoverPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<WorkStatus | 'all'>('all')
+  const [filterProject, setFilterProject] = useState('')
+  const [filterSales, setFilterSales] = useState('')
   const [deliveryTarget, setDeliveryTarget] = useState<HandoverJob | null>(null)
   const [hPeriod, setHPeriod] = useState<HPeriod>('month')
   const [fetchError, setFetchError] = useState('')
@@ -435,8 +437,13 @@ export default function HandoverPage() {
     await load()
   }
 
+  const projectOptions = Array.from(new Set(jobs.map(j => j.projectName).filter(Boolean))).sort()
+  const salesOptions = Array.from(new Set(jobs.map(j => j.salesName).filter(Boolean))).sort()
+
   const filtered = jobs.filter(j => {
     if (filterStatus !== 'all' && j.workStatus !== filterStatus) return false
+    if (filterProject && j.projectName !== filterProject) return false
+    if (filterSales && j.salesName !== filterSales) return false
     if (!search) return true
     const q = search.toLowerCase()
     return j.customerName.toLowerCase().includes(q) ||
@@ -546,7 +553,19 @@ export default function HandoverPage() {
             className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
-        <div className="flex gap-2">
+        <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
+          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: filterProject ? 'var(--text-1)' : 'var(--text-3)' }}>
+          <option value="">ทุกโครงการ</option>
+          {projectOptions.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: filterSales ? 'var(--text-1)' : 'var(--text-3)' }}>
+          <option value="">ทุก Sales</option>
+          {salesOptions.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <div className="flex gap-2 flex-wrap">
           {STATUS_FILTERS.map(f => (
             <button key={f.key} onClick={() => setFilterStatus(f.key)}
               className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-700 dark:text-indigo-300' : ''}`}

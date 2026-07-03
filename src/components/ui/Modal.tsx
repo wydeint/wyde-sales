@@ -93,7 +93,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative w-full ${widths[size]} max-h-[90vh] overflow-y-auto rounded-xl focus:outline-none`}
+        className={`relative w-full ${widths[size]} max-h-[90vh] overflow-y-auto rounded-[18px] focus:outline-none`}
         style={{
           background: 'var(--glass-bg)',
           backdropFilter: 'blur(24px) saturate(180%)',

@@ -86,7 +86,7 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Projects</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Projects</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการข้อมูลโครงการ</p>
         </div>
         <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -95,17 +95,17 @@ export default function ProjectsPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>ID</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>ชื่อโครงการ</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>Developer</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>ที่ตั้ง</th>
-              <th className="text-center px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>ตึก</th>
-              <th className="text-center px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>ห้องทั้งหมด</th>
-              <th className="text-center px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>สถานะ</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ID</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ชื่อโครงการ</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>Developer</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ที่ตั้ง</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ตึก</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ห้องทั้งหมด</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>สถานะ</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -121,7 +121,7 @@ export default function ProjectsPage() {
             {projects.map((p, i) => (
               <tr key={p.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
                 <td className="px-4 py-3 text-accent-blue text-sm font-mono">{p.id}</td>
-                <td className="px-4 py-3 text-sm font-medium" style={{ color: 'var(--text-1)' }}>{p.name}</td>
+                <td className="px-4 py-3 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.developer}</td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.location}</td>
                 <td className="px-4 py-3 text-sm text-center" style={{ color: 'var(--text-2)' }}>{p.tower_count}</td>
@@ -156,7 +156,7 @@ export default function ProjectsPage() {
           {editing && (
             <div className="col-span-2">
               <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--text-3)' }}>รหัสโครงการ</label>
-              <p className="text-sm font-mono px-3 py-2 rounded-xl" style={{ background: 'var(--hover-bg)', color: 'var(--accent)' }}>{editing.id}</p>
+              <p className="text-sm font-mono px-3 py-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--accent)' }}>{editing.id}</p>
             </div>
           )}
           <div className="col-span-2">
@@ -171,7 +171,7 @@ export default function ProjectsPage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

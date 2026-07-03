@@ -74,7 +74,7 @@ export default function SearchableSelect({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute z-50 mt-1 rounded-xl overflow-hidden shadow-lg"
+          className="absolute z-50 mt-1 rounded-[11px] overflow-hidden shadow-lg"
           style={{
             background: 'var(--glass-bg)',
             backdropFilter: 'blur(24px) saturate(180%)',

@@ -145,7 +145,7 @@ export default function WarrantyPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Warranty</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Warranty</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามระยะเวลาประกันผลงาน</p>
         </div>
         <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
@@ -156,7 +156,7 @@ export default function WarrantyPage() {
 
       {/* Alert Banner — expiring soon */}
       {expiringSoon.length > 0 && (
-        <div className="rounded-xl p-4 mb-4 flex items-start gap-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)' }}>
+        <div className="rounded-[18px] p-4 mb-4 flex items-start gap-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)' }}>
           <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-yellow-400">ประกันใกล้หมด {expiringSoon.length} ราย</p>
@@ -173,17 +173,17 @@ export default function WarrantyPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
+            className="w-full pl-9 pr-4 py-2.5 rounded-[8px] text-sm focus:outline-none"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
         <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
-          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
           <option value="">ทุกโครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
           <option value="">ทุกสถานะ</option>
           {STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -193,9 +193,9 @@ export default function WarrantyPage() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {STATUS.map(s => (
-          <div key={s.value} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div key={s.value} className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{s.label}</p>
-            <p className={`text-2xl font-bold ${s.color.split(' ')[1]}`}>{warranties.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
+            <p className={`text-kpi-number ${s.color.split(' ')[1]}`}>{warranties.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
           </div>
         ))}
       </div>
@@ -204,7 +204,7 @@ export default function WarrantyPage() {
       {active.length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>อยู่ในประกัน ({active.length})</h2>
-          <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -235,7 +235,7 @@ export default function WarrantyPage() {
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_end)}</td>
                       <td className="px-4 py-3">
                         {days !== null && (
-                          <span className={`text-sm font-medium ${days <= 30 ? 'text-yellow-400' : 'text-green-400'}`}>
+                          <span className={`text-sm font-semibold ${days <= 30 ? 'text-yellow-400' : 'text-green-400'}`}>
                             {days > 0 ? `${days} วัน` : 'หมดแล้ว'}
                           </span>
                         )}
@@ -248,7 +248,7 @@ export default function WarrantyPage() {
                           {computedStatus(w.warranty_end) === 'expiring_soon' && (
                             <button
                               onClick={() => window.open(`tel:${(w as any).customers?.phone || ''}`, '_self')}
-                              className="text-xs px-2 py-1 rounded-lg font-medium"
+                              className="text-xs px-2 py-1 rounded-lg font-semibold"
                               style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>
                               📞 นัดตรวจ
                             </button>
@@ -275,7 +275,7 @@ export default function WarrantyPage() {
       {expired.length > 0 && (
         <div>
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>หมดประกันแล้ว ({expired.length})</h2>
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', opacity: 0.75 }}>
+          <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', opacity: 0.75 }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -312,7 +312,7 @@ export default function WarrantyPage() {
       )}
 
       {!loading && warranties.length === 0 && (
-        <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <ShieldCheck size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีข้อมูลประกัน</p>
         </div>
@@ -329,7 +329,7 @@ export default function WarrantyPage() {
           <Input label="ระยะเวลาประกัน (เดือน)" type="number" value={form.warranty_months} onChange={e => updateMonths(Number(e.target.value))} />
           <div className="col-span-2 rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>วันหมดประกัน (คำนวณอัตโนมัติ)</p>
-            <p className="font-medium" style={{ color: 'var(--text-1)' }}>{form.warranty_end ? dateStr(form.warranty_end) : '-'}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{form.warranty_end ? dateStr(form.warranty_end) : '-'}</p>
           </div>
           <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={statusOptions} />
           <div className="col-span-2">

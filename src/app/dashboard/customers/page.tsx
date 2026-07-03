@@ -192,12 +192,12 @@ function CustomerDetail({
               {customer.customer_name[0]}
             </div>
             <div>
-              <h2 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</h2>
+              <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</h2>
               <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-3)' }}>{customer.id}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${st.color}`}>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${st.color}`}>
               {st.icon} {st.label}
             </span>
             <button onClick={onEdit} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }} title="แก้ไขข้อมูล">
@@ -214,7 +214,7 @@ function CustomerDetail({
           {/* Contact Info */}
           <section>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ข้อมูลติดต่อ</p>
-            <div className="rounded-xl p-4 grid grid-cols-2 gap-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div className="rounded-[18px] p-4 grid grid-cols-2 gap-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div className="flex items-center gap-2">
                 <Phone size={13} style={{ color: 'var(--text-3)' }} />
                 <span className="text-sm" style={{ color: 'var(--text-1)' }}>{customer.phone || '—'}</span>
@@ -277,7 +277,7 @@ function CustomerDetail({
                       <div className="relative mb-3 flex items-start gap-3">
                         <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isBooked ? '#f97316' : 'var(--divider)', borderColor: isBooked ? '#f97316' : 'var(--text-3)' }} />
                         <div>
-                          <p className="text-xs font-medium" style={{ color: isBooked ? '#f97316' : 'var(--text-3)' }}>
+                          <p className="text-xs font-semibold" style={{ color: isBooked ? '#f97316' : 'var(--text-3)' }}>
                             {isBooked ? '★ Booked' : `สถานะ: ${st.label}`}
                           </p>
                           {customer.status === 'lost' && <p className="text-[10px]" style={{ color: '#f87171' }}>หลุดแล้ว</p>}
@@ -305,7 +305,7 @@ function CustomerDetail({
                         <div className="relative mb-3 flex items-start gap-3">
                           <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: '#6366f1' }} />
                           <div>
-                            <p className="text-xs font-medium" style={{ color: '#a78bfa' }}>📋 สั่งงาน</p>
+                            <p className="text-xs font-semibold" style={{ color: '#a78bfa' }}>📋 สั่งงาน</p>
                             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
                               {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
                             </p>
@@ -317,7 +317,7 @@ function CustomerDetail({
                           <div className="relative mb-3 flex items-start gap-3">
                             <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: paidCount === totalCount ? '#4ade80' : '#fbbf24' }} />
                             <div>
-                              <p className="text-xs font-medium" style={{ color: paidCount === totalCount ? '#4ade80' : '#fbbf24' }}>
+                              <p className="text-xs font-semibold" style={{ color: paidCount === totalCount ? '#4ade80' : '#fbbf24' }}>
                                 💰 ชำระ {paidCount}/{totalCount} งวด
                               </p>
                               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
@@ -331,7 +331,7 @@ function CustomerDetail({
                         <div className="relative mb-3 flex items-start gap-3">
                           <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isDelivered ? '#34d399' : 'var(--divider)', borderColor: isDelivered ? '#34d399' : 'var(--text-3)' }} />
                           <div>
-                            <p className="text-xs font-medium" style={{ color: isDelivered ? '#34d399' : 'var(--text-3)' }}>
+                            <p className="text-xs font-semibold" style={{ color: isDelivered ? '#34d399' : 'var(--text-3)' }}>
                               {isDelivered ? '✅ ส่งมอบแล้ว' : '○ รอส่งมอบ'}
                             </p>
                             {isDelivered && job.handover?.delivery_date && (
@@ -345,7 +345,7 @@ function CustomerDetail({
                           <div className="relative mb-3 flex items-start gap-3">
                             <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? '#fbbf24' : '#60a5fa' }} />
                             <div>
-                              <p className="text-xs font-medium" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : '#60a5fa' }}>
+                              <p className="text-xs font-semibold" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : '#60a5fa' }}>
                                 🛡️ ประกัน {warranty.warranty_months || ''} เดือน
                               </p>
                               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
@@ -366,7 +366,7 @@ function CustomerDetail({
                   <Briefcase size={12} />งาน ({jobs.length})
                 </p>
                 {jobs.length === 0 ? (
-                  <p className="text-xs px-3 py-4 rounded-xl text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
+                  <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
                     ยังไม่มีงาน
                   </p>
                 ) : jobs.map(job => {
@@ -374,7 +374,7 @@ function CustomerDetail({
                   const total = job.installments.reduce((s, i) => s + i.amount, 0)
                   const pct = total > 0 ? Math.round(paid / total * 100) : 0
                   return (
-                    <div key={job.id} className="rounded-xl p-4 mb-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                    <div key={job.id} className="rounded-[18px] p-4 mb-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                       {/* Job header */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -396,7 +396,7 @@ function CustomerDetail({
                         ].map(f => (
                           <div key={f.label} className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--hover-bg)' }}>
                             <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
-                            <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
+                            <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
                           </div>
                         ))}
                       </div>
@@ -462,7 +462,7 @@ function CustomerDetail({
                     <Shield size={12} />ประกัน ({warranties.length})
                   </p>
                   {warranties.map(w => (
-                    <div key={w.id} className="rounded-xl p-4 mb-2" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                    <div key={w.id} className="rounded-[18px] p-4 mb-2" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-mono" style={{ color: 'var(--accent)' }}>ห้อง {w.room}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${w.status === 'active' ? 'bg-green-500/20 text-green-400' : w.status === 'expiring_soon' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-slate-500/20 text-slate-400'}`}>
@@ -616,12 +616,12 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>ลูกค้าใน Pipeline</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>ลูกค้าใน Pipeline</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าและ Pipeline การขาย</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setEditing(null); setForm(emptyForm); setSaveError(''); setOpen(true) }}
-            className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             <Plus size={16} />เพิ่มลูกค้า
           </button>
         </div>
@@ -662,7 +662,7 @@ export default function CustomersPage() {
           if (!count) return null
           return (
             <button key={s.value} onClick={() => setFilterStatus(filterStatus === s.value ? '' : s.value)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${filterStatus === s.value ? s.color + ' ring-1 ring-current' : s.color + ' opacity-60 hover:opacity-100'}`}>
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${filterStatus === s.value ? s.color + ' ring-1 ring-current' : s.color + ' opacity-60 hover:opacity-100'}`}>
               {s.label} {count}
             </button>
           )
@@ -670,16 +670,16 @@ export default function CustomersPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
-              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>เบอร์ / LINE</th>
-              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
-              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
-              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>Sales</th>
-              <th scope="col" className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-3)' }}>สถานะ</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>เบอร์ / LINE</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>Sales</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>สถานะ</th>
               <th scope="col" className="px-4 py-3"><span className="sr-only">แก้ไข</span></th>
             </tr>
           </thead>
@@ -704,10 +704,10 @@ export default function CustomersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--divider)' }}>
-                        <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{c.customer_name[0]}</span>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{c.customer_name[0]}</span>
                       </div>
                       <div>
-                        <p className="text-sm font-medium flex items-center gap-1" style={{ color: 'var(--text-1)' }}>
+                        <p className="text-body-strong flex items-center gap-1" style={{ color: 'var(--text-1)' }}>
                           {c.customer_name}
                           <ChevronRight size={12} style={{ color: 'var(--text-3)' }} />
                         </p>
@@ -726,7 +726,7 @@ export default function CustomersPage() {
                   <td className="px-4 py-3 text-sm capitalize" style={{ color: 'var(--text-2)' }}>{c.source || '-'}</td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${st.color}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${st.color}`}>
                       <span aria-hidden="true">{st.icon}</span>{st.label}
                     </span>
                   </td>
@@ -771,7 +771,7 @@ export default function CustomersPage() {
                   n === '...'
                     ? <span key={`e${idx}`} className="px-1" style={{ color: 'var(--text-3)' }}>…</span>
                     : <button key={n} onClick={() => setPage(n as number)}
-                        className="w-7 h-7 rounded text-xs font-medium transition-colors"
+                        className="w-7 h-7 rounded text-xs font-semibold transition-colors"
                         style={{ background: page === n ? 'var(--accent)' : 'var(--hover-bg)', color: page === n ? '#fff' : 'var(--text-2)' }}>{n}</button>
                 )}
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
@@ -786,7 +786,7 @@ export default function CustomersPage() {
       {/* Edit / Add Modal */}
       <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'} size="lg">
         {saveError && (
-          <div role="alert" className="flex items-center gap-2 mb-4 p-3 rounded-xl text-xs" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+          <div role="alert" className="flex items-center gap-2 mb-4 p-3 rounded-[18px] text-xs" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
             <AlertCircle size={14} aria-hidden="true" />{saveError}
           </div>
         )}
@@ -802,7 +802,7 @@ export default function CustomersPage() {
           <Select label="โครงการที่สนใจ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
           <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm({ ...form, interested_room: e.target.value })} placeholder="เช่น Z-905" />
           {!editing && form.project_id && form.interested_room.trim() && (
-            <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-xl text-xs" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-[18px] text-xs" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               <span style={{ color: 'var(--text-3)' }}>Customer ID ที่จะถูกสร้าง:</span>
               <span className="font-mono font-bold" style={{ color: 'var(--accent)' }}>{form.project_id}-{form.interested_room.trim().toUpperCase()}</span>
             </div>
@@ -819,7 +819,7 @@ export default function CustomersPage() {
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
           <button onClick={save} disabled={saving || !form.customer_name}
-            className="px-4 py-2 text-white text-sm rounded-xl transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-white text-sm rounded-[8px] transition-colors disabled:opacity-50"
             style={{ background: 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>

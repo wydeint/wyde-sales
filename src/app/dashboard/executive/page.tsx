@@ -232,21 +232,21 @@ export default function ExecutivePage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Sales Performance</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Sales Performance</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>ยอดขายนับจาก order_date · ยอดส่งมอบจาก actual_deliver_date</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="rounded-xl px-3 py-1.5 text-sm outline-none"
+            className="rounded-[8px] px-3 py-1.5 text-sm outline-none"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
             <option value="B2B">B2B</option>
           </select>
-          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             {PERIODS.map(p => (
               <button key={p.key} onClick={() => { setPeriod(p.key); setOffset(0) }}
-                className="px-3 py-1.5 text-xs font-medium"
+                className="px-3 py-1.5 text-xs font-semibold"
                 style={{ background: period === p.key ? 'var(--accent)' : 'var(--hover-bg)', color: period === p.key ? '#fff' : 'var(--text-2)' }}>
                 {p.label}
               </button>
@@ -257,7 +257,7 @@ export default function ExecutivePage() {
 
       {/* Period navigation */}
       <div className="flex items-center gap-3">
-        <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-xl"
+        <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <ChevronLeft size={15} />
         </button>
@@ -266,7 +266,7 @@ export default function ExecutivePage() {
           {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
         </div>
         <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-          className="p-2 rounded-xl"
+          className="p-2 rounded-[8px]"
           style={{ background: 'var(--hover-bg)', color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }}>
           <ChevronRight size={15} />
         </button>
@@ -274,7 +274,7 @@ export default function ExecutivePage() {
 
       {/* Org Target Banner */}
       {orgTarget && offset === 0 && (
-        <div className="rounded-xl p-4 flex gap-6 flex-wrap" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)' }}>
+        <div className="rounded-[18px] p-4 flex gap-6 flex-wrap" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)' }}>
           <div className="flex items-center gap-2">
             <Target size={13} className="text-orange-400" />
             <span className="text-orange-400 text-xs font-bold uppercase tracking-wider">เป้าองค์กร {label}</span>
@@ -311,9 +311,9 @@ export default function ExecutivePage() {
           <div key={lbl} className="glass-card p-4">
             <div className="flex items-center gap-2 mb-2">
               <Icon size={13} style={{ color }} />
-              <span className="text-xs" style={{ color: 'var(--text-3)' }}>{lbl}</span>
+              <span className="text-card-title" style={{ color: 'var(--text-3)' }}>{lbl}</span>
             </div>
-            <p className="text-xl font-bold" style={{ color }}>{value}</p>
+            <p className="text-kpi-number" style={{ color }}>{value}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>
           </div>
         ))}
@@ -345,7 +345,7 @@ export default function ExecutivePage() {
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-1">
             <Target size={13} style={{ color: 'var(--accent)' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Pipeline Funnel</h2>
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Pipeline Funnel</h2>
           </div>
           <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>ลูกค้าทั้งหมด {customers.length} ราย · Conversion {pct(closedCount, customers.length)}%</p>
           <div className="space-y-3">
@@ -371,7 +371,7 @@ export default function ExecutivePage() {
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={13} style={{ color: '#fbbf24' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Lead Source</h2>
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Lead Source</h2>
           </div>
           {sourceBreakdown.length === 0 ? (
             <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
@@ -399,7 +399,7 @@ export default function ExecutivePage() {
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={13} style={{ color: 'var(--accent)' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>ยอดขายรายเดือน {start.slice(0, 4)}</h2>
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>ยอดขายรายเดือน {start.slice(0, 4)}</h2>
           </div>
           <div className="flex items-end gap-1.5 h-28">
             {monthlyTrend.map(m => (
@@ -424,7 +424,7 @@ export default function ExecutivePage() {
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Award size={13} style={{ color: '#fbbf24' }} />
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Sales Ranking — {label}</h2>
+          <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales Ranking — {label}</h2>
         </div>
         {salesRanking.length === 0 ? (
           <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ไม่มีข้อมูลในช่วงนี้</p>
@@ -437,7 +437,7 @@ export default function ExecutivePage() {
                     {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{s.name}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{s.name}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                       {s.units} งาน · โทร {s.calls} · เยี่ยม {s.visits}
                     </p>

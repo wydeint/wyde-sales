@@ -72,12 +72,12 @@ export default function SettingsPage() {
     <div className="p-6 space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>ตั้งค่าระบบ</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>ตั้งค่าระบบ</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Commission tiers ปรับได้โดย Admin</p>
         </div>
         {isAdmin && (
           <button onClick={save} disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold text-white"
             style={{ background: saved ? 'rgba(74,222,128,0.8)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', opacity: saving ? 0.7 : 1 }}>
             {saved ? <><RefreshCw size={14} /> บันทึกแล้ว!</> : <><Save size={14} /> บันทึก</>}
           </button>
@@ -88,7 +88,7 @@ export default function SettingsPage() {
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Settings2 size={15} style={{ color: 'var(--accent)' }} />
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>
+          <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>
           <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>คำนวณจาก Revenue (Ex.VAT)</span>
         </div>
 
@@ -108,7 +108,7 @@ export default function SettingsPage() {
                   <input value={t.tier_name} onChange={e => updateTier(t.id, 'tier_name', e.target.value)}
                     className="field-input w-full text-xs" />
                 ) : (
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{t.tier_name}</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{t.tier_name}</span>
                 )}
               </div>
               <div className="col-span-3">
@@ -150,7 +150,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Preview table */}
-        <div className="mt-6 rounded-xl p-4" style={{ background: 'var(--hover-bg)' }}>
+        <div className="mt-6 rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
           <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>ตัวอย่าง Commission จาก Revenue</p>
           <div className="grid grid-cols-3 gap-2">
             {[50000, 100000, 300000, 500000, 1000000, 2000000, 3000000, 5000000].map(rev => {

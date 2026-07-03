@@ -76,7 +76,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   return (
     <div className="fixed inset-0 z-[300] flex items-start justify-center pt-20 px-4" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
-      <div className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
+      <div className="relative w-full max-w-lg rounded-[18px] shadow-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
         onClick={e => e.stopPropagation()}>
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -124,7 +124,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <Icon size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
                         <div>
-                          <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{r.title}</p>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{r.title}</p>
                           <p className="text-xs" style={{ color: 'var(--text-3)' }}>{r.subtitle}</p>
                         </div>
                       </button>

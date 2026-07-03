@@ -77,7 +77,7 @@ function Sheet({ open, onClose, title, children }: {
           bottom: PAD,
           background: 'var(--sidebar-bg)',
           border: '1px solid var(--glass-border)',
-          borderRadius: 20,
+          borderRadius: 18,
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           overflow: 'hidden',
@@ -98,13 +98,13 @@ function Sheet({ open, onClose, title, children }: {
 }
 
 // ─── Shared themed input/card styles ──────────────────────
-const sheetInput = "w-full rounded-xl pl-9 pr-4 py-3 text-base focus:outline-none"
+const sheetInput = "w-full rounded-[8px] pl-9 pr-4 py-3 text-base focus:outline-none"
 const sheetInputStyle: React.CSSProperties = {
   background: 'var(--input-bg)', border: '1px solid var(--divider)',
   color: 'var(--text-1)', fontSize: 16,
 }
-const sheetCard: React.CSSProperties = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', borderRadius: 16, padding: '12px 16px' }
-const sheetCardDark: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 12, padding: '8px 12px' }
+const sheetCard: React.CSSProperties = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', borderRadius: 18, padding: '12px 16px' }
+const sheetCardDark: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 11, padding: '8px 12px' }
 const t1: React.CSSProperties = { color: 'var(--text-1)' }
 const t2: React.CSSProperties = { color: 'var(--text-2)' }
 const t3: React.CSSProperties = { color: 'var(--text-3)' }
@@ -236,7 +236,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
                     <p className="text-[9px] mb-0.5" style={t3}>สถานะ</p>
-                    <p className="text-xs font-medium truncate" style={{ color: '#d97706' }}>{j.working_status || '—'}</p>
+                    <p className="text-xs font-semibold truncate" style={{ color: '#d97706' }}>{j.working_status || '—'}</p>
                   </div>
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
                     <p className="text-[9px] mb-0.5" style={t3}>เริ่มงาน</p>
@@ -244,7 +244,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
                   </div>
                   <div className="rounded-xl p-2 text-center" style={over > 0 ? { ...sheetCardDark, background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)' } : sheetCardDark}>
                     <p className="text-[9px] mb-0.5" style={t3}>ครบสัญญา</p>
-                    <p className={`text-xs font-medium`} style={{ color: over > 0 ? '#dc2626' : 'var(--text-1)' }}>
+                    <p className={`text-xs font-semibold`} style={{ color: over > 0 ? '#dc2626' : 'var(--text-1)' }}>
                       {over > 0 ? `เกิน ${over}ว` : fmtDate(end)}
                     </p>
                   </div>
@@ -327,7 +327,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
               <div key={c.id} style={sheetCard}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="font-semibold" style={t1}>{c.customer_name}</p>
-                  <span className="text-xs font-medium" style={{ color: sColor }}>{s.label}</span>
+                  <span className="text-xs font-semibold" style={{ color: sColor }}>{s.label}</span>
                 </div>
                 <p className="text-xs" style={t2}>{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-xs mt-1" style={{ color: 'var(--accent-blue)' }}>📞 {c.phone}</p>}
@@ -438,7 +438,7 @@ function EventAddSheet({ open, onClose, events }: {
                   className="w-full flex items-center justify-between px-4 py-4 rounded-xl text-left transition-colors"
                   style={sheetCard}>
                   <div>
-                    <p className="font-medium text-sm" style={t1}>{ev.eventName}</p>
+                    <p className="font-semibold text-sm" style={t1}>{ev.eventName}</p>
                     <p className="text-xs mt-0.5" style={t2}>{ev.projectName} · {fmtDate(ev.eventDate)}</p>
                   </div>
                   <ChevronRight size={16} style={t3} />
@@ -467,7 +467,7 @@ function EventAddSheet({ open, onClose, events }: {
                 className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left"
                 style={sheetCard}>
                 <div>
-                  <p className="text-sm font-medium" style={t1}>{l.customer_name}</p>
+                  <p className="text-sm font-semibold" style={t1}>{l.customer_name}</p>
                   <p className="text-xs" style={t2}>{projectsMap[l.project_id] || '—'} · {l.tower ? `${l.tower}-` : ''}ห้อง {l.room_no || '—'} · {l.phone || '—'}</p>
                 </div>
                 <ChevronRight size={16} style={t3} />
@@ -485,7 +485,7 @@ function EventAddSheet({ open, onClose, events }: {
           <button onClick={() => setStep('search')} className="text-sm flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedLead.customer_name}
           </button>
-          <div style={{ ...sheetCard, borderRadius: 16, padding: '16px' }}>
+          <div style={{ ...sheetCard, borderRadius: 18, padding: '16px' }}>
             <p className="font-semibold" style={t1}>{selectedLead.customer_name}</p>
             <p className="text-xs mt-1" style={t2}>{selectedLead.tower ? `${selectedLead.tower}-` : ''}ห้อง {selectedLead.room_no || '—'} · {selectedLead.phone || '—'}</p>
             <p className="text-xs mt-0.5" style={t3}>Event: {selectedEvent.eventName}</p>
@@ -495,7 +495,7 @@ function EventAddSheet({ open, onClose, events }: {
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map(s => (
                 <button key={s.value} onClick={() => setStatus(s.value)}
-                  className="py-3 rounded-xl text-sm font-semibold transition-all border"
+                  className="py-3 rounded-[11px] text-sm font-semibold transition-all border"
                   style={status === s.value
                     ? { background: s.activeBg, color: s.activeColor, borderColor: s.activeColor }
                     : { background: 'var(--hover-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
@@ -508,11 +508,11 @@ function EventAddSheet({ open, onClose, events }: {
             <label className="text-xs mb-2 block" style={t3}>หมายเหตุ</label>
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
               placeholder="บันทึกเพิ่มเติม..."
-              className="w-full rounded-xl px-4 py-3 text-sm resize-none focus:outline-none"
+              className="w-full rounded-[8px] px-4 py-3 text-sm resize-none focus:outline-none"
               style={{ ...sheetInputStyle, fontSize: 14 }} />
           </div>
           <button onClick={save} disabled={saving}
-            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
+            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors text-base">
             {saving ? 'กำลังบันทึก...' : 'เพิ่มในรายชื่อ Event'}
           </button>
         </div>
@@ -600,7 +600,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
                 className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-colors text-left"
                 style={sheetCard}>
                 <div>
-                  <p className="font-medium text-sm" style={t1}>{j.customerName}</p>
+                  <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
                   <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName}</p>
                 </div>
                 <ChevronRight size={16} style={t3} />
@@ -618,11 +618,11 @@ function QuickPaySheet({ open, onClose, jobs }: {
           <p className="text-sm mb-6" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
           <p className="text-xs mb-6" style={t3}>กรุณาตั้งแผนงวดชำระเงินก่อน จึงจะบันทึกรับเงินได้</p>
           <button onClick={() => setStep('job')}
-            className="w-full py-3 rounded-xl mb-3 text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+            className="w-full py-3 rounded-[8px] mb-3 text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
             ← เลือกลูกค้าอื่น
           </button>
           <button onClick={resetAndClose}
-            className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-xl text-sm font-medium">
+            className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-full text-sm font-semibold">
             ไปตั้งแผนชำระ →
           </button>
         </div>
@@ -643,7 +643,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
                   className="w-full flex items-center justify-between px-4 py-4 rounded-xl transition-colors"
                   style={sheetCard}>
                   <div className="text-left">
-                    <p className="font-medium text-sm" style={t1}>{inst.installment_name}</p>
+                    <p className="font-semibold text-sm" style={t1}>{inst.installment_name}</p>
                     {inst.is_work_trigger && <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>⚡ ชำระแล้วเริ่มงาน</p>}
                   </div>
                   <div className="text-right">
@@ -672,7 +672,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
           <div>
             <label className="text-xs mb-2 block" style={t3}>วันที่ชำระ</label>
             <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none"
+              className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none"
               style={sheetInputStyle} />
           </div>
           <div>
@@ -688,7 +688,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
               <div key={i} className="flex gap-2 mb-2">
                 <input value={url} onChange={e => { const n = [...fileUrls]; n[i] = e.target.value; setFileUrls(n) }}
                   placeholder="https://drive.google.com/..."
-                  className="flex-1 rounded-xl px-3 py-2.5 text-xs focus:outline-none"
+                  className="flex-1 rounded-[8px] px-3 py-2.5 text-xs focus:outline-none"
                   style={sheetInputStyle} />
                 {fileUrls.length > 1 && (
                   <button onClick={() => setFileUrls(fileUrls.filter((_, idx) => idx !== i))} className="p-2" style={t3}><X size={13} /></button>
@@ -697,7 +697,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
             ))}
           </div>
           <button onClick={confirmPay} disabled={saving}
-            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
+            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors text-base">
             {saving ? 'กำลังบันทึก...' : 'ยืนยันรับเงิน'}
           </button>
         </div>
@@ -815,7 +815,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
               <button key={j.id} onClick={() => { setSelectedJob(j); setStep('type') }}
                 className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
-                  <p className="font-medium text-sm" style={t1}>{j.customerName}</p>
+                  <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
                   <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName} · {fmtBaht(j.revenue)}</p>
                 </div>
                 <ChevronRight size={16} style={t3} />
@@ -838,13 +838,13 @@ function PlanSetupSheet({ open, onClose, jobs }: {
           <p className="text-xs mb-3" style={t2}>ประเภทลูกค้า</p>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setStep('b2c')}
-              className="py-5 bg-blue-500/15 border border-blue-500/30 rounded-2xl font-semibold text-center" style={{ color: 'var(--accent-blue)' }}>
+              className="py-5 bg-blue-500/15 border border-blue-500/30 rounded-[18px] font-semibold text-center" style={{ color: 'var(--accent-blue)' }}>
               <div className="text-2xl mb-1">👤</div>
               B2C
               <p className="text-xs font-normal mt-1" style={t3}>บุคคลธรรมดา</p>
             </button>
             <button onClick={() => setStep('b2b')}
-              className="py-5 bg-purple-500/15 border border-purple-500/30 rounded-2xl font-semibold text-center" style={{ color: 'var(--accent-purple)' }}>
+              className="py-5 bg-purple-500/15 border border-purple-500/30 rounded-[18px] font-semibold text-center" style={{ color: 'var(--accent-purple)' }}>
               <div className="text-2xl mb-1">🏢</div>
               B2B
               <p className="text-xs font-normal mt-1" style={t3}>นิติบุคคล</p>
@@ -874,7 +874,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
                     ))}
                   </div>
                   <button onClick={() => saveInstallments(insts)} disabled={saving}
-                    className="w-full py-3 bg-indigo-500/30 border border-indigo-500/40 rounded-xl text-sm font-semibold disabled:opacity-40" style={{ color: 'var(--accent)' }}>
+                    className="w-full py-3 bg-indigo-500/30 border border-indigo-500/40 rounded-full text-sm font-semibold disabled:opacity-40" style={{ color: 'var(--accent)' }}>
                     {saving ? 'กำลังบันทึก...' : `เลือกแผน ${plan}`}
                   </button>
                 </div>
@@ -894,7 +894,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
             <div className="flex gap-2">
               {[2, 3, 4, 5, 6].map(n => (
                 <button key={n} onClick={() => selectB2bCount(n)}
-                  className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${b2bCount === n ? 'bg-purple-500/30 border border-purple-500/40' : ''}`}
+                  className={`flex-1 py-3 rounded-[8px] text-sm font-semibold transition-colors ${b2bCount === n ? 'bg-purple-500/30 border border-purple-500/40' : ''}`}
                   style={b2bCount === n ? { color: 'var(--accent-purple)' } : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
                   {n}
                 </button>
@@ -918,7 +918,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
             รวม {totalPct}% {totalPct !== 100 && '— ต้องรวมได้ 100%'}
           </div>
           <button onClick={saveB2BInstallments} disabled={saving || totalPct !== 100}
-            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors">
+            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึกแผนชำระ B2B'}
           </button>
         </div>
@@ -1012,7 +1012,7 @@ function DeliverSheet({ open, onClose, jobs }: {
               <button key={j.id} onClick={() => selectJob(j)}
                 className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
-                  <p className="font-medium text-sm" style={t1}>{j.customerName}</p>
+                  <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
                   <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName}</p>
                   <p className="text-xs" style={t3}>{j.workingStatus}</p>
                 </div>
@@ -1037,9 +1037,9 @@ function DeliverSheet({ open, onClose, jobs }: {
           {checkingPlan ? (
             <p className="text-center text-sm" style={t2}>กำลังตรวจสอบ...</p>
           ) : !canDeliver ? (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-[18px] p-4 text-center">
               <AlertTriangle size={24} className="mx-auto text-red-400 mb-2" />
-              <p className="text-red-400 font-medium text-sm">ยังชำระไม่ครบ</p>
+              <p className="text-red-400 font-semibold text-sm">ยังชำระไม่ครบ</p>
               <p className="text-xs mt-1" style={t2}>ต้องชำระงวดสุดท้ายก่อนจึงจะส่งมอบได้</p>
             </div>
           ) : (
@@ -1047,16 +1047,16 @@ function DeliverSheet({ open, onClose, jobs }: {
               <div>
                 <label className="text-xs mb-2 block" style={t3}>วันที่ส่งมอบจริง</label>
                 <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
+                  className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <div>
                 <label className="text-xs mb-2 block" style={t3}>เอกสารส่งมอบ (Google Drive URL)</label>
                 <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
                   placeholder="https://drive.google.com/..."
-                  className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
+                  className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <button onClick={saveDelivery} disabled={saving}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors text-base">
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors text-base">
                 {saving ? 'กำลังบันทึก...' : '✅ ยืนยันส่งมอบงาน'}
               </button>
             </>
@@ -1123,7 +1123,7 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
             <div key={j.id} className="rounded-xl p-3" style={sheetCard}>
               <div className="flex justify-between mb-1">
                 <div>
-                  <p className="text-sm font-medium" style={t1}>{j.customerName}</p>
+                  <p className="text-sm font-semibold" style={t1}>{j.customerName}</p>
                   <p className="text-xs" style={t2}>{j.roomNo} · {j.projectName}</p>
                 </div>
                 {saving === j.id && <span className="text-xs" style={t2}>บันทึก...</span>}
@@ -1134,7 +1134,7 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
               <div className="flex gap-2">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s.value} onClick={() => updateStatus(j.id, s.value)}
-                    className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors ${jobStatuses[j.id] === s.value ? s.color : ''}`}
+                    className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${jobStatuses[j.id] === s.value ? s.color : ''}`}
                     style={jobStatuses[j.id] !== s.value ? { background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' } : undefined}>
                     {s.label}
                   </button>
@@ -1187,10 +1187,10 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
               <p style={t2}>ไม่มีงานเกินกำหนด 🎉</p>
             </div>
           ) : items.map((j: any) => (
-            <div key={j.id} className="bg-red-500/8 border border-red-500/20 rounded-xl p-3 mb-2">
+            <div key={j.id} className="bg-red-500/8 border border-red-500/20 rounded-[18px] p-3 mb-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="font-medium text-sm" style={t1}>{j.customer_name}</p>
+                  <p className="font-semibold text-sm" style={t1}>{j.customer_name}</p>
                   <p className="text-xs" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                 </div>
                 <span className="text-red-400 font-bold text-sm">เกิน {j.daysOverdue} วัน</span>
@@ -1249,11 +1249,11 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                 <p className="text-[9px] mb-1" style={t3}>รวมทั้งหมด</p>
                 <p className="font-bold text-sm" style={t1}>{fmtBaht(summary.total)}</p>
               </div>
-              <div className="bg-amber-500/10 rounded-2xl p-3 text-center">
+              <div className="bg-amber-500/10 rounded-[18px] p-3 text-center">
                 <p className="text-[9px] mb-1" style={t3}>รอยืนยัน</p>
                 <p className="text-amber-400 font-bold text-sm">{fmtBaht(summary.pending)}</p>
               </div>
-              <div className="bg-emerald-500/10 rounded-2xl p-3 text-center">
+              <div className="bg-emerald-500/10 rounded-[18px] p-3 text-center">
                 <p className="text-[9px] mb-1" style={t3}>อนุมัติแล้ว</p>
                 <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(summary.approved)}</p>
               </div>
@@ -1263,7 +1263,7 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                 <div key={c.id} className="rounded-xl p-3" style={sheetCard}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium" style={t1}>{(c.jobs as any)?.customer_name || '—'}</p>
+                      <p className="text-sm font-semibold" style={t1}>{(c.jobs as any)?.customer_name || '—'}</p>
                       <p className="text-xs" style={t2}>{(c.jobs as any)?.room_no} · {((c.jobs as any)?.projects as any)?.name}</p>
                     </div>
                     <div className="text-right">
@@ -1366,11 +1366,11 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 <button key={j.id} onClick={() => selectJob(j)}
                   className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                   <div>
-                    <p className="font-medium text-sm" style={t1}>{j.customer_name}</p>
+                    <p className="font-semibold text-sm" style={t1}>{j.customer_name}</p>
                     <p className="text-xs mt-0.5" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium ${filled === DOC_FIELDS.length ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    <span className={`text-xs font-semibold ${filled === DOC_FIELDS.length ? 'text-emerald-400' : 'text-amber-400'}`}>
                       {filled}/{DOC_FIELDS.length}
                     </span>
                     <ChevronRight size={16} style={t3} />
@@ -1400,14 +1400,14 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   value={urls[f.key] || ''}
                   onChange={e => setUrls(prev => ({ ...prev, [f.key]: e.target.value }))}
                   placeholder="https://drive.google.com/..."
-                  className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+                  className="w-full rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
                   style={{ ...sheetInputStyle, fontSize: 14 }}
                 />
               </div>
             ))}
           </div>
           <button onClick={saveUrls} disabled={saving}
-            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-2xl transition-colors">
+            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors">
             {saving ? 'กำลังบันทึก...' : '💾 บันทึกเอกสาร'}
           </button>
         </div>
@@ -1531,7 +1531,7 @@ export default function QuickPage() {
             <Home size={20} />
           </button>
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{greeting} 👋</h1>
+        <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>{greeting} 👋</h1>
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>{todayTH}</p>
       </div>
 
@@ -1540,7 +1540,7 @@ export default function QuickPage() {
         <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>ภาพรวม</p>
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-[18px] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />)}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -1550,10 +1550,10 @@ export default function QuickPage() {
               { label: 'รอส่งมอบ', value: widgets.readyToDeliver, sub: 'งานเสร็จแล้ว', color: 'text-green-400', bg: 'bg-green-500/8 border-green-500/20' },
               { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', color: widgets.overdueJobs > 0 ? 'text-red-400' : '', bg: widgets.overdueJobs > 0 ? 'bg-red-500/8 border-red-500/20' : '' },
             ].map(w => (
-              <div key={w.label} className={`rounded-2xl p-4 border ${w.bg}`}
+              <div key={w.label} className={`rounded-[18px] p-4 border ${w.bg}`}
                 style={!w.bg ? { background: 'var(--card-bg)', borderColor: 'var(--divider)' } : undefined}>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{w.label}</p>
-                <p className={`text-3xl font-bold ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.value}</p>
+                <p className={`text-kpi-number ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.value}</p>
                 <p className={`text-xs mt-1 opacity-60 ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.sub}</p>
               </div>
             ))}
@@ -1571,7 +1571,7 @@ export default function QuickPage() {
                 <button
                   key={btn.key}
                   onClick={() => handleAction(btn)}
-                  className={`relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all active:scale-95 ${btn.bg}`}
+                  className={`relative flex flex-col items-center gap-1.5 p-3 rounded-[18px] border transition-all active:scale-95 ${btn.bg}`}
                   style={{ minHeight: 80, ...(!btn.bg ? { background: 'var(--card-bg)', borderColor: 'var(--divider)' } : {}) }}
                 >
                   {btn.badge !== undefined && btn.badge > 0 && (

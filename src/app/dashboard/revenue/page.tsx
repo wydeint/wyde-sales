@@ -230,35 +230,35 @@ export default function RevenuePage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>รายได้ส่งมอบ</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>รายได้ส่งมอบ</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="rounded-xl px-3 py-2 text-sm outline-none"
+            className="rounded-[8px] px-3 py-2 text-sm outline-none"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
             <option value="B2B">B2B</option>
           </select>
           <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-            className="rounded-xl px-3 py-2 text-sm outline-none"
+            className="rounded-[8px] px-3 py-2 text-sm outline-none"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <option value="">ทุกประเภทงาน</option>
             {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
           </select>
           {/* Sales filter */}
           <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-            className="rounded-xl px-3 py-2 text-sm outline-none"
+            className="rounded-[8px] px-3 py-2 text-sm outline-none"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <option value="">ทุก Sales</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
           {/* Period tabs */}
-          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             {(['week', 'month', 'quarter', 'year'] as Period[]).map(p => (
               <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-                className="px-3 py-2 text-xs font-medium"
+                className="px-3 py-2 text-xs font-semibold"
                 style={{
                   background: period === p ? 'var(--accent)' : 'var(--hover-bg)',
                   color: period === p ? '#fff' : 'var(--text-2)',
@@ -272,7 +272,7 @@ export default function RevenuePage() {
 
       {/* Period navigation */}
       <div className="flex items-center gap-3">
-        <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-xl"
+        <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <ChevronLeft size={16} />
         </button>
@@ -281,7 +281,7 @@ export default function RevenuePage() {
           {label}
           {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
         </div>
-        <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-xl"
+        <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-[8px]"
           disabled={offset >= 0}
           style={{ background: 'var(--hover-bg)', color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }}>
           <ChevronRight size={16} />
@@ -317,8 +317,8 @@ export default function RevenuePage() {
           },
         ].map(k => (
           <div key={k.label} className="glass-card p-4">
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
-            <p className="text-xl font-bold" style={{ color: k.color }}>{k.value}</p>
+            <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
+            <p className="text-kpi-number" style={{ color: k.color }}>{k.value}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
           </div>
         ))}
@@ -329,7 +329,7 @@ export default function RevenuePage() {
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={14} style={{ color: 'var(--accent)' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>รายได้รายเดือน {start.getFullYear()}</h2>
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายได้รายเดือน {start.getFullYear()}</h2>
           </div>
           <div className="flex items-end gap-1.5 h-32">
             {monthlyTrend.map(m => (
@@ -357,7 +357,7 @@ export default function RevenuePage() {
       <div className="flex gap-2">
         {([['summary', BarChart3, 'สรุป'], ['sales', Users, 'รายคน'], ['project', Building2, 'รายโครงการ'], ['list', List, 'รายงาน']] as const).map(([v, Icon, lbl]) => (
           <button key={v} onClick={() => setView(v)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[11px] text-sm font-semibold"
             style={{
               background: view === v ? 'var(--active-bg)' : 'var(--hover-bg)',
               color: view === v ? 'var(--accent)' : 'var(--text-2)',
@@ -373,7 +373,7 @@ export default function RevenuePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* By sales mini */}
           <div className="glass-card p-5">
-            <h2 className="font-semibold text-sm mb-4 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
+            <h2 className="text-section-title mb-4 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
               <Users size={13} style={{ color: '#60a5fa' }} /> Revenue by Sales
             </h2>
             {bySales.length === 0 ? (
@@ -383,7 +383,7 @@ export default function RevenuePage() {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs w-4" style={{ color: 'var(--text-3)' }}>{i + 1}.</span>
-                    <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{s.name}</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{s.name}</span>
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.units} งาน</span>
                   </div>
                   <span className="text-sm font-bold" style={{ color: '#4ade80' }}>{fk(s.revenue)}</span>
@@ -400,7 +400,7 @@ export default function RevenuePage() {
 
           {/* By accounting status */}
           <div className="glass-card p-5">
-            <h2 className="font-semibold text-sm mb-4" style={{ color: 'var(--text-1)' }}>ประเภทงาน (Accounting Status)</h2>
+            <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>ประเภทงาน (Accounting Status)</h2>
             {byStatus.length === 0 ? (
               <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
             ) : byStatus.map(s => (
@@ -440,7 +440,7 @@ export default function RevenuePage() {
                 const gp = s.revenueEx > 0 ? (profit / s.revenueEx * 100).toFixed(1) : '—'
                 return (
                   <tr key={s.name} style={{ borderBottom: '1px solid var(--divider)' }}>
-                    <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-1)' }}>
+                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text-1)' }}>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-bold"
                           style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
@@ -481,7 +481,7 @@ export default function RevenuePage() {
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
             <div className="flex items-center gap-2">
               <Building2 size={14} style={{ color: '#f97316' }} />
-              <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>รายโครงการ</h2>
+              <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายโครงการ</h2>
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{byProject.length} โครงการ · {periodJobs.length} งาน</span>
             </div>
             <button className="text-xs px-2 py-1 rounded-lg" style={{ color: 'var(--accent)', background: 'var(--hover-bg)' }}
@@ -531,7 +531,7 @@ export default function RevenuePage() {
                           const gp = j.revenue_ex_vat > 0 ? ((j.revenue_ex_vat - j.cost) / j.revenue_ex_vat * 100) : null
                           return (
                             <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
-                              <td className="px-4 py-2 font-medium" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
+                              <td className="px-4 py-2 font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
                               <td className="px-4 py-2" style={{ color: 'var(--text-2)' }}>{j.customer_name || '—'}</td>
                               <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                                 {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
@@ -591,7 +591,7 @@ export default function RevenuePage() {
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</div>
-                      <div className="font-medium" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</div>
+                      <div className="font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</div>
                     </td>
                     <td className="px-3 py-2.5 font-mono text-xs" style={{ color: 'var(--text-3)' }}>—</td>
                     <td className="px-3 py-2.5">

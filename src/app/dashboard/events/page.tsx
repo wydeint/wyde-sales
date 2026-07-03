@@ -384,11 +384,11 @@ export default function EventsPage() {
     <div className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6 gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Events</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Events</h1>
           <p className="text-sm mt-0.5 hidden sm:block" style={{ color: 'var(--text-2)' }}>จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance</p>
         </div>
         <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
-          className="flex items-center gap-2 btn-green text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-medium transition-colors flex-shrink-0">
+          className="flex items-center gap-2 btn-green text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
           <Plus size={16} /><span className="hidden sm:inline">เพิ่ม Event</span><span className="sm:hidden">เพิ่ม</span>
         </button>
       </div>
@@ -397,7 +397,7 @@ export default function EventsPage() {
         {loading && <div className="flex justify-center py-12"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
         {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
         {!loading && events.length === 0 && (
-          <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <CalendarDays size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มี Event</p>
           </div>
@@ -408,14 +408,14 @@ export default function EventsPage() {
           const perf = isExpanded ? calcPerf() : null
 
           return (
-            <div key={ev.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={ev.id} className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               {/* Event row */}
               <div className="flex items-start gap-3 px-4 py-4">
                 <div className="flex-1 min-w-0">
                   {/* Title + badges */}
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1.5">
                     <span className="text-accent-blue text-xs font-mono flex-shrink-0">{ev.id}</span>
-                    <h3 className="font-medium text-sm" style={{ color: 'var(--text-1)' }}>{ev.event_name}</h3>
+                    <h3 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{ev.event_name}</h3>
                     {ev.event_type && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{typeLabel(ev.event_type)}</span>}
                     {ev.project_name && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{ev.project_name}</span>}
                   </div>
@@ -460,7 +460,7 @@ export default function EventsPage() {
                     <div className="px-4 py-4" style={{ background: 'var(--hover-bg)' }}>
                       <div className="flex items-center gap-2 mb-3">
                         <TrendingUp size={13} className="text-emerald-400" />
-                        <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">Performance</p>
+                        <p className="text-label-upper text-emerald-400">Performance</p>
                       </div>
 
                       {/* KPI row */}
@@ -474,7 +474,7 @@ export default function EventsPage() {
                           { label: 'Add LINE', value: perf.lineAdds, colorClass: 'text-green-600 dark:text-green-300' },
                           { label: 'Conv%', value: perf.conv + '%', colorClass: perf.conv >= 20 ? 'text-green-400' : 'text-yellow-400' },
                         ].map(k => (
-                          <div key={k.label} className="rounded-xl p-3 text-center" style={{ background: 'var(--card-bg)' }}>
+                          <div key={k.label} className="rounded-[18px] p-3 text-center" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-[9px] mb-1 leading-tight" style={{ color: 'var(--text-3)' }}>{k.label}</p>
                             <p className={`text-lg font-bold ${'colorClass' in k ? k.colorClass : ''}`} style={'color' in k && k.color ? { color: k.color } : undefined}>{k.value}</p>
                           </div>
@@ -483,17 +483,17 @@ export default function EventsPage() {
 
                       {/* Revenue row */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                        <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานรวม (Booked Value)</p>
                           <p className="text-emerald-400 font-bold">{fmtBaht(perf.revenue)}</p>
                           <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้อง booked</p>
                         </div>
-                        <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                        <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เฉลี่ย / ห้อง</p>
                           <p className="text-blue-400 font-bold">{fmtBaht(perf.booked > 0 ? Math.round(perf.revenue / perf.booked) : 0)}</p>
                           <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>avg booked value</p>
                         </div>
-                        <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                        <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>มัดจำ (เงินสด)</p>
                           <p className="text-purple-400 font-bold">{fmtBaht(perf.totalDeposit)}</p>
                           <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้องที่เก็บมัดจำ</p>
@@ -504,12 +504,12 @@ export default function EventsPage() {
 
                   {/* Customer List header */}
                   <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
-                    <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าในงาน ({customers.length} คน)</p>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าในงาน ({customers.length} คน)</p>
                     {customers.some(c => c.status !== 'not_interested' && !promotedIds.has(c.id)) && (
                       <button
                         onClick={promoteAll}
                         disabled={promotingAll}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/30 transition-colors font-medium disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/30 transition-colors font-semibold disabled:opacity-50"
                       >
                         <UserPlus size={12} />
                         {promotingAll ? 'กำลังนำเข้า...' : 'นำรายชื่อเข้าระบบ'}
@@ -550,7 +550,7 @@ export default function EventsPage() {
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>{idx + 1}</td>
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{projects.find(p => p.id === c.project_id)?.name || '—'}</td>
                                 <td className="px-3 py-2 text-accent-blue text-xs font-mono">{c.room_no || '—'}</td>
-                                <td className="px-3 py-2 text-sm font-medium" style={{ color: 'var(--text-1)' }}>{c.customer_name}</td>
+                                <td className="px-3 py-2 text-body-strong" style={{ color: 'var(--text-1)' }}>{c.customer_name}</td>
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{(c.users as any)?.name || '—'}</td>
                                 <td className="px-3 py-2">
                                   <select

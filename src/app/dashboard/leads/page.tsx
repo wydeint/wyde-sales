@@ -270,17 +270,17 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Condo Leads Pool</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Condo Leads Pool</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
             ข้อมูลลูกค้าจาก Origin CRM — ดึงเข้า Pipeline เมื่อพร้อมขาย
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => load()} className="p-2 rounded-xl transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          <button onClick={() => load()} className="p-2 rounded-[11px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <RefreshCw size={15} />
           </button>
           <button onClick={() => { setShowImport(!showImport); setImportResult(null); setImportRows([]) }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold transition-colors"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
             <Upload size={15} />นำเข้า xlsx
           </button>
@@ -294,39 +294,39 @@ export default function LeadsPage() {
           { label: 'ยังไม่เข้า Pipeline', value: stats.new, color: '#f59e0b' },
           { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline, color: '#34d399' },
         ].map(s => (
-          <div key={s.label} className="rounded-2xl p-4" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+          <div key={s.label} className="rounded-[18px] p-4" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-            <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
+            <p className="text-kpi-number" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
           </div>
         ))}
       </div>
 
       {/* Import Panel */}
       {showImport && (
-        <div className="rounded-2xl p-5 mb-5" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
+        <div className="rounded-[18px] p-5 mb-5" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+          <h3 className="text-card-title mb-3" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
           {importResult ? (
             <div className="text-center py-4">
               <CheckCircle size={32} className="mx-auto mb-2 text-green-400" />
-              <p className="font-medium" style={{ color: 'var(--text-1)' }}>นำเข้าสำเร็จ</p>
+              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>นำเข้าสำเร็จ</p>
               <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>
                 เพิ่ม {importResult.done} ราย · ข้าม {importResult.skipped} ราย · ซ้ำ {importResult.dup} ราย
               </p>
               <button onClick={() => { setImportResult(null); setShowImport(false) }}
-                className="mt-3 px-5 py-2 text-sm rounded-xl text-white" style={{ background: 'var(--accent)' }}>
+                className="mt-3 px-5 py-2 text-sm rounded-[8px] text-white" style={{ background: 'var(--accent)' }}>
                 ปิด
               </button>
             </div>
           ) : importRows.length === 0 ? (
             <div
-              className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors"
+              className="border-2 border-dashed rounded-[18px] p-8 text-center cursor-pointer transition-colors"
               style={{ borderColor: 'var(--divider)', background: 'var(--hover-bg)' }}
               onDragOver={e => e.preventDefault()}
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
               onClick={() => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.xlsx,.xls,.csv'; i.onchange = (e: any) => handleFile(e.target.files[0]); i.click() }}
             >
               <Upload size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-              <p className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>วาง xlsx หรือคลิกเพื่อเลือกไฟล์</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>วาง xlsx หรือคลิกเพื่อเลือกไฟล์</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                 รองรับ Origin CRM Export: Tower, Room No, Customer, Phone, S00, ราคาสัญญา, วันโอน
               </p>
@@ -334,7 +334,7 @@ export default function LeadsPage() {
           ) : (
             <>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                   พบ {importRows.length} แถว &nbsp;·&nbsp;
                   <span className="text-green-400">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
                   <span className="text-amber-400">🔁 {importRows.filter(r => r._dup).length} ซ้ำ</span> &nbsp;·&nbsp;
@@ -344,7 +344,7 @@ export default function LeadsPage() {
                   เลือกใหม่
                 </button>
               </div>
-              <div className="overflow-auto max-h-60 rounded-xl border text-xs" style={{ borderColor: 'var(--divider)' }}>
+              <div className="overflow-auto max-h-60 rounded-[11px] border text-xs" style={{ borderColor: 'var(--divider)' }}>
                 <table className="w-full">
                   <thead>
                     <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
@@ -365,7 +365,7 @@ export default function LeadsPage() {
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.phone}</td>
                         <td className="px-3 py-1.5 text-right" style={{ color: 'var(--text-2)' }}>{fmtBaht(r.contract_price)}</td>
-                        <td className="px-3 py-1.5 text-right font-medium" style={{ color: r.s00_budget ? '#34d399' : 'var(--text-3)' }}>{fmtBaht(r.s00_budget)}</td>
+                        <td className="px-3 py-1.5 text-right font-semibold" style={{ color: r.s00_budget ? '#34d399' : 'var(--text-3)' }}>{fmtBaht(r.s00_budget)}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-3)' }}>{r.transfer_date || '—'}</td>
                       </tr>
                     ))}
@@ -375,7 +375,7 @@ export default function LeadsPage() {
               <div className="flex justify-end gap-3 mt-3">
                 <button onClick={() => setImportRows([])} className="px-4 py-2 text-sm" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
                 <button onClick={doImport} disabled={importing || importRows.filter(r => r._valid).length === 0}
-                  className="px-5 py-2 text-sm rounded-xl text-white disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2 text-sm rounded-[8px] text-white disabled:opacity-50 flex items-center gap-2"
                   style={{ background: 'var(--accent)' }}>
                   {importing ? 'กำลังนำเข้า...' : `นำเข้า ${importRows.filter(r => r._valid).length} ราย`}
                 </button>
@@ -387,7 +387,7 @@ export default function LeadsPage() {
 
       {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap">
-        <div className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 min-w-[200px]"
+        <div className="flex items-center gap-2 rounded-[8px] px-3 py-2 flex-1 min-w-[200px]"
           style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
           <Search size={14} style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
@@ -400,10 +400,10 @@ export default function LeadsPage() {
           options={[{ value: '', label: 'ทุกโครงการ' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
           placeholder="ทุกโครงการ"
         />
-        <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
+        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
           {(['all', 'new', 'in_pipeline'] as const).map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className="px-3 py-2 text-xs font-medium transition-colors"
+              className="px-3 py-2 text-xs font-semibold transition-colors"
               style={{
                 background: filterStatus === s ? 'var(--accent)' : 'var(--glass-bg)',
                 color: filterStatus === s ? '#fff' : 'var(--text-2)',
@@ -415,13 +415,13 @@ export default function LeadsPage() {
       </div>
 
       {addError && (
-        <div className="flex items-center gap-2 mb-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
           <AlertCircle size={14} />{addError}
         </div>
       )}
 
       {/* Table */}
-      <div className="rounded-2xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+      <div className="rounded-[18px]" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
         <div className="overflow-x-auto">
           <table className="w-full" style={{ minWidth: 780 }}>
             <thead>
@@ -448,11 +448,11 @@ export default function LeadsPage() {
                     {l.projects?.name || l.project_id || '—'}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-sm font-mono font-medium" style={{ color: 'var(--accent)' }}>{l.tower}-{l.room_no}</p>
+                    <p className="text-sm font-mono font-semibold" style={{ color: 'var(--accent)' }}>{l.tower}-{l.room_no}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{l.model_name || '—'}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{l.customer_name}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{l.customer_name}</p>
                     {l.email && <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{l.email}</p>}
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
@@ -476,7 +476,7 @@ export default function LeadsPage() {
                       <button
                         onClick={() => addToPipeline(l)}
                         disabled={addingId === l.id}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium disabled:opacity-50 transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-[8px] font-semibold disabled:opacity-50 transition-colors whitespace-nowrap"
                         style={{ background: 'var(--accent)', color: '#fff' }}
                       >
                         <UserPlus size={12} />

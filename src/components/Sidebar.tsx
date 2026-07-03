@@ -151,7 +151,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       {/* ── Search ── */}
       <div className="px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
         <button onClick={() => setSearchOpen(true)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-[8px] text-sm"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
           <Search size={13} aria-hidden="true" />
           <span className="flex-1 text-left text-xs">ค้นหา...</span>
@@ -182,7 +182,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
                   onClick={onClose}
-                  className="flex items-center gap-2.5 rounded-xl mb-0.5 relative group transition-colors"
+                  className="flex items-center gap-2.5 rounded-[11px] mb-0.5 relative group transition-colors"
                   style={{
                     background: isActive ? 'var(--active-bg)' : 'transparent',
                     color: isActive ? 'var(--accent)' : 'var(--text-2)',

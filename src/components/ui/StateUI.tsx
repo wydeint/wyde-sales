@@ -32,11 +32,11 @@ export function PageError({ message, onRetry }: { message: string; onRetry: () =
     <div className="flex items-center justify-center h-64">
       <div className="flex flex-col items-center gap-3 text-center max-w-xs">
         <AlertCircle size={28} style={{ color: 'var(--accent-orange)' }} />
-        <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>โหลดข้อมูลไม่สำเร็จ</p>
+        <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>โหลดข้อมูลไม่สำเร็จ</p>
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>{message}</p>
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-[9999px] text-sm font-semibold transition-colors"
           style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}
         >
           <RefreshCw size={14} aria-hidden="true" />ลองใหม่
@@ -75,7 +75,7 @@ export function TableError({ colSpan, message, onRetry }: { colSpan: number; mes
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>โหลดข้อมูลไม่สำเร็จ</p>
           <button
             onClick={onRetry}
-            className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg"
+            className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-[9999px] font-semibold"
             style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}
           >
             <RefreshCw size={12} aria-hidden="true" />ลองใหม่

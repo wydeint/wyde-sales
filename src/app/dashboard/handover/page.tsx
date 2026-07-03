@@ -141,7 +141,7 @@ function DeliveryModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-2xl shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
+      <div className="relative w-full max-w-md rounded-[18px] shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>บันทึกส่งมอบงาน</h3>
@@ -153,7 +153,7 @@ function DeliveryModal({
           <div>
             <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-2)' }}>วันที่ส่งมอบจริง</label>
             <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
-              className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+              className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
           <div>
@@ -168,7 +168,7 @@ function DeliveryModal({
                 <div key={i} className="flex gap-2">
                   <input value={url} onChange={e => updateUrl(i, e.target.value)}
                     placeholder="https://drive.google.com/..."
-                    className="flex-1 rounded-lg px-3 py-2 text-xs focus:outline-none"
+                    className="flex-1 rounded-[8px] px-3 py-2 text-xs focus:outline-none"
                     style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                   {fileUrls.length > 1 && (
                     <button onClick={() => removeUrl(i)} className="hover:text-red-400 p-2" style={{ color: 'var(--text-3)' }}><X size={14} /></button>
@@ -178,7 +178,7 @@ function DeliveryModal({
             </div>
             <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>รองรับ jpg, pdf — ไม่เกิน 5 ไฟล์</p>
           </div>
-          <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
+          <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-[11px] p-3">
             <p className="text-indigo-600 dark:text-indigo-300 text-xs">⚡ เมื่อบันทึกส่งมอบแล้ว — Commission จะถูก trigger อัตโนมัติ</p>
           </div>
         </div>
@@ -220,7 +220,7 @@ function ProjectSummaryModal({ jobs, open, onClose }: { jobs: HandoverJob[]; ope
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh]"
+      <div className="relative w-full max-w-2xl rounded-[18px] shadow-2xl flex flex-col max-h-[85vh]"
         style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
 
@@ -262,8 +262,8 @@ function ProjectSummaryModal({ jobs, open, onClose }: { jobs: HandoverJob[]; ope
                     { label: 'รอส่งมอบ', count: ready, color: '#60a5fa' },
                     { label: 'ส่งมอบแล้ว', count: done, color: '#4ade80' },
                   ].map(k => (
-                    <div key={k.label} className="rounded-xl p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
-                      <p className="text-xl font-bold" style={{ color: k.color }}>{k.count}</p>
+                    <div key={k.label} className="rounded-[11px] p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
+                      <p className="text-kpi-number" style={{ color: k.color }}>{k.count}</p>
                       <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{k.label}</p>
                     </div>
                   ))}
@@ -288,12 +288,12 @@ function ProjectSummaryModal({ jobs, open, onClose }: { jobs: HandoverJob[]; ope
                   {activeJobs.sort((a, b) => a.roomNo.localeCompare(b.roomNo, 'th')).map(j => {
                     const cfg = STATUS_CONFIG[j.workStatus]
                     return (
-                      <div key={j.jobId} className="flex items-center justify-between rounded-xl px-3 py-2.5"
+                      <div key={j.jobId} className="flex items-center justify-between rounded-[11px] px-3 py-2.5"
                         style={{ background: 'var(--hover-bg)', border: j.workStatus === 'delivered' ? '1px solid rgba(74,222,128,0.2)' : '1px solid transparent' }}>
                         <div className="flex items-center gap-2.5">
                           <span className="p-1 rounded-lg" style={cfg.bgStyle}>{cfg.icon}</span>
                           <div>
-                            <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{j.customerName}</p>
+                            <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{j.customerName}</p>
                             <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.roomNo}</p>
                           </div>
                         </div>
@@ -469,11 +469,11 @@ export default function HandoverPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Handover</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Handover</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามงาน · วันส่งมอบ · Commission</p>
         </div>
         <button onClick={() => setProjectSummaryOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white"
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
           style={{ background: 'var(--accent)' }}>
           <LayoutGrid size={15} />สรุปโครงการ
         </button>
@@ -487,9 +487,9 @@ export default function HandoverPage() {
           { label: 'ส่งมอบแล้ว', value: delivered, colorVar: 'var(--accent-green)' },
           { label: 'เกินกำหนด', value: overdue, colorVar: 'var(--accent-red)' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl p-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
-            <p className="text-2xl font-bold" style={{ color: k.colorVar }}>{k.value}</p>
+          <div key={k.label} className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
+            <p className="text-kpi-number" style={{ color: k.colorVar }}>{k.value}</p>
           </div>
         ))}
       </div>
@@ -510,7 +510,7 @@ export default function HandoverPage() {
         const overdueRev = overdueRolling.reduce((s, j) => s + j.revenueIncVat, 0)
 
         return (
-          <div className="mb-5 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="mb-5 rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             {/* Period pills */}
             <div className="flex items-center gap-2 mb-4 flex-wrap">
               <span className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รายได้ตามช่วงเวลา:</span>
@@ -524,17 +524,17 @@ export default function HandoverPage() {
               <span className="text-xs ml-1" style={{ color: 'var(--text-3)' }}>{label}</span>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>คาดว่าจะส่งมอบ</p>
                 <p className="font-bold text-base" style={{ color: 'var(--accent-blue)' }}>{fmtBahtH(expectedRev)}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{expected.length} ห้อง</p>
               </div>
-              <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</p>
                 <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{fmtBahtH(deliveredRev)}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{deliveredInPeriod.length} ห้อง</p>
               </div>
-              <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด (ทบ)</p>
                 <p className="font-bold text-base" style={{ color: 'var(--accent-red)' }}>{fmtBahtH(overdueRev)}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{overdueRolling.length} ห้อง</p>
@@ -550,17 +550,17 @@ export default function HandoverPage() {
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อ, ห้อง, โครงการ..."
-            className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none"
+            className="w-full rounded-[8px] pl-9 pr-4 py-2.5 text-sm focus:outline-none"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: filterProject ? 'var(--text-1)' : 'var(--text-3)' }}>
           <option value="">ทุกโครงการ</option>
           {projectOptions.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: filterSales ? 'var(--text-1)' : 'var(--text-3)' }}>
           <option value="">ทุก Sales</option>
           {salesOptions.map(s => <option key={s} value={s}>{s}</option>)}
@@ -568,7 +568,7 @@ export default function HandoverPage() {
         <div className="flex gap-2 flex-wrap">
           {STATUS_FILTERS.map(f => (
             <button key={f.key} onClick={() => setFilterStatus(f.key)}
-              className={`text-xs px-3 py-2 rounded-xl border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-700 dark:text-indigo-300' : ''}`}
+              className={`text-xs px-3 py-2 rounded-full border transition-colors ${filterStatus === f.key ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-700 dark:text-indigo-300' : ''}`}
               style={filterStatus !== f.key ? { background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-2)' } : undefined}>
               {f.label} <span className="ml-1 opacity-60">{f.count}</span>
             </button>
@@ -580,7 +580,7 @@ export default function HandoverPage() {
       {loading && <div className="flex justify-center py-16"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
       {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
       {!loading && filtered.length === 0 && (
-        <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <p style={{ color: 'var(--text-2)' }}>ไม่พบข้อมูล</p>
         </div>
       )}
@@ -592,12 +592,12 @@ export default function HandoverPage() {
           const isOverdue = job.workStatus !== 'delivered' && job.daysOverdue > 0
 
           return (
-            <div key={job.jobId} className={`rounded-xl overflow-hidden ${isOverdue && job.workStatus !== 'delivered' ? 'border border-red-500/30' : ''}`}
+            <div key={job.jobId} className={`rounded-[18px] overflow-hidden ${isOverdue && job.workStatus !== 'delivered' ? 'border border-red-500/30' : ''}`}
               style={!(isOverdue && job.workStatus !== 'delivered') ? { background: 'var(--card-bg)', border: '1px solid var(--card-border)' } : { background: 'var(--card-bg)' }}>
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   {/* Status icon */}
-                  <div className="mt-0.5 p-2 rounded-xl" style={cfg.bgStyle}>
+                  <div className="mt-0.5 p-2 rounded-[8px]" style={cfg.bgStyle}>
                     {cfg.icon}
                   </div>
 
@@ -618,26 +618,26 @@ export default function HandoverPage() {
                     <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: 'var(--text-2)' }}>
                       <span>{job.projectName}</span>
                       <span>· {job.salesName}</span>
-                      <span className="font-medium" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenueIncVat)}</span>
+                      <span className="font-semibold" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenueIncVat)}</span>
                     </div>
 
                     {/* Timeline bar */}
                     <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                       <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
                         <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันเริ่มงาน</p>
-                        <p className={`font-medium ${job.workStartDate ? 'text-amber-600 dark:text-amber-300' : ''}`} style={!job.workStartDate ? { color: 'var(--text-3)' } : undefined}>
+                        <p className={`font-semibold ${job.workStartDate ? 'text-amber-600 dark:text-amber-300' : ''}`} style={!job.workStartDate ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.workStartDate)}
                         </p>
                       </div>
                       <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
                         <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันครบสัญญา ({job.workDays} วัน)</p>
-                        <p className={`font-medium ${isOverdue ? 'text-red-400' : ''}`} style={!isOverdue && job.workEndDate ? { color: 'var(--text-2)' } : !isOverdue ? { color: 'var(--text-3)' } : undefined}>
+                        <p className={`font-semibold ${isOverdue ? 'text-red-400' : ''}`} style={!isOverdue && job.workEndDate ? { color: 'var(--text-2)' } : !isOverdue ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.workEndDate)}
                         </p>
                       </div>
                       <div className="rounded-lg p-2" style={{ background: 'var(--hover-bg)' }}>
                         <p className="text-[9px] mb-0.5" style={{ color: 'var(--text-3)' }}>วันส่งมอบจริง</p>
-                        <p className={`font-medium ${job.deliveryDate ? 'text-green-400' : ''}`} style={!job.deliveryDate ? { color: 'var(--text-3)' } : undefined}>
+                        <p className={`font-semibold ${job.deliveryDate ? 'text-green-400' : ''}`} style={!job.deliveryDate ? { color: 'var(--text-3)' } : undefined}>
                           {fmtDate(job.deliveryDate)}
                         </p>
                       </div>
@@ -646,7 +646,7 @@ export default function HandoverPage() {
 
                   {/* Right: status + actions */}
                   <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                    <span className="text-xs px-2.5 py-1 rounded-lg font-medium" style={{ ...cfg.bgStyle, color: cfg.colorVar }}>
+                    <span className="text-xs px-2.5 py-1 rounded-lg font-semibold" style={{ ...cfg.bgStyle, color: cfg.colorVar }}>
                       {cfg.label}
                     </span>
 

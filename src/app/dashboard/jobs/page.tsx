@@ -369,31 +369,31 @@ export default function JobsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Wyde Clients</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Wyde Clients</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>บันทึก PO/SO ต่องาน · ติดตามงวดการเก็บเงิน</p>
         </div>
         <div className="flex items-center gap-2">
           {/* View toggle */}
-          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
+          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
             <button onClick={() => setView('list')}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-colors"
               style={{ background: view === 'list' ? 'var(--accent)' : 'var(--glass-bg)', color: view === 'list' ? '#fff' : 'var(--text-2)' }}>
               <LayoutList size={13} />ตาราง
             </button>
             <button onClick={() => setView('summary')}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-colors"
               style={{ background: view === 'summary' ? 'var(--accent)' : 'var(--glass-bg)', color: view === 'summary' ? '#fff' : 'var(--text-2)' }}>
               <BarChart2 size={13} />สรุปโครงการ
             </button>
           </div>
           <button onClick={exportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
             <FileDown size={13} /> Export CSV
           </button>
           {canWrite && (
             <button onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
               style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
               <Plus size={15} /> เพิ่มงาน
             </button>
@@ -438,7 +438,7 @@ export default function JobsPage() {
 
       {/* Filters */}
       <div className="glass-card p-4 flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2" style={{ background: 'var(--hover-bg)' }}>
+        <div className="flex items-center gap-2 flex-1 min-w-48 rounded-[8px] px-3 py-2" style={{ background: 'var(--hover-bg)' }}>
           <Search size={14} style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหา PO / SO / ลูกค้า..." className="bg-transparent text-sm flex-1 outline-none"
@@ -451,26 +451,26 @@ export default function JobsPage() {
           placeholder="ทุกโครงการ"
         />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none"
+          className="rounded-[8px] px-3 py-2 text-sm outline-none"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <option value="">ทุกสถานะ</option>
           {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none"
+          className="rounded-[8px] px-3 py-2 text-sm outline-none"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <option value="">ทุก Sales</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
         <select value={filterCustomerType} onChange={e => setFilterCustomerType(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none"
+          className="rounded-[8px] px-3 py-2 text-sm outline-none"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <option value="">B2C + B2B</option>
           <option value="B2C">B2C</option>
           <option value="B2B">B2B</option>
         </select>
         <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none"
+          className="rounded-[8px] px-3 py-2 text-sm outline-none"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <option value="">ทุกประเภทงาน</option>
           {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -572,14 +572,14 @@ export default function JobsPage() {
                         return (
                           <div key={j.id}
                             onClick={() => canWrite && openEdit(j)}
-                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] cursor-pointer transition-colors"
                             style={{ background: isOverdue ? 'rgba(248,113,113,0.08)' : 'var(--hover-bg)', border: isOverdue ? '1px solid rgba(248,113,113,0.25)' : '1px solid transparent' }}
                             onMouseEnter={e => (e.currentTarget.style.background = cfg.bg)}
                             onMouseLeave={e => (e.currentTarget.style.background = isOverdue ? 'rgba(248,113,113,0.08)' : 'var(--hover-bg)')}
                           >
                             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{name}</p>
+                              <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{name}</p>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'}</p>
                                 {dueDate && (
@@ -693,7 +693,7 @@ export default function JobsPage() {
                   </td>
                   <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>
                     <div className="text-xs" style={{ color: 'var(--text-3)' }}>{projectName}</div>
-                    <div className="font-medium">{rep.room_no || '—'}</div>
+                    <div className="font-semibold">{rep.room_no || '—'}</div>
                   </td>
                   <td className="px-4 py-3">
                     {phone !== '—' ? (
@@ -774,7 +774,7 @@ export default function JobsPage() {
                                     {j.voucher ? f(j.voucher) : '—'}
                                   </td>
                                   <td className="px-3 py-2">
-                                    <span className="px-1.5 py-0.5 rounded-full font-medium"
+                                    <span className="px-1.5 py-0.5 rounded-full font-semibold"
                                       style={{
                                         background: j.working_status === 'ส่งมอบแล้ว' ? 'rgba(74,222,128,0.15)' :
                                           j.working_status === 'ยกเลิก' ? 'rgba(248,113,113,0.15)' : 'rgba(251,191,36,0.15)',
@@ -829,7 +829,7 @@ export default function JobsPage() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 space-y-5"
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[18px] p-6 space-y-5"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', backdropFilter: 'blur(32px)' }}>
 
             {/* Modal header */}
@@ -845,7 +845,7 @@ export default function JobsPage() {
 
             {/* ── Section: ลูกค้า & ห้อง ── */}
             <section>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--accent)' }}>ลูกค้า & ห้อง</p>
+              <p className="text-label-upper mb-3" style={{ color: 'var(--accent)' }}>ลูกค้า & ห้อง</p>
               <div className="grid grid-cols-2 gap-3">
                 {/* B2C / B2B toggle */}
                 <div className="col-span-2">
@@ -853,7 +853,7 @@ export default function JobsPage() {
                   <div className="flex gap-2 mt-1">
                     {['B2C', 'B2B'].map(t => (
                       <button key={t} onClick={() => setEditing(e => ({ ...e, customer_type: t }))}
-                        className="px-4 py-2 rounded-xl text-sm font-medium"
+                        className="px-4 py-2 rounded-full text-sm font-semibold"
                         style={{
                           background: editing.customer_type === t ? 'var(--accent)' : 'var(--hover-bg)',
                           color: editing.customer_type === t ? '#fff' : 'var(--text-2)',
@@ -891,7 +891,7 @@ export default function JobsPage() {
 
                     {/* Auto-filled customer info */}
                     {editing.customer_name && (
-                      <div className="col-span-2 rounded-xl px-4 py-3 flex items-center gap-3"
+                      <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
                         style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                           style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
@@ -935,7 +935,7 @@ export default function JobsPage() {
 
             {/* ── Section: Order ── */}
             <section>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--accent)' }}>ข้อมูลงาน / PO-SO</p>
+              <p className="text-label-upper mb-3" style={{ color: 'var(--accent)' }}>ข้อมูลงาน / PO-SO</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="field-label">PO No. (Origin)</label>
@@ -981,7 +981,7 @@ export default function JobsPage() {
 
             {/* ── Section: Revenue & Cost ── */}
             <section>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#4ade80' }}>Revenue & Cost</p>
+              <p className="text-label-upper mb-3" style={{ color: '#4ade80' }}>Revenue & Cost</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="field-label">Revenue (Ex.VAT) ฿</label>
@@ -1012,7 +1012,7 @@ export default function JobsPage() {
                     className="field-input w-full mt-1" placeholder="0" />
                 </div>
                 {/* Profit display */}
-                <div className="rounded-xl p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
+                <div className="rounded-[11px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center gap-1 mb-1">
                     <Calculator size={12} style={{ color: 'var(--text-3)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>Profit / GP%</span>
@@ -1026,7 +1026,7 @@ export default function JobsPage() {
 
             {/* ── Section: Commission ── */}
             <section>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#fbbf24' }}>Commission</p>
+              <p className="text-label-upper mb-3" style={{ color: '#fbbf24' }}>Commission</p>
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="field-label">Rate (อัตโนมัติจาก Revenue)</label>
@@ -1052,7 +1052,7 @@ export default function JobsPage() {
                   <div className="flex gap-2 mt-1">
                     {COMMISSION_STATUSES.map(s => (
                       <button key={s} onClick={() => setEditing(e => ({ ...e, commission_status: s }))}
-                        className="px-3 py-1.5 rounded-xl text-xs font-medium"
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold"
                         style={{
                           background: editing.commission_status === s ? 'var(--accent)' : 'var(--hover-bg)',
                           color: editing.commission_status === s ? '#fff' : 'var(--text-2)',
@@ -1067,7 +1067,7 @@ export default function JobsPage() {
 
             {/* ── Section: Status & Delivery ── */}
             <section>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>สถานะ & ส่งมอบ</p>
+              <p className="text-label-upper mb-3" style={{ color: 'var(--text-3)' }}>สถานะ & ส่งมอบ</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="field-label">สถานะการทำงาน</label>
@@ -1109,10 +1109,10 @@ export default function JobsPage() {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-xl text-sm"
+              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-full text-sm"
                 style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ยกเลิก</button>
               <button onClick={save} disabled={saving}
-                className="px-6 py-2 rounded-xl text-sm font-semibold text-white"
+                className="px-6 py-2 rounded-full text-sm font-semibold text-white"
                 style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>

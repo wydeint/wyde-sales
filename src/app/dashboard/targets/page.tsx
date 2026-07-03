@@ -267,19 +267,19 @@ export default function TargetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Sales Targets</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Sales Targets</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>กำหนดและติดตามเป้าหมายการขาย</p>
         </div>
         <div className="flex gap-2">
           {tab === 'org' && (
             <button onClick={() => { setEditingOrg(null); setOrgForm({ ...emptyOrgForm, year: filterYear }); setOrgModalOpen(true) }}
-              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
               <Plus size={16} />ตั้งเป้าองค์กร
             </button>
           )}
           {tab === 'sales' && (
             <button onClick={() => { setEditingSales(null); setSalesForm({ ...emptySalesForm, year: filterYear }); setSalesModalStep(1); setSalesModalOpen(true) }}
-              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
@@ -290,7 +290,7 @@ export default function TargetsPage() {
       {/* Tab + Period row */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
+        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
           <button onClick={() => setTab('org')}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
             style={{ background: tab === 'org' ? '#f97316' : 'transparent', color: tab === 'org' ? '#fff' : 'var(--text-2)' }}>
@@ -309,7 +309,7 @@ export default function TargetsPage() {
         </div>
 
         {/* Period pills */}
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
+        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
           {(['month','quarter','year'] as ViewPeriod[]).map(p => (
             <button key={p} onClick={() => setViewPeriod(p)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
@@ -341,7 +341,7 @@ export default function TargetsPage() {
           {tab === 'org' && (
             <div className="space-y-6">
               {/* Annual Summary Card */}
-              <div className="rounded-xl p-5" style={{ background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.25)' }}>
+              <div className="rounded-[18px] p-5" style={{ background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.25)' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 size={16} className="text-orange-400" />
                   <h2 className="text-orange-400 font-bold text-sm uppercase tracking-wider">สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
@@ -383,8 +383,8 @@ export default function TargetsPage() {
 
               {/* Sales team vs Org gap */}
               {orgTotalSales > 0 && salesTeamSalesTarget > 0 && (
-                <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
-                  <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-2)' }}>เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
+                <div className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                  <p className="text-card-title mb-3" style={{ color: 'var(--text-2)' }}>เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยอดขาย</p>
@@ -419,16 +419,16 @@ export default function TargetsPage() {
               )}
 
               {/* Monthly breakdown table */}
-              <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+              <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                 <div className="px-5 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--divider)' }}>
-                  <h3 className="font-medium text-sm" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
+                  <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         {['เดือน','เป้ายอดขาย','จริง (ขาย)','%','เป้าส่งมอบ','จริง (ส่งมอบ)','%',''].map((h, i) => (
-                          <th key={i} className={`py-2 px-4 text-xs font-medium ${i === 0 ? 'text-left' : 'text-right'}`} style={{ color: 'var(--text-2)' }}>{h}</th>
+                          <th key={i} className={`py-2 px-4 text-xs font-semibold ${i === 0 ? 'text-left' : 'text-right'}`} style={{ color: 'var(--text-2)' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -524,7 +524,7 @@ export default function TargetsPage() {
                 {/* ── Side-by-side team comparison ─── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {teamData.map(team => (
-                    <div key={team.manager.id} className="rounded-xl p-5 space-y-4"
+                    <div key={team.manager.id} className="rounded-[18px] p-5 space-y-4"
                       style={{ background: 'var(--card-bg)', border: `1px solid ${team.color}40` }}>
                       {/* Team header */}
                       <div className="flex items-center gap-3">
@@ -533,7 +533,7 @@ export default function TargetsPage() {
                           {team.manager.name[0]}
                         </div>
                         <div>
-                          <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ทีม {team.manager.name}</p>
+                          <p className="text-section-title" style={{ color: 'var(--text-1)' }}>ทีม {team.manager.name}</p>
                           <p className="text-xs" style={{ color: 'var(--text-3)' }}>{team.members.length} คน · {periodLabel}</p>
                         </div>
                       </div>
@@ -574,7 +574,7 @@ export default function TargetsPage() {
                                 <div className="flex items-center gap-2">
                                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
                                     style={{ background: team.color + '99' }}>{u.name[0]}</div>
-                                  <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{u.name}</span>
+                                  <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</span>
                                 </div>
                                 {tgtS > 0 && (
                                   <span className="text-[10px] font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? '#4ade80' : 'var(--text-3)' }}>
@@ -606,15 +606,15 @@ export default function TargetsPage() {
 
                 {/* ── Cross-team comparison table ─── */}
                 {teamData.length >= 2 && (
-                  <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                  <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                     <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>เปรียบเทียบผลทีม ({periodLabel})</p>
+                      <p className="text-section-title" style={{ color: 'var(--text-1)' }}>เปรียบเทียบผลทีม ({periodLabel})</p>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                            <th className="text-left px-4 py-2 text-xs font-medium" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
+                            <th className="text-left px-4 py-2 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
                             {teamData.map(t => (
                               <th key={t.manager.id} colSpan={2} className="text-center px-4 py-2 text-xs font-semibold" style={{ color: t.color }}>
                                 ทีม {t.manager.name}
@@ -642,7 +642,7 @@ export default function TargetsPage() {
                                 return (
                                   <>
                                     <td key={t.manager.id + 's'} className="px-3 py-2">
-                                      <p className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{u.name}</p>
+                                      <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</p>
                                       <p className="text-[10px]" style={{ color: '#4ade80' }}>{f(getUserActual(u.id, 'sales'))}</p>
                                     </td>
                                     <td key={t.manager.id + 'd'} className="px-3 py-2 text-right">
@@ -682,7 +682,7 @@ export default function TargetsPage() {
           {tab === 'sales' && (
             <div className="space-y-4">
               {grouped.length === 0 ? (
-                <div className="text-center py-16 rounded-xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                   <Target size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
                   <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีเป้าหมายสำหรับช่วงนี้</p>
                 </div>
@@ -698,7 +698,7 @@ export default function TargetsPage() {
                     const trend = sparkSales[2] > sparkSales[0] ? '↑' : sparkSales[2] < sparkSales[0] ? '↓' : '→'
                     const trendColor = trend === '↑' ? '#4ade80' : trend === '↓' ? '#f87171' : 'var(--text-3)'
                     return (
-                      <div key={t.user_id} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                      <div key={t.user_id} className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
@@ -724,14 +724,14 @@ export default function TargetsPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-3">
-                          <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                          <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
                             <p className="text-emerald-400 font-bold text-base">{f(t.target_sales_value)}</p>
                             <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actS)}</span></p>
                             <ProgressBar value={actS} max={t.target_sales_value} color="#34d399" />
                             <p className="text-emerald-400 text-[10px] mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
                           </div>
-                          <div className="rounded-xl p-3" style={{ background: 'var(--card-bg)' }}>
+                          <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
                             <p className="text-blue-400 font-bold text-base">{f(t.target_delivery_value)}</p>
                             <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>
@@ -773,7 +773,7 @@ export default function TargetsPage() {
                           ].map(item => (
                             <div key={item.label} className="rounded-lg p-2" style={{ background: 'var(--card-bg)' }}>
                               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{item.label}</p>
-                              <p className="text-xs font-medium mt-0.5" style={{ color: item.c }}>{item.d ?? item.v}</p>
+                              <p className="text-xs font-semibold mt-0.5" style={{ color: item.c }}>{item.d ?? item.v}</p>
                             </div>
                           ))}
                         </div>

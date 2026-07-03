@@ -152,7 +152,7 @@ export default function CommissionPage() {
     <div className="p-6 space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Commission</h1>
+        <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Commission</h1>
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>ค่าคอมมิชชั่นจากงานที่ส่งมอบแล้ว · อัปเดตสถานะได้จากหน้านี้</p>
       </div>
 
@@ -164,13 +164,13 @@ export default function CommissionPage() {
           const count = jobs.filter(j => getStatus(j) === s).length
           return (
             <button key={s} onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
-              className="rounded-2xl p-4 text-left transition-all"
+              className="rounded-[18px] p-4 text-left transition-all"
               style={{ background: filterStatus === s ? cfg.bg : 'var(--card-bg)', border: `1px solid ${filterStatus === s ? cfg.color + '50' : 'var(--divider)'}` }}>
               <div className="flex items-center gap-2 mb-2">
                 <Icon size={14} style={{ color: cfg.color }} />
-                <p className="text-xs font-medium" style={{ color: cfg.color }}>{cfg.label}</p>
+                <p className="text-card-title" style={{ color: cfg.color }}>{cfg.label}</p>
               </div>
-              <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{f(v)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(v)}</p>
               <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>{count} งาน</p>
             </button>
           )
@@ -180,9 +180,9 @@ export default function CommissionPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
         {/* Status filter pills */}
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+        <div className="flex gap-1 p-1 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
           <button onClick={() => setFilterStatus('all')}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
             style={{ background: filterStatus === 'all' ? 'var(--accent)' : 'transparent', color: filterStatus === 'all' ? '#fff' : 'var(--text-2)' }}>
             ทั้งหมด
           </button>
@@ -190,7 +190,7 @@ export default function CommissionPage() {
             const cfg = STATUS_CFG[s]
             return (
               <button key={s} onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
                 style={{ background: filterStatus === s ? cfg.color : 'transparent', color: filterStatus === s ? '#fff' : 'var(--text-2)' }}>
                 {cfg.label}
               </button>
@@ -200,7 +200,7 @@ export default function CommissionPage() {
 
         {/* Sales filter */}
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="rounded-xl px-3 py-2 text-sm outline-none"
+          className="rounded-[8px] px-3 py-2 text-sm outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
           <option value="all">— Sales ทั้งหมด —</option>
           {salesList.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
@@ -213,7 +213,7 @@ export default function CommissionPage() {
 
       {/* Monthly groups */}
       {byMonth.length === 0 && (
-        <div className="rounded-2xl p-12 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+        <div className="rounded-[18px] p-12 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
           <DollarSign size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบข้อมูล Commission</p>
         </div>
@@ -227,7 +227,7 @@ export default function CommissionPage() {
           monthJobs.forEach(j => { const s = getStatus(j) as keyof typeof statusCounts; if (s in statusCounts) statusCounts[s]++ })
 
           return (
-            <div key={month} className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+            <div key={month} className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
               {/* Month header */}
               <button className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
                 style={{ background: isOpen ? 'var(--hover-bg)' : 'transparent' }}
@@ -260,7 +260,7 @@ export default function CommissionPage() {
                     <thead>
                       <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                         {['ลูกค้า / ห้อง', 'โครงการ', 'Sales', 'Revenue', 'Rate', 'Commission', 'สถานะ'].map(h => (
-                          <th key={h} className={`px-4 py-2 text-xs font-medium ${h === 'ลูกค้า / ห้อง' || h === 'โครงการ' || h === 'Sales' || h === 'สถานะ' ? 'text-left' : 'text-right'}`}
+                          <th key={h} className={`px-4 py-2 text-xs font-semibold ${h === 'ลูกค้า / ห้อง' || h === 'โครงการ' || h === 'Sales' || h === 'สถานะ' ? 'text-left' : 'text-right'}`}
                             style={{ color: 'var(--text-3)' }}>{h}</th>
                         ))}
                       </tr>
@@ -277,7 +277,7 @@ export default function CommissionPage() {
                         return (
                           <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                             <td className="px-4 py-3">
-                              <p className="font-medium" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</p>
+                              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</p>
                               <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'}</p>
                             </td>
                             <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</td>

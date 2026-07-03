@@ -175,23 +175,23 @@ function SummaryView({ jobs }: { jobs: Job[] }) {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="glass-card p-4">
-          <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยอดรวมทั้งหมด</p>
-          <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBahtK(totalRevenue)}</p>
+          <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ยอดรวมทั้งหมด</p>
+          <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fmtBahtK(totalRevenue)}</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{jobs.length} งาน</p>
         </div>
         <div className="glass-card p-4">
-          <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</p>
-          <p className="text-xl font-bold text-green-400">{fmtBahtK(paidAmount)}</p>
+          <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</p>
+          <p className="text-kpi-number text-green-400">{fmtBahtK(paidAmount)}</p>
           <p className="text-xs mt-1 text-green-400">{collectionRate}% ของยอดรวม</p>
         </div>
         <div className="glass-card p-4">
-          <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค้างเก็บ</p>
-          <p className="text-xl font-bold text-amber-400">{fmtBahtK(pendingAmount)}</p>
+          <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างเก็บ</p>
+          <p className="text-kpi-number text-amber-400">{fmtBahtK(pendingAmount)}</p>
           {overdueAmount > 0 && <p className="text-xs mt-1 text-red-400">เกินกำหนด {fmtBahtK(overdueAmount)}</p>}
         </div>
         <div className="glass-card p-4">
-          <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่ตั้งแผน</p>
-          <p className="text-xl font-bold text-red-400">{jobs.filter(j => j.installments.length === 0).length} งาน</p>
+          <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่ตั้งแผน</p>
+          <p className="text-kpi-number text-red-400">{jobs.filter(j => j.installments.length === 0).length} งาน</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
             {fmtBahtK(jobs.filter(j => j.installments.length === 0).reduce((s, j) => s + j.revenue_ex_vat, 0))}
           </p>
@@ -216,15 +216,15 @@ function SummaryView({ jobs }: { jobs: Job[] }) {
       {/* Breakdown */}
       <div className="glass-card p-5">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>แบ่งตาม</h2>
-          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>แบ่งตาม</h2>
+          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             {[
               { key: 'sales', label: 'เซลล์' },
               { key: 'work_type', label: 'หมวดงาน' },
               { key: 'customer_type', label: 'ประเภทลูกค้า' },
             ].map(t => (
               <button key={t.key} onClick={() => setBreakdownBy(t.key as any)}
-                className="px-3 py-1.5 text-xs font-medium"
+                className="px-3 py-1.5 text-xs font-semibold"
                 style={{ background: breakdownBy === t.key ? 'var(--accent)' : 'var(--hover-bg)', color: breakdownBy === t.key ? '#fff' : 'var(--text-2)' }}>
                 {t.label}
               </button>
@@ -247,7 +247,7 @@ function SummaryView({ jobs }: { jobs: Job[] }) {
             return (
               <div key={row.key}>
                 <div className="grid gap-2 items-center text-sm mb-1" style={{ gridTemplateColumns: '1fr 100px 100px 100px 120px' }}>
-                  <span className="font-medium truncate" style={{ color: 'var(--text-1)' }}>{row.key}</span>
+                  <span className="font-semibold truncate" style={{ color: 'var(--text-1)' }}>{row.key}</span>
                   <span className="text-right text-xs" style={{ color: 'var(--text-3)' }}>{row.jobs}</span>
                   <span className="text-right text-xs font-semibold text-green-400">{fmtBahtK(row.paid)}</span>
                   <span className="text-right text-xs font-semibold text-amber-400">{fmtBahtK(row.pending)}</span>
@@ -344,7 +344,7 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-lg rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+      <div className="relative w-full max-w-lg rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
         style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -355,16 +355,16 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
         <div className="p-5 space-y-5">
-          <div className="rounded-xl p-4 text-center" style={{ background: 'var(--hover-bg)' }}>
+          <div className="rounded-[11px] p-4 text-center" style={{ background: 'var(--hover-bg)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>มูลค่างานรวม</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(total)}</p>
+            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fmtBaht(total)}</p>
           </div>
           <div>
             <p className="text-xs mb-2" style={{ color: 'var(--text-2)' }}>ประเภทลูกค้า</p>
             <div className="grid grid-cols-2 gap-2">
               {(['B2C', 'B2B'] as ClientType[]).map(t => (
                 <button key={t} onClick={() => setClientType(t)}
-                  className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${clientType === t ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-700 dark:text-indigo-300' : ''}`}
+                  className={`py-2.5 rounded-[11px] text-sm font-semibold border transition-all ${clientType === t ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-700 dark:text-indigo-300' : ''}`}
                   style={clientType !== t ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : undefined}>
                   {t}
                 </button>
@@ -377,9 +377,9 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
               <div className="space-y-2">
                 {B2C_PLANS.map(p => (
                   <button key={p.value} onClick={() => setPlan(p.value)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${plan === p.value ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-200' : ''}`}
+                    className={`w-full text-left px-4 py-3 rounded-[11px] border transition-all ${plan === p.value ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-200' : ''}`}
                     style={plan !== p.value ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : undefined}>
-                    <p className="text-sm font-medium">{p.label}</p>
+                    <p className="text-sm font-semibold">{p.label}</p>
                     <p className="text-xs opacity-60 mt-0.5">{p.desc}</p>
                   </button>
                 ))}
@@ -389,7 +389,7 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดมัดจำจองสิทธิ์ (บาท)</label>
                   <input type="number" value={depositAmount || ''} onChange={e => setDepositAmount(Number(e.target.value))}
                     placeholder={`เช่น ${Math.round(total * 0.1).toLocaleString()} (10%)`}
-                    className="mt-1 w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+                    className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                     style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                 </div>
               )}
@@ -402,7 +402,7 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
                 <div className="flex gap-2">
                   {[2, 3, 4, 5, 6].map(n => (
                     <button key={n} onClick={() => updateB2bCount(n)}
-                      className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all ${b2bCount === n ? 'bg-blue-500/20 border-blue-500/40 text-blue-700 dark:text-blue-300' : ''}`}
+                      className={`flex-1 py-2 rounded-[11px] text-sm font-semibold border transition-all ${b2bCount === n ? 'bg-blue-500/20 border-blue-500/40 text-blue-700 dark:text-blue-300' : ''}`}
                       style={b2bCount !== n ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : undefined}>
                       {n}
                     </button>
@@ -416,7 +416,7 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
                     <span className="text-xs w-16" style={{ color: 'var(--text-2)' }}>งวดที่ {i + 1}</span>
                     <input type="number" value={pct}
                       onChange={e => { const np = [...b2bPcts]; np[i] = Number(e.target.value); setB2bPcts(np) }}
-                      className="w-20 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none"
+                      className="w-20 rounded-[8px] px-2 py-1.5 text-sm text-center focus:outline-none"
                       style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-2)' }}>% = {fmtBaht(Math.round((pct / 100) * total))}</span>
                   </div>
@@ -428,7 +428,7 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
             <div>
               <p className="text-xs mb-1.5" style={{ color: 'var(--text-2)' }}>ระยะเวลางาน</p>
               <select value={workDays} onChange={e => setWorkDays(Number(e.target.value))}
-                className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+                className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
                 {WORK_DAYS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
@@ -436,13 +436,13 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
             <div>
               <p className="text-xs mb-1.5" style={{ color: 'var(--text-2)' }}>วันเซ็นสัญญา</p>
               <input type="date" value={contractDate} onChange={e => setContractDate(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+                className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
             </div>
           </div>
           {preview.length > 0 && (
-            <div className="rounded-xl p-4" style={{ background: 'var(--hover-bg)' }}>
-              <p className="text-xs mb-3 font-medium" style={{ color: 'var(--text-2)' }}>ตัวอย่างแผนงวด</p>
+            <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
+              <p className="text-xs mb-3 font-semibold" style={{ color: 'var(--text-2)' }}>ตัวอย่างแผนงวด</p>
               <div className="space-y-2">
                 {preview.map((p, i) => (
                   <div key={i} className="flex items-center justify-between">
@@ -502,7 +502,7 @@ function RecordPaymentModal({ installment, open, onClose, onSaved }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-2xl shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
+      <div className="relative w-full max-w-md rounded-[18px] shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>บันทึกการชำระเงิน</h3>
@@ -511,16 +511,16 @@ function RecordPaymentModal({ installment, open, onClose, onSaved }: {
           <button onClick={onClose} style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
         <div className="p-5 space-y-4">
-          <div className="rounded-xl p-4 text-center" style={{ background: 'var(--hover-bg)' }}>
+          <div className="rounded-[11px] p-4 text-center" style={{ background: 'var(--hover-bg)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ยอดชำระ</p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(installment.amount)}</p>
+            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fmtBaht(installment.amount)}</p>
             {installment.is_work_trigger && <p className="text-amber-400 text-xs mt-2">⚡ งวดนี้จะ trigger วันเริ่มงาน</p>}
             {installment.is_final && <p className="text-green-400 text-xs mt-1">⚑ งวดสุดท้าย — unlock การส่งมอบ</p>}
           </div>
           <div>
             <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-2)' }}>วันที่ชำระ</label>
             <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-              className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
+              className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
           <div>
@@ -534,7 +534,7 @@ function RecordPaymentModal({ installment, open, onClose, onSaved }: {
               {fileUrls.map((url, i) => (
                 <div key={i} className="flex gap-2">
                   <input value={url} onChange={e => updateFileUrl(i, e.target.value)} placeholder="https://drive.google.com/..."
-                    className="flex-1 rounded-lg px-3 py-2 text-xs focus:outline-none"
+                    className="flex-1 rounded-[8px] px-3 py-2 text-xs focus:outline-none"
                     style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                   {fileUrls.length > 1 && <button onClick={() => removeFileUrl(i)} className="hover:text-red-400 p-2" style={{ color: 'var(--text-3)' }}><X size={14} /></button>}
                 </div>
@@ -707,11 +707,11 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>สถานะการชำระเงิน</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>สถานะการชำระเงิน</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ภาพรวมการเก็บเงิน · แยกตามเซลล์ / หมวดงาน / ประเภทลูกค้า</p>
         </div>
         {/* View toggle */}
-        <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
           <button onClick={() => setView('summary')}
             className="flex items-center gap-1.5 px-3 py-2 text-sm"
             style={{ background: view === 'summary' ? 'var(--accent)' : 'var(--hover-bg)', color: view === 'summary' ? '#fff' : 'var(--text-2)' }}>
@@ -742,7 +742,7 @@ export default function PaymentsPage() {
               { key: 'no_plan', label: '⚙️ ยังไม่ตั้งแผน', color: 'text-orange-400 bg-orange-500/15 border-orange-500/30', count: payStatusCounts.no_plan },
             ] as { key: typeof filterPayStatus; label: string; color: string; count: number }[]).map(f => (
               <button key={f.key} onClick={() => setFilterPayStatus(f.key)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium border whitespace-nowrap transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap transition-colors ${
                   filterPayStatus === f.key
                     ? f.color || 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
                     : ''
@@ -752,7 +752,7 @@ export default function PaymentsPage() {
               </button>
             ))}
             <button onClick={() => setHideCompleted(h => !h)}
-              className={`ml-auto px-3 py-1.5 rounded-xl text-xs font-medium border whitespace-nowrap ${hideCompleted ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : ''}`}
+              className={`ml-auto px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${hideCompleted ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : ''}`}
               style={!hideCompleted ? { background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' } : undefined}>
               ซ่อนงานเสร็จสิ้น
             </button>
@@ -763,23 +763,23 @@ export default function PaymentsPage() {
             <div className="relative flex-1 min-w-40">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ, ห้อง, โครงการ..."
-                className="w-full rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none"
+                className="w-full rounded-[8px] pl-8 pr-3 py-2 text-sm focus:outline-none"
                 style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
             </div>
             <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-              className="rounded-xl px-3 py-2 text-sm outline-none"
+              className="rounded-[8px] px-3 py-2 text-sm outline-none"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-2)' }}>
               <option value="">ทุกโครงการ</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-              className="rounded-xl px-3 py-2 text-sm outline-none"
+              className="rounded-[8px] px-3 py-2 text-sm outline-none"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-2)' }}>
               <option value="">ทุกเซลล์</option>
               {salesList.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-              className="rounded-xl px-3 py-2 text-sm outline-none"
+              className="rounded-[8px] px-3 py-2 text-sm outline-none"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-2)' }}>
               <option value="">ทุกหมวดงาน</option>
               {workTypeList.map(w => <option key={w} value={w}>{w}</option>)}
@@ -798,12 +798,12 @@ export default function PaymentsPage() {
               const jobPending = job.installments.filter(i => i.status !== 'paid').reduce((s, i) => s + i.amount, 0)
 
               return (
-                <div key={job.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                <div key={job.id} className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                   <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" onClick={() => setExpandedId(expanded ? null : job.id)}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="text-accent-blue text-xs font-mono">{job.id}</span>
-                        <span className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{job.customer_name}</span>
+                        <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{job.customer_name}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>{job.room_no}</span>
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${job.customer_type === 'B2B' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
                           {job.customer_type}
@@ -858,7 +858,7 @@ export default function PaymentsPage() {
                           <AlertCircle size={28} className="mx-auto text-amber-500/50 mb-3" />
                           <p className="text-sm mb-3" style={{ color: 'var(--text-2)' }}>ยังไม่ได้ตั้งแผนการชำระเงิน</p>
                           <button onClick={() => setPlanJob(job)}
-                            className="flex items-center gap-2 mx-auto px-4 py-2 bg-amber-500/15 text-amber-600 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/20 rounded-xl text-sm transition-colors">
+                            className="flex items-center gap-2 mx-auto px-4 py-2 bg-amber-500/15 text-amber-600 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/20 rounded-[11px] text-sm transition-colors">
                             <Settings2 size={14} />ตั้งแผนงวดการชำระเงิน
                           </button>
                         </div>
@@ -880,14 +880,14 @@ export default function PaymentsPage() {
                             </button>
                           </div>
                           {job.installments.map(inst => (
-                            <div key={inst.id} className={`flex items-center gap-3 p-3 rounded-xl border ${inst.status === 'paid' ? 'bg-green-500/5 border-green-500/15' : ''}`}
+                            <div key={inst.id} className={`flex items-center gap-3 p-3 rounded-[11px] border ${inst.status === 'paid' ? 'bg-green-500/5 border-green-500/15' : ''}`}
                               style={inst.status !== 'paid' ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)' } : undefined}>
                               <div className="flex-shrink-0">
                                 {inst.status === 'paid' ? <CheckCircle2 size={18} className="text-green-400" /> : <Circle size={18} style={{ color: 'var(--divider)' }} />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
+                                  <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
                                   {inst.is_work_trigger && <span className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-300 px-1.5 py-0.5 rounded">▶ เริ่มงาน</span>}
                                   {inst.is_final && <span className="text-[9px] bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">⚑ สุดท้าย</span>}
                                 </div>
@@ -940,10 +940,10 @@ export default function PaymentsPage() {
       {followupPaymentId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setFollowupPaymentId(null)}>
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} />
-          <div className="relative w-full max-w-sm rounded-2xl p-5 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
+          <div className="relative w-full max-w-sm rounded-[18px] p-5 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>📝 บันทึกการติดตาม</h3>
+              <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>📝 บันทึกการติดตาม</h3>
               <button onClick={() => setFollowupPaymentId(null)} style={{ color: 'var(--text-3)' }}><X size={16} /></button>
             </div>
             <textarea
@@ -951,14 +951,14 @@ export default function PaymentsPage() {
               onChange={e => setFollowupNote(e.target.value)}
               placeholder="บันทึกว่าติดต่อแล้ว / นัดหมาย / ลูกค้าแจ้งว่า..."
               rows={3}
-              className="w-full rounded-xl px-3 py-2 text-sm resize-none outline-none"
+              className="w-full rounded-[8px] px-3 py-2 text-sm resize-none outline-none"
               style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}
               autoFocus
             />
             <div className="flex justify-end gap-2 mt-3">
               <button onClick={() => setFollowupPaymentId(null)} className="px-4 py-2 text-sm" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
               <button onClick={saveFollowup} disabled={followupSaving || !followupNote.trim()}
-                className="px-4 py-2 text-sm rounded-xl text-white disabled:opacity-40 transition-colors"
+                className="px-4 py-2 text-sm rounded-full text-white disabled:opacity-40 transition-colors"
                 style={{ background: '#6366f1' }}>
                 {followupSaving ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>

@@ -109,24 +109,24 @@ export default function UsersPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Users</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Users</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการผู้ใช้และสิทธิ์การเข้าถึง</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
           <Plus size={16} />เพิ่มผู้ใช้
         </button>
       </div>
 
-      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>ชื่อ</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>Email</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>Role</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>Level</th>
-              <th className="text-left px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>แผนก</th>
-              <th className="text-center px-4 py-3 text-xs font-medium" style={{ color: 'var(--text-2)' }}>สถานะ</th>
+              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>ชื่อ</th>
+              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>Email</th>
+              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>Role</th>
+              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>Level</th>
+              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>แผนก</th>
+              <th className="text-center px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>สถานะ</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -144,14 +144,14 @@ export default function UsersPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--divider)' }}>
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{u.name?.[0]?.toUpperCase()}</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name?.[0]?.toUpperCase()}</span>
                     </div>
                     <span className="text-sm" style={{ color: 'var(--text-1)' }}>{u.name}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{u.email}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${ROLE_COLORS[u.role] || 'bg-gray-500/20 text-gray-400'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${ROLE_COLORS[u.role] || 'bg-gray-500/20 text-gray-400'}`}>
                     {u.role}
                   </span>
                 </td>
@@ -191,7 +191,7 @@ export default function UsersPage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-xl text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

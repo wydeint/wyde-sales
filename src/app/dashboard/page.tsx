@@ -163,7 +163,7 @@ export default function DashboardPage() {
       {/* Header + Filters */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>
             {greeting}คุณ{userName || '...'} 👋
           </h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
@@ -172,14 +172,14 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="rounded-xl px-3 py-1.5 text-sm outline-none"
+            className="rounded-[8px] px-3 py-1.5 text-sm outline-none"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
             <option value="B2B">B2B</option>
           </select>
           <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-            className="rounded-xl px-3 py-1.5 text-sm outline-none"
+            className="rounded-[8px] px-3 py-1.5 text-sm outline-none"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <option value="">ทุกประเภทงาน</option>
             {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
@@ -188,13 +188,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Hero KPI Banner */}
-      <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', borderLeft: '4px solid #f97316' }}>
-        <p className="text-xs font-semibold mb-4" style={{ color: 'var(--text-3)' }}>ผลงาน{currentMonthThai}</p>
+      <div className="rounded-[18px] p-5 relative overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', borderLeft: '4px solid #f97316' }}>
+        <p className="text-card-title mb-4" style={{ color: 'var(--text-3)' }}>ผลงาน{currentMonthThai}</p>
         <div className="grid grid-cols-2 gap-6">
           {/* ยอดขาย */}
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยอดขายเดือนนี้</p>
-            <p className="text-3xl font-extrabold leading-none" style={{ color: '#f97316' }}>{f(actualSales)}</p>
+            <p className="text-kpi-number leading-none" style={{ color: '#f97316' }}>{f(actualSales)}</p>
             {orgTarget?.target_sales_value ? (
               <>
                 <p className="text-xs mt-2 mb-1" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTarget.target_sales_value)} · <span style={{ color: salesPct >= 100 ? '#4ade80' : '#f97316' }}>{salesPct}%</span></p>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
           {/* ส่งมอบ */}
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบเดือนนี้</p>
-            <p className="text-3xl font-extrabold leading-none" style={{ color: '#4ade80' }}>{f(actualDeliv)}</p>
+            <p className="text-kpi-number leading-none" style={{ color: '#4ade80' }}>{f(actualDeliv)}</p>
             {orgTarget?.target_delivery_value ? (
               <>
                 <p className="text-xs mt-2 mb-1" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTarget.target_delivery_value)} · <span style={{ color: delivPct >= 100 ? '#4ade80' : '#60a5fa' }}>{delivPct}%</span></p>
@@ -249,12 +249,12 @@ export default function DashboardPage() {
       {/* Drill-down modal: delivered this month */}
       {deliverDrillOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setDeliverDrillOpen(false)}>
-          <div className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-2xl overflow-hidden"
+          <div className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-[18px] overflow-hidden"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
               <div>
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>งานส่งมอบเดือนนี้</h3>
+                <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>งานส่งมอบเดือนนี้</h3>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
                   นับจาก <code className="px-1 rounded" style={{ background: 'var(--hover-bg)' }}>jobs.actual_deliver_date</code> · {deliveredThisMonth.length} รายการ
                 </p>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                         <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
                         <td className="px-4 py-2.5">
                           <div className="text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</div>
-                          <div className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>{j.room_no || '—'}</div>
+                          <div className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>{j.room_no || '—'}</div>
                         </td>
                         <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
                         <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>
@@ -309,7 +309,7 @@ export default function DashboardPage() {
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <Target size={15} style={{ color: 'var(--accent)' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Pipeline</h2>
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Pipeline</h2>
           </div>
           <div className="space-y-3">
             {pipeline.map(s => (
@@ -342,7 +342,7 @@ export default function DashboardPage() {
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <Award size={15} style={{ color: '#fbbf24' }} />
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Sales เดือนนี้</h2>
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales เดือนนี้</h2>
           </div>
           {leaderboard.length === 0 ? (
             <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                 <div key={p.name} className="flex items-center gap-3">
                   <span className="text-base w-6 flex-shrink-0">{rankIcon(i)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{p.name}</p>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{p.name}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                       โทร {p.calls} · เยี่ยม {p.visits}
                     </p>
@@ -370,7 +370,7 @@ export default function DashboardPage() {
 
         {/* Recent Daily Reports */}
         <div className="glass-card p-5">
-          <h2 className="font-semibold text-sm mb-4" style={{ color: 'var(--text-1)' }}>Daily Report ล่าสุด</h2>
+          <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>Daily Report ล่าสุด</h2>
           {recentReports.length === 0 ? (
             <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายงาน</p>
           ) : (
@@ -378,7 +378,7 @@ export default function DashboardPage() {
               {recentReports.map(r => (
                 <div key={r.id} className="flex items-center justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>
                       {(r.users as any)?.name || '—'}
                     </p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>

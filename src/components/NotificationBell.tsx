@@ -110,7 +110,7 @@ export default function NotificationBell() {
 
       {open && (
         <div
-          className="absolute bottom-9 left-0 w-72 rounded-xl shadow-2xl overflow-hidden z-[200]"
+          className="absolute bottom-9 left-0 w-72 rounded-[18px] shadow-2xl overflow-hidden z-[200]"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', backdropFilter: 'blur(20px)' }}
         >
           {/* Header */}
@@ -151,7 +151,7 @@ export default function NotificationBell() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{p.customer_name}</p>
+                            <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.customer_name}</p>
                             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{p.room_no} · เกิน {p.days_overdue} วัน</p>
                           </div>
                           <span className="text-xs font-semibold" style={{ color: '#f87171' }}>{fmtBaht(p.amount)}</span>
@@ -184,7 +184,7 @@ export default function NotificationBell() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{w.customer_name}</p>
+                            <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{w.customer_name}</p>
                             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{w.room_no} · เหลือ {w.days_left} วัน</p>
                           </div>
                           <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{fmtDate(w.warranty_end)}</span>

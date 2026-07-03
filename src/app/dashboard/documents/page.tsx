@@ -132,7 +132,7 @@ function DocCheckbox({
       )}
       {/* Tooltip */}
       {auto && (
-        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity z-10"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
           ล็อกอัตโนมัติตามสถานะ
         </span>
@@ -257,7 +257,7 @@ export default function DocumentsPage() {
     <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>เอกสารลูกค้า</h1>
+        <h1 className="text-page-title mb-1" style={{ color: 'var(--text-1)' }}>เอกสารลูกค้า</h1>
         <p className="text-sm" style={{ color: 'var(--text-3)' }}>
           ตรวจสอบและจัดการเอกสารทุกห้องลูกค้า ·
           <span className="ml-1" style={{ color: 'rgba(52,211,153,0.5)' }}>✓ จาง</span> = ติ๊กอัตโนมัติจากสถานะ ·
@@ -271,7 +271,7 @@ export default function DocumentsPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            className="w-full pl-9 pr-4 py-2.5 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
         <SearchableSelect
@@ -287,7 +287,7 @@ export default function DocumentsPage() {
           placeholder="ทุกเซลล์"
         />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
           {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -304,9 +304,9 @@ export default function DocumentsPage() {
             { label: 'ครบถ้วน', value: filtered.filter(j => { const { done, total } = getDocComplete(j); return done === total }).length, color: 'text-emerald-400' },
             { label: 'ยังไม่ครบ', value: filtered.filter(j => { const { done, total } = getDocComplete(j); return done < total }).length, color: 'text-amber-400' },
           ].map(s => (
-            <div key={s.label} className="rounded-2xl p-4 border text-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+            <div key={s.label} className="rounded-[18px] p-4 border text-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-              <p className={`text-2xl font-bold ${s.color || ''}`} style={!s.color ? { color: 'var(--text-1)' } : undefined}>{s.value}</p>
+              <p className={`text-kpi-number ${s.color || ''}`} style={!s.color ? { color: 'var(--text-1)' } : undefined}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -315,7 +315,7 @@ export default function DocumentsPage() {
       {/* Job list */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: 'var(--card-bg)' }} />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-[18px] animate-pulse" style={{ background: 'var(--card-bg)' }} />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16" style={{ color: 'var(--text-3)' }}>ไม่พบข้อมูล</div>
@@ -328,7 +328,7 @@ export default function DocumentsPage() {
             const allDone = done === total
 
             return (
-              <div key={job.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
+              <div key={job.id} className="rounded-[18px] border overflow-hidden" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
                 {/* Row header */}
                 <button
                   onClick={() => setExpandedJob(isExpanded ? null : job.id)}
@@ -366,7 +366,7 @@ export default function DocumentsPage() {
                     {DOC_SCHEMA.map(cat => (
                       <div key={cat.key}>
                         <p className={`text-[10px] font-bold uppercase tracking-wider mb-3 ${cat.color.split(' ')[0]}`}>{cat.label}</p>
-                        <div className={`rounded-2xl border p-4 space-y-3 ${cat.color.split(' ').slice(1).join(' ')}`}>
+                        <div className={`rounded-[18px] border p-4 space-y-3 ${cat.color.split(' ').slice(1).join(' ')}`}>
                           {cat.key !== 'payment' ? (
                             cat.docs.map(doc => {
                               const urlKey = doc.urlField as keyof Job
@@ -391,7 +391,7 @@ export default function DocumentsPage() {
                                 const autoPayment = isAutoCheckedPaymentDoc(pay)
                                 return (
                                   <div key={pay.id} className="space-y-2">
-                                    <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
+                                    <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>
                                       งวด {pay.installment_no}: {pay.installment_name}
                                       <span className={`ml-2 text-[10px] ${pay.status === 'paid' ? 'text-emerald-400' : ''}`}
                                         style={pay.status !== 'paid' ? { color: 'var(--text-3)' } : undefined}>

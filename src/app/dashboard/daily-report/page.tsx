@@ -86,12 +86,12 @@ export default function DailyReportPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Daily Report</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Daily Report</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายงานการทำงานประจำวัน</p>
         </div>
         {!todayDone && (
           <button onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             <Plus size={16} />บันทึกวันนี้
           </button>
         )}
@@ -104,8 +104,8 @@ export default function DailyReportPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="rounded-xl p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <h2 className="font-medium mb-4" style={{ color: 'var(--text-1)' }}>บันทึกรายงานวันที่ {new Date(form.date).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h2>
+        <div className="rounded-[18px] p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>บันทึกรายงานวันที่ {new Date(form.date).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <Input label="โทรหาลูกค้า (ครั้ง)" type="number" value={form.calls} onChange={e => setForm({ ...form, calls: Number(e.target.value) })} />
             <Input label="เยี่ยมลูกค้า (ครั้ง)" type="number" value={form.visits} onChange={e => setForm({ ...form, visits: Number(e.target.value) })} />
@@ -129,9 +129,9 @@ export default function DailyReportPage() {
       )}
 
       {/* History */}
-      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
-          <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>ประวัติรายงาน 30 วันล่าสุด</p>
+          <p className="text-card-title" style={{ color: 'var(--text-2)' }}>ประวัติรายงาน 30 วันล่าสุด</p>
         </div>
         <table className="w-full">
           <thead>
@@ -168,7 +168,7 @@ export default function DailyReportPage() {
                 <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.quotations_sent}</td>
                 <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.leads_created}</td>
                 <td className="px-4 py-2.5 text-sm text-right" style={{ color: 'var(--text-2)' }}>{f(r.quotation_value)}</td>
-                <td className="px-4 py-2.5 text-green-400 text-sm text-right font-medium">{f(r.booking_value)}</td>
+                <td className="px-4 py-2.5 text-green-400 text-sm text-right font-semibold">{f(r.booking_value)}</td>
               </tr>
             ))}
           </tbody>

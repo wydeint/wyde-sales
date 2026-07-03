@@ -25,7 +25,8 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // ถ้ายังไม่ login และไม่ได้อยู่ที่หน้า login → redirect ไป login
-  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/auth')) {
+  // /design-preview เป็นหน้า QA ดีไซน์ชั่วคราว เปิดสาธารณะไว้เพื่อ review โดยไม่ต้อง login
+  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/auth') && !pathname.startsWith('/design-preview')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

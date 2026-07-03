@@ -57,7 +57,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <button
             onClick={() => setOpen(v => !v)}
             aria-label="เปิด/ปิดเมนู"
-            className="w-10 h-10 flex items-center justify-center rounded-xl flex-shrink-0 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-[11px] flex-shrink-0 transition-colors"
             style={{ color: 'var(--text-2)' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}

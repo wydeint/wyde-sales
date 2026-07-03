@@ -66,7 +66,7 @@ export default function PipelinePage() {
   return (
     <div className="p-6">
       <div className="mb-5">
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Pipeline</h1>
+        <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Pipeline</h1>
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามสถานะลูกค้าแต่ละขั้น</p>
       </div>
 
@@ -76,7 +76,7 @@ export default function PipelinePage() {
           const count = customers.filter(c => c.status === s.value).length
           return (
             <button key={s.value} onClick={() => toggleCollapse(s.value)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${s.border} ${collapsed.has(s.value) ? 'opacity-50' : ''}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all border ${s.border} ${collapsed.has(s.value) ? 'opacity-50' : ''}`}
               style={{ background: s.bg, color: 'var(--text-2)' }}>
               <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
               {s.label}
@@ -92,7 +92,7 @@ export default function PipelinePage() {
           const list = customers.filter(c => c.status === stage.value)
           const isCollapsed = collapsed.has(stage.value)
           return (
-            <div key={stage.value} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--card-border)' }}>
+            <div key={stage.value} className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--card-border)' }}>
               {/* Stage header */}
               <button
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left"
@@ -100,8 +100,8 @@ export default function PipelinePage() {
                 onClick={() => toggleCollapse(stage.value)}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${stage.dot}`} />
-                <span className={`text-sm font-semibold ${stage.text}`}>{stage.label}</span>
-                <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+                <span className={`text-section-title ${stage.text}`}>{stage.label}</span>
+                <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
                   {list.length}
                 </span>
                 <span className="ml-auto" style={{ color: 'var(--text-3)' }}>
@@ -119,9 +119,9 @@ export default function PipelinePage() {
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                       {list.map(c => (
-                        <div key={c.id} className={`rounded-lg p-2.5 border-l-2 ${stage.border}`}
+                        <div key={c.id} className={`rounded-[11px] p-2.5 border-l-2 ${stage.border}`}
                           style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                          <p className="text-xs font-medium leading-snug mb-0.5 truncate" style={{ color: 'var(--text-1)' }} title={c.customer_name}>
+                          <p className="text-card-title leading-snug mb-0.5 truncate" style={{ color: 'var(--text-1)' }} title={c.customer_name}>
                             {c.customer_name}
                           </p>
                           {(c as any).projects?.name && (

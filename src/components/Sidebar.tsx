@@ -7,7 +7,7 @@ import {
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
   Target, LogOut, Sun, Moon, ChevronRight, CreditCard,
-  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap, Search
+  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap, Search, PanelLeftClose
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -81,7 +81,7 @@ const NAV = [
   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ onToggle }: { onToggle?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -137,17 +137,27 @@ export default function Sidebar() {
         WebkitBackdropFilter: 'blur(28px) saturate(180%)',
       }}
     >
-      {/* ── Logo ── */}
-      <div className="px-4 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 flex items-center" style={{ width: 72, height: 32 }}>
+      {/* ── Logo + Hamburger ── */}
+      <div className="px-4 pt-4 pb-3 flex-shrink-0 flex items-center gap-2" style={{ borderBottom: '1px solid var(--divider)' }}>
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <div className="flex-shrink-0 flex items-center" style={{ width: 60, height: 28 }}>
             <img src="/logo.svg" alt="WydE Int." style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
           </div>
-          <div>
-            <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>Super Sales</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-sm leading-tight truncate" style={{ color: 'var(--text-1)' }}>Super Sales</p>
             <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>WydEInt Interior</p>
           </div>
         </div>
+        <button
+          onClick={onToggle}
+          aria-label="ซ่อนเมนู"
+          className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: 'var(--text-3)' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <PanelLeftClose size={16} />
+        </button>
       </div>
 
       {/* ── Search ── */}

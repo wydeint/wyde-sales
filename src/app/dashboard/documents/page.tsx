@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, CheckCircle2, Circle, ExternalLink, Plus, X, ChevronDown } from 'lucide-react'
+import { Search, CheckCircle2, ChevronDown, Paperclip, Lock } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 
@@ -13,7 +13,11 @@ interface Job {
   room_no: string
   project_id: string
   projectName: string
+  sales_id: string | null
+  salesName: string
   order_date: string | null
+  working_status: string
+  customerStatus: string
   // doc fields
   quotation1_url: string | null
   quotation2_url: string | null
@@ -35,7 +39,6 @@ interface Payment {
   receipt_url: string | null
 }
 
-// Document checklist categories
 interface DocCategory {
   key: string
   label: string
@@ -77,52 +80,78 @@ const DOC_SCHEMA: DocCategory[] = [
   }
 ]
 
-// ─── Url Input Modal ───────────────────────────────────────
-function UrlModal({ open, label, initialUrl, onSave, onClose }: {
-  open: boolean; label: string; initialUrl: string; onSave: (url: string) => void; onClose: () => void
+// ─── Auto-checked logic ────────────────────────────────────
+// ส่งมอบแล้ว → เอกสารครบทั้งหมด
+// booked/closed → เอกสารช่วงขายครบ
+// payment.status === 'paid' → สลิป + ใบเสร็จงวดนั้นครบ
+
+function isAutoCheckedSaleDoc(job: Job): boolean {
+  return job.working_status === 'ส่งมอบแล้ว' || ['booked', 'closed'].includes(job.customerStatus)
+}
+
+function isAutoCheckedDeliveryDoc(job: Job): boolean {
+  return job.working_status === 'ส่งมอบแล้ว'
+}
+
+function isAutoCheckedPaymentDoc(payment: Payment): boolean {
+  return payment.status === 'paid'
+}
+
+function effectiveChecked(job: Job, cat: string, urlVal: string | null): boolean {
+  if (cat === 'sale') return isAutoCheckedSaleDoc(job) || !!urlVal
+  if (cat === 'delivery') return isAutoCheckedDeliveryDoc(job) || !!urlVal
+  return !!urlVal
+}
+
+// ─── Doc Checkbox ──────────────────────────────────────────
+function DocCheckbox({
+  checked,
+  auto,
+  onClick,
+}: {
+  checked: boolean
+  auto: boolean
+  onClick: () => void
 }) {
-  const [url, setUrl] = useState(initialUrl)
-  useEffect(() => { setUrl(initialUrl) }, [initialUrl, open])
-  if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative rounded-2xl p-5 w-full max-w-md" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{label}</h3>
-          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={16} /></button>
-        </div>
-        <input value={url} onChange={e => setUrl(e.target.value)}
-          placeholder="https://drive.google.com/..."
-          className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none mb-4"
-          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-        <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={() => { onSave(url); onClose() }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold">บันทึก</button>
-        </div>
-      </div>
-    </div>
+    <button
+      onClick={auto ? undefined : onClick}
+      className="relative flex items-center justify-center w-6 h-6 rounded flex-shrink-0 transition-colors group"
+      style={{
+        border: `2px solid ${checked ? '#34d399' : 'var(--divider)'}`,
+        background: checked ? (auto ? 'rgba(52,211,153,0.08)' : 'rgba(52,211,153,0.15)') : 'transparent',
+        cursor: auto ? 'default' : 'pointer',
+      }}
+      title={auto ? 'ติ๊กอัตโนมัติตามสถานะของลูกค้า — ไม่สามารถแก้ไขได้' : undefined}
+    >
+      {checked && !auto && (
+        <CheckCircle2 size={14} style={{ color: '#34d399' }} />
+      )}
+      {checked && auto && (
+        <Lock size={11} style={{ color: 'rgba(52,211,153,0.55)' }} />
+      )}
+      {/* Tooltip */}
+      {auto && (
+        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+          ล็อกอัตโนมัติตามสถานะ
+        </span>
+      )}
+    </button>
   )
 }
 
-// ─── Doc Status Badge ──────────────────────────────────────
-function DocBadge({ hasUrl, url, onClick }: { hasUrl: boolean; url?: string | null; onClick: () => void }) {
+// ─── Attach Button (placeholder) ──────────────────────────
+function AttachButton() {
   return (
-    <div className="flex items-center gap-2">
-      <button onClick={onClick} className="flex items-center gap-1.5 group">
-        {hasUrl ? (
-          <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />
-        ) : (
-          <Circle size={16} className="flex-shrink-0" style={{ color: 'var(--text-3)' }} />
-        )}
-      </button>
-      {hasUrl && url && (
-        <a href={url} target="_blank" rel="noopener noreferrer"
-          className="text-blue-600 dark:text-accent-blue hover:text-blue-800 dark:hover:text-blue-300 p-0.5" onClick={e => e.stopPropagation()}>
-          <ExternalLink size={12} />
-        </a>
-      )}
-    </div>
+    <button
+      disabled
+      title="แนบไฟล์ (ยังไม่เปิดใช้งาน)"
+      className="flex items-center justify-center w-6 h-6 rounded flex-shrink-0"
+      style={{ color: 'var(--text-3)', opacity: 0.35, cursor: 'not-allowed' }}
+    >
+      <Paperclip size={13} />
+    </button>
   )
 }
 
@@ -134,24 +163,29 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
+  const [salesFilter, setSalesFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [expandedJob, setExpandedJob] = useState<string | null>(null)
-  const [urlModal, setUrlModal] = useState<{ jobId: string; field: string; label: string; current: string } | null>(null)
   const [fetchError, setFetchError] = useState('')
+  const [salesList, setSalesList] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
     setFetchError('')
-    const [{ data: jobsData, error: e1 }, { data: paymentsData }, { data: projData }] = await Promise.all([
+    const [{ data: jobsData, error: e1 }, { data: paymentsData }, { data: projData }, { data: salesData }] = await Promise.all([
       supabase.from('jobs').select(`
-        id, customer_name, room_no, project_id, order_date,
+        id, customer_name, room_no, project_id, sales_id, order_date, working_status,
         quotation1_url, quotation2_url, id_card_url, sale_slip_url, sale_receipt_url,
         delivery_doc_url, satisfaction_url,
-        projects:project_id(id, name)
+        projects:project_id(id, name),
+        sales:users!jobs_sales_id_fkey(id, name),
+        customers(status)
       `).not('working_status', 'eq', 'ยกเลิก').order('customer_name'),
       supabase.from('payments').select('job_id, id, installment_no, installment_name, status, slip_url, receipt_url').order('installment_no'),
       supabase.from('projects').select('id, name').order('name'),
+      supabase.from('users').select('id, name').eq('role', 'sales').order('name'),
     ])
 
     if (e1) { setFetchError(e1.message); setLoading(false); return }
@@ -163,51 +197,60 @@ export default function DocumentsPage() {
 
     setJobs((jobsData || []).map((j: any) => ({
       ...j,
-      projectName: (j.projects as any)?.name || '—',
+      projectName: j.projects?.name || '—',
+      salesName: j.sales?.name || '—',
+      customerStatus: j.customers?.status || '',
       payments: payMap.get(j.id) || [],
     })))
     setProjects(projData || [])
+    setSalesList(salesData || [])
     setLoading(false)
   }
 
-  async function saveUrl(jobId: string, field: string, url: string) {
+  async function toggleDoc(jobId: string, field: string, currentValue: string | null) {
+    const newValue = currentValue ? null : 'checked'
     if (field.startsWith('payment:')) {
-      // payment slip/receipt: field = "payment:paymentId:slip_url" or "payment:paymentId:receipt_url"
       const [, payId, col] = field.split(':')
-      await supabase.from('payments').update({ [col]: url || null }).eq('id', payId)
+      await supabase.from('payments').update({ [col]: newValue }).eq('id', payId)
     } else {
-      await supabase.from('jobs').update({ [field]: url || null }).eq('id', jobId)
+      await supabase.from('jobs').update({ [field]: newValue }).eq('id', jobId)
     }
     await load()
   }
+
+  const STATUS_OPTIONS = [
+    { value: '', label: 'ทุกสถานะ' },
+    { value: 'รับงาน', label: 'รับงาน' },
+    { value: 'กำลังดำเนินการ', label: 'กำลังดำเนินการ' },
+    { value: 'รอส่งมอบ', label: 'รอส่งมอบ' },
+    { value: 'ส่งมอบแล้ว', label: 'ส่งมอบแล้ว' },
+  ]
 
   const filtered = jobs.filter(j => {
     const q = search.toLowerCase()
     const matchSearch = !q || j.customer_name?.toLowerCase().includes(q) || j.room_no?.toLowerCase().includes(q)
     const matchProject = !projectFilter || j.project_id === projectFilter
-    return matchSearch && matchProject
+    const matchSales = !salesFilter || j.sales_id === salesFilter
+    const matchStatus = !statusFilter || j.working_status === statusFilter
+    return matchSearch && matchProject && matchSales && matchStatus
   })
 
   function getDocComplete(job: Job): { done: number; total: number } {
     let done = 0, total = 0
-    // sale docs
     const saleFields: (keyof Job)[] = ['quotation1_url', 'quotation2_url', 'id_card_url', 'sale_slip_url', 'sale_receipt_url']
-    for (const f of saleFields) { total++; if (job[f]) done++ }
-    // payment docs
+    for (const f of saleFields) {
+      total++
+      if (effectiveChecked(job, 'sale', job[f] as string | null)) done++
+    }
     for (const p of job.payments) {
       total += 2
-      if (p.slip_url) done++
-      if (p.receipt_url) done++
+      if (isAutoCheckedPaymentDoc(p) || !!p.slip_url) done++
+      if (isAutoCheckedPaymentDoc(p) || !!p.receipt_url) done++
     }
-    // delivery docs
     total += 2
-    if (job.delivery_doc_url) done++
-    if (job.satisfaction_url) done++
+    if (effectiveChecked(job, 'delivery', job.delivery_doc_url)) done++
+    if (effectiveChecked(job, 'delivery', job.satisfaction_url)) done++
     return { done, total }
-  }
-
-  function openUrlModal(jobId: string, field: string, label: string, current: string | null) {
-    setUrlModal({ jobId, field, label, current: current || '' })
   }
 
   return (
@@ -215,12 +258,16 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>เอกสารลูกค้า</h1>
-        <p className="text-sm" style={{ color: 'var(--text-3)' }}>ตรวจสอบและจัดการเอกสารทุกห้องลูกค้า</p>
+        <p className="text-sm" style={{ color: 'var(--text-3)' }}>
+          ตรวจสอบและจัดการเอกสารทุกห้องลูกค้า ·
+          <span className="ml-1" style={{ color: 'rgba(52,211,153,0.5)' }}>✓ จาง</span> = ติ๊กอัตโนมัติจากสถานะ ·
+          <span className="ml-1"><Paperclip size={11} className="inline" style={{ opacity: 0.35 }} /></span> = แนบไฟล์ (เร็วๆ นี้)
+        </p>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row gap-3 mb-5 flex-wrap">
+        <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
@@ -233,6 +280,17 @@ export default function DocumentsPage() {
           options={[{ value: '', label: 'ทุกโครงการ' }, ...[...projects].sort((a, b) => a.name.localeCompare(b.name)).map(p => ({ value: p.id, label: p.name }))]}
           placeholder="ทุกโครงการ"
         />
+        <SearchableSelect
+          value={salesFilter}
+          onChange={v => setSalesFilter(v)}
+          options={[{ value: '', label: 'ทุกเซลล์' }, ...salesList.map(s => ({ value: s.id, label: s.name }))]}
+          placeholder="ทุกเซลล์"
+        />
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
+          {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
       </div>
 
       {loading && <div className="flex justify-center py-16"><PageSpinner /></div>}
@@ -276,7 +334,6 @@ export default function DocumentsPage() {
                   onClick={() => setExpandedJob(isExpanded ? null : job.id)}
                   className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-black/5 transition-colors"
                 >
-                  {/* Progress circle */}
                   <div className="relative flex-shrink-0 w-10 h-10">
                     <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                       <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" style={{ color: 'var(--divider)' }} />
@@ -289,10 +346,13 @@ export default function DocumentsPage() {
 
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-1)' }}>{job.customer_name}</p>
-                    <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{job.room_no} · {job.projectName}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>{job.room_no} · {job.projectName} · {job.salesName}</p>
                   </div>
 
                   <div className="flex items-center gap-3 flex-shrink-0">
+                    {job.working_status === 'ส่งมอบแล้ว' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399' }}>โอนแล้ว</span>
+                    )}
                     <span className={`text-xs font-semibold ${allDone ? 'text-emerald-400' : 'text-amber-400'}`}>
                       {done}/{total}
                     </span>
@@ -310,62 +370,52 @@ export default function DocumentsPage() {
                           {cat.key !== 'payment' ? (
                             cat.docs.map(doc => {
                               const urlKey = doc.urlField as keyof Job
-                              const currentUrl = job[urlKey] as string | null
+                              const rawVal = job[urlKey] as string | null
+                              const auto = cat.key === 'sale'
+                                ? isAutoCheckedSaleDoc(job)
+                                : isAutoCheckedDeliveryDoc(job)
+                              const checked = auto || !!rawVal
                               return (
-                                <div key={doc.key} className="flex items-center justify-between gap-3">
-                                  <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{doc.label}</span>
-                                  <DocBadge
-                                    hasUrl={!!currentUrl}
-                                    url={currentUrl}
-                                    onClick={() => openUrlModal(job.id, doc.urlField as string, doc.label, currentUrl)}
-                                  />
-                                  <button
-                                    onClick={() => openUrlModal(job.id, doc.urlField as string, doc.label, currentUrl)}
-                                    className="text-xs px-2 py-1 rounded-lg flex items-center gap-1"
-                                    style={{ color: 'var(--text-3)', background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-                                  >
-                                    <Plus size={10} />{currentUrl ? 'แก้ไข' : 'เพิ่ม'}
-                                  </button>
+                                <div key={doc.key} className="flex items-center gap-3">
+                                  <DocCheckbox checked={checked} auto={auto && !rawVal} onClick={() => toggleDoc(job.id, doc.urlField as string, rawVal)} />
+                                  <span className="text-sm flex-1" style={{ color: checked ? 'var(--text-1)' : 'var(--text-2)' }}>{doc.label}</span>
+                                  <AttachButton />
                                 </div>
                               )
                             })
                           ) : (
-                            // Payment installments
                             job.payments.length === 0 ? (
                               <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังไม่มีงวดชำระ</p>
                             ) : (
-                              job.payments.map(pay => (
-                                <div key={pay.id} className="space-y-2">
-                                  <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
-                                    งวด {pay.installment_no}: {pay.installment_name}
-                                    <span className={`ml-2 text-[10px] ${pay.status === 'paid' ? 'text-emerald-400' : ''}`} style={pay.status !== 'paid' ? { color: 'var(--text-3)' } : undefined}>
-                                      ({pay.status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'})
-                                    </span>
-                                  </p>
-                                  <div className="pl-3 space-y-2">
-                                    {[
-                                      { label: 'สลิปโอนเงิน', col: 'slip_url', url: pay.slip_url },
-                                      { label: 'ใบเสร็จรับเงิน', col: 'receipt_url', url: pay.receipt_url },
-                                    ].map(d => (
-                                      <div key={d.col} className="flex items-center justify-between gap-3">
-                                        <span className="text-xs flex-1" style={{ color: 'var(--text-3)' }}>{d.label}</span>
-                                        <DocBadge
-                                          hasUrl={!!d.url}
-                                          url={d.url}
-                                          onClick={() => openUrlModal(job.id, `payment:${pay.id}:${d.col}`, `${d.label} (งวด ${pay.installment_no})`, d.url)}
-                                        />
-                                        <button
-                                          onClick={() => openUrlModal(job.id, `payment:${pay.id}:${d.col}`, `${d.label} (งวด ${pay.installment_no})`, d.url)}
-                                          className="text-xs px-2 py-1 rounded-lg flex items-center gap-1"
-                                          style={{ color: 'var(--text-3)', background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-                                        >
-                                          <Plus size={10} />{d.url ? 'แก้ไข' : 'เพิ่ม'}
-                                        </button>
-                                      </div>
-                                    ))}
+                              job.payments.map(pay => {
+                                const autoPayment = isAutoCheckedPaymentDoc(pay)
+                                return (
+                                  <div key={pay.id} className="space-y-2">
+                                    <p className="text-xs font-medium" style={{ color: 'var(--text-2)' }}>
+                                      งวด {pay.installment_no}: {pay.installment_name}
+                                      <span className={`ml-2 text-[10px] ${pay.status === 'paid' ? 'text-emerald-400' : ''}`}
+                                        style={pay.status !== 'paid' ? { color: 'var(--text-3)' } : undefined}>
+                                        ({pay.status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'})
+                                      </span>
+                                    </p>
+                                    <div className="pl-3 space-y-2">
+                                      {[
+                                        { label: 'สลิปโอนเงิน', col: 'slip_url', url: pay.slip_url },
+                                        { label: 'ใบเสร็จรับเงิน', col: 'receipt_url', url: pay.receipt_url },
+                                      ].map(d => {
+                                        const checked = autoPayment || !!d.url
+                                        return (
+                                          <div key={d.col} className="flex items-center gap-3">
+                                            <DocCheckbox checked={checked} auto={autoPayment && !d.url} onClick={() => toggleDoc(job.id, `payment:${pay.id}:${d.col}`, d.url)} />
+                                            <span className="text-xs flex-1" style={{ color: checked ? 'var(--text-1)' : 'var(--text-3)' }}>{d.label}</span>
+                                            <AttachButton />
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
                                   </div>
-                                </div>
-                              ))
+                                )
+                              })
                             )
                           )}
                         </div>
@@ -377,17 +427,6 @@ export default function DocumentsPage() {
             )
           })}
         </div>
-      )}
-
-      {/* URL Modal */}
-      {urlModal && (
-        <UrlModal
-          open
-          label={urlModal.label}
-          initialUrl={urlModal.current}
-          onSave={(url) => saveUrl(urlModal.jobId, urlModal.field, url)}
-          onClose={() => setUrlModal(null)}
-        />
       )}
     </div>
   )

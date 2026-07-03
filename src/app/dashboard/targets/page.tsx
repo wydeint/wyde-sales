@@ -21,7 +21,7 @@ interface SalesTarget {
   users?: { name: string }; projects?: { name: string }
 }
 
-interface User { id: string; name: string }
+interface User { id: string; name: string; manager_id?: string }
 interface Project { id: string; name: string }
 
 const MONTHS = [
@@ -38,7 +38,7 @@ const thisMonth = new Date().getMonth() + 1
 const thisQ = Math.floor((thisMonth - 1) / 3) + 1
 
 type ViewPeriod = 'month' | 'quarter' | 'year'
-type TabView = 'org' | 'sales'
+type TabView = 'org' | 'sales' | 'team'
 
 function getViewMonths(p: ViewPeriod): number[] {
   if (p === 'month') return [thisMonth]
@@ -55,6 +55,21 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
     <div className="w-full h-1.5 rounded-full bg-white/10 mt-1">
       <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${p}%`, background: color }} />
     </div>
+  )
+}
+
+function Sparkline({ points, color = '#6366f1', width = 64, height = 24 }: { points: number[]; color?: string; width?: number; height?: number }) {
+  if (points.length < 2) return null
+  const max = Math.max(...points, 1)
+  const step = width / (points.length - 1)
+  const pts = points.map((v, i) => `${i * step},${height - (v / max) * (height - 2) - 1}`)
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+      <polyline points={pts.join(' ')} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((v, i) => (
+        <circle key={i} cx={i * step} cy={height - (v / max) * (height - 2) - 1} r={2} fill={color} />
+      ))}
+    </svg>
   )
 }
 
@@ -85,6 +100,7 @@ export default function TargetsPage() {
   const [users, setUsers] = useState<User[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [salesModalOpen, setSalesModalOpen] = useState(false)
+  const [salesModalStep, setSalesModalStep] = useState<1 | 2>(1)
   const [editingSales, setEditingSales] = useState<SalesTarget | null>(null)
   const [salesForm, setSalesForm] = useState(emptySalesForm)
   const [salesSaving, setSalesSaving] = useState(false)
@@ -103,17 +119,25 @@ export default function TargetsPage() {
       { data: st, error: e2 },
       { data: u, error: e3 },
       { data: p },
-      { data: jobs },
-      { data: hovs },
+      { data: saleJobs },
+      { data: delivJobs },
     ] = await Promise.all([
       supabase.from('org_targets').select('*').eq('year', filterYear).order('month'),
       supabase.from('sales_targets').select('*, users(name), projects(name)').eq('year', filterYear).order('month'),
-      supabase.from('users').select('id,name').eq('active', true).order('name'),
+      supabase.from('users').select('id,name,manager_id').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
       supabase.from('projects').select('id,name').order('name'),
+      // ยอดขาย: order_date ในปีนั้น
       supabase.from('jobs').select('sales_id, revenue_ex_vat, order_date')
-        .not('order_date', 'is', null).gte('order_date', `${filterYear}-01-01`).lte('order_date', `${filterYear}-12-31`),
-      supabase.from('handovers').select('delivery_date, jobs(sales_id, revenue_ex_vat)')
-        .not('delivery_date', 'is', null).gte('delivery_date', `${filterYear}-01-01`).lte('delivery_date', `${filterYear}-12-31`),
+        .not('order_date', 'is', null)
+        .not('working_status', 'eq', 'ยกเลิก')
+        .gte('order_date', `${filterYear}-01-01`)
+        .lte('order_date', `${filterYear}-12-31`),
+      // ยอดส่งมอบ: actual_deliver_date ในปีนั้น (ใช้ jobs โดยตรง ไม่ใช่ handovers)
+      supabase.from('jobs').select('sales_id, revenue_ex_vat, actual_deliver_date')
+        .eq('working_status', 'ส่งมอบแล้ว')
+        .not('actual_deliver_date', 'is', null)
+        .gte('actual_deliver_date', `${filterYear}-01-01`)
+        .lte('actual_deliver_date', `${filterYear}-12-31`),
     ])
 
     if (e1 && !e1.message.includes('does not exist')) { setFetchError(e1.message); setLoading(false); return }
@@ -124,10 +148,10 @@ export default function TargetsPage() {
     setUsers(u || [])
     setProjects(p || [])
 
-    // Build by-user monthly actuals
+    // ยอดขาย by user & month
     const salesByUser: Record<string, Record<number, number>> = {}
     const salesByMonth: Record<number, number> = {}
-    for (const j of (jobs || [])) {
+    for (const j of (saleJobs || [])) {
       if (!j.order_date) continue
       const m = parseInt(j.order_date.slice(5, 7))
       const val = j.revenue_ex_vat || 0
@@ -138,16 +162,18 @@ export default function TargetsPage() {
       }
     }
 
+    // ยอดส่งมอบ by user & month (จาก actual_deliver_date)
     const delivByUser: Record<string, Record<number, number>> = {}
     const delivByMonth: Record<number, number> = {}
-    for (const h of (hovs || [])) {
-      const job = (h as any).jobs
-      if (!job?.sales_id || !h.delivery_date) continue
-      const m = parseInt(h.delivery_date.slice(5, 7))
-      const val = job.revenue_ex_vat || 0
+    for (const j of (delivJobs || [])) {
+      if (!j.actual_deliver_date) continue
+      const m = parseInt((j.actual_deliver_date as string).slice(5, 7))
+      const val = j.revenue_ex_vat || 0
       delivByMonth[m] = (delivByMonth[m] || 0) + val
-      if (!delivByUser[job.sales_id]) delivByUser[job.sales_id] = {}
-      delivByUser[job.sales_id][m] = (delivByUser[job.sales_id][m] || 0) + val
+      if (j.sales_id) {
+        if (!delivByUser[j.sales_id]) delivByUser[j.sales_id] = {}
+        delivByUser[j.sales_id][m] = (delivByUser[j.sales_id][m] || 0) + val
+      }
     }
 
     setActualSalesByUser(salesByUser)
@@ -252,11 +278,12 @@ export default function TargetsPage() {
             </button>
           )}
           {tab === 'sales' && (
-            <button onClick={() => { setEditingSales(null); setSalesForm({ ...emptySalesForm, year: filterYear }); setSalesModalOpen(true) }}
+            <button onClick={() => { setEditingSales(null); setSalesForm({ ...emptySalesForm, year: filterYear }); setSalesModalStep(1); setSalesModalOpen(true) }}
               className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
+          {tab === 'team' && <div />}
         </div>
       </div>
 
@@ -273,6 +300,11 @@ export default function TargetsPage() {
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
             style={{ background: tab === 'sales' ? '#6366f1' : 'transparent', color: tab === 'sales' ? '#fff' : 'var(--text-2)' }}>
             <Users size={12} />เป้า Sales
+          </button>
+          <button onClick={() => setTab('team')}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+            style={{ background: tab === 'team' ? '#ec4899' : 'transparent', color: tab === 'team' ? '#fff' : 'var(--text-2)' }}>
+            <Users size={12} />ทีม Sales
           </button>
         </div>
 
@@ -471,6 +503,181 @@ export default function TargetsPage() {
             </div>
           )}
 
+          {/* ══ TEAM TAB ════════════════════════════════════ */}
+          {tab === 'team' && (() => {
+            const TEAM_COLORS = ['#6366f1', '#ec4899']
+            const managerIds = [...new Set(users.filter(u => u.manager_id).map(u => u.manager_id!))]
+            const teamData = managerIds.map((mgrId, idx) => {
+              const manager = users.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId }
+              const members = users.filter(u => u.manager_id === mgrId)
+              const memberIds = new Set(members.map(m => m.id))
+              const teamActualSales = members.reduce((s, u) => s + getUserActual(u.id, 'sales'), 0)
+              const teamActualDeliv = members.reduce((s, u) => s + getUserActual(u.id, 'deliv'), 0)
+              const teamTargetSales = filteredSales.filter(t => memberIds.has(t.user_id)).reduce((s, t) => s + (t.target_sales_value || 0), 0)
+              const teamTargetDeliv = filteredSales.filter(t => memberIds.has(t.user_id)).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
+              const color = TEAM_COLORS[idx % TEAM_COLORS.length]
+              return { manager, members, teamActualSales, teamActualDeliv, teamTargetSales, teamTargetDeliv, color }
+            })
+
+            return (
+              <div className="space-y-6">
+                {/* ── Side-by-side team comparison ─── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {teamData.map(team => (
+                    <div key={team.manager.id} className="rounded-xl p-5 space-y-4"
+                      style={{ background: 'var(--card-bg)', border: `1px solid ${team.color}40` }}>
+                      {/* Team header */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white"
+                          style={{ background: team.color }}>
+                          {team.manager.name[0]}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ทีม {team.manager.name}</p>
+                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{team.members.length} คน · {periodLabel}</p>
+                        </div>
+                      </div>
+
+                      {/* Team totals */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
+                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ยอดขายทีม</p>
+                          <p className="font-bold text-base" style={{ color: '#4ade80' }}>{f(team.teamActualSales)}</p>
+                          {team.teamTargetSales > 0 && <>
+                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(team.teamTargetSales)}</p>
+                            <ProgressBar value={team.teamActualSales} max={team.teamTargetSales} color="#4ade80" />
+                            <p className="text-[10px] mt-0.5 text-right" style={{ color: '#4ade80' }}>{pct(team.teamActualSales, team.teamTargetSales)}%</p>
+                          </>}
+                        </div>
+                        <div className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
+                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบทีม</p>
+                          <p className="font-bold text-base" style={{ color: '#60a5fa' }}>{f(team.teamActualDeliv)}</p>
+                          {team.teamTargetDeliv > 0 && <>
+                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(team.teamTargetDeliv)}</p>
+                            <ProgressBar value={team.teamActualDeliv} max={team.teamTargetDeliv} color="#60a5fa" />
+                            <p className="text-[10px] mt-0.5 text-right" style={{ color: '#60a5fa' }}>{pct(team.teamActualDeliv, team.teamTargetDeliv)}%</p>
+                          </>}
+                        </div>
+                      </div>
+
+                      {/* Member breakdown */}
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
+                        {team.members.map(u => {
+                          const actS = getUserActual(u.id, 'sales')
+                          const actD = getUserActual(u.id, 'deliv')
+                          const tgtS = filteredSales.filter(t => t.user_id === u.id).reduce((s, t) => s + (t.target_sales_value || 0), 0)
+                          const tgtD = filteredSales.filter(t => t.user_id === u.id).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
+                          return (
+                            <div key={u.id} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                                    style={{ background: team.color + '99' }}>{u.name[0]}</div>
+                                  <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{u.name}</span>
+                                </div>
+                                {tgtS > 0 && (
+                                  <span className="text-[10px] font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? '#4ade80' : 'var(--text-3)' }}>
+                                    {pct(actS, tgtS)}%
+                                  </span>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                <div>
+                                  <span style={{ color: 'var(--text-3)' }}>ขาย </span>
+                                  <span style={{ color: '#4ade80' }}>{f(actS)}</span>
+                                  {tgtS > 0 && <span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span>}
+                                  {tgtS > 0 && <ProgressBar value={actS} max={tgtS} color="#4ade80" />}
+                                </div>
+                                <div>
+                                  <span style={{ color: 'var(--text-3)' }}>ส่งมอบ </span>
+                                  <span style={{ color: '#60a5fa' }}>{f(actD)}</span>
+                                  {tgtD > 0 && <span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span>}
+                                  {tgtD > 0 && <ProgressBar value={actD} max={tgtD} color="#60a5fa" />}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── Cross-team comparison table ─── */}
+                {teamData.length >= 2 && (
+                  <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                    <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>เปรียบเทียบผลทีม ({periodLabel})</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                            <th className="text-left px-4 py-2 text-xs font-medium" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
+                            {teamData.map(t => (
+                              <th key={t.manager.id} colSpan={2} className="text-center px-4 py-2 text-xs font-semibold" style={{ color: t.color }}>
+                                ทีม {t.manager.name}
+                              </th>
+                            ))}
+                          </tr>
+                          <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                            <th className="text-left px-4 py-1.5 text-[10px]" style={{ color: 'var(--text-3)' }}></th>
+                            {teamData.map(t => (
+                              <>
+                                <th key={t.manager.id + 's'} className="text-right px-3 py-1.5 text-[10px]" style={{ color: 'var(--text-3)' }}>ยอดขาย</th>
+                                <th key={t.manager.id + 'd'} className="text-right px-3 py-1.5 text-[10px]" style={{ color: 'var(--text-3)' }}>ส่งมอบ</th>
+                              </>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* max members rows */}
+                          {Array.from({ length: Math.max(...teamData.map(t => t.members.length)) }, (_, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid var(--divider)' }}>
+                              <td className="px-4 py-2 text-xs" style={{ color: 'var(--text-3)' }}>#{i + 1}</td>
+                              {teamData.map(t => {
+                                const u = t.members[i]
+                                if (!u) return <><td key={t.manager.id + 's'} className="px-3 py-2" /><td key={t.manager.id + 'd'} className="px-3 py-2" /></>
+                                return (
+                                  <>
+                                    <td key={t.manager.id + 's'} className="px-3 py-2">
+                                      <p className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{u.name}</p>
+                                      <p className="text-[10px]" style={{ color: '#4ade80' }}>{f(getUserActual(u.id, 'sales'))}</p>
+                                    </td>
+                                    <td key={t.manager.id + 'd'} className="px-3 py-2 text-right">
+                                      <p className="text-[10px]" style={{ color: '#60a5fa' }}>{f(getUserActual(u.id, 'deliv'))}</p>
+                                    </td>
+                                  </>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                          {/* team total row */}
+                          <tr style={{ borderTop: '2px solid var(--divider)', background: 'var(--hover-bg)' }}>
+                            <td className="px-4 py-2 text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวมทีม</td>
+                            {teamData.map(t => (
+                              <>
+                                <td key={t.manager.id + 'ts'} className="px-3 py-2">
+                                  <p className="text-xs font-bold" style={{ color: '#4ade80' }}>{f(t.teamActualSales)}</p>
+                                  {t.teamTargetSales > 0 && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualSales, t.teamTargetSales)}%</p>}
+                                </td>
+                                <td key={t.manager.id + 'td'} className="px-3 py-2 text-right">
+                                  <p className="text-xs font-bold" style={{ color: '#60a5fa' }}>{f(t.teamActualDeliv)}</p>
+                                  {t.teamTargetDeliv > 0 && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualDeliv, t.teamTargetDeliv)}%</p>}
+                                </td>
+                              </>
+                            ))}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           {/* ══ SALES TARGETS TAB ═══════════════════════════ */}
           {tab === 'sales' && (
             <div className="space-y-4">
@@ -484,6 +691,12 @@ export default function TargetsPage() {
                   {grouped.map(t => {
                     const actS = getUserActual(t.user_id, 'sales')
                     const actD = getUserActual(t.user_id, 'deliv')
+                    // Sparkline: last 3 months actuals
+                    const sparkMonths = [thisMonth - 2, thisMonth - 1, thisMonth].map(m => m <= 0 ? m + 12 : m)
+                    const sparkSales = sparkMonths.map(m => (actualSalesByUser[t.user_id]?.[m] || 0))
+                    const sparkDeliv = sparkMonths.map(m => (actualDelivByUser[t.user_id]?.[m] || 0))
+                    const trend = sparkSales[2] > sparkSales[0] ? '↑' : sparkSales[2] < sparkSales[0] ? '↓' : '→'
+                    const trendColor = trend === '↑' ? '#4ade80' : trend === '↓' ? '#f87171' : 'var(--text-3)'
                     return (
                       <div key={t.user_id} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                         <div className="flex items-center justify-between mb-4">
@@ -501,7 +714,7 @@ export default function TargetsPage() {
                             if (r) {
                               setEditingSales(r)
                               setSalesForm({ user_id: r.user_id, project_id: r.project_id || '', year: r.year, month: r.month, target_calls: r.target_calls, target_visits: r.target_visits, target_leads: r.target_leads, target_bookings: r.target_bookings, target_booking_value: r.target_booking_value, target_closed: r.target_closed, target_sales_value: r.target_sales_value || 0, target_delivery_value: r.target_delivery_value || 0 })
-                              setSalesModalOpen(true)
+                              setSalesModalStep(1); setSalesModalOpen(true)
                             }
                           }} className="transition-colors p-1" style={{ color: 'var(--text-2)' }}
                             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
@@ -524,6 +737,28 @@ export default function TargetsPage() {
                             <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>
                             <ProgressBar value={actD} max={t.target_delivery_value} color="#60a5fa" />
                             <p className="text-blue-400 text-[10px] mt-0.5 text-right">{pct(actD, t.target_delivery_value)}%</p>
+                          </div>
+                        </div>
+
+                        {/* Trend sparkline */}
+                        <div className="rounded-lg p-3 flex items-center gap-4" style={{ background: 'var(--hover-bg)' }}>
+                          <div>
+                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>
+                              trend 3 เดือน <span style={{ color: trendColor }}>{trend}</span>
+                            </p>
+                            <Sparkline points={sparkSales} color="#4ade80" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
+                            <Sparkline points={sparkDeliv} color="#60a5fa" />
+                          </div>
+                          <div className="text-[10px] space-y-0.5 ml-auto">
+                            {sparkMonths.map((m, i) => (
+                              <div key={m} className="flex gap-2 justify-between" style={{ color: 'var(--text-3)' }}>
+                                <span>{MONTHS[m - 1]}</span>
+                                <span style={{ color: '#4ade80' }}>{sparkSales[i] > 0 ? `฿${(sparkSales[i] / 1e6).toFixed(1)}M` : '—'}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
 
@@ -570,35 +805,83 @@ export default function TargetsPage() {
         </div>
       </Modal>
 
-      {/* ── Sales Target Modal ────────────────────────── */}
+      {/* ── Sales Target Modal (2-step) ───────────────── */}
       <Modal open={salesModalOpen} onClose={() => setSalesModalOpen(false)} title={editingSales ? 'แก้ไขเป้าหมาย Sales' : 'ตั้งเป้าหมาย Sales'}>
-        <div className="grid grid-cols-2 gap-4">
-          <Select label="Sales *" value={salesForm.user_id} onChange={e => setSalesForm({ ...salesForm, user_id: e.target.value })} options={userOptions} />
-          <Select label="โครงการ" value={salesForm.project_id} onChange={e => setSalesForm({ ...salesForm, project_id: e.target.value })} options={projOptions} />
-          <Select label="ปี" value={String(salesForm.year)} onChange={e => setSalesForm({ ...salesForm, year: Number(e.target.value) })} options={yearOptions} />
-          <Select label="เดือน" value={String(salesForm.month)} onChange={e => setSalesForm({ ...salesForm, month: Number(e.target.value) })} options={monthOptions} />
-          <div className="col-span-2 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
-            <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>เป้ายอดเงิน</p>
-          </div>
-          <Input label="เป้ายอดขาย (บาท)" type="number" value={salesForm.target_sales_value} onChange={e => setSalesForm({ ...salesForm, target_sales_value: Number(e.target.value) })} />
-          <Input label="เป้าส่งมอบ (บาท)" type="number" value={salesForm.target_delivery_value} onChange={e => setSalesForm({ ...salesForm, target_delivery_value: Number(e.target.value) })} />
-          <Input label="เป้า Booking Value (บาท)" type="number" value={salesForm.target_booking_value} onChange={e => setSalesForm({ ...salesForm, target_booking_value: Number(e.target.value) })} />
-          <div className="col-span-2 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
-            <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>เป้ากิจกรรม</p>
-          </div>
-          <Input label="เป้าโทร (ครั้ง)" type="number" value={salesForm.target_calls} onChange={e => setSalesForm({ ...salesForm, target_calls: Number(e.target.value) })} />
-          <Input label="เป้าเยี่ยม (ครั้ง)" type="number" value={salesForm.target_visits} onChange={e => setSalesForm({ ...salesForm, target_visits: Number(e.target.value) })} />
-          <Input label="เป้า Lead ใหม่" type="number" value={salesForm.target_leads} onChange={e => setSalesForm({ ...salesForm, target_leads: Number(e.target.value) })} />
-          <Input label="เป้า Booking" type="number" value={salesForm.target_bookings} onChange={e => setSalesForm({ ...salesForm, target_booking_value: Number(e.target.value) })} />
-          <Input label="เป้าปิดการขาย" type="number" value={salesForm.target_closed} onChange={e => setSalesForm({ ...salesForm, target_closed: Number(e.target.value) })} />
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-5">
+          {[1, 2].map(s => (
+            <div key={s} className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{ background: salesModalStep >= s ? '#6366f1' : 'var(--hover-bg)', color: salesModalStep >= s ? '#fff' : 'var(--text-3)' }}>
+                {s}
+              </div>
+              <span className="text-xs" style={{ color: salesModalStep === s ? 'var(--text-1)' : 'var(--text-3)' }}>
+                {s === 1 ? 'ยอดเงิน' : 'กิจกรรม'}
+              </span>
+              {s < 2 && <div className="w-8 h-px" style={{ background: 'var(--divider)' }} />}
+            </div>
+          ))}
         </div>
-        <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setSalesModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
+
+        {salesModalStep === 1 && (
+          <div className="grid grid-cols-2 gap-4">
+            <Select label="Sales *" value={salesForm.user_id} onChange={e => setSalesForm({ ...salesForm, user_id: e.target.value })} options={userOptions} />
+            <Select label="โครงการ" value={salesForm.project_id} onChange={e => setSalesForm({ ...salesForm, project_id: e.target.value })} options={projOptions} />
+            <Select label="ปี" value={String(salesForm.year)} onChange={e => setSalesForm({ ...salesForm, year: Number(e.target.value) })} options={yearOptions} />
+            <Select label="เดือน" value={String(salesForm.month)} onChange={e => setSalesForm({ ...salesForm, month: Number(e.target.value) })} options={monthOptions} />
+            <Input label="เป้ายอดขาย (บาท)" type="number" value={salesForm.target_sales_value} onChange={e => setSalesForm({ ...salesForm, target_sales_value: Number(e.target.value) })} />
+            <Input label="เป้าส่งมอบ (บาท)" type="number" value={salesForm.target_delivery_value} onChange={e => setSalesForm({ ...salesForm, target_delivery_value: Number(e.target.value) })} />
+            <div className="col-span-2">
+              <Input label="เป้า Booking Value (บาท)" type="number" value={salesForm.target_booking_value} onChange={e => setSalesForm({ ...salesForm, target_booking_value: Number(e.target.value) })} />
+            </div>
+            {/* Copy from prev month */}
+            {(() => {
+              const prevMonth = salesForm.month === 1 ? 12 : salesForm.month - 1
+              const prevYear = salesForm.month === 1 ? salesForm.year - 1 : salesForm.year
+              const prevTarget = salesTargets.find(t => t.user_id === salesForm.user_id && t.month === prevMonth && t.year === prevYear)
+              if (!prevTarget || !salesForm.user_id) return null
+              return (
+                <div className="col-span-2">
+                  <button onClick={() => setSalesForm(f => ({ ...f, target_sales_value: prevTarget.target_sales_value || 0, target_delivery_value: prevTarget.target_delivery_value || 0, target_booking_value: prevTarget.target_booking_value || 0, target_calls: prevTarget.target_calls, target_visits: prevTarget.target_visits, target_leads: prevTarget.target_leads, target_bookings: prevTarget.target_bookings, target_closed: prevTarget.target_closed }))}
+                    className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
+                    style={{ color: '#6366f1', borderColor: '#6366f1', background: 'transparent' }}>
+                    ใช้เป้าเดิม ({MONTHS[prevMonth - 1]})
+                  </button>
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {salesModalStep === 2 && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="เป้าโทร (ครั้ง)" type="number" value={salesForm.target_calls} onChange={e => setSalesForm({ ...salesForm, target_calls: Number(e.target.value) })} />
+            <Input label="เป้าเยี่ยม (ครั้ง)" type="number" value={salesForm.target_visits} onChange={e => setSalesForm({ ...salesForm, target_visits: Number(e.target.value) })} />
+            <Input label="เป้า Lead ใหม่" type="number" value={salesForm.target_leads} onChange={e => setSalesForm({ ...salesForm, target_leads: Number(e.target.value) })} />
+            <Input label="เป้า Booking" type="number" value={salesForm.target_bookings} onChange={e => setSalesForm({ ...salesForm, target_bookings: Number(e.target.value) })} />
+            <Input label="เป้าปิดการขาย" type="number" value={salesForm.target_closed} onChange={e => setSalesForm({ ...salesForm, target_closed: Number(e.target.value) })} />
+          </div>
+        )}
+
+        <div className="flex justify-between gap-3 mt-5">
+          <button onClick={() => salesModalStep === 1 ? setSalesModalOpen(false) : setSalesModalStep(1)}
+            className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
-          <button onClick={saveSales} disabled={salesSaving || !salesForm.user_id} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
-            {salesSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>
+            {salesModalStep === 1 ? 'ยกเลิก' : '← ย้อนกลับ'}
           </button>
+          {salesModalStep === 1 ? (
+            <button onClick={() => setSalesModalStep(2)} disabled={!salesForm.user_id}
+              className="px-4 py-2 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+              style={{ background: '#6366f1' }}>
+              ถัดไป →
+            </button>
+          ) : (
+            <button onClick={saveSales} disabled={salesSaving}
+              className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+              {salesSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+            </button>
+          )}
         </div>
       </Modal>
     </div>

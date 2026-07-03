@@ -10,7 +10,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 // ─────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────
-const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'B2B', 'อื่นๆ']
+const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PACKAGE_TYPES = [
   'Starter set (S)', 'Combo (S)', 'Investor Pro (M)', 'Medium (M)',
   'Premium (L)', 'Fully design (L)', 'Design & Turnkey',
@@ -129,6 +129,8 @@ export default function JobsPage() {
   const [filterProject, setFilterProject] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterSales, setFilterSales] = useState('')
+  const [filterWorkType, setFilterWorkType] = useState('')
+  const [filterCustomerType, setFilterCustomerType] = useState('')
 
   // Modal
   const [open, setOpen] = useState(false)
@@ -166,7 +168,7 @@ export default function JobsPage() {
     ] = await Promise.all([
       supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
-      supabase.from('users').select('id, name').eq('active', true).order('name'),
+      supabase.from('users').select('id, name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
     ])
@@ -278,7 +280,9 @@ export default function JobsPage() {
     const matchProj = !filterProject || j.project_id === filterProject
     const matchStatus = !filterStatus || j.working_status === filterStatus
     const matchSales = !filterSales || j.sales_id === filterSales
-    return matchSearch && matchProj && matchStatus && matchSales
+    const matchWorkType = !filterWorkType || j.work_type === filterWorkType
+    const matchCustomerType = !filterCustomerType || j.customer_type === filterCustomerType
+    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType
   })
 
   // ─── Project Summary ───
@@ -329,10 +333,14 @@ export default function JobsPage() {
   }
 
   const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-    'ดำเนินการ':   { label: 'ดำเนินการอยู่', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24' },
-    'รอเอกสาร':   { label: 'รอเอกสาร',      color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   dot: '#60a5fa' },
-    'ส่งมอบแล้ว': { label: 'ส่งมอบแล้ว',    color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   dot: '#4ade80' },
+    'ดำเนินการ':        { label: 'ดำเนินการอยู่',   color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24' },
+    'กำลังดำเนินการ':  { label: 'กำลังดำเนินการ',   color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24' },
+    'รับงาน':           { label: 'รับงาน',            color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24' },
+    'รอเอกสาร':        { label: 'รอเอกสาร',          color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   dot: '#60a5fa' },
+    'รอส่งมอบ':        { label: 'รอส่งมอบ',           color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', dot: '#a78bfa' },
+    'ส่งมอบแล้ว':      { label: 'ส่งมอบแล้ว',         color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  dot: '#4ade80' },
   }
+  const DEFAULT_STATUS_CFG = { label: 'ดำเนินการ', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', dot: '#fbbf24' }
 
   function toggleProj(id: string) {
     setExpandedProj(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -394,18 +402,39 @@ export default function JobsPage() {
       </div>
 
       {/* Summary KPI */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Revenue (Ex.VAT)', value: f(totalRevenue), color: '#4ade80' },
-          { label: 'Cost รวม', value: f(totalCost), color: '#f87171' },
-          { label: 'Commission รวม', value: f(totalCommission), color: '#fbbf24' },
-        ].map(k => (
-          <div key={k.label} className="glass-card p-4">
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
-            <p className="text-lg font-bold" style={{ color: k.color }}>{k.value}</p>
+      {(() => {
+        const profit = totalRevenue - totalCost
+        const gpPctAvg = totalRevenue > 0 ? (profit / totalRevenue * 100) : null
+        const gpColor = gpPctAvg === null ? 'var(--text-3)' : gpPctAvg >= 20 ? '#4ade80' : gpPctAvg >= 10 ? '#fbbf24' : '#f87171'
+        const overdueCount = filtered.filter(j => {
+          if (j.working_status === 'ส่งมอบแล้ว' || j.working_status === 'ยกเลิก') return false
+          if (!j.expected_finish_date) return false
+          return j.expected_finish_date < new Date().toISOString().slice(0, 10)
+        }).length
+        return (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="glass-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
+              <p className="text-lg font-bold" style={{ color: '#4ade80' }}>{f(totalRevenue)}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
+            </div>
+            <div className="glass-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% เฉลี่ย</p>
+              <p className="text-lg font-bold" style={{ color: gpColor }}>
+                {gpPctAvg !== null ? gpPctAvg.toFixed(1) + '%' : '—'}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>กำไร {f(profit)}</p>
+            </div>
+            <div className="glass-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
+              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? '#f87171' : '#4ade80' }}>
+                {overdueCount} งาน
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
+            </div>
           </div>
-        ))}
-      </div>
+        )
+      })()}
 
       {/* Filters */}
       <div className="glass-card p-4 flex flex-wrap gap-3">
@@ -433,6 +462,19 @@ export default function JobsPage() {
           <option value="">ทุก Sales</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
+        <select value={filterCustomerType} onChange={e => setFilterCustomerType(e.target.value)}
+          className="rounded-xl px-3 py-2 text-sm outline-none"
+          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          <option value="">B2C + B2B</option>
+          <option value="B2C">B2C</option>
+          <option value="B2B">B2B</option>
+        </select>
+        <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
+          className="rounded-xl px-3 py-2 text-sm outline-none"
+          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          <option value="">ทุกประเภทงาน</option>
+          {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
       </div>
 
       {/* ─── Project Summary View ─── */}
@@ -450,7 +492,12 @@ export default function JobsPage() {
               byStatus[s].push(j)
             }
             const totalRev = proj.jobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+            const totalCost = proj.jobs.reduce((s, j) => s + (j.cost || 0), 0)
+            const gp = totalRev > 0 ? ((totalRev - totalCost) / totalRev * 100) : null
+            const revInProgress = (byStatus['ดำเนินการ'] || []).concat(byStatus['รอเอกสาร'] || []).reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+            const revDelivered = (byStatus['ส่งมอบแล้ว'] || []).reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
             const statuses = ['ดำเนินการ', 'รอเอกสาร', 'ส่งมอบแล้ว']
+            const today = new Date(); today.setHours(0,0,0,0)
 
             return (
               <div key={proj.projectId} className="glass-card overflow-hidden">
@@ -460,22 +507,41 @@ export default function JobsPage() {
                   style={{ background: isOpen ? 'var(--hover-bg)' : 'transparent' }}
                   onClick={() => toggleProj(proj.projectId)}
                 >
-                  <div className="flex items-center gap-3">
-                    {isOpen ? <ChevronDown size={16} style={{ color: 'var(--accent)' }} /> : <ChevronRight size={16} style={{ color: 'var(--text-3)' }} />}
-                    <div>
-                      <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{proj.projectName}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Revenue: <span style={{ color: '#4ade80' }}>{f(totalRev)}</span></p>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {isOpen ? <ChevronDown size={16} style={{ color: 'var(--accent)', flexShrink: 0 }} /> : <ChevronRight size={16} style={{ color: 'var(--text-3)', flexShrink: 0 }} />}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{proj.projectName}</p>
+                        {gp !== null && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: gp >= 20 ? 'rgba(74,222,128,0.15)' : gp >= 10 ? 'rgba(251,191,36,0.15)' : 'rgba(248,113,113,0.15)', color: gp >= 20 ? '#4ade80' : gp >= 10 ? '#fbbf24' : '#f87171' }}>
+                            GP {gp.toFixed(1)}%
+                          </span>
+                        )}
+                      </div>
+                      {/* Revenue stacked bar */}
+                      {totalRev > 0 && (
+                        <div className="mt-2 max-w-xs">
+                          <div className="flex rounded-full overflow-hidden h-1.5 w-full" style={{ background: 'var(--divider)' }}>
+                            <div style={{ width: `${(revDelivered / totalRev) * 100}%`, background: '#4ade80', transition: 'width 0.4s' }} />
+                            <div style={{ width: `${(revInProgress / totalRev) * 100}%`, background: '#fbbf24', transition: 'width 0.4s' }} />
+                          </div>
+                          <div className="flex gap-3 mt-1">
+                            <span className="text-[10px]" style={{ color: '#4ade80' }}>ส่งมอบแล้ว {f(revDelivered)}</span>
+                            {revInProgress > 0 && <span className="text-[10px]" style={{ color: '#fbbf24' }}>กำลังทำ {f(revInProgress)}</span>}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* Status chips summary */}
-                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                  <div className="flex items-center gap-2 flex-wrap justify-end flex-shrink-0 ml-3">
                     <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
                       ทั้งหมด {proj.jobs.length}
                     </span>
                     {statuses.map(s => {
                       const cnt = byStatus[s]?.length || 0
                       if (!cnt) return null
-                      const cfg = STATUS_CFG[s]
+                      const cfg = STATUS_CFG[s] || DEFAULT_STATUS_CFG
                       return (
                         <span key={s} className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
                           {cfg.label} {cnt}
@@ -488,86 +554,85 @@ export default function JobsPage() {
                 {/* Expanded: per-status name lists */}
                 {isOpen && (
                   <div style={{ borderTop: '1px solid var(--divider)' }}>
-                    {/* All-clients table */}
-                    <div className="px-5 pt-4 pb-2">
-                      <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>รายชื่อลูกค้าทั้งหมด ({proj.jobs.length} ราย)</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-                        {statuses.flatMap(s => (byStatus[s] || []).map(j => {
-                          const cfg = STATUS_CFG[s]
-                          const name = (j.condo_leads as any)?.customer_name || j.customer_name || '—'
-                          return (
-                            <div key={j.id}
-                              onClick={() => canWrite && openEdit(j)}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
-                              style={{ background: 'var(--hover-bg)' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = cfg.bg)}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
-                            >
-                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{name}</p>
-                                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'} · {j.id}</p>
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
-                                {j.revenue_ex_vat ? <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{f(j.revenue_ex_vat)}</p> : null}
+                    {/* Active jobs grid */}
+                    {(() => {
+                      const deliveredJobs = byStatus['ส่งมอบแล้ว'] || []
+                      const activeJobs = proj.jobs.filter(j => j.working_status !== 'ส่งมอบแล้ว' && j.working_status !== 'ยกเลิก')
+                      const showDeliveredKey = `${proj.projectId}:delivered-collapse`
+                      const showDelivered = expandedStatus.has(showDeliveredKey)
+
+                      const renderJobCard = (j: any, s: string) => {
+                        const cfg = STATUS_CFG[s] || DEFAULT_STATUS_CFG || STATUS_CFG['ดำเนินการ']
+                        const name = (j.condo_leads as any)?.customer_name || j.customer_name || '—'
+                        const isInProgress = s !== 'ส่งมอบแล้ว' && s !== 'ยกเลิก'
+                        const dueDate = isInProgress && j.expected_finish_date ? new Date(j.expected_finish_date) : null
+                        const daysLeft = dueDate ? Math.ceil((dueDate.getTime() - today.getTime()) / 86400000) : null
+                        const isOverdue = daysLeft !== null && daysLeft < 0
+                        const isDueSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7
+                        return (
+                          <div key={j.id}
+                            onClick={() => canWrite && openEdit(j)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
+                            style={{ background: isOverdue ? 'rgba(248,113,113,0.08)' : 'var(--hover-bg)', border: isOverdue ? '1px solid rgba(248,113,113,0.25)' : '1px solid transparent' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = cfg.bg)}
+                            onMouseLeave={e => (e.currentTarget.style.background = isOverdue ? 'rgba(248,113,113,0.08)' : 'var(--hover-bg)')}
+                          >
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate" style={{ color: 'var(--text-1)' }}>{name}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'}</p>
+                                {dueDate && (
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{
+                                    background: isOverdue ? 'rgba(248,113,113,0.2)' : isDueSoon ? 'rgba(251,191,36,0.2)' : 'var(--hover-bg)',
+                                    color: isOverdue ? '#f87171' : isDueSoon ? '#fbbf24' : 'var(--text-3)',
+                                  }}>
+                                    {isOverdue ? `เกิน ${Math.abs(daysLeft!)} วัน` : daysLeft === 0 ? 'วันนี้' : `อีก ${daysLeft} วัน`}
+                                  </span>
+                                )}
                               </div>
                             </div>
-                          )
-                        }))}
-                      </div>
-                    </div>
-
-                    {/* Status breakdown accordions */}
-                    <div className="px-5 pb-4 mt-2 space-y-2">
-                      {statuses.map(s => {
-                        const list = byStatus[s] || []
-                        if (!list.length) return null
-                        const cfg = STATUS_CFG[s]
-                        const key = `${proj.projectId}:${s}`
-                        const open = expandedStatus.has(key)
-                        return (
-                          <div key={s} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${cfg.color}30` }}>
-                            <button
-                              className="w-full flex items-center justify-between px-4 py-2.5 text-left"
-                              style={{ background: cfg.bg }}
-                              onClick={() => toggleStatus(key)}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full" style={{ background: cfg.dot }} />
-                                <span className="text-sm font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
-                                <span className="text-xs px-1.5 py-0.5 rounded-md font-bold" style={{ background: cfg.color + '25', color: cfg.color }}>{list.length}</span>
-                              </div>
-                              {open ? <ChevronDown size={14} style={{ color: cfg.color }} /> : <ChevronRight size={14} style={{ color: cfg.color }} />}
-                            </button>
-                            {open && (
-                              <div className="px-4 py-3 space-y-1.5">
-                                {list.map(j => {
-                                  const name = (j.condo_leads as any)?.customer_name || j.customer_name || '—'
-                                  return (
-                                    <div key={j.id}
-                                      onClick={() => canWrite && openEdit(j)}
-                                      className="flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-colors"
-                                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
-                                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                    >
-                                      <div>
-                                        <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{name}</span>
-                                        <span className="ml-2 text-xs" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        {j.revenue_ex_vat ? <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>{f(j.revenue_ex_vat)}</span> : null}
-                                        <span className="text-[10px] font-mono" style={{ color: 'var(--text-3)' }}>{j.id}</span>
-                                      </div>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            )}
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
+                              {j.revenue_ex_vat ? <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{f(j.revenue_ex_vat)}</p> : null}
+                            </div>
                           </div>
                         )
-                      })}
-                    </div>
+                      }
+
+                      return (
+                        <div className="px-5 pt-4 pb-2 space-y-3">
+                          {/* Active / in-progress rooms */}
+                          {activeJobs.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>กำลังดำเนินการ ({activeJobs.length} ห้อง)</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                                {activeJobs.map(j => renderJobCard(j, j.working_status || 'ดำเนินการ'))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Delivered rooms — collapsible */}
+                          {deliveredJobs.length > 0 && (
+                            <div>
+                              <button
+                                onClick={() => toggleStatus(showDeliveredKey)}
+                                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 transition-opacity hover:opacity-80"
+                                style={{ color: '#4ade80' }}>
+                                {showDelivered ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                                ส่งมอบแล้ว ({deliveredJobs.length} ห้อง)
+                              </button>
+                              {showDelivered && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 opacity-70">
+                                  {deliveredJobs.map(j => renderJobCard(j, 'ส่งมอบแล้ว'))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
+
                   </div>
                 )}
               </div>

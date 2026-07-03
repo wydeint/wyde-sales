@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, ShieldCheck, Pencil, AlertTriangle } from 'lucide-react'
+import { Plus, ShieldCheck, Pencil, AlertTriangle, Search } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
@@ -42,8 +42,15 @@ const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day
 
 function daysLeft(endDate: string) {
   if (!endDate) return null
-  const diff = Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000)
-  return diff
+  return Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000)
+}
+
+function computedStatus(endDate: string): string {
+  if (!endDate) return 'active'
+  const days = daysLeft(endDate)!
+  if (days <= 0) return 'expired'
+  if (days <= 30) return 'expiring_soon'
+  return 'active'
 }
 
 export default function WarrantyPage() {
@@ -57,6 +64,9 @@ export default function WarrantyPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [fetchError, setFetchError] = useState('')
+  const [search, setSearch] = useState('')
+  const [projectFilter, setProjectFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   async function load() {
     setLoading(true)
@@ -114,9 +124,19 @@ export default function WarrantyPage() {
   const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
   const statusOptions = STATUS.map(s => ({ value: s.value, label: s.label }))
 
-  const active = warranties.filter(w => w.status === 'active' || w.status === 'expiring_soon')
-  const expired = warranties.filter(w => w.status === 'expired')
-  const expiringSoon = warranties.filter(w => w.status === 'expiring_soon')
+  const filtered = warranties.filter(w => {
+    const q = search.toLowerCase()
+    const matchSearch = !q ||
+      ((w as any).customers?.name || '').toLowerCase().includes(q) ||
+      (w.room || '').toLowerCase().includes(q)
+    const matchProject = !projectFilter || w.project_id === projectFilter
+    const matchStatus = !statusFilter || computedStatus(w.warranty_end) === statusFilter
+    return matchSearch && matchProject && matchStatus
+  })
+
+  const active = filtered.filter(w => computedStatus(w.warranty_end) === 'active' || computedStatus(w.warranty_end) === 'expiring_soon')
+  const expired = filtered.filter(w => computedStatus(w.warranty_end) === 'expired')
+  const expiringSoon = filtered.filter(w => computedStatus(w.warranty_end) === 'expiring_soon')
 
   if (loading) return <PageSpinner />
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
@@ -134,20 +154,48 @@ export default function WarrantyPage() {
         </button>
       </div>
 
-      {/* Alert: expiring soon */}
+      {/* Alert Banner — expiring soon */}
       {expiringSoon.length > 0 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-center gap-3">
-          <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0" />
-          <p className="text-yellow-700 dark:text-yellow-300 text-sm">มี {expiringSoon.length} รายการที่ประกันจะหมดภายใน 30 วัน</p>
+        <div className="rounded-xl p-4 mb-4 flex items-start gap-3" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)' }}>
+          <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-yellow-400">ประกันใกล้หมด {expiringSoon.length} ราย</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
+              {expiringSoon.map(w => `${(w as any).customers?.name || w.room} (เหลือ ${daysLeft(w.warranty_end)} วัน)`).join(' · ')}
+            </p>
+          </div>
         </div>
       )}
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
+        </div>
+        <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
+          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
+          <option value="">ทุกโครงการ</option>
+          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+          className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
+          <option value="">ทุกสถานะ</option>
+          {STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+      </div>
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {STATUS.map(s => (
           <div key={s.value} className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{s.label}</p>
-            <p className={`text-2xl font-bold ${s.color.split(' ')[1]}`}>{warranties.filter(w => w.status === s.value).length}</p>
+            <p className={`text-2xl font-bold ${s.color.split(' ')[1]}`}>{warranties.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
           </div>
         ))}
       </div>
@@ -171,7 +219,7 @@ export default function WarrantyPage() {
               </thead>
               <tbody>
                 {active.map((w, i) => {
-                  const st = STATUS.find(s => s.value === w.status) || STATUS[0]
+                  const st = STATUS.find(s => s.value === computedStatus(w.warranty_end)) || STATUS[0]
                   const days = daysLeft(w.warranty_end)
                   return (
                     <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
@@ -196,13 +244,23 @@ export default function WarrantyPage() {
                         <span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => {
-                          setEditing(w)
-                          setForm({ customer_id: w.customer_id, project_id: w.project_id, room: w.room, handover_date: w.handover_date || '', warranty_start: w.warranty_start || '', warranty_end: w.warranty_end || '', warranty_months: w.warranty_months, status: w.status, notes: w.notes || '' })
-                          setOpen(true)
-                        }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
-                          <Pencil size={14} />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {computedStatus(w.warranty_end) === 'expiring_soon' && (
+                            <button
+                              onClick={() => window.open(`tel:${(w as any).customers?.phone || ''}`, '_self')}
+                              className="text-xs px-2 py-1 rounded-lg font-medium"
+                              style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>
+                              📞 นัดตรวจ
+                            </button>
+                          )}
+                          <button onClick={() => {
+                            setEditing(w)
+                            setForm({ customer_id: w.customer_id, project_id: w.project_id, room: w.room, handover_date: w.handover_date || '', warranty_start: w.warranty_start || '', warranty_end: w.warranty_end || '', warranty_months: w.warranty_months, status: w.status, notes: w.notes || '' })
+                            setOpen(true)
+                          }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
+                            <Pencil size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -217,7 +275,7 @@ export default function WarrantyPage() {
       {expired.length > 0 && (
         <div>
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>หมดประกันแล้ว ({expired.length})</h2>
-          <div className="rounded-xl overflow-hidden opacity-60" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', opacity: 0.75 }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>

@@ -196,22 +196,37 @@ export default function EventsPage() {
     loadCustomers(selectedEvent.id)
   }
 
+  // Dedup helper: find existing customer by lead_id → phone
+  async function findExistingCustomer(c: EventCustomer): Promise<string | null> {
+    if (c.lead_id) {
+      const { data } = await supabase.from('customers').select('id').eq('lead_id', c.lead_id).maybeSingle()
+      if (data) return data.id
+    }
+    if (c.phone) {
+      const { data } = await supabase.from('customers').select('id').eq('phone', c.phone).maybeSingle()
+      if (data) return data.id
+    }
+    return null
+  }
+
+  // Check job duplicate: same customer + room
+  async function jobExists(customerId: string, roomNo: string | null): Promise<boolean> {
+    if (!roomNo) return false
+    const { data } = await supabase.from('jobs')
+      .select('id').eq('customer_id', customerId).eq('room_no', roomNo).maybeSingle()
+    return !!data
+  }
+
   // Promote booked → jobs table (auto-create job)
   async function promoteBooked(c: EventCustomer) {
     if (promotedIds.has(c.id)) return
 
-    // 1. Find or create customer record
-    let customerId: string | null = null
-    if (c.lead_id) {
-      const { data: existing } = await supabase.from('customers')
-        .select('id').eq('lead_id', c.lead_id).maybeSingle()
-      if (existing) {
-        customerId = existing.id
-        await supabase.from('customers').update({ status: 'booked', booking_date: c.booked_date || undefined })
-          .eq('id', customerId!)
-      }
-    }
-    if (!customerId) {
+    // 1. Find or create customer (dedup by lead_id → phone)
+    let customerId = await findExistingCustomer(c)
+    if (customerId) {
+      await supabase.from('customers').update({ status: 'booked', booking_date: c.booked_date || undefined })
+        .eq('id', customerId)
+    } else {
       customerId = await genCustomerId()
       await supabase.from('customers').insert({
         id: customerId,
@@ -229,21 +244,24 @@ export default function EventsPage() {
       })
     }
 
-    // 2. Create job record
-    const jobId = await genJobId()
-    await supabase.from('jobs').insert({
-      id: jobId,
-      customer_id: customerId,
-      project_id: c.project_id || null,
-      room_no: c.room_no || null,
-      lead_id: c.lead_id || null,
-      customer_name: c.customer_name,
-      sales_id: c.sales_id || null,
-      customer_type: 'B2C',
-      revenue_ex_vat: c.booked_value || 0,
-      order_date: c.booked_date || null,
-      working_status: 'ดำเนินการ',
-    })
+    // 2. Create job only if not duplicate (same customer + room)
+    const alreadyHasJob = await jobExists(customerId, c.room_no || null)
+    if (!alreadyHasJob) {
+      const jobId = await genJobId()
+      await supabase.from('jobs').insert({
+        id: jobId,
+        customer_id: customerId,
+        project_id: c.project_id || null,
+        room_no: c.room_no || null,
+        lead_id: c.lead_id || null,
+        customer_name: c.customer_name,
+        sales_id: c.sales_id || null,
+        customer_type: 'B2C',
+        revenue_ex_vat: c.booked_value || 0,
+        order_date: c.booked_date || null,
+        working_status: 'ดำเนินการ',
+      })
+    }
 
     setPromotedIds(prev => new Set(prev).add(c.id))
   }
@@ -251,13 +269,11 @@ export default function EventsPage() {
   // Promote interested / not_met → customers (Prospects)
   async function promoteToProspect(c: EventCustomer) {
     if (promotedIds.has(c.id)) return
-    if (c.lead_id) {
-      const { data: existing } = await supabase.from('customers')
-        .select('id').eq('lead_id', c.lead_id).maybeSingle()
-      if (existing) {
-        setPromotedIds(prev => new Set(prev).add(c.id))
-        return
-      }
+    // Dedup by lead_id → phone
+    const existing = await findExistingCustomer(c)
+    if (existing) {
+      setPromotedIds(prev => new Set(prev).add(c.id))
+      return
     }
     const customerId = await genCustomerId()
     await supabase.from('customers').insert({

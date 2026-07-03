@@ -1,264 +1,328 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, DollarSign, Pencil, CheckCircle } from 'lucide-react'
-import { TableSpinner, TableError } from '@/components/ui/StateUI'
-import Modal from '@/components/ui/Modal'
-import { Input, Select, TextArea } from '@/components/ui/Input'
+import { DollarSign, ChevronDown, ChevronRight, CheckCircle, Clock, Banknote } from 'lucide-react'
+import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
-interface Commission {
+interface Job {
   id: string
-  customer_id: string
-  sales_person_id: string
-  project_id: string
-  room: string
-  sale_price: number
-  commission_rate: number
-  commission_amount: number
-  bonus: number
-  total_commission: number
-  status: string
-  paid_date: string
-  notes: string
-  created_at: string
-  customers?: { name: string }
-  users?: { name: string }
+  customer_name: string
+  room_no: string
+  revenue_ex_vat: number
+  commission_rate: number | null
+  commission_amount: number | null
+  commission_status: string | null
+  commission_month: string | null
+  actual_deliver_date: string
+  sales_id: string
+  sales?: { name: string }
   projects?: { name: string }
 }
 
-interface Customer { id: string; name: string }
-interface User { id: string; name: string }
-interface Project { id: string; name: string }
-
-const STATUS = [
-  { value: 'pending', label: 'รอดำเนินการ', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'approved', label: 'อนุมัติแล้ว', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'paid', label: 'จ่ายแล้ว', color: 'bg-green-500/20 text-green-400' },
-]
-
-const emptyForm = {
-  customer_id: '', sales_person_id: '', project_id: '', room: '',
-  sale_price: 0, commission_rate: 3, commission_amount: 0,
-  bonus: 0, total_commission: 0, status: 'pending', paid_date: '', notes: ''
+interface Tier {
+  revenue_min: number
+  revenue_max: number | null
+  rate: number
 }
 
-const f = (v: number) => v ? '฿' + v.toLocaleString() : '฿0'
-const pct = (v: number) => v ? v + '%' : '0%'
+function calcTier(revenue: number, tiers: Tier[]): { rate: number; amount: number } {
+  const sorted = [...tiers].sort((a, b) => a.revenue_min - b.revenue_min)
+  for (const t of sorted) {
+    if (revenue >= t.revenue_min && (t.revenue_max === null || revenue <= t.revenue_max)) {
+      return { rate: t.rate, amount: Math.round(revenue * t.rate) }
+    }
+  }
+  return { rate: 0, amount: 0 }
+}
+
+const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
+
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
+  pending:  { label: 'รอดำเนินการ', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  icon: Clock },
+  approved: { label: 'อนุมัติแล้ว',  color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   icon: CheckCircle },
+  paid:     { label: 'จ่ายแล้ว',     color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   icon: Banknote },
+}
+const STATUSES = ['pending', 'approved', 'paid'] as const
+
+const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+function monthLabel(ym: string) {
+  if (!ym) return '—'
+  const [y, m] = ym.split('-')
+  return `${MONTHS_TH[parseInt(m) - 1]} ${parseInt(y) + 543}`
+}
 
 export default function CommissionPage() {
   const supabase = createClient()
-  const [commissions, setCommissions] = useState<Commission[]>([])
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [tiers, setTiers] = useState<Tier[]>([])
   const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState<Commission | null>(null)
-  const [form, setForm] = useState(emptyForm)
-  const [saving, setSaving] = useState(false)
   const [fetchError, setFetchError] = useState('')
+  const [myRole, setMyRole] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterSales, setFilterSales] = useState<string>('all')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [saving, setSaving] = useState<string | null>(null)
 
-  async function load() {
-    setLoading(true)
-    setFetchError('')
-    const [
-      { data: com, error: e1 }, { data: cust, error: e2 },
-      { data: u, error: e3 }, { data: p, error: e4 },
-    ] = await Promise.all([
-      supabase.from('commissions').select('*, customers(name), users!commissions_sales_person_id_fkey(name), projects(name)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id,name').eq('status', 'closed').order('name'),
-      supabase.from('users').select('id,name').eq('active', true).order('name'),
-      supabase.from('projects').select('id,name').order('name'),
+  const load = useCallback(async () => {
+    setLoading(true); setFetchError('')
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: me } = await supabase.from('users').select('role').eq('email', user?.email ?? '').single()
+    setMyRole(me?.role || '')
+
+    const [{ data, error }, { data: tierData }] = await Promise.all([
+      supabase
+        .from('jobs')
+        .select('id,customer_name,room_no,revenue_ex_vat,commission_rate,commission_amount,commission_status,commission_month,actual_deliver_date,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)')
+        .eq('working_status', 'ส่งมอบแล้ว')
+        .not('actual_deliver_date', 'is', null)
+        .order('actual_deliver_date', { ascending: false }),
+      supabase.from('commission_settings').select('revenue_min,revenue_max,rate').eq('active', true),
     ])
-    if (e1 || e2 || e3 || e4) { setFetchError((e1 ?? e2 ?? e3 ?? e4)!.message); setLoading(false); return }
-    setCommissions(com || [])
-    setCustomers(cust || [])
-    setUsers(u || [])
-    setProjects(p || [])
+    if (error) { setFetchError(error.message); setLoading(false); return }
+    setJobs((data || []) as unknown as Job[])
+    setTiers((tierData || []) as unknown as Tier[])
     setLoading(false)
-  }
+  }, [])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
-  function calcCommission(price: number, rate: number, bonus: number) {
-    const comm = Math.round(price * rate / 100)
-    return { commission_amount: comm, total_commission: comm + bonus }
-  }
-
-  function updatePrice(val: number) {
-    const { commission_amount, total_commission } = calcCommission(val, form.commission_rate, form.bonus)
-    setForm({ ...form, sale_price: val, commission_amount, total_commission })
-  }
-
-  function updateRate(val: number) {
-    const { commission_amount, total_commission } = calcCommission(form.sale_price, val, form.bonus)
-    setForm({ ...form, commission_rate: val, commission_amount, total_commission })
-  }
-
-  function updateBonus(val: number) {
-    setForm({ ...form, bonus: val, total_commission: form.commission_amount + val })
-  }
-
-  function genId() {
-    const nums = commissions.map(c => parseInt(c.id.replace('COM-', ''))).filter(n => !isNaN(n))
-    return 'COM-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(3, '0')
-  }
-
-  async function save() {
-    if (!form.customer_id || !form.sales_person_id) return
-    setSaving(true)
-    if (editing) {
-      await supabase.from('commissions').update(form).eq('id', editing.id)
-    } else {
-      await supabase.from('commissions').insert({ id: genId(), ...form })
+  // ── helpers ─────────────────────────────────────────────
+  function getCommission(j: Job) {
+    if (j.commission_amount !== null && j.commission_amount !== undefined) {
+      return { rate: j.commission_rate ?? 0, amount: j.commission_amount }
     }
-    setSaving(false)
-    setOpen(false)
-    load()
+    return calcTier(j.revenue_ex_vat || 0, tiers)
+  }
+  function getStatus(j: Job) {
+    if (j.commission_status) return j.commission_status
+    const currentMonth = new Date().toISOString().slice(0, 7)
+    const jobMonth = j.commission_month || j.actual_deliver_date?.slice(0, 7) || ''
+    return jobMonth < currentMonth ? 'paid' : 'pending'
+  }
+  function getMonth(j: Job)  { return j.commission_month || j.actual_deliver_date?.slice(0, 7) || '' }
+
+  async function updateStatus(jobId: string, newStatus: string) {
+    setSaving(jobId)
+    await supabase.from('jobs').update({ commission_status: newStatus }).eq('id', jobId)
+    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, commission_status: newStatus } : j))
+    setSaving(null)
   }
 
-  const custOptions = [{ value: '', label: '— เลือกลูกค้า —' }, ...customers.map(c => ({ value: c.id, label: c.name }))]
-  const userOptions = [{ value: '', label: '— เลือก Sales —' }, ...users.map(u => ({ value: u.id, label: u.name }))]
-  const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
-  const statusOptions = STATUS.map(s => ({ value: s.value, label: s.label }))
+  const canApprove = ['admin', 'admin_sales'].includes(myRole)
 
-  const totalPending = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + c.total_commission, 0)
-  const totalApproved = commissions.filter(c => c.status === 'approved').reduce((s, c) => s + c.total_commission, 0)
-  const totalPaid = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + c.total_commission, 0)
+  const salesList = useMemo(() => {
+    const map = new Map<string, string>()
+    jobs.forEach(j => { if (j.sales_id) map.set(j.sales_id, (j.sales as any)?.name || j.sales_id) })
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]))
+  }, [jobs])
+
+  const filtered = useMemo(() => jobs.filter(j => {
+    const matchStatus = filterStatus === 'all' || getStatus(j) === filterStatus
+    const matchSales = filterSales === 'all' || j.sales_id === filterSales
+    return matchStatus && matchSales
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [jobs, filterStatus, filterSales, tiers])
+
+  // Group by commission_month (fallback to deliver date month)
+  const byMonth = useMemo(() => {
+    const map = new Map<string, Job[]>()
+    for (const j of filtered) {
+      const key = getMonth(j) || 'ไม่ระบุ'
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(j)
+    }
+    return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, tiers])
+
+  // Summary totals from ALL jobs (not filtered), using computed values
+  const totalPending  = jobs.filter(j => getStatus(j) === 'pending' ).reduce((s, j) => s + getCommission(j).amount, 0)
+  const totalApproved = jobs.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
+  const totalPaid     = jobs.filter(j => getStatus(j) === 'paid'    ).reduce((s, j) => s + getCommission(j).amount, 0)
+
+  function toggleMonth(key: string) {
+    setExpanded(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
+
+  if (loading) return <PageSpinner />
+  if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Commission</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามค่าคอมมิชชั่นทีมขาย</p>
-        </div>
-        <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-          className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} />บันทึก Commission
-        </button>
+    <div className="p-6 space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Commission</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>ค่าคอมมิชชั่นจากงานที่ส่งมอบแล้ว · อัปเดตสถานะได้จากหน้านี้</p>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>รอดำเนินการ</p>
-          <p className="text-yellow-400 text-xl font-bold">{f(totalPending)}</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{commissions.filter(c => c.status === 'pending').length} รายการ</p>
-        </div>
-        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>อนุมัติแล้ว</p>
-          <p className="text-blue-400 text-xl font-bold">{f(totalApproved)}</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{commissions.filter(c => c.status === 'approved').length} รายการ</p>
-        </div>
-        <div className="rounded-xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>จ่ายแล้ว</p>
-          <p className="text-green-400 text-xl font-bold">{f(totalPaid)}</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{commissions.filter(c => c.status === 'paid').length} รายการ</p>
-        </div>
+      {/* Summary KPI */}
+      <div className="grid grid-cols-3 gap-4">
+        {([['pending', totalPending], ['approved', totalApproved], ['paid', totalPaid]] as const).map(([s, v]) => {
+          const cfg = STATUS_CFG[s]
+          const Icon = cfg.icon
+          const count = jobs.filter(j => getStatus(j) === s).length
+          return (
+            <button key={s} onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
+              className="rounded-2xl p-4 text-left transition-all"
+              style={{ background: filterStatus === s ? cfg.bg : 'var(--card-bg)', border: `1px solid ${filterStatus === s ? cfg.color + '50' : 'var(--divider)'}` }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Icon size={14} style={{ color: cfg.color }} />
+                <p className="text-xs font-medium" style={{ color: cfg.color }}>{cfg.label}</p>
+              </div>
+              <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{f(v)}</p>
+              <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>{count} งาน</p>
+            </button>
+          )
+        })}
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-        <table className="w-full">
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ID</th>
-              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า / ห้อง</th>
-              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Sales</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ราคาขาย</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Rate</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Commission</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Bonus</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>รวม</th>
-              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>สถานะ</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {loading && <TableSpinner colSpan={10} />}
-            {!loading && fetchError && <TableError colSpan={10} message={fetchError} onRetry={load} />}
-            {!loading && commissions.length === 0 && (
-              <tr><td colSpan={10} className="text-center py-12">
-                <DollarSign size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-                <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มี Commission</p>
-              </td></tr>
-            )}
-            {commissions.map((c, i) => {
-              const st = STATUS.find(s => s.value === c.status) || STATUS[0]
-              return (
-                <tr key={c.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
-                  <td className="px-4 py-3 text-accent-blue text-xs font-mono">{c.id}</td>
-                  <td className="px-4 py-3">
-                    <p className="text-sm" style={{ color: 'var(--text-1)' }}>{(c as any).customers?.name || '-'}</p>
-                    <p className="text-accent-blue text-xs">{c.room || '-'}</p>
-                  </td>
-                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
-                  <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{f(c.sale_price)}</td>
-                  <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{pct(c.commission_rate)}</td>
-                  <td className="px-4 py-3 text-right text-sm" style={{ color: 'var(--text-2)' }}>{f(c.commission_amount)}</td>
-                  <td className="px-4 py-3 text-right text-yellow-400 text-sm">{c.bonus > 0 ? f(c.bonus) : '-'}</td>
-                  <td className="px-4 py-3 text-right text-green-400 text-sm font-medium">{f(c.total_commission)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => {
-                      setEditing(c)
-                      setForm({ customer_id: c.customer_id, sales_person_id: c.sales_person_id, project_id: c.project_id, room: c.room, sale_price: c.sale_price, commission_rate: c.commission_rate, commission_amount: c.commission_amount, bonus: c.bonus, total_commission: c.total_commission, status: c.status, paid_date: c.paid_date || '', notes: c.notes })
-                      setOpen(true)
-                    }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
-                      <Pencil size={14} />
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไข Commission' : 'บันทึก Commission ใหม่'} size="lg">
-        <div className="grid grid-cols-2 gap-4">
-          <Select label="ลูกค้า *" value={form.customer_id} onChange={e => setForm({ ...form, customer_id: e.target.value })} options={custOptions} />
-          <Select label="Sales *" value={form.sales_person_id} onChange={e => setForm({ ...form, sales_person_id: e.target.value })} options={userOptions} />
-          <Select label="โครงการ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projOptions} />
-          <Input label="ห้อง" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} placeholder="A-1201" />
-          <Input label="ราคาขาย (บาท)" type="number" value={form.sale_price} onChange={e => updatePrice(Number(e.target.value))} />
-          <Input label="Commission Rate (%)" type="number" value={form.commission_rate} onChange={e => updateRate(Number(e.target.value))} />
-          <div className="col-span-2 rounded-lg p-3 grid grid-cols-3 gap-3" style={{ background: 'var(--hover-bg)' }}>
-            <div>
-              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Commission</p>
-              <p className="font-medium" style={{ color: 'var(--text-1)' }}>{f(form.commission_amount)}</p>
-            </div>
-            <div>
-              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Bonus</p>
-              <input type="number" value={form.bonus} onChange={e => updateBonus(Number(e.target.value))}
-                className="bg-transparent text-yellow-400 font-medium text-sm w-full outline-none pb-0.5"
-                style={{ borderBottom: '1px solid var(--divider)' }} />
-            </div>
-            <div>
-              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>รวมทั้งหมด</p>
-              <p className="text-green-400 font-bold">{f(form.total_commission)}</p>
-            </div>
-          </div>
-          <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} options={statusOptions} />
-          {form.status === 'paid' && (
-            <Input label="วันที่จ่าย" type="date" value={form.paid_date} onChange={e => setForm({ ...form, paid_date: e.target.value })} />
-          )}
-          <div className="col-span-2">
-            <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-          </div>
-        </div>
-        <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.customer_id || !form.sales_person_id} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
-            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 items-center">
+        {/* Status filter pills */}
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <button onClick={() => setFilterStatus('all')}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            style={{ background: filterStatus === 'all' ? 'var(--accent)' : 'transparent', color: filterStatus === 'all' ? '#fff' : 'var(--text-2)' }}>
+            ทั้งหมด
           </button>
+          {STATUSES.map(s => {
+            const cfg = STATUS_CFG[s]
+            return (
+              <button key={s} onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                style={{ background: filterStatus === s ? cfg.color : 'transparent', color: filterStatus === s ? '#fff' : 'var(--text-2)' }}>
+                {cfg.label}
+              </button>
+            )
+          })}
         </div>
-      </Modal>
+
+        {/* Sales filter */}
+        <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+          className="rounded-xl px-3 py-2 text-sm outline-none"
+          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+          <option value="all">— Sales ทั้งหมด —</option>
+          {salesList.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </select>
+
+        <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>
+          {filtered.length} งาน · {f(filtered.reduce((s, j) => s + getCommission(j).amount, 0))}
+        </span>
+      </div>
+
+      {/* Monthly groups */}
+      {byMonth.length === 0 && (
+        <div className="rounded-2xl p-12 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+          <DollarSign size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบข้อมูล Commission</p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {byMonth.map(([month, monthJobs]) => {
+          const isOpen = expanded.has(month)
+          const monthTotal = monthJobs.reduce((s, j) => s + getCommission(j).amount, 0)
+          const statusCounts = { pending: 0, approved: 0, paid: 0 }
+          monthJobs.forEach(j => { const s = getStatus(j) as keyof typeof statusCounts; if (s in statusCounts) statusCounts[s]++ })
+
+          return (
+            <div key={month} className="rounded-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+              {/* Month header */}
+              <button className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
+                style={{ background: isOpen ? 'var(--hover-bg)' : 'transparent' }}
+                onClick={() => toggleMonth(month)}>
+                <div className="flex items-center gap-3">
+                  {isOpen ? <ChevronDown size={15} style={{ color: 'var(--accent)' }} /> : <ChevronRight size={15} style={{ color: 'var(--text-3)' }} />}
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{monthLabel(month)}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{monthJobs.length} งาน</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* status chips */}
+                  <div className="flex gap-1.5">
+                    {STATUSES.map(s => statusCounts[s] > 0 && (
+                      <span key={s} className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: STATUS_CFG[s].bg, color: STATUS_CFG[s].color }}>
+                        {statusCounts[s]}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="font-bold text-sm" style={{ color: '#fbbf24' }}>{f(monthTotal)}</p>
+                </div>
+              </button>
+
+              {/* Job rows */}
+              {isOpen && (
+                <div style={{ borderTop: '1px solid var(--divider)' }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
+                        {['ลูกค้า / ห้อง', 'โครงการ', 'Sales', 'Revenue', 'Rate', 'Commission', 'สถานะ'].map(h => (
+                          <th key={h} className={`px-4 py-2 text-xs font-medium ${h === 'ลูกค้า / ห้อง' || h === 'โครงการ' || h === 'Sales' || h === 'สถานะ' ? 'text-left' : 'text-right'}`}
+                            style={{ color: 'var(--text-3)' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthJobs.map(j => {
+                        const { rate, amount } = getCommission(j)
+                        const status = getStatus(j)
+                        const cfg = STATUS_CFG[status] || STATUS_CFG.pending
+                        const Icon = cfg.icon
+                        const isSaving = saving === j.id
+                        const isCalc = j.commission_amount === null
+                        const nextStatus: Record<string, string> = { pending: 'approved', approved: 'paid', paid: 'pending' }
+                        return (
+                          <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
+                            <td className="px-4 py-3">
+                              <p className="font-medium" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</p>
+                              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no || '—'}</p>
+                            </td>
+                            <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</td>
+                            <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
+                            <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-2)' }}>{f(j.revenue_ex_vat)}</td>
+                            <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-3)' }}>
+                              {rate ? (rate * 100).toFixed(2) + '%' : '—'}
+                              {isCalc && <span className="ml-1 text-[9px] opacity-40">auto</span>}
+                            </td>
+                            <td className="px-4 py-3 text-right font-bold text-sm" style={{ color: '#fbbf24' }}>{f(amount)}</td>
+                            <td className="px-4 py-3">
+                              {canApprove ? (
+                                <button
+                                  disabled={isSaving}
+                                  onClick={() => updateStatus(j.id, nextStatus[status] || 'pending')}
+                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                                  style={{ background: cfg.bg, color: cfg.color }}>
+                                  <Icon size={11} />
+                                  {isSaving ? '...' : cfg.label}
+                                </button>
+                              ) : (
+                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold w-fit"
+                                  style={{ background: cfg.bg, color: cfg.color }}>
+                                  <Icon size={11} />{cfg.label}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: '2px solid var(--divider)', background: 'var(--hover-bg)' }}>
+                        <td colSpan={5} className="px-4 py-2.5 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวม {monthLabel(month)}</td>
+                        <td className="px-4 py-2.5 text-right font-bold text-sm" style={{ color: '#fbbf24' }}>{f(monthTotal)}</td>
+                        <td />
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

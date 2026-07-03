@@ -13,8 +13,10 @@ type DeliveredJob = {
   project_id: string
   room_no: string
   work_type: string
+  customer_type: string
   package_type: string
   revenue_ex_vat: number
+  revenue_inc_vat: number
   cost: number
   actual_deliver_date: string
   delivery_lot: string
@@ -100,6 +102,8 @@ export default function RevenuePage() {
   const [offset, setOffset] = useState(0)
   const [view, setView] = useState<'summary' | 'sales' | 'project' | 'list'>('summary')
   const [filterSales, setFilterSales] = useState('')
+  const [filterCustType, setFilterCustType] = useState('')
+  const [filterWorkType, setFilterWorkType] = useState('')
 
   // Unique users
   const users = useMemo(() => {
@@ -118,7 +122,7 @@ export default function RevenuePage() {
       setFetchError('')
       const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }] = await Promise.all([
         supabase.from('jobs')
-          .select('id,project_id,room_no,work_type,package_type,revenue_ex_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,customers(customer_name),projects(name),sales:users!jobs_sales_id_fkey(name)')
+          .select('id,project_id,room_no,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,customers(customer_name),projects(name),sales:users!jobs_sales_id_fkey(name)')
           .eq('working_status', 'ส่งมอบแล้ว')
           .not('actual_deliver_date', 'is', null)
           .order('actual_deliver_date', { ascending: false }),
@@ -134,11 +138,18 @@ export default function RevenuePage() {
 
   const { start, end, label } = getPeriodBounds(period, offset)
 
+  const workTypes = useMemo(() => {
+    const s = new Set(allJobs.map(j => j.work_type).filter(Boolean))
+    return Array.from(s).sort()
+  }, [allJobs])
+
   // Jobs in current period
   const periodJobs = useMemo(() =>
     allJobs.filter(j => inRange(j.actual_deliver_date, start, end) &&
-      (!filterSales || j.sales_id === filterSales)),
-    [allJobs, start, end, filterSales]
+      (!filterSales || j.sales_id === filterSales) &&
+      (!filterCustType || j.customer_type === filterCustType) &&
+      (!filterWorkType || j.work_type === filterWorkType)),
+    [allJobs, start, end, filterSales, filterCustType, filterWorkType]
   )
 
   // Jobs in previous period
@@ -148,23 +159,24 @@ export default function RevenuePage() {
     [allJobs, prevBounds]
   )
 
-  const totalRevenue = periodJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+  const totalRevenue = periodJobs.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+  const totalRevenueEx = periodJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const totalCost = periodJobs.reduce((s, j) => s + (j.cost || 0), 0)
-  const totalProfit = totalRevenue - totalCost
+  const totalProfit = totalRevenueEx - totalCost
   const totalCommission = periodJobs.reduce((s, j) => s + (j.commission_amount || 0), 0)
-  const prevRevenue = prevJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+  const prevRevenue = prevJobs.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
   const growthPct = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue * 100).toFixed(1) : null
   const unitCount = periodJobs.length
 
   // By sales
   const bySales = useMemo(() => {
-    const map = new Map<string, { name: string; revenue: number; units: number; commission: number }>()
+    const map = new Map<string, { name: string; revenue: number; revenueEx: number; units: number; commission: number }>()
     periodJobs.forEach(j => {
       const salesData = j.sales as any
       const name = salesData?.name || 'ไม่ระบุ'
       const key = j.sales_id || name
-      const cur = map.get(key) || { name, revenue: 0, units: 0, commission: 0 }
-      map.set(key, { name, revenue: cur.revenue + (j.revenue_ex_vat || 0), units: cur.units + 1, commission: cur.commission + (j.commission_amount || 0) })
+      const cur = map.get(key) || { name, revenue: 0, revenueEx: 0, units: 0, commission: 0 }
+      map.set(key, { name, revenue: cur.revenue + (j.revenue_inc_vat || 0), revenueEx: cur.revenueEx + (j.revenue_ex_vat || 0), units: cur.units + 1, commission: cur.commission + (j.commission_amount || 0) })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -176,7 +188,7 @@ export default function RevenuePage() {
       const projectData = j.projects as any
       const name = projectData?.name || j.project_id || 'ไม่ระบุ'
       const cur = map.get(name) || { name, revenue: 0, units: 0 }
-      map.set(name, { name, revenue: cur.revenue + (j.revenue_ex_vat || 0), units: cur.units + 1 })
+      map.set(name, { name, revenue: cur.revenue + (j.revenue_inc_vat || 0), units: cur.units + 1 })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -186,7 +198,7 @@ export default function RevenuePage() {
     const map = new Map<string, number>()
     periodJobs.forEach(j => {
       const s = j.accounting_status || 'Backlog'
-      map.set(s, (map.get(s) || 0) + (j.revenue_ex_vat || 0))
+      map.set(s, (map.get(s) || 0) + (j.revenue_inc_vat || 0))
     })
     return [...map.entries()].map(([status, revenue]) => ({ status, revenue })).sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -202,7 +214,7 @@ export default function RevenuePage() {
     return Array.from({ length: 12 }, (_, m) => {
       const mStart = new Date(y, m, 1)
       const mEnd = new Date(y, m + 1, 0, 23, 59, 59)
-      const rev = allJobs.filter(j => inRange(j.actual_deliver_date, mStart, mEnd)).reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+      const rev = allJobs.filter(j => inRange(j.actual_deliver_date, mStart, mEnd)).reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
       return { month: m + 1, label: mStart.toLocaleDateString('th-TH', { month: 'short' }), revenue: rev }
     })
   }, [allJobs, period, start])
@@ -222,6 +234,19 @@ export default function RevenuePage() {
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
+            className="rounded-xl px-3 py-2 text-sm outline-none"
+            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <option value="">B2C + B2B</option>
+            <option value="B2C">B2C</option>
+            <option value="B2B">B2B</option>
+          </select>
+          <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
+            className="rounded-xl px-3 py-2 text-sm outline-none"
+            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <option value="">ทุกประเภทงาน</option>
+            {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
+          </select>
           {/* Sales filter */}
           <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
             className="rounded-xl px-3 py-2 text-sm outline-none"
@@ -267,7 +292,7 @@ export default function RevenuePage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: 'Revenue ส่งมอบ',
+            label: 'Revenue ส่งมอบ (Inc.VAT)',
             value: fk(totalRevenue),
             sub: growthPct ? `${growthPct > '0' ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`,
             color: '#4ade80',
@@ -279,9 +304,9 @@ export default function RevenuePage() {
             color: '#60a5fa',
           },
           {
-            label: 'Profit (Revenue-Cost)',
+            label: 'Profit (Ex.VAT-Cost)',
             value: fk(totalProfit),
-            sub: totalRevenue > 0 ? 'GP ' + (totalProfit / totalRevenue * 100).toFixed(1) + '%' : '—',
+            sub: totalRevenueEx > 0 ? 'GP ' + (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—',
             color: totalProfit >= 0 ? '#4ade80' : '#f87171',
           },
           {
@@ -398,7 +423,7 @@ export default function RevenuePage() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                {['Sales', 'จำนวนงาน', 'Revenue (Ex.VAT)', 'Cost', 'Profit', 'GP%', 'Commission'].map(h => (
+                {['Sales', 'จำนวนงาน', 'Revenue (Inc.VAT)', 'Cost', 'Profit (Ex-Cost)', 'GP%', 'Commission'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
@@ -411,8 +436,8 @@ export default function RevenuePage() {
                   const salesData = j.sales as any
                   return salesData?.name === s.name
                 }).reduce((sum, j) => sum + (j.cost || 0), 0)
-                const profit = s.revenue - cost
-                const gp = s.revenue > 0 ? (profit / s.revenue * 100).toFixed(1) : '—'
+                const profit = s.revenueEx - cost
+                const gp = s.revenueEx > 0 ? (profit / s.revenueEx * 100).toFixed(1) : '—'
                 return (
                   <tr key={s.name} style={{ borderBottom: '1px solid var(--divider)' }}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-1)' }}>
@@ -441,7 +466,7 @@ export default function RevenuePage() {
                 <td className="px-4 py-3 font-bold" style={{ color: '#f87171' }}>{f(totalCost)}</td>
                 <td className="px-4 py-3 font-bold" style={{ color: totalProfit >= 0 ? '#4ade80' : '#f87171' }}>{f(totalProfit)}</td>
                 <td className="px-4 py-3 font-bold" style={{ color: 'var(--text-2)' }}>
-                  {totalRevenue > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) + '%' : '—'}
+                  {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—'}
                 </td>
                 <td className="px-4 py-3 font-bold" style={{ color: '#fbbf24' }}>{f(totalCommission)}</td>
               </tr>
@@ -492,7 +517,7 @@ export default function RevenuePage() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                {['วันที่ส่งมอบ', 'ลูกค้า', 'โครงการ / ห้อง', 'SO', 'ประเภท', 'Revenue', 'Cost', 'GP%', 'Lot', 'Status', 'Sales'].map(h => (
+                {['วันที่ส่งมอบ', 'ลูกค้า', 'โครงการ / ห้อง', 'SO', 'ประเภท', 'Revenue (Inc.VAT)', 'Cost', 'GP%', 'Lot', 'Status', 'Sales'].map(h => (
                   <th key={h} className="text-left px-3 py-3 text-xs font-semibold whitespace-nowrap"
                     style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
@@ -504,6 +529,7 @@ export default function RevenuePage() {
               ) : periodJobs.map(j => {
                 const profit = (j.revenue_ex_vat || 0) - (j.cost || 0)
                 const gp = j.revenue_ex_vat > 0 ? (profit / j.revenue_ex_vat * 100).toFixed(0) : '—'
+                const revDisplay = j.revenue_inc_vat || 0
                 return (
                   <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                     <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
@@ -524,7 +550,7 @@ export default function RevenuePage() {
                       </span>
                     </td>
                     <td className="px-3 py-2.5 font-bold text-right" style={{ color: '#4ade80' }}>
-                      {j.revenue_ex_vat ? f(j.revenue_ex_vat) : '—'}
+                      {revDisplay ? f(revDisplay) : '—'}
                     </td>
                     <td className="px-3 py-2.5 text-right" style={{ color: '#f87171' }}>
                       {j.cost ? f(j.cost) : '—'}
@@ -538,10 +564,10 @@ export default function RevenuePage() {
                     <td className="px-3 py-2.5">
                       <span className="px-1.5 py-0.5 rounded-full text-xs"
                         style={{
-                          background: STATUS_COLORS[j.accounting_status || 'Backlog'] + '22',
-                          color: STATUS_COLORS[j.accounting_status || 'Backlog'],
+                          background: j.working_status === 'ส่งมอบแล้ว' ? 'rgba(74,222,128,0.15)' : 'rgba(251,191,36,0.15)',
+                          color: j.working_status === 'ส่งมอบแล้ว' ? '#4ade80' : '#fbbf24',
                         }}>
-                        {j.accounting_status || 'Backlog'}
+                        {j.working_status || '—'}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>
@@ -559,7 +585,7 @@ export default function RevenuePage() {
                 <td className="px-3 py-2.5 font-bold text-right" style={{ color: '#4ade80' }}>{f(totalRevenue)}</td>
                 <td className="px-3 py-2.5 font-bold text-right" style={{ color: '#f87171' }}>{f(totalCost)}</td>
                 <td className="px-3 py-2.5 font-bold text-right" style={{ color: 'var(--text-2)' }}>
-                  {totalRevenue > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) + '%' : '—'}
+                  {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—'}
                 </td>
                 <td colSpan={3} />
               </tr>

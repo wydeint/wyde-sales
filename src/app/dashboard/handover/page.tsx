@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle2, Clock, Truck, AlertTriangle, Paperclip, X, Plus, Search } from 'lucide-react'
+import { CheckCircle2, Clock, Truck, AlertTriangle, Paperclip, X, Plus, Search, LayoutGrid } from 'lucide-react'
 import { PageError } from '@/components/ui/StateUI'
 
 // ─── Types ────────────────────────────────────────────────
@@ -18,7 +18,7 @@ interface HandoverJob {
   customerName: string
   salesName: string
   clientType: 'B2C' | 'B2B'
-  revenueExVat: number
+  revenueIncVat: number
   workDays: number | null
   workStartDate: string | null
   workEndDate: string | null
@@ -53,10 +53,10 @@ function daysDiff(from: string): number {
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 const fmtBaht = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '—'
 
-const STATUS_CONFIG: Record<WorkStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  in_progress:      { label: 'กำลังดำเนินการ',     color: 'text-amber-400',  bg: 'bg-amber-500/10 border-amber-500/20',  icon: <Clock size={14} className="text-amber-400" /> },
-  ready_to_deliver: { label: 'งานเสร็จ รอส่งมอบ',  color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20',    icon: <CheckCircle2 size={14} className="text-blue-400" /> },
-  delivered:        { label: 'ส่งมอบแล้ว',          color: 'text-green-400',  bg: 'bg-green-500/10 border-green-500/20',  icon: <Truck size={14} className="text-green-400" /> },
+const STATUS_CONFIG: Record<WorkStatus, { label: string; colorVar: string; bgStyle: React.CSSProperties; icon: React.ReactNode }> = {
+  in_progress:      { label: 'กำลังดำเนินการ',    colorVar: 'var(--accent-orange)', bgStyle: { background: 'rgba(234,88,12,0.10)',  border: '1px solid rgba(234,88,12,0.20)' },  icon: <Clock size={14} style={{ color: 'var(--accent-orange)' }} /> },
+  ready_to_deliver: { label: 'งานเสร็จ รอส่งมอบ', colorVar: 'var(--accent-blue)',   bgStyle: { background: 'rgba(37,99,235,0.10)',  border: '1px solid rgba(37,99,235,0.20)' },  icon: <CheckCircle2 size={14} style={{ color: 'var(--accent-blue)' }} /> },
+  delivered:        { label: 'ส่งมอบแล้ว',         colorVar: 'var(--accent-green)',  bgStyle: { background: 'rgba(5,150,105,0.10)', border: '1px solid rgba(5,150,105,0.20)' },  icon: <Truck size={14} style={{ color: 'var(--accent-green)' }} /> },
 }
 
 // ─── Period Helper ─────────────────────────────────────────
@@ -127,8 +127,8 @@ function DeliveryModal({
       })
     }
 
-    // Update job working_status
-    await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว' }).eq('id', job.jobId)
+    // Update job working_status + actual_deliver_date (keeps Revenue/Dashboard in sync)
+    await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว', actual_deliver_date: deliveryDate }).eq('id', job.jobId)
 
     setSaving(false)
     onSaved()
@@ -193,6 +193,131 @@ function DeliveryModal({
   )
 }
 
+// ─── Project Summary Modal ─────────────────────────────────
+function ProjectSummaryModal({ jobs, open, onClose }: { jobs: HandoverJob[]; open: boolean; onClose: () => void }) {
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
+
+  if (!open) return null
+
+  // group by project
+  const byProject: Record<string, HandoverJob[]> = {}
+  jobs.forEach(j => {
+    const k = j.projectName || 'ไม่ระบุโครงการ'
+    if (!byProject[k]) byProject[k] = []
+    byProject[k].push(j)
+  })
+  const projects = Object.entries(byProject).sort((a, b) => a[0].localeCompare(b[0], 'th'))
+  const active = selectedProject ?? projects[0]?.[0] ?? null
+  const activeJobs = active ? (byProject[active] || []) : []
+
+  const countByStatus = (s: WorkStatus) => activeJobs.filter(j => j.workStatus === s).length
+  const total = activeJobs.length
+  const inProg = countByStatus('in_progress')
+  const ready = countByStatus('ready_to_deliver')
+  const done = countByStatus('delivered')
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh]"
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Modal header */}
+        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>สรุปโครงการ</h3>
+          <button onClick={onClose} style={{ color: 'var(--text-2)' }}><X size={18} /></button>
+        </div>
+
+        <div className="flex flex-1 min-h-0">
+          {/* Left: project list */}
+          <div className="w-44 flex-shrink-0 overflow-y-auto" style={{ borderRight: '1px solid var(--divider)' }}>
+            {projects.map(([name, pjobs]) => {
+              const pdone = pjobs.filter(j => j.workStatus === 'delivered').length
+              const isActive = active === name
+              return (
+                <button key={name} onClick={() => setSelectedProject(name)}
+                  className="w-full text-left px-4 py-3 transition-colors"
+                  style={{ background: isActive ? 'var(--active-bg)' : 'transparent', borderBottom: '1px solid var(--divider)' }}>
+                  <p className="text-xs font-semibold truncate" style={{ color: isActive ? 'var(--accent)' : 'var(--text-1)' }}>{name}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{pdone}/{pjobs.length} ส่งมอบ</p>
+                  {/* mini progress */}
+                  <div className="h-1 rounded-full mt-1.5" style={{ background: 'var(--divider)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${pjobs.length > 0 ? (pdone / pjobs.length) * 100 : 0}%`, background: '#4ade80', transition: 'width 0.3s' }} />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Right: project detail */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {active && (
+              <>
+                {/* Progress summary */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'กำลังดำเนินการ', count: inProg, color: '#fbbf24' },
+                    { label: 'รอส่งมอบ', count: ready, color: '#60a5fa' },
+                    { label: 'ส่งมอบแล้ว', count: done, color: '#4ade80' },
+                  ].map(k => (
+                    <div key={k.label} className="rounded-xl p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
+                      <p className="text-xl font-bold" style={{ color: k.color }}>{k.count}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Progress bar */}
+                {total > 0 && (
+                  <div>
+                    <div className="flex h-2.5 rounded-full overflow-hidden gap-px" style={{ background: 'var(--divider)' }}>
+                      <div style={{ width: `${(done / total) * 100}%`, background: '#4ade80' }} />
+                      <div style={{ width: `${(ready / total) * 100}%`, background: '#60a5fa' }} />
+                      <div style={{ width: `${(inProg / total) * 100}%`, background: '#fbbf24' }} />
+                    </div>
+                    <p className="text-[10px] mt-1 text-right" style={{ color: 'var(--text-3)' }}>
+                      ส่งมอบแล้ว {done}/{total} ห้อง ({total > 0 ? Math.round(done / total * 100) : 0}%)
+                    </p>
+                  </div>
+                )}
+
+                {/* Room list */}
+                <div className="space-y-1.5">
+                  {activeJobs.sort((a, b) => a.roomNo.localeCompare(b.roomNo, 'th')).map(j => {
+                    const cfg = STATUS_CONFIG[j.workStatus]
+                    return (
+                      <div key={j.jobId} className="flex items-center justify-between rounded-xl px-3 py-2.5"
+                        style={{ background: 'var(--hover-bg)', border: j.workStatus === 'delivered' ? '1px solid rgba(74,222,128,0.2)' : '1px solid transparent' }}>
+                        <div className="flex items-center gap-2.5">
+                          <span className="p-1 rounded-lg" style={cfg.bgStyle}>{cfg.icon}</span>
+                          <div>
+                            <p className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>{j.customerName}</p>
+                            <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.roomNo}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] font-semibold" style={{ color: cfg.colorVar }}>{cfg.label}</span>
+                          {j.deliveryDate && (
+                            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>ส่ง {fmtDate(j.deliveryDate)}</p>
+                          )}
+                          {j.daysOverdue > 0 && j.workStatus !== 'delivered' && (
+                            <p className="text-[10px] text-red-400">เกิน {j.daysOverdue} วัน</p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ─────────────────────────────────────────────
 export default function HandoverPage() {
   const supabase = createClient()
@@ -203,18 +328,17 @@ export default function HandoverPage() {
   const [deliveryTarget, setDeliveryTarget] = useState<HandoverJob | null>(null)
   const [hPeriod, setHPeriod] = useState<HPeriod>('month')
   const [fetchError, setFetchError] = useState('')
+  const [projectSummaryOpen, setProjectSummaryOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     setFetchError('')
 
-    // Jobs that have started work (work_start_date is set)
     const { data: jobsData, error: e1 } = await supabase
       .from('jobs')
       .select('*, projects:project_id(name), sales:sales_id(name)')
-      .not('work_start_date', 'is', null)
       .not('working_status', 'eq', 'ยกเลิก')
-      .order('work_start_date')
+      .order('order_date', { ascending: false })
 
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     const jobIds = (jobsData || []).map((j: any) => j.id)
@@ -249,7 +373,8 @@ export default function HandoverPage() {
         : null
       const overdue = workEndDate ? Math.max(0, daysDiff(workEndDate)) : 0
 
-      const workStatus: WorkStatus = hov?.work_status || 'in_progress'
+      const workStatus: WorkStatus = hov?.work_status ||
+        (j.working_status === 'ส่งมอบแล้ว' ? 'delivered' : 'in_progress')
       const lastInstallmentPaid = finalPayMap.get(j.id) || false
 
       return {
@@ -261,13 +386,13 @@ export default function HandoverPage() {
         customerName: j.customer_name || '—',
         salesName: j.sales?.name || '—',
         clientType: j.customer_type || 'B2C',
-        revenueExVat: j.revenue_ex_vat || 0,
+        revenueIncVat: j.revenue_inc_vat || j.revenue_ex_vat || 0,
         workDays: j.work_days,
         workStartDate: j.work_start_date,
         workEndDate,
         handoverId: hov?.id || null,
         workStatus,
-        deliveryDate: hov?.delivery_date || null,
+        deliveryDate: hov?.delivery_date || j.actual_deliver_date || null,
         deliveryFileUrl: hov?.delivery_file_url || null,
         commissionTriggered: hov?.commission_triggered || false,
         daysOverdue: overdue,
@@ -334,22 +459,29 @@ export default function HandoverPage() {
   return (
     <div className="p-4 md:p-6">
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Handover</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามงาน · วันส่งมอบ · Commission</p>
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>Handover</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามงาน · วันส่งมอบ · Commission</p>
+        </div>
+        <button onClick={() => setProjectSummaryOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white"
+          style={{ background: 'var(--accent)' }}>
+          <LayoutGrid size={15} />สรุปโครงการ
+        </button>
       </div>
 
       {/* KPI bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'กำลังดำเนินการ', value: inProgress, color: 'text-amber-400' },
-          { label: 'งานเสร็จ รอส่งมอบ', value: ready, color: 'text-blue-400' },
-          { label: 'ส่งมอบแล้ว', value: delivered, color: 'text-green-400' },
-          { label: 'เกินกำหนด', value: overdue, color: 'text-red-400' },
+          { label: 'กำลังดำเนินการ', value: inProgress, colorVar: 'var(--accent-orange)' },
+          { label: 'งานเสร็จ รอส่งมอบ', value: ready, colorVar: 'var(--accent-blue)' },
+          { label: 'ส่งมอบแล้ว', value: delivered, colorVar: 'var(--accent-green)' },
+          { label: 'เกินกำหนด', value: overdue, colorVar: 'var(--accent-red)' },
         ].map(k => (
           <div key={k.label} className="rounded-xl p-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
-            <p className={`text-2xl font-bold ${k.color}`}>{k.value}</p>
+            <p className="text-2xl font-bold" style={{ color: k.colorVar }}>{k.value}</p>
           </div>
         ))}
       </div>
@@ -365,9 +497,9 @@ export default function HandoverPage() {
         // Overdue rolling: workEndDate already past, not delivered yet — show in current period
         const overdueRolling = jobs.filter(j => j.workStatus !== 'delivered' && j.workEndDate && j.workEndDate < todayStr)
 
-        const expectedRev = expected.reduce((s, j) => s + j.revenueExVat, 0)
-        const deliveredRev = deliveredInPeriod.reduce((s, j) => s + j.revenueExVat, 0)
-        const overdueRev = overdueRolling.reduce((s, j) => s + j.revenueExVat, 0)
+        const expectedRev = expected.reduce((s, j) => s + j.revenueIncVat, 0)
+        const deliveredRev = deliveredInPeriod.reduce((s, j) => s + j.revenueIncVat, 0)
+        const overdueRev = overdueRolling.reduce((s, j) => s + j.revenueIncVat, 0)
 
         return (
           <div className="mb-5 rounded-2xl p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
@@ -386,17 +518,17 @@ export default function HandoverPage() {
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>คาดว่าจะส่งมอบ</p>
-                <p className="text-blue-400 font-bold text-base">{fmtBahtH(expectedRev)}</p>
+                <p className="font-bold text-base" style={{ color: 'var(--accent-blue)' }}>{fmtBahtH(expectedRev)}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{expected.length} ห้อง</p>
               </div>
               <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</p>
-                <p className="text-green-400 font-bold text-base">{fmtBahtH(deliveredRev)}</p>
+                <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{fmtBahtH(deliveredRev)}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{deliveredInPeriod.length} ห้อง</p>
               </div>
               <div className="rounded-xl p-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด (ทบ)</p>
-                <p className="text-red-400 font-bold text-base">{fmtBahtH(overdueRev)}</p>
+                <p className="font-bold text-base" style={{ color: 'var(--accent-red)' }}>{fmtBahtH(overdueRev)}</p>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{overdueRolling.length} ห้อง</p>
               </div>
             </div>
@@ -445,7 +577,7 @@ export default function HandoverPage() {
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   {/* Status icon */}
-                  <div className={`mt-0.5 p-2 rounded-xl border ${cfg.bg}`}>
+                  <div className="mt-0.5 p-2 rounded-xl" style={cfg.bgStyle}>
                     {cfg.icon}
                   </div>
 
@@ -466,7 +598,7 @@ export default function HandoverPage() {
                     <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: 'var(--text-2)' }}>
                       <span>{job.projectName}</span>
                       <span>· {job.salesName}</span>
-                      <span className="font-medium" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenueExVat)}</span>
+                      <span className="font-medium" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenueIncVat)}</span>
                     </div>
 
                     {/* Timeline bar */}
@@ -494,7 +626,7 @@ export default function HandoverPage() {
 
                   {/* Right: status + actions */}
                   <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                    <span className={`text-xs px-2.5 py-1 rounded-lg border font-medium ${cfg.bg} ${cfg.color}`}>
+                    <span className="text-xs px-2.5 py-1 rounded-lg font-medium" style={{ ...cfg.bgStyle, color: cfg.colorVar }}>
                       {cfg.label}
                     </span>
 
@@ -526,14 +658,8 @@ export default function HandoverPage() {
                           onClick={() => !isActive && !isDeliverLocked && updateStatus(job, s)}
                           disabled={isActive || isDeliverLocked}
                           title={isDeliverLocked ? 'ยังไม่ได้เก็บเงินงวดสุดท้าย' : undefined}
-                          className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                            isActive
-                              ? `${c.bg} ${c.color} cursor-default`
-                              : isDeliverLocked
-                                ? 'cursor-not-allowed opacity-40'
-                                : ''
-                          }`}
-                          style={(!isActive && !isDeliverLocked) ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' } : isDeliverLocked ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-3)' } : undefined}>
+                          className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all ${isActive ? 'cursor-default' : isDeliverLocked ? 'cursor-not-allowed opacity-40' : ''}`}
+                          style={isActive ? { ...c.bgStyle, color: c.colorVar } : isDeliverLocked ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-3)' } : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                           {c.icon}{c.label}
                           {isDeliverLocked && s === 'delivered' && <span className="text-[9px] opacity-60">(ล็อก)</span>}
                         </button>
@@ -552,6 +678,12 @@ export default function HandoverPage() {
         open={!!deliveryTarget}
         onClose={() => setDeliveryTarget(null)}
         onSaved={() => { load(); setDeliveryTarget(null) }}
+      />
+
+      <ProjectSummaryModal
+        jobs={jobs}
+        open={projectSummaryOpen}
+        onClose={() => setProjectSummaryOpen(false)}
       />
     </div>
   )

@@ -34,6 +34,7 @@
   --accent-purple: #7c3aed;
   --accent-blue: #2563eb;
   --accent-orange: #ea580c;
+  --accent-red: #dc2626;
 }
 
 /* Dark — iOS 26 Deep Glass */
@@ -58,6 +59,7 @@
   --accent-purple: #a78bfa;
   --accent-blue: #60a5fa;
   --accent-orange: #fb923c;
+  --accent-red: #f87171;
 }
 
 /* ══════════════════════════════════════════
@@ -216,6 +218,66 @@ html:not(.dark) thead tr {
 .tbl-scroll > table { min-width: 640px; }
 
 /* ══════════════════════════════════════════
+   Tab group — shared across pages (Finance, Commission, Handover, etc.)
+══════════════════════════════════════════ */
+.tab-group {
+  display: flex;
+  gap: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  padding: 3px;
+  flex-shrink: 0;
+}
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 11px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: transparent;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+}
+
+/* ══════════════════════════════════════════
    Transitions
 ══════════════════════════════════════════ */
 a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ══════════════════════════════════════════
+   Mobile utilities
+══════════════════════════════════════════ */
+
+/* Horizontal-scroll filter chip row */
+.filter-row {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  flex-wrap: nowrap;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+
+/* Minimum touch target */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* On mobile: full-width stacked grid */
+@media (max-width: 640px) {
+  .mobile-stack { grid-template-columns: 1fr !important; }
+  .mobile-p { padding: 1rem !important; }
+}

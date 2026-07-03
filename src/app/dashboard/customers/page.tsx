@@ -262,6 +262,104 @@ function CustomerDetail({
 
           {!loading && (
             <>
+              {/* Journey Timeline */}
+              <section>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Journey</p>
+                <div className="relative pl-5">
+                  {/* vertical line */}
+                  <div className="absolute left-1.5 top-2 bottom-2 w-px" style={{ background: 'var(--divider)' }} />
+
+                  {/* Step: Booked / Status */}
+                  {(() => {
+                    const isBooked = ['booked','close_pending','closed'].includes(customer.status)
+                    const st = statusInfo(customer.status)
+                    return (
+                      <div className="relative mb-3 flex items-start gap-3">
+                        <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isBooked ? '#f97316' : 'var(--divider)', borderColor: isBooked ? '#f97316' : 'var(--text-3)' }} />
+                        <div>
+                          <p className="text-xs font-medium" style={{ color: isBooked ? '#f97316' : 'var(--text-3)' }}>
+                            {isBooked ? '★ Booked' : `สถานะ: ${st.label}`}
+                          </p>
+                          {customer.status === 'lost' && <p className="text-[10px]" style={{ color: '#f87171' }}>หลุดแล้ว</p>}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Steps: per job */}
+                  {jobs.length === 0 ? (
+                    <div className="relative mb-3 flex items-start gap-3">
+                      <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: 'var(--divider)', borderColor: 'var(--text-3)' }} />
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังไม่แปลงเป็น Job</p>
+                    </div>
+                  ) : jobs.map(job => {
+                    const paidCount = job.installments.filter(i => i.status === 'paid').length
+                    const totalCount = job.installments.length
+                    const isDelivered = job.working_status === 'ส่งมอบแล้ว'
+                    const warranty = warranties.find(w => w.room === (job as any).room_no)
+                    const warrantDaysLeft = warranty?.warranty_end ? Math.floor((new Date(warranty.warranty_end).getTime() - Date.now()) / 864e5) : null
+
+                    return (
+                      <div key={job.id}>
+                        {/* สั่งงาน */}
+                        <div className="relative mb-3 flex items-start gap-3">
+                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: '#6366f1' }} />
+                          <div>
+                            <p className="text-xs font-medium" style={{ color: '#a78bfa' }}>📋 สั่งงาน</p>
+                            <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                              {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* งวดชำระ */}
+                        {totalCount > 0 && (
+                          <div className="relative mb-3 flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: paidCount === totalCount ? '#4ade80' : '#fbbf24' }} />
+                            <div>
+                              <p className="text-xs font-medium" style={{ color: paidCount === totalCount ? '#4ade80' : '#fbbf24' }}>
+                                💰 ชำระ {paidCount}/{totalCount} งวด
+                              </p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                                {fmt(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))} / {fmt(job.installments.reduce((s, i) => s + i.amount, 0))} บ.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ส่งมอบ */}
+                        <div className="relative mb-3 flex items-start gap-3">
+                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isDelivered ? '#34d399' : 'var(--divider)', borderColor: isDelivered ? '#34d399' : 'var(--text-3)' }} />
+                          <div>
+                            <p className="text-xs font-medium" style={{ color: isDelivered ? '#34d399' : 'var(--text-3)' }}>
+                              {isDelivered ? '✅ ส่งมอบแล้ว' : '○ รอส่งมอบ'}
+                            </p>
+                            {isDelivered && job.handover?.delivery_date && (
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{job.handover.delivery_date.slice(0, 10)}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* ประกัน */}
+                        {warranty && (
+                          <div className="relative mb-3 flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? '#fbbf24' : '#60a5fa' }} />
+                            <div>
+                              <p className="text-xs font-medium" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : '#60a5fa' }}>
+                                🛡️ ประกัน {warranty.warranty_months || ''} เดือน
+                              </p>
+                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                                {warranty.warranty_end?.slice(0, 10)} · {warrantDaysLeft !== null ? (warrantDaysLeft <= 0 ? 'หมดแล้ว' : `เหลือ ${warrantDaysLeft} วัน`) : ''}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+
               {/* Jobs */}
               <section>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
@@ -424,7 +522,7 @@ export default function CustomersPage() {
     ] = await Promise.all([
       supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, projects(name), users!customers_assigned_to_fkey(name)').order('created_at', { ascending: false }),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
-      supabase.from('users').select('id,name').eq('active', true).order('name'),
+      supabase.from('users').select('id,name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
     ])
     if (cErr || pErr || uErr) {
       setFetchError((cErr ?? pErr ?? uErr)!.message)
@@ -460,6 +558,16 @@ export default function CustomersPage() {
       const { error } = await supabase.from('customers').update(payload).eq('id', editing.id)
       if (error) { setSaveError(error.message); setSaving(false); return }
     } else {
+      // ป้องกัน duplicate: ตรวจเบอร์โทรก่อน insert
+      if (form.phone) {
+        const { data: dup } = await supabase.from('customers')
+          .select('id,customer_name').eq('phone', form.phone).maybeSingle()
+        if (dup) {
+          setSaveError(`เบอร์ ${form.phone} มีอยู่แล้วในระบบ — ลูกค้า: "${dup.customer_name}" (${dup.id})`)
+          setSaving(false)
+          return
+        }
+      }
       const newId = genId()
       if (customers.some(c => c.id === newId)) {
         setSaveError(`ID "${newId}" มีอยู่แล้วในระบบ — กรุณาตรวจสอบโครงการและห้องอีกครั้ง`)
@@ -508,7 +616,7 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>ลูกค้า Condo Origin</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>ลูกค้าใน Pipeline</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าและ Pipeline การขาย</p>
         </div>
         <div className="flex gap-2">

@@ -19,11 +19,11 @@ interface Warranty {
   status: string
   notes: string
   created_at: string
-  customers?: { name: string; phone: string }
+  customers?: { customer_name: string; phone: string }
   projects?: { name: string }
 }
 
-interface Customer { id: string; name: string }
+interface Customer { id: string; customer_name: string }
 interface Project { id: string; name: string }
 
 const STATUS = [
@@ -72,8 +72,8 @@ export default function WarrantyPage() {
     setLoading(true)
     setFetchError('')
     const [{ data: w, error: e1 }, { data: c, error: e2 }, { data: p, error: e3 }] = await Promise.all([
-      supabase.from('warranties').select('*, customers(name,phone), projects(name)').order('warranty_end', { ascending: true }),
-      supabase.from('customers').select('id,name').order('name'),
+      supabase.from('warranties').select('*, customers(customer_name,phone), projects(name)').order('warranty_end', { ascending: true }),
+      supabase.from('customers').select('id,customer_name').order('customer_name'),
       supabase.from('projects').select('id,name').order('name'),
     ])
     if (e1 || e2 || e3) { setFetchError((e1 ?? e2 ?? e3)!.message); setLoading(false); return }
@@ -120,14 +120,14 @@ export default function WarrantyPage() {
     load()
   }
 
-  const custOptions = [{ value: '', label: '— เลือกลูกค้า —' }, ...customers.map(c => ({ value: c.id, label: c.name }))]
+  const custOptions = [{ value: '', label: '— เลือกลูกค้า —' }, ...customers.map(c => ({ value: c.id, label: c.customer_name }))]
   const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
   const statusOptions = STATUS.map(s => ({ value: s.value, label: s.label }))
 
   const filtered = warranties.filter(w => {
     const q = search.toLowerCase()
     const matchSearch = !q ||
-      ((w as any).customers?.name || '').toLowerCase().includes(q) ||
+      ((w as any).customers?.customer_name || '').toLowerCase().includes(q) ||
       (w.room || '').toLowerCase().includes(q)
     const matchProject = !projectFilter || w.project_id === projectFilter
     const matchStatus = !statusFilter || computedStatus(w.warranty_end) === statusFilter
@@ -161,7 +161,7 @@ export default function WarrantyPage() {
           <div>
             <p className="text-sm font-semibold text-yellow-400">ประกันใกล้หมด {expiringSoon.length} ราย</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
-              {expiringSoon.map(w => `${(w as any).customers?.name || w.room} (เหลือ ${daysLeft(w.warranty_end)} วัน)`).join(' · ')}
+              {expiringSoon.map(w => `${(w as any).customers?.customer_name || w.room} (เหลือ ${daysLeft(w.warranty_end)} วัน)`).join(' · ')}
             </p>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default function WarrantyPage() {
                   return (
                     <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
                       <td className="px-4 py-3">
-                        <p className="text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.name || '-'}</p>
+                        <p className="text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.customer_name || '-'}</p>
                         <p className="text-xs" style={{ color: 'var(--text-3)' }}>{(w as any).customers?.phone}</p>
                       </td>
                       <td className="px-4 py-3">
@@ -288,7 +288,7 @@ export default function WarrantyPage() {
               <tbody>
                 {expired.map((w, i) => (
                   <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
-                    <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.name || '-'}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-1)' }}>{(w as any).customers?.customer_name || '-'}</td>
                     <td className="px-4 py-3">
                       <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(w as any).projects?.name || '-'}</p>
                       <p className="text-accent-blue text-xs">{w.room}</p>

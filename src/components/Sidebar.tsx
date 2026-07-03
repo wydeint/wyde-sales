@@ -129,7 +129,7 @@ export default function Sidebar() {
         lg+   : w-[216px] — full labels
     */}
     <aside
-      className="w-[60px] lg:w-[216px] flex-shrink-0 flex flex-col h-screen"
+      className="w-[216px] flex-shrink-0 flex flex-col h-screen"
       style={{
         background: 'var(--sidebar-bg)',
         borderRight: '1px solid var(--sidebar-border)',
@@ -138,9 +138,8 @@ export default function Sidebar() {
       }}
     >
       {/* ── Logo ── */}
-      <div className="px-2 lg:px-4 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
-        {/* Full logo (lg+) */}
-        <div className="hidden lg:flex items-center gap-3">
+      <div className="px-4 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+        <div className="flex items-center gap-3">
           <div className="flex-shrink-0 flex items-center" style={{ width: 72, height: 32 }}>
             <img src="/logo.svg" alt="WydE Int." style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
           </div>
@@ -149,15 +148,10 @@ export default function Sidebar() {
             <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>WydEInt Interior</p>
           </div>
         </div>
-        {/* Mini logo (< lg) */}
-        <div className="flex lg:hidden items-center justify-center">
-          <img src="/logo.svg" alt="WydE" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-        </div>
       </div>
 
       {/* ── Search ── */}
-      {/* Full search bar (lg+) */}
-      <div className="hidden lg:block px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+      <div className="px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
         <button onClick={() => setSearchOpen(true)}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
           style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
@@ -166,30 +160,18 @@ export default function Sidebar() {
           <kbd className="text-[10px] px-1 rounded" style={{ background: 'var(--card-bg)', color: 'var(--text-3)' }}>⌘K</kbd>
         </button>
       </div>
-      {/* Mini search icon (< lg) */}
-      <div className="flex lg:hidden items-center justify-center py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
-        <button onClick={() => setSearchOpen(true)}
-          aria-label="ค้นหา"
-          className="w-9 h-9 flex items-center justify-center rounded-xl"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
-          <Search size={15} />
-        </button>
-      </div>
 
       {/* ── Nav ── */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="เมนูหลัก">
+      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5" aria-label="เมนูหลัก">
         {NAV.map(section => (
           <div key={section.label} className="mb-4">
-            {/* Section label (lg+ only) */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2 mb-1">
+            <div className="flex items-center gap-1.5 px-2 mb-1">
               {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
               <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
                 style={!section.color ? { color: 'var(--text-3)' } : undefined}>
                 {section.label}
               </span>
             </div>
-            {/* Divider instead of label (< lg) */}
-            <div className="block lg:hidden mb-1" style={{ height: 1, background: 'var(--divider)', margin: '4px 4px' }} />
 
             {section.items.map(item => {
               const isActive = pathname === item.href
@@ -209,13 +191,11 @@ export default function Sidebar() {
                   onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--hover-bg)' }}
                   onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
-                  {/* Icon — centered on < lg, left-aligned on lg+ */}
-                  <span className="flex items-center justify-center w-full lg:w-auto py-2.5 px-0 lg:px-3">
+                  <span className="flex items-center justify-center py-2.5 px-3">
                     <Icon size={16} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)', flexShrink: 0 }} />
                   </span>
-                  {/* Label (lg+ only) */}
-                  <span className="hidden lg:inline truncate flex-1 text-sm font-normal">{item.label}</span>
-                  {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="hidden lg:inline flex-shrink-0 mr-2" />}
+                  <span className="truncate flex-1 text-sm font-normal">{item.label}</span>
+                  {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="flex-shrink-0 mr-2" />}
                 </Link>
               )
             })}
@@ -224,9 +204,8 @@ export default function Sidebar() {
       </nav>
 
       {/* ── Bottom bar ── */}
-      <div className="flex-shrink-0 px-2 lg:px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
-        {/* Full mode (lg+) */}
-        <div className="hidden lg:flex items-center gap-1.5">
+      <div className="flex-shrink-0 px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
+        <div className="flex items-center gap-1.5">
           <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
             style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
             {userInitial}
@@ -248,24 +227,6 @@ export default function Sidebar() {
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
             <LogOut size={14} />
-          </button>
-        </div>
-
-        {/* Icon-only mode (< lg) */}
-        <div className="flex lg:hidden flex-col items-center gap-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
-            {userInitial}
-          </div>
-          <button onClick={toggle} aria-label={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            className="w-9 h-9 flex items-center justify-center rounded-xl"
-            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
-            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
-          <button onClick={signOut} aria-label="ออกจากระบบ"
-            className="w-9 h-9 flex items-center justify-center rounded-xl"
-            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
-            <LogOut size={15} />
           </button>
         </div>
       </div>

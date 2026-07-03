@@ -7,12 +7,14 @@ import {
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
   Target, LogOut, Sun, Moon, ChevronRight, CreditCard,
-  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap
+  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap, Search
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/ThemeProvider'
 import { useEffect, useState } from 'react'
+import NotificationBell from '@/components/NotificationBell'
+import GlobalSearch from '@/components/GlobalSearch'
 
 const NAV = [
   {
@@ -26,7 +28,7 @@ const NAV = [
   },
   {
     label: 'SALES',
-    color: 'text-emerald-400 dark:text-emerald-400',
+    color: 'text-emerald-400',
     dot: 'bg-emerald-400',
     items: [
       { href: '/dashboard/leads', icon: Database, label: 'Origin Pool' },
@@ -42,7 +44,7 @@ const NAV = [
   },
   {
     label: 'SALES MGR',
-    color: 'text-sky-400 dark:text-sky-400',
+    color: 'text-sky-400',
     dot: 'bg-sky-400',
     items: [
       { href: '/dashboard/commission', icon: DollarSign, label: 'Commission' },
@@ -50,8 +52,8 @@ const NAV = [
     ],
   },
   {
-    label: 'AFTER SALE SERVICE',
-    color: 'text-violet-400 dark:text-violet-400',
+    label: 'AFTER SALE',
+    color: 'text-violet-400',
     dot: 'bg-violet-400',
     items: [
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
@@ -59,7 +61,7 @@ const NAV = [
   },
   {
     label: 'REPORTS',
-    color: 'text-amber-400 dark:text-amber-400',
+    color: 'text-amber-400',
     dot: 'bg-amber-400',
     items: [
       { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
@@ -79,13 +81,29 @@ const NAV = [
   },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
   const { theme, toggle } = useTheme()
   const [userName, setUserName] = useState('')
   const [userInitial, setUserInitial] = useState('W')
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(o => !o)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     async function getUser() {
@@ -108,8 +126,15 @@ export default function Sidebar() {
   }
 
   return (
+    <>
+    {/*
+      Width responsive:
+        < md  : w-60 (overlay, slides in)
+        md–lg : w-16 (icon-only, always visible)
+        lg+   : w-60 (full, always visible)
+    */}
     <aside
-      className="w-60 flex-shrink-0 flex flex-col h-screen relative"
+      className="w-60 md:w-16 lg:w-60 flex-shrink-0 flex flex-col h-screen relative"
       style={{
         background: 'var(--sidebar-bg)',
         borderRight: '1px solid var(--sidebar-border)',
@@ -117,42 +142,71 @@ export default function Sidebar() {
         WebkitBackdropFilter: 'blur(28px) saturate(180%)',
       }}
     >
-      {/* Logo */}
-      <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
-        <div className="flex items-center gap-3">
-          {/* Logo mark */}
+      {/* ── Logo ──────────────────────────────────── */}
+      <div className="px-4 md:px-2 lg:px-4 pt-5 pb-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+        {/* Full logo (overlay + lg+) */}
+        <div className="flex items-center gap-3 md:hidden lg:flex">
           <div className="flex-shrink-0 flex items-center" style={{ width: 72, height: 32 }}>
             <img src="/logo.svg" alt="WydE Int." style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
           </div>
           <div>
-            <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>
-              Super Sales
-            </p>
-            <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>
-              WydEInt Interior
-            </p>
+            <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>Super Sales</p>
+            <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>WydEInt Interior</p>
+          </div>
+        </div>
+        {/* Mini logo (icon-only iPad) */}
+        <div className="hidden md:flex lg:hidden items-center justify-center">
+          <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/logo.svg" alt="WydE" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           </div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+      {/* ── Search ────────────────────────────────── */}
+      {/* Full search bar (overlay + lg+) */}
+      <div className="md:hidden lg:block px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+        <button onClick={() => setSearchOpen(true)}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+          style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+          <Search size={13} aria-hidden="true" />
+          <span className="flex-1 text-left text-xs">ค้นหา...</span>
+          <kbd className="text-[10px] px-1 rounded" style={{ background: 'var(--card-bg)', color: 'var(--text-3)' }}>⌘K</kbd>
+        </button>
+      </div>
+      {/* Mini search icon (icon-only iPad) */}
+      <div className="hidden md:flex lg:hidden items-center justify-center py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--divider)' }}>
+        <button onClick={() => setSearchOpen(true)}
+          aria-label="ค้นหา"
+          className="w-9 h-9 flex items-center justify-center rounded-xl"
+          style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+          <Search size={15} />
+        </button>
+      </div>
+
+      {/* ── Nav ───────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2 lg:px-3 space-y-0.5" aria-label="เมนูหลัก">
         {NAV.map(section => (
-          <div key={section.label} className="mb-3">
-            {/* Section label */}
-            <div className="flex items-center gap-1.5 px-2 mb-1">
-              {section.dot && (
-                <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />
-              )}
-              <span
-                className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
-                style={!section.color ? { color: 'var(--text-3)' } : undefined}
-              >
+          <div key={section.label} className="mb-2 lg:mb-3">
+            {/* Section label — full mode only */}
+            <div className="hidden md:hidden lg:flex items-center gap-1.5 px-2 mb-1">
+              {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
+              <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
+                style={!section.color ? { color: 'var(--text-3)' } : undefined}>
+                {section.label}
+              </span>
+            </div>
+            {/* Section label visible on lg+ */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2 mb-1">
+              {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
+              <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
+                style={!section.color ? { color: 'var(--text-3)' } : undefined}>
                 {section.label}
               </span>
             </div>
 
-            {/* Items */}
+            {/* Divider instead of label on icon-only iPad */}
+            <div className="hidden md:block lg:hidden mb-1" style={{ height: 1, background: 'var(--divider)', margin: '4px 4px' }} />
+
             {section.items.map(item => {
               const isActive = pathname === item.href
               const Icon = item.icon
@@ -160,26 +214,27 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm mb-0.5 relative group"
+                  onClick={onClose}
+                  title={item.label}
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className="flex items-center gap-2.5 rounded-xl mb-0.5 relative group transition-colors"
                   style={{
                     background: isActive ? 'var(--active-bg)' : 'transparent',
                     color: isActive ? 'var(--accent)' : 'var(--text-2)',
+                    /* Full mode: normal padding; icon mode: center icon */
+                    padding: undefined,
                   }}
-                  onMouseEnter={e => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--hover-bg)'
-                  }}
-                  onMouseLeave={e => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'
-                  }}
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--hover-bg)' }}
+                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                 >
-                  <Icon
-                    size={15}
-                    style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)', flexShrink: 0 }}
-                  />
-                  <span className="truncate flex-1 font-medium">{item.label}</span>
-                  {isActive && (
-                    <ChevronRight size={12} style={{ color: 'var(--accent)' }} />
-                  )}
+                  {/* Icon — centered on md, left-aligned on lg */}
+                  <span className="flex items-center justify-center md:w-full lg:w-auto md:py-2 lg:py-0 px-2 lg:px-3 py-2">
+                    <Icon size={16} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)', flexShrink: 0 }} />
+                  </span>
+                  {/* Label — visible on overlay + lg, hidden on md */}
+                  <span className="truncate flex-1 font-medium text-sm md:hidden lg:inline">{item.label}</span>
+                  {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="md:hidden lg:inline flex-shrink-0 mr-2" />}
                 </Link>
               )
             })}
@@ -187,45 +242,54 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom bar — compact single row */}
-      <div className="px-3 pb-3 pt-2.5 flex items-center gap-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
-        {/* Avatar + name */}
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-          >
+      {/* ── Bottom bar ───────────────────────────── */}
+      <div className="flex-shrink-0 px-2 lg:px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
+        {/* Full mode (overlay + lg+): avatar + name + buttons in a row */}
+        <div className="flex items-center gap-1.5 md:hidden lg:flex">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
+            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
             {userInitial}
           </div>
-          <span className="text-[11px] font-medium truncate" style={{ color: 'var(--text-3)' }}>
+          <span className="text-[11px] font-medium truncate flex-1" style={{ color: 'var(--text-3)' }}>
             {userName || '...'}
           </span>
+          <NotificationBell />
+          <button onClick={toggle} aria-label={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
+            style={{ color: 'var(--text-3)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+          </button>
+          <button onClick={signOut} aria-label="ออกจากระบบ"
+            className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
+            style={{ color: 'var(--text-3)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            <LogOut size={14} />
+          </button>
         </div>
 
-        {/* Theme toggle icon-only */}
-        <button
-          onClick={toggle}
-          aria-label={theme === 'dark' ? 'เปลี่ยนเป็น Light Mode' : 'เปลี่ยนเป็น Dark Mode'}
-          className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
-          style={{ color: 'var(--text-3)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        >
-          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-        </button>
-
-        {/* Sign out icon-only */}
-        <button
-          onClick={signOut}
-          aria-label="ออกจากระบบ"
-          className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
-          style={{ color: 'var(--text-3)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        >
-          <LogOut size={14} />
-        </button>
+        {/* Icon-only mode (md): stacked icon buttons */}
+        <div className="hidden md:flex lg:hidden flex-col items-center gap-2">
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+            {userInitial}
+          </div>
+          <button onClick={toggle} aria-label={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            className="w-9 h-9 flex items-center justify-center rounded-xl"
+            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+          <button onClick={signOut} aria-label="ออกจากระบบ"
+            className="w-9 h-9 flex items-center justify-center rounded-xl"
+            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
+            <LogOut size={15} />
+          </button>
+        </div>
       </div>
     </aside>
+    <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   )
 }

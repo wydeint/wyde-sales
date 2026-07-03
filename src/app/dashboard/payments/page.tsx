@@ -19,6 +19,7 @@ interface Job {
   customer_type: ClientType
   work_type: string
   revenue_ex_vat: number
+  revenue_inc_vat: number
   working_status: string
   order_date: string | null
   sales_id: string
@@ -55,6 +56,7 @@ interface RawJob {
   customer_type: string
   work_type: string
   revenue_ex_vat: number
+  revenue_inc_vat: number
   working_status: string
   order_date: string | null
   sales_id: string
@@ -140,7 +142,7 @@ function SummaryView({ jobs }: { jobs: Job[] }) {
   const { totalRevenue, paidAmount, pendingAmount, overdueAmount, collectionRate } = useMemo(() => {
     let totalRevenue = 0, paidAmount = 0, pendingAmount = 0, overdueAmount = 0
     for (const j of jobs) {
-      totalRevenue += j.revenue_ex_vat
+      totalRevenue += (j.revenue_inc_vat || j.revenue_ex_vat)
       for (const i of j.installments) {
         if (i.status === 'paid') paidAmount += i.amount
         else if (i.status === 'overdue') { overdueAmount += i.amount; pendingAmount += i.amount }
@@ -193,7 +195,7 @@ function SummaryView({ jobs }: { jobs: Job[] }) {
           <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่ตั้งแผน</p>
           <p className="text-kpi-number text-red-400">{jobs.filter(j => j.installments.length === 0).length} งาน</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-            {fmtBahtK(jobs.filter(j => j.installments.length === 0).reduce((s, j) => s + j.revenue_ex_vat, 0))}
+            {fmtBahtK(jobs.filter(j => j.installments.length === 0).reduce((s, j) => s + (j.revenue_inc_vat || j.revenue_ex_vat), 0))}
           </p>
         </div>
       </div>
@@ -297,7 +299,7 @@ function PlanSetupModal({ job, open, onClose, onSaved }: { job: Job; open: boole
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [saving, setSaving] = useState(false)
 
-  const total = job.revenue_ex_vat || 0
+  const total = job.revenue_inc_vat || job.revenue_ex_vat || 0
   const pctSum = b2bPcts.slice(0, b2bCount).reduce((a, b) => a + b, 0)
   const pctValid = Math.abs(pctSum - 100) < 0.01
 
@@ -606,6 +608,7 @@ export default function PaymentsPage() {
       customer_type: (j.customer_type as ClientType) || 'B2C',
       work_type: j.work_type || '',
       revenue_ex_vat: j.revenue_ex_vat,
+      revenue_inc_vat: j.revenue_inc_vat,
       working_status: j.working_status,
       order_date: j.order_date,
       sales_id: j.sales_id,
@@ -844,7 +847,7 @@ export default function PaymentsPage() {
                         </div>
                       )}
                       <div className="text-right">
-                        <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{fmtBahtK(job.revenue_ex_vat)}</p>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{fmtBahtK(job.revenue_inc_vat || job.revenue_ex_vat)}</p>
                         {nextPending && <p className="text-amber-400 text-xs">งวดถัดไป {fmtBahtK(nextPending.amount)}</p>}
                       </div>
                       {expanded ? <ChevronUp size={16} style={{ color: 'var(--text-3)' }} /> : <ChevronDown size={16} style={{ color: 'var(--text-3)' }} />}

@@ -35,6 +35,7 @@ const NAV = [
       { href: '/dashboard/customers', icon: Users, label: 'Prospects' },
       { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects (Kanban)' },
       { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
+      { href: '/dashboard/my-deals', icon: Zap, label: 'My Deals' },
       { href: '/dashboard/payments', icon: Receipt, label: 'สถานะการชำระเงิน' },
       { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },

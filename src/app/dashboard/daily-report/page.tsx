@@ -83,7 +83,7 @@ export default function DailyReportPage() {
   const f = (v: number) => v ? v.toLocaleString() : '0'
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Daily Report</h1>

@@ -81,7 +81,11 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
       {/* Backdrop */}
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.60)' }}
+        style={{
+          background: 'rgba(0,0,0,0.30)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+        }}
         onClick={onClose}
         aria-hidden="true"
       />

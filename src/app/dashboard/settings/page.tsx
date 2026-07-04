@@ -69,7 +69,7 @@ export default function SettingsPage() {
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="page-content space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>ตั้งค่าระบบ</h1>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Commission Tiers */}
-      <div className="glass-card p-5">
+      <div className="ds-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Settings2 size={15} style={{ color: 'var(--accent)' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>

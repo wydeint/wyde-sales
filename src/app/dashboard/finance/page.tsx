@@ -96,10 +96,10 @@ type EntryDraft = {
 // ── Constants ──────────────────────────────────────────────
 const EXPENSE_CATS = ['เงินเดือน', 'ค่าเช่า/สำนักงาน', 'ค่าวัสดุ/สินค้า', 'ค่าขนส่ง', 'ค่าการตลาด', 'ค่าสาธารณูปโภค', 'ค่าใช้จ่ายอื่นๆ']
 const PAY_STATUS = [
-  { value: 'pending', label: 'รอชำระ', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'overdue', label: 'เกินกำหนด', color: 'bg-red-500/20 text-red-400' },
-  { value: 'paid', label: 'ชำระแล้ว', color: 'bg-green-500/20 text-green-400' },
-  { value: 'partial', label: 'ชำระบางส่วน', color: 'bg-blue-500/20 text-blue-400' },
+  { value: 'pending', label: 'รอชำระ', color: 'badge badge-orange' },
+  { value: 'overdue', label: 'เกินกำหนด', color: 'badge badge-red' },
+  { value: 'paid', label: 'ชำระแล้ว', color: 'badge badge-green' },
+  { value: 'partial', label: 'ชำระบางส่วน', color: 'badge badge-blue' },
 ]
 const emptyEntry = { category: '', amount: 0, entry_date: new Date().toISOString().slice(0, 10), description: '', ref_id: '' }
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
@@ -348,7 +348,7 @@ export default function FinancePage() {
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -402,7 +402,7 @@ export default function FinancePage() {
             <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-lg" style={{ background: 'var(--hover-bg)' }}>
               <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
             </button>
-            <span className="text-sm font-semibold px-3 py-1.5 rounded-xl glass-card" style={{ color: 'var(--text-1)' }}>
+            <span className="text-sm font-semibold px-3 py-1.5 rounded-xl ds-card" style={{ color: 'var(--text-1)' }}>
               {label}
               {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
             </span>
@@ -414,7 +414,7 @@ export default function FinancePage() {
 
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="glass-card p-4">
+            <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Package size={13} style={{ color: '#4ade80' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>ยอดส่งมอบ (inc.VAT)</span>
@@ -422,7 +422,7 @@ export default function FinancePage() {
               <p className="text-kpi-number" style={{ color: '#4ade80' }}>{fk(periodDeliveredRevenue)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodDelivered.length} งาน</p>
             </div>
-            <div className="glass-card p-4">
+            <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Wallet size={13} style={{ color: '#60a5fa' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>รับงวด (paid)</span>
@@ -430,7 +430,7 @@ export default function FinancePage() {
               <p className="text-kpi-number" style={{ color: '#60a5fa' }}>{fk(periodPaidAmount)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodPaid.length} งวด</p>
             </div>
-            <div className="glass-card p-4">
+            <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingDown size={13} style={{ color: '#f87171' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>รายจ่าย</span>
@@ -438,7 +438,7 @@ export default function FinancePage() {
               <p className="text-kpi-number" style={{ color: '#f87171' }}>{fk(periodExpenseTotal)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodExpenses.length} รายการ</p>
             </div>
-            <div className="glass-card p-4">
+            <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp size={13} style={{ color: periodTotalIncome - periodExpenseTotal >= 0 ? '#4ade80' : '#f87171' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>Net Cash</span>
@@ -453,7 +453,7 @@ export default function FinancePage() {
           </div>
 
           {/* 12-month chart */}
-          <div className="glass-card p-5">
+          <div className="ds-card p-5">
             <div className="flex items-center gap-4 mb-4 flex-wrap">
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายรับ vs รายจ่าย 12 เดือนล่าสุด</h2>
               <div className="flex gap-4 text-xs">
@@ -512,7 +512,7 @@ export default function FinancePage() {
           </div>
 
           {/* ── Pipeline การเงิน ─────────────────────────────── */}
-          <div className="glass-card p-5">
+          <div className="ds-card p-5">
             <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>Pipeline การเงิน</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
@@ -608,7 +608,7 @@ export default function FinancePage() {
             })
             const projectGroups = Object.values(byProject).sort((a, b) => a.name.localeCompare(b.name, 'th'))
             return (
-              <div className="glass-card p-5">
+              <div className="ds-card p-5">
                 <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>
                   งานส่งมอบใน{label} ({periodDelivered.length} งาน · {projectGroups.length} โครงการ)
                 </h2>
@@ -656,7 +656,7 @@ export default function FinancePage() {
 
           {/* Period detail: paid installments */}
           {periodPaid.length > 0 && (
-            <div className="glass-card p-5">
+            <div className="ds-card p-5">
               <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>งวดรับชำระใน{label} ({periodPaid.length} งวด)</h2>
               <div className="space-y-2">
                 {periodPaid.map(p => (
@@ -677,7 +677,7 @@ export default function FinancePage() {
           )}
 
           {periodDelivered.length === 0 && periodPaid.length === 0 && (
-            <div className="glass-card p-10 text-center text-sm" style={{ color: 'var(--text-3)' }}>
+            <div className="ds-card p-10 text-center text-sm" style={{ color: 'var(--text-3)' }}>
               ไม่มีรายรับใน{label}
             </div>
           )}
@@ -915,11 +915,11 @@ export default function FinancePage() {
             {expenseMonth && (
               <button onClick={() => setExpenseMonth('')} className="text-xs px-3 py-2 rounded-[8px]" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>ล้าง</button>
             )}
-            <div className="ml-auto glass-card px-4 py-2 text-sm">
+            <div className="ml-auto ds-card px-4 py-2 text-sm">
               รวม <span className="font-bold ml-1" style={{ color: '#f87171' }}>{f(filteredEntries.reduce((s, e) => s + e.amount, 0))}</span>
             </div>
           </div>
-          <div className="glass-card overflow-x-auto">
+          <div className="ds-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -966,17 +966,17 @@ export default function FinancePage() {
             </div>
           )}
           <div className="grid grid-cols-3 gap-3">
-            <div className="glass-card p-3">
+            <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับทั้งหมด</p>
               <p className="text-lg font-bold text-yellow-400">{f(outstanding.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.length} งวด</p>
             </div>
-            <div className="glass-card p-3">
+            <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
               <p className="text-lg font-bold text-red-400">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
             </div>
-            <div className="glass-card p-3">
+            <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว</p>
               <p className="text-lg font-bold text-green-400">{f(paidPayments.reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{paidPayments.length} งวด</p>
@@ -995,7 +995,7 @@ export default function FinancePage() {
               </button>
             ))}
           </div>
-          <div className="glass-card overflow-x-auto">
+          <div className="ds-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -1207,12 +1207,11 @@ export default function FinancePage() {
 
       {/* Drill-down Modal */}
       {drilldown && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDrilldown(null)}>
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} />
-          <div className="relative w-full max-w-lg rounded-[18px] shadow-2xl max-h-[80vh] flex flex-col" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
+        <div className="modal-backdrop" onClick={() => setDrilldown(null)}>
+          <div className="modal-panel max-h-[80vh] flex flex-col"
             onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
-              <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">
                 {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Backlog)' : drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง' : '⚠️ งวดเกินกำหนด'}
               </h3>
               <button onClick={() => setDrilldown(null)} style={{ color: 'var(--text-3)' }}>✕</button>

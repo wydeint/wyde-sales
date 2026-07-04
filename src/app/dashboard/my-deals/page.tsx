@@ -36,6 +36,8 @@ interface Installment {
   paid_date: string | null
   is_work_trigger: boolean
   is_final: boolean
+  slip_url: string | null
+  receipt_url: string | null
 }
 
 interface FullJob {
@@ -57,6 +59,12 @@ interface FullJob {
   work_start_date: string | null
   warranty_end: string | null
   installments: Installment[]
+  // job-level docs
+  quotation1_url: string | null
+  quotation2_url: string | null
+  id_card_url: string | null
+  delivery_doc_url: string | null
+  satisfaction_url: string | null
 }
 
 // ─── Stage helpers ─────────────────────────────────────────
@@ -149,6 +157,10 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(todayStr())
+  const [slipUrl, setSlipUrl] = useState('')
+  const [slipPosted, setSlipPosted] = useState(false)
+  const [receiptUrl, setReceiptUrl] = useState('')
+  const [receiptPosted, setReceiptPosted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState<'plan' | 'pay'>('plan')
 
@@ -192,6 +204,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       paid_date: i === 0 ? paidDate : null,
       is_work_trigger: p.trigger,
       is_final: p.final,
+      slip_url: i === 0 ? (slipUrl.trim() || (slipPosted ? 'posted' : null)) : null,
+      receipt_url: i === 0 ? (receiptUrl.trim() || (receiptPosted ? 'posted' : null)) : null,
     })))
     setSaving(false); onSaved(); onClose()
   }
@@ -326,6 +340,18 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                 <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
                   className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
               </div>
+              <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
+                    className="w-4 h-4 rounded" style={{ accentColor: '#60a5fa' }} />
+                  <span className="text-xs font-medium" style={{ color: slipPosted ? '#60a5fa' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input type="checkbox" checked={receiptPosted} onChange={e => setReceiptPosted(e.target.checked)}
+                    className="w-4 h-4 rounded" style={{ accentColor: '#4ade80' }} />
+                  <span className="text-xs font-medium" style={{ color: receiptPosted ? '#4ade80' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
+                </label>
+              </div>
               <div className="flex gap-2">
                 <button onClick={() => setStep('plan')} className="flex-1 py-2.5 rounded-[11px] text-sm border"
                   style={btnIdle}>← ย้อนกลับ</button>
@@ -348,6 +374,10 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
   const pending = job.installments.filter(i => i.status !== 'paid').sort((a, b) => a.installment_no - b.installment_no)
   const [selected, setSelected] = useState<Installment | null>(pending[0] || null)
   const [paidDate, setPaidDate] = useState(todayStr())
+  const [slipUrl, setSlipUrl] = useState('')
+  const [slipPosted, setSlipPosted] = useState(false)
+  const [receiptUrl, setReceiptUrl] = useState('')
+  const [receiptPosted, setReceiptPosted] = useState(false)
   const [saving, setSaving] = useState(false)
 
   async function save() {
@@ -356,7 +386,12 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     if (selected.is_work_trigger && !job.work_start_date) {
       await supabase.from('jobs').update({ work_start_date: paidDate }).eq('id', job.id)
     }
-    await supabase.from('payments').update({ status: 'paid', paid_date: paidDate }).eq('id', selected.id)
+    await supabase.from('payments').update({
+      status: 'paid',
+      paid_date: paidDate,
+      slip_url: slipUrl.trim() || (slipPosted ? 'posted' : null),
+      receipt_url: receiptUrl.trim() || (receiptPosted ? 'posted' : null),
+    }).eq('id', selected.id)
     setSaving(false); onSaved(); onClose()
   }
 
@@ -365,7 +400,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
+      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
         style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -400,6 +435,19 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
             <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
               className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
           </div>
+          {/* Slip + Receipt checkboxes */}
+          <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
+                className="w-4 h-4 rounded" style={{ accentColor: '#60a5fa' }} />
+              <span className="text-xs font-medium" style={{ color: slipPosted ? '#60a5fa' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" checked={receiptPosted} onChange={e => setReceiptPosted(e.target.checked)}
+                className="w-4 h-4 rounded" style={{ accentColor: '#4ade80' }} />
+              <span className="text-xs font-medium" style={{ color: receiptPosted ? '#4ade80' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
+            </label>
+          </div>
           <button onClick={save} disabled={saving || !selected}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
@@ -429,7 +477,12 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
     const wEnd = new Date(deliverDate)
     wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
     const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
-    await supabase.from('jobs').update({ actual_deliver_date: deliverDate, working_status: 'ส่งมอบแล้ว' }).eq('id', job.id)
+    const commissionMonth = deliverDate.slice(0, 7)
+    await supabase.from('jobs').update({
+      actual_deliver_date: deliverDate,
+      working_status: 'ส่งมอบแล้ว',
+      commission_month: commissionMonth,
+    }).eq('id', job.id)
     if (markFinalPaid && finalInst) {
       await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate }).eq('id', finalInst.id)
     }
@@ -500,12 +553,148 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
 }
 
 // ─── Deal Drawer (right panel) ─────────────────────────────
-function DealDrawer({ job, onClose, onRefresh }: { job: FullJob; onClose: () => void; onRefresh: () => void }) {
+// ─── Doc field component ───────────────────────────────────
+// ─── InstRow — inline paid_date edit ───────────────────────
+function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: string | null) => void }) {
+  const supabase = createClient()
+  const [editingDate, setEditingDate] = useState(false)
+  const [dateVal, setDateVal] = useState(inst.paid_date || todayStr())
+  const [saving, setSaving] = useState(false)
+  const [slipUrl, setSlipUrl] = useState(inst.slip_url)
+  const [receiptUrl, setReceiptUrl] = useState(inst.receipt_url)
+  const [savingSlip, setSavingSlip] = useState(false)
+  const [savingReceipt, setSavingReceipt] = useState(false)
+
+  async function saveDate() {
+    setSaving(true)
+    await supabase.from('payments').update({ paid_date: dateVal }).eq('id', inst.id)
+    onDateSaved(dateVal)
+    setSaving(false)
+    setEditingDate(false)
+  }
+
+  async function toggleSlip() {
+    setSavingSlip(true)
+    const newVal = slipUrl ? null : 'posted'
+    await supabase.from('payments').update({ slip_url: newVal }).eq('id', inst.id)
+    setSlipUrl(newVal)
+    setSavingSlip(false)
+  }
+
+  async function toggleReceipt() {
+    setSavingReceipt(true)
+    const newVal = receiptUrl ? null : 'posted'
+    await supabase.from('payments').update({ receipt_url: newVal }).eq('id', inst.id)
+    setReceiptUrl(newVal)
+    setSavingReceipt(false)
+  }
+
+  return (
+    <div className="px-4 py-2.5">
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0">
+          {inst.status === 'paid'
+            ? <CheckCircle2 size={14} className="text-green-400" />
+            : <Circle size={14} style={{ color: 'var(--text-3)' }} />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-xs" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
+          {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded bg-amber-500/15 text-amber-400">สุดท้าย</span>}
+        </div>
+        <div className="text-right">
+          <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
+            {fmtBaht(inst.amount)}
+          </span>
+          {inst.status === 'paid' && (
+            <div>
+              {editingDate ? (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <input type="date" value={dateVal} onChange={e => setDateVal(e.target.value)}
+                    className="text-[10px] rounded px-1 py-0.5 focus:outline-none w-28"
+                    style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+                  <button onClick={saveDate} disabled={saving}
+                    className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white"
+                    style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
+                  <button onClick={() => setEditingDate(false)} className="text-[10px]" style={{ color: 'var(--text-3)' }}>✕</button>
+                </div>
+              ) : (
+                <button onClick={() => { setDateVal(inst.paid_date || todayStr()); setEditingDate(true) }}
+                  className="text-[10px] mt-0.5 flex items-center gap-0.5"
+                  style={{ color: inst.paid_date ? 'var(--text-3)' : '#f59e0b' }}>
+                  {inst.paid_date ? fmtDate(inst.paid_date) : '+ วันที่รับเงิน'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      {inst.status === 'paid' && (
+        <div className="flex gap-2 mt-2 ml-7">
+          <button onClick={toggleSlip} disabled={savingSlip}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium transition-all active:scale-95"
+            style={{
+              background: slipUrl ? 'rgba(96,165,250,0.12)' : 'var(--hover-bg)',
+              border: `1px solid ${slipUrl ? 'rgba(96,165,250,0.3)' : 'var(--divider)'}`,
+              color: slipUrl ? '#60a5fa' : 'var(--text-3)',
+              opacity: savingSlip ? 0.5 : 1,
+            }}>
+            {slipUrl ? <CheckCircle2 size={11} /> : <Circle size={11} />} Slip
+          </button>
+          <button onClick={toggleReceipt} disabled={savingReceipt}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium transition-all active:scale-95"
+            style={{
+              background: receiptUrl ? 'rgba(74,222,128,0.12)' : 'var(--hover-bg)',
+              border: `1px solid ${receiptUrl ? 'rgba(74,222,128,0.3)' : 'var(--divider)'}`,
+              color: receiptUrl ? '#4ade80' : 'var(--text-3)',
+              opacity: savingReceipt ? 0.5 : 1,
+            }}>
+            {receiptUrl ? <CheckCircle2 size={11} /> : <Circle size={11} />} ใบเสร็จ
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DocField({ jobId, field, label, value, onUpdate }: {
+  jobId: string; field: string; label: string; value: string | null; onUpdate: (v: string | null) => void
+}) {
+  const supabase = createClient()
+  const [saving, setSaving] = useState(false)
+  const checked = !!value
+
+  async function toggle() {
+    setSaving(true)
+    const newVal = checked ? null : 'posted'
+    await supabase.from('jobs').update({ [field]: newVal }).eq('id', jobId)
+    onUpdate(newVal)
+    setSaving(false)
+  }
+
+  return (
+    <label className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] cursor-pointer transition-colors select-none"
+      style={{ background: checked ? 'rgba(34,197,94,0.08)' : 'var(--hover-bg)', border: `1px solid ${checked ? 'rgba(34,197,94,0.3)' : 'var(--divider)'}` }}>
+      <input type="checkbox" checked={checked} onChange={toggle} disabled={saving}
+        className="w-4 h-4 rounded flex-shrink-0" style={{ accentColor: '#4ade80' }} />
+      <span className="text-xs font-medium flex-1" style={{ color: checked ? '#4ade80' : 'var(--text-2)' }}>{label}</span>
+      {saving && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>...</span>}
+    </label>
+  )
+}
+
+function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onClose: () => void; onRefresh: () => void }) {
+  const [job, setJob] = useState(initialJob)
   const [actionModal, setActionModal] = useState<'setup' | 'pay' | 'handover' | null>(null)
   const [instExpanded, setInstExpanded] = useState(false)
+  const [docsExpanded, setDocsExpanded] = useState(false)
+  useEffect(() => { setJob(initialJob) }, [initialJob])
   const { hasPlan, finalPaid, delivered, paidCount, totalCount, pendingInstallments, activeStage } = getFullStageInfo(job)
   const revenue = job.revenue_inc_vat || job.revenue_ex_vat || 0
   const overdueCount = job.installments.filter(i => i.status === 'overdue').length
+
+  function updateDocField(field: keyof FullJob, val: string | null) {
+    setJob(prev => ({ ...prev, [field]: val }))
+  }
 
   const stages = [
     { label: 'ขาย', icon: ShoppingCart, done: true },
@@ -519,10 +708,11 @@ function DealDrawer({ job, onClose, onRefresh }: { job: FullJob; onClose: () => 
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm shadow-2xl flex flex-col"
-        style={{ background: 'var(--card-bg)', borderLeft: '1px solid var(--card-border)' }}>
+      <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={onClose} />
+      {/* Centered Panel */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -600,37 +790,61 @@ function DealDrawer({ job, onClose, onRefresh }: { job: FullJob; onClose: () => 
           {/* Installments */}
           {hasPlan && (
             <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-              <button className="w-full flex items-center justify-between px-4 py-2.5"
-                style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}
-                onClick={() => setInstExpanded(e => !e)}>
-                <span className="text-xs">งวดชำระเงิน</span>
-                {instExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              </button>
+              <div className="flex items-center" style={{ background: 'var(--hover-bg)' }}>
+                <button className="flex-1 flex items-center justify-between px-4 py-2.5"
+                  style={{ color: 'var(--text-3)' }}
+                  onClick={() => setInstExpanded(e => !e)}>
+                  <span className="text-xs">งวดชำระเงิน</span>
+                  {instExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                </button>
+                <button onClick={() => setActionModal('setup')}
+                  className="px-3 py-2.5 text-xs font-medium"
+                  style={{ color: 'var(--accent)', borderLeft: '1px solid var(--divider)' }}>
+                  แก้ไข
+                </button>
+              </div>
               {instExpanded && (
                 <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
                   {job.installments.sort((a, b) => a.installment_no - b.installment_no).map(inst => (
-                    <div key={inst.id} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="flex-shrink-0">
-                        {inst.status === 'paid'
-                          ? <CheckCircle2 size={14} className="text-green-400" />
-                          : <Circle size={14} style={{ color: 'var(--text-3)' }} />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
-                        {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded bg-amber-500/15 text-amber-400">สุดท้าย</span>}
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
-                          {fmtBaht(inst.amount)}
-                        </span>
-                        {inst.paid_date && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{fmtDate(inst.paid_date)}</p>}
-                      </div>
-                    </div>
+                    <InstRow key={inst.id} inst={inst}
+                      onDateSaved={newDate => setJob(prev => ({
+                        ...prev,
+                        installments: prev.installments.map(i => i.id === inst.id ? { ...i, paid_date: newDate } : i)
+                      }))} />
                   ))}
                 </div>
               )}
             </div>
           )}
+
+          {/* Documents section */}
+          <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            <button className="w-full flex items-center justify-between px-4 py-2.5"
+              style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}
+              onClick={() => setDocsExpanded(e => !e)}>
+              <span className="text-xs">เอกสาร</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                  {[job.quotation1_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length}/4
+                </span>
+                {docsExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              </div>
+            </button>
+            {docsExpanded && (
+              <div className="p-3 space-y-2">
+                <DocField jobId={job.id} field="quotation1_url" label="ใบเสนอราคา 1"
+                  value={job.quotation1_url} onUpdate={v => updateDocField('quotation1_url', v)} />
+                <DocField jobId={job.id} field="quotation2_url" label="ใบเสนอราคา 2"
+                  value={job.quotation2_url} onUpdate={v => updateDocField('quotation2_url', v)} />
+                <DocField jobId={job.id} field="id_card_url" label="บัตรประชาชนลูกค้า"
+                  value={job.id_card_url} onUpdate={v => updateDocField('id_card_url', v)} />
+                <DocField jobId={job.id} field="delivery_doc_url" label="ใบส่งมอบ"
+                  value={job.delivery_doc_url} onUpdate={v => updateDocField('delivery_doc_url', v)} />
+                <DocField jobId={job.id} field="satisfaction_url" label="แบบประเมินความพึงพอใจ"
+                  value={job.satisfaction_url} onUpdate={v => updateDocField('satisfaction_url', v)} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Actions */}
@@ -673,6 +887,7 @@ function DealDrawer({ job, onClose, onRefresh }: { job: FullJob; onClose: () => 
           )}
         </div>
       </div>
+      </div>
 
       {actionModal === 'setup' && <SetupAndPayModal job={job} onClose={() => setActionModal(null)} onSaved={handleSaved} />}
       {actionModal === 'pay' && <PayModal job={job} onClose={() => setActionModal(null)} onSaved={handleSaved} />}
@@ -687,13 +902,16 @@ function RoomCard({ job, onClick }: { job: RoomJob; onClick: () => void }) {
   const meta = STAGE_META[stage]
   const isDone = stage === 'done'
 
+  const tooltip = [job.customer_name, job.sales_name].filter(Boolean).join(' · ')
+
   return (
     <button onClick={onClick}
+      title={tooltip}
       className="text-left rounded-[10px] p-3 transition-all hover:scale-[1.02]"
       style={{
         background: isDone ? 'var(--hover-bg)' : 'var(--card-bg)',
         border: `1px solid ${isDone ? 'var(--divider)' : 'var(--card-border)'}`,
-        width: 140,
+        width: 130,
         opacity: isDone ? 0.7 : 1,
       }}>
       {/* Room number */}
@@ -707,13 +925,11 @@ function RoomCard({ job, onClick }: { job: RoomJob; onClick: () => void }) {
           {meta.label}
         </span>
       </div>
-      {/* Customer */}
-      <p className="text-[11px] truncate" style={{ color: 'var(--text-2)' }}>{job.customer_name || '—'}</p>
       {/* Sales + progress */}
-      <div className="flex items-center justify-between mt-1">
-        <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{job.sales_name || ''}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] truncate flex-1" style={{ color: 'var(--text-3)' }}>{job.sales_name || ''}</p>
         {job.has_plan && job.total_count > 0 && (
-          <p className="text-[10px] font-semibold" style={{ color: job.paid_count === job.total_count ? '#4ade80' : '#f59e0b' }}>
+          <p className="text-[10px] font-semibold ml-1 flex-shrink-0" style={{ color: job.paid_count === job.total_count ? '#4ade80' : '#f59e0b' }}>
             {job.paid_count}/{job.total_count}
           </p>
         )}
@@ -811,6 +1027,11 @@ export default function MyDealsPage() {
       contract_date: raw.contract_date || null,
       work_start_date: raw.work_start_date || null,
       warranty_end: war?.warranty_end || null,
+      quotation1_url: raw.quotation1_url || null,
+      quotation2_url: raw.quotation2_url || null,
+      id_card_url: raw.id_card_url || null,
+      delivery_doc_url: raw.delivery_doc_url || null,
+      satisfaction_url: raw.satisfaction_url || null,
       installments: ((raw as any).installments || []).map((p: any) => ({
         id: p.id,
         installment_no: p.installment_no,
@@ -822,6 +1043,8 @@ export default function MyDealsPage() {
         paid_date: p.paid_date || null,
         is_work_trigger: !!p.is_work_trigger,
         is_final: !!p.is_final,
+        slip_url: p.slip_url || null,
+        receipt_url: p.receipt_url || null,
       })),
     })
     setDrawerLoading(false)
@@ -992,10 +1215,12 @@ export default function MyDealsPage() {
       {/* Drawer loading indicator */}
       {drawerLoading && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={closeDrawer} />
-          <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm flex items-center justify-center"
-            style={{ background: 'var(--card-bg)', borderLeft: '1px solid var(--card-border)' }}>
-            <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
+          <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={closeDrawer} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[20px] p-12"
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+              <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
+            </div>
           </div>
         </>
       )}

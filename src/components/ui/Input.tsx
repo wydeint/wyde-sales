@@ -32,7 +32,7 @@ export function Input({ label, error, className, id: externalId, ...props }: Inp
         {...props}
       />
       {error && (
-        <p id={errId} role="alert" className="text-xs" style={{ color: '#ef4444' }}>
+        <p id={errId} role="alert" className="text-xs" style={{ color: 'var(--accent-red)' }}>
           {error}
         </p>
       )}
@@ -74,7 +74,7 @@ export function Select({ label, options, className, id: externalId, error, ...pr
         ))}
       </select>
       {error && (
-        <p id={errId} role="alert" className="text-xs" style={{ color: '#ef4444' }}>
+        <p id={errId} role="alert" className="text-xs" style={{ color: 'var(--accent-red)' }}>
           {error}
         </p>
       )}
@@ -112,7 +112,7 @@ export function TextArea({ label, className, id: externalId, error, ...props }: 
         {...props}
       />
       {error && (
-        <p id={errId} role="alert" className="text-xs" style={{ color: '#ef4444' }}>
+        <p id={errId} role="alert" className="text-xs" style={{ color: 'var(--accent-red)' }}>
           {error}
         </p>
       )}

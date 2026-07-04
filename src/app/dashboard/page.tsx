@@ -158,7 +158,7 @@ export default function DashboardPage() {
   if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="page-content space-y-6">
 
       {/* Header + Filters */}
       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -229,7 +229,7 @@ export default function DashboardPage() {
           { icon: PhoneCall, label: 'โทร เดือนนี้', value: fn(callsThisMonth), sub: `เยี่ยม ${visitsThisMonth} ครั้ง`, color: '#fbbf24', onClick: undefined },
         ].map(({ icon: Icon, label, value, sub, color, onClick }) => (
           <div key={label} onClick={onClick}
-            className="glass-card p-4"
+            className="ds-card p-4"
             style={{ cursor: onClick ? 'pointer' : 'default' }}
             onMouseEnter={e => onClick && (e.currentTarget.style.background = 'var(--active-bg)')}
             onMouseLeave={e => onClick && (e.currentTarget.style.background = '')}>
@@ -248,13 +248,12 @@ export default function DashboardPage() {
 
       {/* Drill-down modal: delivered this month */}
       {deliverDrillOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setDeliverDrillOpen(false)}>
-          <div className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-[18px] overflow-hidden"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        <div className="modal-backdrop" onClick={() => setDeliverDrillOpen(false)}>
+          <div className="modal-panel modal-panel-wide max-h-[80vh] flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+            <div className="modal-header">
               <div>
-                <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>งานส่งมอบเดือนนี้</h3>
+                <span className="modal-title">งานส่งมอบเดือนนี้</span>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
                   นับจาก <code className="px-1 rounded" style={{ background: 'var(--hover-bg)' }}>jobs.actual_deliver_date</code> · {deliveredThisMonth.length} รายการ
                 </p>
@@ -306,7 +305,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Pipeline Funnel */}
-        <div className="glass-card p-5">
+        <div className="ds-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <Target size={15} style={{ color: 'var(--accent)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Pipeline</h2>
@@ -339,7 +338,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Sales Leaderboard */}
-        <div className="glass-card p-5">
+        <div className="ds-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <Award size={15} style={{ color: '#fbbf24' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales เดือนนี้</h2>
@@ -369,7 +368,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Daily Reports */}
-        <div className="glass-card p-5">
+        <div className="ds-card p-5">
           <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>Daily Report ล่าสุด</h2>
           {recentReports.length === 0 ? (
             <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายงาน</p>

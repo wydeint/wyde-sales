@@ -263,7 +263,7 @@ export default function TargetsPage() {
   const salesTeamDelivTarget = salesTargets.filter(t => viewMonths.includes(t.month)).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>

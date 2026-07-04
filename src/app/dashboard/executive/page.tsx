@@ -227,7 +227,7 @@ export default function ExecutivePage() {
   ]
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="page-content space-y-5">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -261,7 +261,7 @@ export default function ExecutivePage() {
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <ChevronLeft size={15} />
         </button>
-        <div className="glass-card px-5 py-2 text-sm font-semibold flex-1 text-center" style={{ color: 'var(--text-1)' }}>
+        <div className="ds-card px-5 py-2 text-sm font-semibold flex-1 text-center" style={{ color: 'var(--text-1)' }}>
           {label}
           {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
         </div>
@@ -308,7 +308,7 @@ export default function ExecutivePage() {
           { icon: Users, label: 'Win Rate', value: winRate + '%', sub: `ปิด ${closedCount} · หลุด ${lostCount}`, color: winRate >= 50 ? '#4ade80' : '#f97316' },
           { icon: DollarSign, label: 'โทร/เยี่ยม', value: totalCalls.toLocaleString(), sub: `เยี่ยม ${totalVisits} ครั้ง`, color: '#fbbf24' },
         ].map(({ icon: Icon, label: lbl, value, sub, color }) => (
-          <div key={lbl} className="glass-card p-4">
+          <div key={lbl} className="ds-card-sm">
             <div className="flex items-center gap-2 mb-2">
               <Icon size={13} style={{ color }} />
               <span className="text-card-title" style={{ color: 'var(--text-3)' }}>{lbl}</span>
@@ -326,7 +326,7 @@ export default function ExecutivePage() {
           { label: 'B2B', revenue: b2bRevenue, count: periodJobs.filter(j => j.customer_type === 'B2B').length, color: '#a78bfa' },
           { label: 'RPT', revenue: rptRevenue, count: periodJobs.filter(j => j.work_type === 'RPT').length, color: '#34d399' },
         ].map(s => (
-          <div key={s.label} className="glass-card p-4">
+          <div key={s.label} className="ds-card-sm">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: s.color + '22', color: s.color }}>{s.label}</span>
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.count} งาน</span>
@@ -342,7 +342,7 @@ export default function ExecutivePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Pipeline Funnel */}
-        <div className="glass-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-1">
             <Target size={13} style={{ color: 'var(--accent)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Pipeline Funnel</h2>
@@ -368,7 +368,7 @@ export default function ExecutivePage() {
         </div>
 
         {/* Lead Source */}
-        <div className="glass-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={13} style={{ color: '#fbbf24' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Lead Source</h2>
@@ -396,7 +396,7 @@ export default function ExecutivePage() {
 
       {/* Monthly trend (year view) */}
       {period === 'year' && monthlyTrend.length > 0 && (
-        <div className="glass-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={13} style={{ color: 'var(--accent)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>ยอดขายรายเดือน {start.slice(0, 4)}</h2>
@@ -421,7 +421,7 @@ export default function ExecutivePage() {
       )}
 
       {/* Sales Ranking */}
-      <div className="glass-card p-5">
+      <div className="ds-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Award size={13} style={{ color: '#fbbf24' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales Ranking — {label}</h2>

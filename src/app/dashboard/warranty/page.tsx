@@ -27,9 +27,9 @@ interface Customer { id: string; customer_name: string }
 interface Project { id: string; name: string }
 
 const STATUS = [
-  { value: 'active', label: 'ยังอยู่ในประกัน', color: 'bg-green-500/20 text-green-400' },
-  { value: 'expiring_soon', label: 'ใกล้หมด', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'expired', label: 'หมดประกันแล้ว', color: 'bg-red-500/20 text-red-400' },
+  { value: 'active', label: 'ยังอยู่ในประกัน', color: 'bg-green-500/20 text-green-400', badge: 'badge badge-green' },
+  { value: 'expiring_soon', label: 'ใกล้หมด', color: 'bg-yellow-500/20 text-yellow-400', badge: 'badge badge-orange' },
+  { value: 'expired', label: 'หมดประกันแล้ว', color: 'bg-red-500/20 text-red-400', badge: 'badge badge-red' },
 ]
 
 const emptyForm = {
@@ -142,7 +142,7 @@ export default function WarrantyPage() {
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Warranty</h1>
@@ -241,7 +241,7 @@ export default function WarrantyPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span>
+                        <span className={st.badge || st.color}>{st.label}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">

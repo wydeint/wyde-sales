@@ -37,11 +37,11 @@ const LEVELS = [
 ]
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: 'bg-orange-500/20 text-orange-400',
-  sales: 'bg-green-500/20 text-green-400',
-  admin_sales: 'bg-purple-500/20 text-purple-400',
-  executive: 'bg-yellow-500/20 text-yellow-400',
-  finance: 'bg-blue-500/20 text-blue-400',
+  admin: 'badge badge-orange',
+  sales: 'badge badge-green',
+  admin_sales: 'badge badge-purple',
+  executive: 'badge badge-orange',
+  finance: 'badge badge-blue',
 }
 
 const empty = { email: '', name: '', role: 'sales', level: 'staff', dept: '', active: true, manager_id: '' }
@@ -106,7 +106,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Users</h1>
@@ -151,7 +151,7 @@ export default function UsersPage() {
                 </td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{u.email}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${ROLE_COLORS[u.role] || 'bg-gray-500/20 text-gray-400'}`}>
+                  <span className={`${ROLE_COLORS[u.role] || 'badge badge-gray'}`}>
                     {u.role}
                   </span>
                 </td>

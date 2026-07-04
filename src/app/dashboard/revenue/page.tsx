@@ -225,7 +225,7 @@ export default function RevenuePage() {
   if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="page-content space-y-5">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -276,7 +276,7 @@ export default function RevenuePage() {
           style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
           <ChevronLeft size={16} />
         </button>
-        <div className="glass-card px-5 py-2 text-sm font-semibold flex-1 text-center"
+        <div className="ds-card px-5 py-2 text-sm font-semibold flex-1 text-center"
           style={{ color: 'var(--text-1)' }}>
           {label}
           {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
@@ -316,7 +316,7 @@ export default function RevenuePage() {
             color: '#fbbf24',
           },
         ].map(k => (
-          <div key={k.label} className="glass-card p-4">
+          <div key={k.label} className="ds-card p-4">
             <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
             <p className="text-kpi-number" style={{ color: k.color }}>{k.value}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
@@ -326,7 +326,7 @@ export default function RevenuePage() {
 
       {/* Year trend chart */}
       {period === 'year' && monthlyTrend.length > 0 && (
-        <div className="glass-card p-5">
+        <div className="ds-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={14} style={{ color: 'var(--accent)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายได้รายเดือน {start.getFullYear()}</h2>
@@ -372,7 +372,7 @@ export default function RevenuePage() {
       {view === 'summary' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* By sales mini */}
-          <div className="glass-card p-5">
+          <div className="ds-card p-5">
             <h2 className="text-section-title mb-4 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
               <Users size={13} style={{ color: '#60a5fa' }} /> Revenue by Sales
             </h2>
@@ -399,7 +399,7 @@ export default function RevenuePage() {
           </div>
 
           {/* By accounting status */}
-          <div className="glass-card p-5">
+          <div className="ds-card p-5">
             <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>ประเภทงาน (Accounting Status)</h2>
             {byStatus.length === 0 ? (
               <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
@@ -419,7 +419,7 @@ export default function RevenuePage() {
 
       {/* ── Sales view ── */}
       {view === 'sales' && (
-        <div className="glass-card overflow-x-auto">
+        <div className="ds-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -477,7 +477,7 @@ export default function RevenuePage() {
 
       {/* ── Project view ── */}
       {view === 'project' && (
-        <div className="glass-card overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
             <div className="flex items-center gap-2">
               <Building2 size={14} style={{ color: '#f97316' }} />
@@ -564,7 +564,7 @@ export default function RevenuePage() {
 
       {/* ── List view ── */}
       {view === 'list' && (
-        <div className="glass-card overflow-x-auto">
+        <div className="ds-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>

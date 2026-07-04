@@ -46,10 +46,10 @@ const EVENT_TYPES = [
 ]
 
 const CUST_STATUS = [
-  { value: 'booked',          label: 'Booked',                    color: 'bg-green-500/20 text-green-400' },
-  { value: 'interested',      label: 'สนใจ ติดตามต่อ',            color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'not_interested',  label: 'ไม่สนใจ',                   color: 'bg-red-500/20 text-red-400' },
-  { value: 'not_met',         label: 'ไม่ได้พบ ติดตามภายหลัง',   color: 'bg-slate-500/15 text-slate-400' },
+  { value: 'booked',          label: 'Booked',                    color: 'badge badge-green' },
+  { value: 'interested',      label: 'สนใจ ติดตามต่อ',            color: 'badge badge-orange' },
+  { value: 'not_interested',  label: 'ไม่สนใจ',                   color: 'badge badge-red' },
+  { value: 'not_met',         label: 'ไม่ได้พบ ติดตามภายหลัง',   color: 'badge badge-gray' },
 ]
 
 const BOOKING_TYPES = [
@@ -349,7 +349,7 @@ export default function EventsPage() {
     }
   }
 
-  const stColor = (s: string) => CUST_STATUS.find(x => x.value === s)?.color || 'bg-slate-500/15 text-slate-400'
+  const stColor = (s: string) => CUST_STATUS.find(x => x.value === s)?.color || 'badge badge-gray'
   const stLabel = (s: string) => CUST_STATUS.find(x => x.value === s)?.label || s
   const typeLabel = (t: string) => EVENT_TYPES.find(e => e.value === t)?.label || t
 
@@ -381,7 +381,7 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="page-content">
       <div className="flex items-center justify-between mb-6 gap-3">
         <div className="min-w-0">
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Events</h1>
@@ -397,7 +397,7 @@ export default function EventsPage() {
         {loading && <div className="flex justify-center py-12"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
         {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
         {!loading && events.length === 0 && (
-          <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="ds-card text-center py-16">
             <CalendarDays size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มี Event</p>
           </div>
@@ -408,7 +408,7 @@ export default function EventsPage() {
           const perf = isExpanded ? calcPerf() : null
 
           return (
-            <div key={ev.id} className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={ev.id} className="ds-card overflow-hidden">
               {/* Event row */}
               <div className="flex items-start gap-3 px-4 py-4">
                 <div className="flex-1 min-w-0">

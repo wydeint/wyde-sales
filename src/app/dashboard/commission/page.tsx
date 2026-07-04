@@ -149,7 +149,7 @@ export default function CommissionPage() {
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="page-content space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Commission</h1>

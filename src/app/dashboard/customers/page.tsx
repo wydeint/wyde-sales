@@ -71,13 +71,13 @@ interface DetailWarranty {
 }
 
 const STATUS_LIST = [
-  { value: 'new', label: 'ใหม่', icon: '●', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'interested', label: 'สนใจ', icon: '◉', color: 'bg-cyan-500/20 text-cyan-400' },
-  { value: 'quoted', label: 'เสนอราคาแล้ว', icon: '◈', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'booked', label: 'จอง', icon: '★', color: 'bg-orange-500/20 text-orange-400' },
-  { value: 'close_pending', label: 'รอปิด', icon: '◷', color: 'bg-purple-500/20 text-purple-400' },
-  { value: 'closed', label: 'ปิดแล้ว', icon: '✓', color: 'bg-green-500/20 text-green-400' },
-  { value: 'lost', label: 'หลุด', icon: '✕', color: 'bg-red-500/20 text-red-400' },
+  { value: 'new', label: 'ใหม่', icon: '●', color: 'badge badge-blue' },
+  { value: 'interested', label: 'สนใจ', icon: '◉', color: 'badge badge-blue' },
+  { value: 'quoted', label: 'เสนอราคาแล้ว', icon: '◈', color: 'badge badge-orange' },
+  { value: 'booked', label: 'จอง', icon: '★', color: 'badge badge-orange' },
+  { value: 'close_pending', label: 'รอปิด', icon: '◷', color: 'badge badge-purple' },
+  { value: 'closed', label: 'ปิดแล้ว', icon: '✓', color: 'badge badge-green' },
+  { value: 'lost', label: 'หลุด', icon: '✕', color: 'badge badge-red' },
 ]
 
 const SOURCE_OPTIONS = [
@@ -214,7 +214,7 @@ function CustomerDetail({
           {/* Contact Info */}
           <section>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ข้อมูลติดต่อ</p>
-            <div className="rounded-[18px] p-4 grid grid-cols-2 gap-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div className="ds-card p-4 grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2">
                 <Phone size={13} style={{ color: 'var(--text-3)' }} />
                 <span className="text-sm" style={{ color: 'var(--text-1)' }}>{customer.phone || '—'}</span>
@@ -374,7 +374,7 @@ function CustomerDetail({
                   const total = job.installments.reduce((s, i) => s + i.amount, 0)
                   const pct = total > 0 ? Math.round(paid / total * 100) : 0
                   return (
-                    <div key={job.id} className="rounded-[18px] p-4 mb-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                    <div key={job.id} className="ds-card p-4 mb-3">
                       {/* Job header */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -462,10 +462,10 @@ function CustomerDetail({
                     <Shield size={12} />ประกัน ({warranties.length})
                   </p>
                   {warranties.map(w => (
-                    <div key={w.id} className="rounded-[18px] p-4 mb-2" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                    <div key={w.id} className="ds-card p-4 mb-2">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-mono" style={{ color: 'var(--accent)' }}>ห้อง {w.room}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${w.status === 'active' ? 'bg-green-500/20 text-green-400' : w.status === 'expiring_soon' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-slate-500/20 text-slate-400'}`}>
+                        <span className={`badge ${w.status === 'active' ? 'badge-green' : w.status === 'expiring_soon' ? 'badge-orange' : 'badge-gray'}`}>
                           {w.status === 'active' ? 'ยังอยู่ในประกัน' : w.status === 'expiring_soon' ? 'ใกล้หมด' : 'หมดแล้ว'}
                         </span>
                       </div>
@@ -612,7 +612,7 @@ export default function CustomersPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -670,7 +670,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="ds-card overflow-hidden tbl-scroll">
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>

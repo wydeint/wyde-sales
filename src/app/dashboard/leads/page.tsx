@@ -266,7 +266,7 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="page-content">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -290,20 +290,20 @@ export default function LeadsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
-          { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
-          { label: 'ยังไม่เข้า Pipeline', value: stats.new, color: '#f59e0b' },
-          { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline, color: '#34d399' },
+          { label: 'Lead ทั้งหมด', value: stats.total },
+          { label: 'ยังไม่เข้า Pipeline', value: stats.new },
+          { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline },
         ].map(s => (
-          <div key={s.label} className="rounded-[18px] p-4" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+          <div key={s.label} className="ds-card-sm p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-            <p className="text-kpi-number" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
+            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{s.value.toLocaleString()}</p>
           </div>
         ))}
       </div>
 
       {/* Import Panel */}
       {showImport && (
-        <div className="rounded-[18px] p-5 mb-5" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+        <div className="ds-card p-5 mb-5">
           <h3 className="text-card-title mb-3" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
           {importResult ? (
             <div className="text-center py-4">
@@ -421,7 +421,7 @@ export default function LeadsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-[18px]" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+      <div className="ds-card">
         <div className="overflow-x-auto">
           <table className="w-full" style={{ minWidth: 780 }}>
             <thead>
@@ -448,11 +448,11 @@ export default function LeadsPage() {
                     {l.projects?.name || l.project_id || '—'}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-sm font-mono font-semibold" style={{ color: 'var(--accent)' }}>{l.tower}-{l.room_no}</p>
+                    <p className="text-sm font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{l.tower}-{l.room_no}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{l.model_name || '—'}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{l.customer_name}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-2)' }}>{l.customer_name}</p>
                     {l.email && <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{l.email}</p>}
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
@@ -463,10 +463,10 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>
                   <td className="px-4 py-3">
                     {l.customer_id
-                      ? <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399' }}>
+                      ? <span className="badge badge-green whitespace-nowrap">
                           <CheckCircle size={10} />เข้า Pipeline แล้ว
                         </span>
-                      : <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+                      : <span className="badge badge-orange whitespace-nowrap">
                           ยังไม่ได้ติดต่อ
                         </span>
                     }

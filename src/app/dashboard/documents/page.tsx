@@ -254,7 +254,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="page-content max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-page-title mb-1" style={{ color: 'var(--text-1)' }}>เอกสารลูกค้า</h1>

@@ -27,9 +27,9 @@ interface Customer { id: string; customer_name: string }
 interface Project { id: string; name: string }
 
 const STATUS = [
-  { value: 'active', label: 'ยังอยู่ในประกัน', color: 'bg-green-500/20 text-green-400', badge: 'badge badge-green' },
-  { value: 'expiring_soon', label: 'ใกล้หมด', color: 'bg-yellow-500/20 text-yellow-400', badge: 'badge badge-orange' },
-  { value: 'expired', label: 'หมดประกันแล้ว', color: 'bg-red-500/20 text-red-400', badge: 'badge badge-red' },
+  { value: 'active', label: 'ยังอยู่ในประกัน', color: 'badge badge-green' },
+  { value: 'expiring_soon', label: 'ใกล้หมด', color: 'badge badge-orange' },
+  { value: 'expired', label: 'หมดประกันแล้ว', color: 'badge badge-red' },
 ]
 
 const emptyForm = {
@@ -195,7 +195,7 @@ export default function WarrantyPage() {
         {STATUS.map(s => (
           <div key={s.value} className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{s.label}</p>
-            <p className={`text-kpi-number ${s.color.split(' ')[1]}`}>{warranties.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
+            <p className="text-kpi-number" style={{ color: s.value === 'active' ? 'var(--accent-green)' : s.value === 'expiring_soon' ? 'var(--accent-orange)' : 'var(--accent-red)' }}>{warranties.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
           </div>
         ))}
       </div>

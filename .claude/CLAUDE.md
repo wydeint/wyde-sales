@@ -58,6 +58,32 @@ Requires `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_
 5. **PWA service worker** (`public/sw.js`) — bumping `CACHE` (`wyde-sales-v4`) controls cache invalidation for all users. Mishandling strands users on stale assets.
 6. **Client-side ID generation** (e.g. `CST-0001` via `max+1` in `leads/page.tsx`) is race-prone under concurrent writes. Be cautious extending this pattern.
 
+## Design system — follow before writing any UI
+
+All new UI **must** follow `.claude/design/design.md`. The tokens are live in `globals.css`:
+
+| Token group | CSS variables | Utility classes |
+|-------------|--------------|-----------------|
+| Spacing | `--space-xxs/xs/sm/md/lg/xl` | use inline or via classes |
+| Radius | `--radius-sm/md/lg/pill` | used inside all utility classes |
+| Font size | `--fs-body/caption/label/section/page-title/kpi/micro` | `.text-page-title`, `.text-section-title`, etc. |
+| Font weight | `--fw-regular/medium/semibold/bold` | used inside utility classes |
+| Card | — | **`.ds-card`** (standard), **`.ds-card-sm`** (compact) |
+| Modal | — | **`.modal-backdrop` + `.modal-panel` + `.modal-header` + `.modal-title`** |
+| Badge / status | — | **`.badge .badge-green/.blue/.purple/.orange/.red/.gray`** |
+| Buttons (colored) | — | **`.btn-green` `.btn-blue` `.btn-purple`** |
+| Buttons (neutral) | — | **`.btn-util`** |
+| Page wrapper | — | **`.page-content`** (p-lg, p-md on mobile) |
+| Form | — | **`.field-label` `.field-input`** |
+| Tabs | — | **`.tab-group` `.tab-btn` `.tab-btn.active`** |
+
+**Rules:**
+- Never hardcode `border-radius`, `padding`, or `font-size` as raw px — use the CSS variables above.
+- Never use Tailwind `text-blue-400`, `text-red-400`, `bg-green-500` etc. for semantic colors — use `var(--accent-*)` or `.badge-*` classes.
+- Cards → always `.ds-card` or `.ds-card-sm`. No bespoke `background: var(--card-bg)` inline.
+- Modals → always `.modal-backdrop` + `.modal-panel`. No bespoke `fixed inset-0 z-50` per page.
+- Page root div → always `className="page-content"`.
+
 ## Coding conventions (observed)
 
 - **Pages are client components** (`'use client'`) that fetch directly from Supabase in `useEffect` via `createClient()` from `@/lib/supabase/client`. Data fetching is **not** done in server components.

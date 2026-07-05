@@ -462,7 +462,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
 // ─── Handover Modal ────────────────────────────────────────
 function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void; onSaved: () => void }) {
   const supabase = createClient()
-  const [deliverDate, setDeliverDate] = useState(todayStr())
+  const [deliverDate, setDeliverDate] = useState(job.actual_deliver_date || todayStr())
   const [warrantyMonths, setWarrantyMonths] = useState(12)
   const [saving, setSaving] = useState(false)
   const finalInst = job.installments.find(i => i.is_final && i.status !== 'paid') || null

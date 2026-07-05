@@ -429,7 +429,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
 // ─── Handover Modal ────────────────────────────────────────
 function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () => void; onSaved: () => void; onError?: (msg: string) => void }) {
   const supabase = createClient()
-  const [deliverDate, setDeliverDate] = useState(today())
+  const [deliverDate, setDeliverDate] = useState(job.actual_deliver_date || today())
   const [warrantyMonths, setWarrantyMonths] = useState(12)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')

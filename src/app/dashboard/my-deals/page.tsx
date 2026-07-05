@@ -155,6 +155,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const [plan, setPlan] = useState(job.payment_plan_type || 'B')
   const [workDays, setWorkDays] = useState(job.work_days || 45)
   const [depositAmount, setDepositAmount] = useState(0)
+  const [firstPaidAmount, setFirstPaidAmount] = useState(0)
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(todayStr())
@@ -203,6 +204,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       amount: p.amount,
       status: i === 0 ? 'paid' : 'pending',
       paid_date: i === 0 ? paidDate : null,
+      paid_amount: i === 0 ? (firstPaidAmount || p.amount) : null,
       is_work_trigger: p.trigger,
       is_final: p.final,
       slip_url: i === 0 ? (slipUrl.trim() || (slipPosted ? 'posted' : null)) : null,
@@ -336,10 +338,18 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                 <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(firstInst?.amount || 0)}</p>
                 {firstInst?.trigger && <p className="text-xs mt-1 text-indigo-400">งวดนี้เป็นงวดเริ่มงาน</p>}
               </div>
-              <div>
-                <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-                <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-                  className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับจริง (฿)</label>
+                  <input type="number" value={firstPaidAmount || ''} onChange={e => setFirstPaidAmount(+e.target.value)}
+                    className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle}
+                    placeholder={String(firstInst?.amount || 0)} />
+                </div>
+                <div>
+                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
+                  <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                    className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                </div>
               </div>
               <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -487,6 +497,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
   const [saving, setSaving] = useState(false)
   const finalInst = job.installments.find(i => i.is_final && i.status !== 'paid') || null
   const [markFinalPaid, setMarkFinalPaid] = useState(!!finalInst)
+  const [finalPaidAmount, setFinalPaidAmount] = useState(finalInst?.amount || 0)
 
   const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
   const btnActive = { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }
@@ -504,7 +515,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
       commission_month: commissionMonth,
     }).eq('id', job.id)
     if (markFinalPaid && finalInst) {
-      await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate }).eq('id', finalInst.id)
+      await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate, paid_amount: finalPaidAmount }).eq('id', finalInst.id)
     }
     const handoverData = { job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'ส่งมอบแล้ว' }
     const { data: existHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
@@ -548,7 +559,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
             </div>
           </div>
           {finalInst && (
-            <div className="rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
+            <div className="rounded-[11px] p-3 space-y-2" style={{ background: 'var(--hover-bg)' }}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={markFinalPaid} onChange={e => setMarkFinalPaid(e.target.checked)} className="w-4 h-4 rounded" />
                 <div>
@@ -556,6 +567,14 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{finalInst.installment_name} — {fmtBaht(finalInst.amount)}</p>
                 </div>
               </label>
+              {markFinalPaid && (
+                <div>
+                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับจริง (฿)</label>
+                  <input type="number" value={finalPaidAmount || ''} onChange={e => setFinalPaidAmount(+e.target.value)}
+                    className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold"
+                    style={inputStyle} placeholder="0" />
+                </div>
+              )}
             </div>
           )}
           <div className="rounded-[11px] p-3" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid var(--divider)' }}>

@@ -143,7 +143,7 @@ function CustomerDetail({
 
       const [{ data: installsRaw }, { data: handoversRaw }] = jobIds.length > 0
         ? await Promise.all([
-            supabase.from('payments').select('id, job_id, installment_no, installment_name, amount, status, due_date, paid_date, is_final').in('job_id', jobIds).order('installment_no'),
+            supabase.from('payments').select('id, job_id, installment_no, installment_name, amount, paid_amount, status, due_date, paid_date, is_final').in('job_id', jobIds).order('installment_no'),
             supabase.from('handovers').select('job_id, delivery_date, work_status').in('job_id', jobIds),
           ])
         : [{ data: [] }, { data: [] }]
@@ -372,7 +372,7 @@ function CustomerDetail({
                     ยังไม่มีงาน
                   </p>
                 ) : jobs.map(job => {
-                  const paid = job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
+                  const paid = job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + ((i as any).paid_amount ?? i.amount), 0)
                   const total = job.installments.reduce((s, i) => s + i.amount, 0)
                   const pct = total > 0 ? Math.round(paid / total * 100) : 0
                   return (

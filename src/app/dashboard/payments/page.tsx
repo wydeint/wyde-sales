@@ -22,6 +22,7 @@ interface JobRow {
   project_id: string
   project_name: string
   customer_name: string
+  sales_id: string | null
   sales_name: string
   revenue_inc_vat: number
   quotation1_url: string | null
@@ -221,7 +222,7 @@ export default function PaymentsPage() {
     setLoading(true)
     const [{ data: jobsRaw }, { data: pData }, { data: uData }] = await Promise.all([
       supabase.from('jobs').select(
-        'id, room_no, project_id, customer_name, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name)'
+        'id, room_no, project_id, customer_name, sales_id, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name)'
       ).neq('working_status', 'ยกเลิก').order('room_no'),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).order('name'),
@@ -229,7 +230,7 @@ export default function PaymentsPage() {
 
     const jobIds = (jobsRaw || []).map((j: any) => j.id)
     const { data: instsRaw } = jobIds.length > 0
-      ? await supabase.from('payments').select('id, job_id, installment_no, installment_name, amount, status, slip_url, receipt_url').in('job_id', jobIds).order('installment_no')
+      ? await supabase.from('payments').select('id, job_id, installment_no, installment_name, amount, paid_amount, status, slip_url, receipt_url').in('job_id', jobIds).order('installment_no')
       : { data: [] }
 
     const instMap = new Map<string, Installment[]>()
@@ -240,12 +241,13 @@ export default function PaymentsPage() {
 
     const built: JobRow[] = (jobsRaw || []).map((j: any) => {
       const insts: Installment[] = instMap.get(j.id) || []
-      const paid_total = insts.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
+      const paid_total = insts.filter(i => i.status === 'paid').reduce((s, i) => s + ((i as any).paid_amount ?? i.amount), 0)
       const unpaid_total = insts.filter(i => i.status !== 'paid').reduce((s, i) => s + i.amount, 0)
       return {
         id: j.id, room_no: j.room_no, project_id: j.project_id,
         project_name: j.projects?.name || j.project_id,
         customer_name: j.customer_name || '—',
+        sales_id: j.sales_id || null,
         sales_name: j.sales?.name || '—',
         revenue_inc_vat: j.revenue_inc_vat || 0,
         quotation1_url: j.quotation1_url, quotation2_url: j.quotation2_url,
@@ -267,7 +269,7 @@ export default function PaymentsPage() {
   const filtered = useMemo(() => {
     let r = rows
     if (filterProject) r = r.filter(j => j.project_id === filterProject)
-    if (filterSales) r = r.filter(j => j.sales_name === filterSales)
+    if (filterSales) r = r.filter(j => (j as any).sales_id === filterSales)
     if (search.trim()) {
       const q = search.toLowerCase().replace(/-/g, '')
       r = r.filter(j => (j.room_no.toLowerCase().replace(/-/g, '')).includes(q) || j.customer_name.toLowerCase().includes(search.toLowerCase()))
@@ -308,7 +310,7 @@ export default function PaymentsPage() {
           <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
             className="px-3 py-1.5 rounded-[8px] text-xs focus:outline-none" style={inputStyle}>
             <option value="">ทุก Sales</option>
-            {users.map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
+            {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
         </div>
 

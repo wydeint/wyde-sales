@@ -337,16 +337,18 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
 // ─── Record Payment Modal ──────────────────────────────────
 function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () => void; onSaved: () => void; onError?: (msg: string) => void }) {
   const supabase = createClient()
-  const pending = job.installments.filter(i => i.status !== 'paid').sort((a, b) => a.installment_no - b.installment_no)
-  const [selected, setSelected] = useState<Installment | null>(pending[0] || null)
-  const [paidDate, setPaidDate] = useState(today())
-  const [paidAmount, setPaidAmount] = useState(pending[0]?.amount || 0)
+  const allInsts = [...job.installments].sort((a, b) => a.installment_no - b.installment_no)
+  const firstPending = allInsts.find(i => i.status !== 'paid') || allInsts[0] || null
+  const [selected, setSelected] = useState<Installment | null>(firstPending)
+  const [paidDate, setPaidDate] = useState(firstPending?.paid_date || today())
+  const [paidAmount, setPaidAmount] = useState(firstPending?.paid_amount ?? firstPending?.amount ?? 0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   function selectInst(inst: Installment) {
     setSelected(inst)
-    setPaidAmount(inst.amount || 0)
+    setPaidAmount(inst.paid_amount ?? inst.amount ?? 0)
+    setPaidDate(inst.paid_date || today())
   }
 
   async function save() {
@@ -380,7 +382,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
           <div>
             <p className="text-xs mb-2" style={{ color: 'var(--text-2)' }}>เลือกงวด</p>
             <div className="space-y-2">
-              {pending.map(inst => (
+              {allInsts.map(inst => (
                 <button key={inst.id} onClick={() => selectInst(inst)}
                   className="w-full text-left px-4 py-3 rounded-[11px] border transition-all"
                   style={selected?.id === inst.id
@@ -388,12 +390,13 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                   <div className="flex justify-between">
                     <span className="text-sm font-semibold">{inst.installment_name}</span>
-                    <span className="text-sm font-bold">{fmtBaht(inst.amount)}</span>
+                    <span className="text-sm font-bold">{fmtBaht(inst.paid_amount ?? inst.amount)}</span>
                   </div>
                   <div className="flex gap-2 mt-0.5">
+                    {inst.status === 'paid' && <span className="text-[10px] text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                     {inst.is_work_trigger && <span className="text-[10px] text-indigo-400">เริ่มงาน</span>}
                     {inst.is_final && <span className="text-[10px] text-amber-400">งวดสุดท้าย</span>}
-                    {inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
+                    {inst.status !== 'paid' && inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                   </div>
                 </button>
               ))}
@@ -418,7 +421,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
           <button onClick={save} disabled={saving || !selected}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
-            {saving ? 'กำลังบันทึก...' : `บันทึกรับเงิน ${selected ? fmtBaht(selected.amount) : ''}`}
+            {saving ? 'กำลังบันทึก...' : `บันทึกรับเงิน ${selected ? fmtBaht(paidAmount) : ''}`}
           </button>
         </div>
       </div>

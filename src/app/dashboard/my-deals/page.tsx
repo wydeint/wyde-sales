@@ -486,10 +486,10 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
     if (markFinalPaid && finalInst) {
       await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate }).eq('id', finalInst.id)
     }
-    await supabase.from('handovers').upsert({
-      job_id: job.id, customer_id: job.customer_id, project_id: job.project_id,
-      room: job.room_no, delivery_date: deliverDate, work_status: 'ส่งมอบแล้ว',
-    }, { onConflict: 'job_id' })
+    const handoverData = { job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'ส่งมอบแล้ว' }
+    const { data: existHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
+    if (existHO) { await supabase.from('handovers').update(handoverData).eq('id', existHO.id) }
+    else { await supabase.from('handovers').insert(handoverData) }
     await supabase.from('warranties').upsert({
       id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
       room: job.room_no, handover_date: deliverDate, warranty_start: deliverDate,

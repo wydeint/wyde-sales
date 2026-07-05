@@ -538,6 +538,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
   const [installments, setInstallments] = useState<any[]>([])
   const [selectedInst, setSelectedInst] = useState<any | null>(null)
   const [paidDate, setPaidDate] = useState('')
+  const [paidAmount, setPaidAmount] = useState(0)
   useEffect(() => { setPaidDate(new Date().toISOString().slice(0, 10)) }, [])
   const [fileUrls, setFileUrls] = useState<string[]>([''])
   const [saving, setSaving] = useState(false)
@@ -568,7 +569,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
     setSaving(true)
     const urls = fileUrls.filter(u => u.trim())
     await supabase.from('payments').update({
-      status: 'paid', paid_date: paidDate,
+      status: 'paid', paid_date: paidDate, paid_amount: paidAmount,
       file_urls: urls.length > 0 ? urls : null,
     }).eq('id', selectedInst.id)
 
@@ -646,7 +647,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
             <div className="space-y-2">
               <p className="text-xs mb-3" style={t2}>เลือกงวดที่ต้องการบันทึก</p>
               {installments.map((inst: any) => (
-                <button key={inst.id} onClick={() => { setSelectedInst(inst); setStep('confirm') }}
+                <button key={inst.id} onClick={() => { setSelectedInst(inst); setPaidAmount(inst.amount || 0); setStep('confirm') }}
                   className="w-full flex items-center justify-between px-4 py-4 rounded-xl transition-colors"
                   style={sheetCard}>
                   <div className="text-left">
@@ -676,11 +677,19 @@ function QuickPaySheet({ open, onClose, jobs }: {
               <p className="text-xs mt-2" style={{ color: 'var(--accent-orange)' }}>⚡ ชำระงวดนี้ → เริ่มนับวันงาน</p>
             )}
           </div>
-          <div>
-            <label className="text-xs mb-2 block" style={t3}>วันที่ชำระ</label>
-            <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-              className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none"
-              style={sheetInputStyle} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs mb-2 block" style={t3}>ยอดที่รับจริง (฿)</label>
+              <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
+                className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none font-semibold"
+                style={sheetInputStyle} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-xs mb-2 block" style={t3}>วันที่ชำระ</label>
+              <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none"
+                style={sheetInputStyle} />
+            </div>
           </div>
           <div>
             <div className="flex justify-between mb-2">

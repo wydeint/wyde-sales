@@ -477,6 +477,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
         status: inst.is_paid ? 'paid' : 'pending',
         due_date: inst.due_date || null,
         paid_date: inst.is_paid ? (inst.due_date || orderDate) : null,
+        paid_amount: inst.is_paid ? inst.amount : null,
         is_final: inst.is_final,
       }))
       await supabase.from('payments').insert(payments)

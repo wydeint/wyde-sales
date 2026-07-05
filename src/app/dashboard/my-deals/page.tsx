@@ -477,7 +477,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
     const wEnd = new Date(deliverDate)
     wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
     const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
-    const commissionMonth = deliverDate.slice(0, 7)
+    const commissionMonth = deliverDate.slice(0, 7) + '-01'
     await supabase.from('jobs').update({
       actual_deliver_date: deliverDate,
       working_status: 'ส่งมอบแล้ว',

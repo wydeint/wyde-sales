@@ -812,14 +812,28 @@ export default function JobDetailPage() {
             )}
           </div>
         ) : (
-          <div className="rounded-[12px] p-4 text-center"
-            style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)' }}>
-            <p className="text-sm font-semibold text-green-400">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
-            {job.warranty_end && (
-              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-                ประกันหมด {fmtDate(job.warranty_end)}
-              </p>
-            )}
+          <div className="space-y-2">
+            <div className="rounded-[12px] p-4 text-center"
+              style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)' }}>
+              <p className="text-sm font-semibold text-green-400">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
+              {job.warranty_end && (
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
+                  ประกันหมด {fmtDate(job.warranty_end)}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setModal('pay')}
+                className="flex-1 py-2.5 rounded-[12px] font-semibold text-sm"
+                style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                แก้ไขงวดเงิน
+              </button>
+              <button onClick={() => setModal('handover')}
+                className="flex-1 py-2.5 rounded-[12px] font-semibold text-sm"
+                style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                แก้ไขวันส่งมอบ
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -30,6 +30,7 @@ interface Installment {
   installment_no: number
   installment_name: string
   amount: number
+  paid_amount: number | null
   percentage: number
   status: 'pending' | 'paid' | 'overdue'
   due_date: string | null
@@ -371,14 +372,24 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
 // ─── Record Payment Modal ──────────────────────────────────
 function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void; onSaved: () => void }) {
   const supabase = createClient()
-  const pending = job.installments.filter(i => i.status !== 'paid').sort((a, b) => a.installment_no - b.installment_no)
-  const [selected, setSelected] = useState<Installment | null>(pending[0] || null)
-  const [paidDate, setPaidDate] = useState(todayStr())
+  const allInsts = [...job.installments].sort((a, b) => a.installment_no - b.installment_no)
+  const firstPending = allInsts.find(i => i.status !== 'paid') || allInsts[0] || null
+  const [selected, setSelected] = useState<Installment | null>(firstPending)
+  const [paidDate, setPaidDate] = useState(firstPending?.paid_date || todayStr())
+  const [paidAmount, setPaidAmount] = useState(firstPending?.paid_amount ?? firstPending?.amount ?? 0)
   const [slipUrl, setSlipUrl] = useState('')
   const [slipPosted, setSlipPosted] = useState(false)
   const [receiptUrl, setReceiptUrl] = useState('')
   const [receiptPosted, setReceiptPosted] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  function selectInst(inst: Installment) {
+    setSelected(inst)
+    setPaidAmount(inst.paid_amount ?? inst.amount ?? 0)
+    setPaidDate(inst.paid_date || todayStr())
+    setSlipPosted(inst.slip_url === 'posted'); setSlipUrl(inst.slip_url && inst.slip_url !== 'posted' ? inst.slip_url : '')
+    setReceiptPosted(inst.receipt_url === 'posted'); setReceiptUrl(inst.receipt_url && inst.receipt_url !== 'posted' ? inst.receipt_url : '')
+  }
 
   async function save() {
     if (!selected) return
@@ -389,6 +400,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     await supabase.from('payments').update({
       status: 'paid',
       paid_date: paidDate,
+      paid_amount: paidAmount,
       slip_url: slipUrl.trim() || (slipPosted ? 'posted' : null),
       receipt_url: receiptUrl.trim() || (receiptPosted ? 'posted' : null),
     }).eq('id', selected.id)
@@ -412,28 +424,36 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
         </div>
         <div className="p-5 space-y-4">
           <div className="space-y-2">
-            {pending.map(inst => (
-              <button key={inst.id} onClick={() => setSelected(inst)}
+            {allInsts.map(inst => (
+              <button key={inst.id} onClick={() => selectInst(inst)}
                 className="w-full text-left px-4 py-3 rounded-[11px] border"
                 style={selected?.id === inst.id
                   ? { background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.4)', color: 'var(--text-1)' }
                   : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                 <div className="flex justify-between">
                   <span className="text-sm font-semibold">{inst.installment_name}</span>
-                  <span className="text-sm font-bold">{fmtBaht(inst.amount)}</span>
+                  <span className="text-sm font-bold">{fmtBaht(inst.paid_amount ?? inst.amount)}</span>
                 </div>
                 <div className="flex gap-2 mt-0.5">
+                  {inst.status === 'paid' && <span className="text-[10px] text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                   {inst.is_work_trigger && <span className="text-[10px]" style={{ color: 'var(--accent)' }}>เริ่มงาน</span>}
                   {inst.is_final && <span className="text-[10px]" style={{ color: 'var(--accent-orange)' }}>งวดสุดท้าย</span>}
-                  {inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
+                  {inst.status !== 'paid' && inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                 </div>
               </button>
             ))}
           </div>
-          <div>
-            <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-            <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-              className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับ (฿)</label>
+              <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
+                className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
+              <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+            </div>
           </div>
           {/* Slip + Receipt checkboxes */}
           <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
@@ -850,12 +870,26 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         {/* Actions */}
         <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>
           {delivered ? (
-            <div className="rounded-[12px] p-3 text-center"
-              style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
-              <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
-              {job.warranty_end && (
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>
-              )}
+            <div className="space-y-2">
+              <div className="rounded-[12px] p-3 text-center"
+                style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
+                <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
+                {job.warranty_end && (
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setActionModal('pay')}
+                  className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
+                  style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                  แก้ไขงวดเงิน
+                </button>
+                <button onClick={() => setActionModal('handover')}
+                  className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
+                  style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                  แก้ไขวันส่งมอบ
+                </button>
+              </div>
             </div>
           ) : !hasPlan ? (
             <button onClick={() => setActionModal('setup')}
@@ -956,7 +990,7 @@ export default function MyDealsPage() {
     setLoading(true)
     const { data } = await supabase
       .from('jobs')
-      .select('id, room_no, project_id, customer_name, actual_deliver_date, projects(name), sales:users!sales_id(name), installments:payments(status, is_final)')
+      .select('id, room_no, project_id, customer_name, actual_deliver_date, work_start_date, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, slip_url, receipt_url)')
       .neq('working_status', 'ยกเลิก')
       .order('room_no')
 
@@ -1041,6 +1075,7 @@ export default function MyDealsPage() {
         status: p.status || 'pending',
         due_date: p.due_date || null,
         paid_date: p.paid_date || null,
+        paid_amount: p.paid_amount ?? null,
         is_work_trigger: !!p.is_work_trigger,
         is_final: !!p.is_final,
         slip_url: p.slip_url || null,

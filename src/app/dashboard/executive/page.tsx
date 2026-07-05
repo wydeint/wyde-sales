@@ -81,6 +81,9 @@ export default function ExecutivePage() {
   const [period, setPeriod] = useState<Period>('month')
   const [offset, setOffset] = useState(0)
   const [filterCustType, setFilterCustType] = useState('')
+  const [mainTab, setMainTab] = useState<'performance' | 'team'>('performance')
+  const [teamUsers, setTeamUsers] = useState<{ id: string; name: string; manager_id: string | null }[]>([])
+  const [salesTargets, setSalesTargets] = useState<{ user_id: string; month: number; year: number; target_sales_value: number; target_delivery_value: number }[]>([])
 
   const { start, end, label } = getPeriodBounds(period, offset)
 
@@ -113,6 +116,14 @@ export default function ExecutivePage() {
         const delivery = rows.reduce((s, x) => s + (x.target_delivery_value || 0), 0)
         setOrgTarget(sales > 0 || delivery > 0 ? { sales, delivery } : null)
       }
+
+      // Load team data
+      const [{ data: uData }, { data: stData }] = await Promise.all([
+        supabase.from('users').select('id, name, manager_id').eq('active', true),
+        supabase.from('sales_targets').select('user_id, month, year, target_sales_value, target_delivery_value').eq('year', new Date().getFullYear()),
+      ])
+      setTeamUsers((uData || []) as any)
+      setSalesTargets((stData || []) as any)
 
       setLoading(false)
     }
@@ -255,6 +266,20 @@ export default function ExecutivePage() {
         </div>
       </div>
 
+      {/* Main tab */}
+      <div className="flex gap-1 rounded-[11px] p-1 w-fit" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
+        <button onClick={() => setMainTab('performance')}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          style={{ background: mainTab === 'performance' ? 'var(--accent)' : 'transparent', color: mainTab === 'performance' ? '#fff' : 'var(--text-2)' }}>
+          <BarChart3 size={12} />Sales Performance
+        </button>
+        <button onClick={() => setMainTab('team')}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          style={{ background: mainTab === 'team' ? '#ec4899' : 'transparent', color: mainTab === 'team' ? '#fff' : 'var(--text-2)' }}>
+          <Users size={12} />ทีม Sales
+        </button>
+      </div>
+
       {/* Period navigation */}
       <div className="flex items-center gap-3">
         <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]"
@@ -263,7 +288,7 @@ export default function ExecutivePage() {
         </button>
         <div className="ds-card px-5 py-2 text-sm font-semibold flex-1 text-center" style={{ color: 'var(--text-1)' }}>
           {label}
-          {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
+          {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-[4px] font-semibold" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
         </div>
         <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
           className="p-2 rounded-[8px]"
@@ -272,27 +297,29 @@ export default function ExecutivePage() {
         </button>
       </div>
 
+      {mainTab === 'performance' && <>
+
       {/* Org Target Banner */}
       {orgTarget && offset === 0 && (
         <div className="rounded-[18px] p-4 flex gap-6 flex-wrap" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)' }}>
           <div className="flex items-center gap-2">
-            <Target size={13} className="text-orange-400" />
-            <span className="text-orange-400 text-xs font-bold uppercase tracking-wider">เป้าองค์กร {label}</span>
+            <Target size={13} style={{ color: 'var(--accent-orange)' }} />
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--accent-orange)' }}>เป้าองค์กร {label}</span>
           </div>
           <div className="flex gap-8 flex-wrap">
             <div>
               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
-              <p className="text-emerald-400 font-bold text-sm">{f(orgTarget.sales)}</p>
+              <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{f(orgTarget.sales)}</p>
               <div className="mt-1 h-1.5 w-36 rounded-full" style={{ background: 'var(--divider)' }}>
-                <div className="h-1.5 rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(pct(salesRevenue, orgTarget.sales), 100)}%` }} />
+                <div className="h-1.5 rounded-full transition-all" style={{ background: 'var(--accent-green)', width: `${Math.min(pct(salesRevenue, orgTarget.sales), 100)}%` }} />
               </div>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(salesRevenue)} ({pct(salesRevenue, orgTarget.sales)}%)</p>
             </div>
             <div>
               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
-              <p className="text-blue-400 font-bold text-sm">{f(orgTarget.delivery)}</p>
+              <p className="font-bold text-sm" style={{ color: 'var(--accent-blue)' }}>{f(orgTarget.delivery)}</p>
               <div className="mt-1 h-1.5 w-36 rounded-full" style={{ background: 'var(--divider)' }}>
-                <div className="h-1.5 rounded-full bg-blue-400 transition-all" style={{ width: `${Math.min(pct(deliveryRevenue, orgTarget.delivery), 100)}%` }} />
+                <div className="h-1.5 rounded-full transition-all" style={{ background: 'var(--accent-blue)', width: `${Math.min(pct(deliveryRevenue, orgTarget.delivery), 100)}%` }} />
               </div>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(deliveryRevenue)} ({pct(deliveryRevenue, orgTarget.delivery)}%)</p>
             </div>
@@ -328,7 +355,7 @@ export default function ExecutivePage() {
         ].map(s => (
           <div key={s.label} className="ds-card-sm">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: s.color + '22', color: s.color }}>{s.label}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-[4px]" style={{ background: s.color + '22', color: s.color }}>{s.label}</span>
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.count} งาน</span>
             </div>
             <p className="text-lg font-bold mt-1" style={{ color: 'var(--text-1)' }}>{fk(s.revenue)}</p>
@@ -370,7 +397,7 @@ export default function ExecutivePage() {
         {/* Lead Source */}
         <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
-            <BarChart3 size={13} style={{ color: '#fbbf24' }} />
+            <BarChart3 size={13} style={{ color: 'var(--accent-orange)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Lead Source</h2>
           </div>
           {sourceBreakdown.length === 0 ? (
@@ -442,7 +469,7 @@ export default function ExecutivePage() {
                       {s.units} งาน · โทร {s.calls} · เยี่ยม {s.visits}
                     </p>
                   </div>
-                  <p className="text-sm font-bold flex-shrink-0" style={{ color: '#4ade80' }}>{fk(s.revenue)}</p>
+                  <p className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--accent-green)' }}>{fk(s.revenue)}</p>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden ml-9" style={{ background: 'var(--divider)' }}>
                   <div className="h-full rounded-full transition-all"
@@ -453,6 +480,102 @@ export default function ExecutivePage() {
           </div>
         )}
       </div>
+
+      </>}
+
+      {/* ══ TEAM TAB ══════════════════════════════════════════ */}
+      {mainTab === 'team' && (() => {
+        const now = new Date(); const thisMonth = now.getMonth() + 1
+        const TEAM_COLORS = ['#6366f1', '#ec4899']
+        const managerIds = [...new Set(teamUsers.filter(u => u.manager_id).map(u => u.manager_id!))]
+        const teamData = managerIds.map((mgrId, idx) => {
+          const manager = teamUsers.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId, manager_id: null }
+          const members = teamUsers.filter(u => u.manager_id === mgrId)
+          const memberIds = new Set(members.map(m => m.id))
+          const getActual = (uid: string, type: 'sales' | 'deliv') => {
+            const monthJobs = allJobs.filter(j => {
+              const d = type === 'sales' ? j.order_date : j.actual_deliver_date
+              return d && d >= start && d <= end && j.sales_id === uid
+            })
+            return monthJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+          }
+          const teamActualSales = members.reduce((s, u) => s + getActual(u.id, 'sales'), 0)
+          const teamActualDeliv = members.reduce((s, u) => s + getActual(u.id, 'deliv'), 0)
+          const teamTargetSales = salesTargets.filter(t => memberIds.has(t.user_id) && t.month === thisMonth).reduce((s, t) => s + (t.target_sales_value || 0), 0)
+          const teamTargetDeliv = salesTargets.filter(t => memberIds.has(t.user_id) && t.month === thisMonth).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
+          const color = TEAM_COLORS[idx % TEAM_COLORS.length]
+          return { manager, members, teamActualSales, teamActualDeliv, teamTargetSales, teamTargetDeliv, color, getActual }
+        })
+        const ProgressBar = ({ value, max, color }: { value: number; max: number; color: string }) => (
+          <div className="h-1 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--divider)' }}>
+            <div className="h-full rounded-full" style={{ width: Math.min(100, max > 0 ? value / max * 100 : 0) + '%', background: color }} />
+          </div>
+        )
+        if (managerIds.length === 0) return (
+          <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+            <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีข้อมูลทีม (ตั้งค่า manager_id ที่หน้า Users)</p>
+          </div>
+        )
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {teamData.map(team => (
+                <div key={team.manager.id} className="rounded-[18px] p-5 space-y-4"
+                  style={{ background: 'var(--card-bg)', border: `1px solid ${team.color}40` }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white" style={{ background: team.color }}>
+                      {team.manager.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>ทีม {team.manager.name}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{team.members.length} คน · {label}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[{ label: 'ยอดขายทีม', val: team.teamActualSales, tgt: team.teamTargetSales, color: '#4ade80' },
+                      { label: 'ส่งมอบทีม', val: team.teamActualDeliv, tgt: team.teamTargetDeliv, color: '#60a5fa' }].map(item => (
+                      <div key={item.label} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
+                        <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.label}</p>
+                        <p className="font-bold text-base" style={{ color: item.color }}>{f(item.val)}</p>
+                        {item.tgt > 0 && <>
+                          <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(item.tgt)}</p>
+                          <ProgressBar value={item.val} max={item.tgt} color={item.color} />
+                          <p className="text-[10px] mt-0.5 text-right" style={{ color: item.color }}>{pct(item.val, item.tgt)}%</p>
+                        </>}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
+                    {team.members.map(u => {
+                      const actS = team.getActual(u.id, 'sales'); const actD = team.getActual(u.id, 'deliv')
+                      const tgtS = salesTargets.filter(t => t.user_id === u.id && t.month === thisMonth).reduce((s, t) => s + (t.target_sales_value || 0), 0)
+                      const tgtD = salesTargets.filter(t => t.user_id === u.id && t.month === thisMonth).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
+                      return (
+                        <div key={u.id} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                                style={{ background: team.color + '99' }}>{u.name[0]}</div>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</span>
+                            </div>
+                            {tgtS > 0 && <span className="text-[10px] font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? '#4ade80' : 'var(--text-3)' }}>{pct(actS, tgtS)}%</span>}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[10px]">
+                            <div><span style={{ color: 'var(--text-3)' }}>ขาย </span><span style={{ color: '#4ade80' }}>{f(actS)}</span>{tgtS > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span><ProgressBar value={actS} max={tgtS} color="#4ade80" /></>}</div>
+                            <div><span style={{ color: 'var(--text-3)' }}>ส่งมอบ </span><span style={{ color: '#60a5fa' }}>{f(actD)}</span>{tgtD > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span><ProgressBar value={actD} max={tgtD} color="#60a5fa" /></>}</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
     </div>
   )

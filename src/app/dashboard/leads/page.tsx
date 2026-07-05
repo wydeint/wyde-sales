@@ -250,8 +250,12 @@ export default function LeadsPage() {
   // ── Filter ────────────────────────────────────────────────
   const filtered = leads.filter(l => {
     const q = search.toLowerCase()
+    const qNorm = q.replace(/-/g, '')
+    const combined = `${l.tower || ''}${l.room_no || ''}`.toLowerCase()  // "D803"
+    const combinedDash = `${l.tower || ''}-${l.room_no || ''}`.toLowerCase()  // "D-803"
     const matchSearch = !q || l.customer_name?.toLowerCase().includes(q) ||
-      l.phone?.includes(q) || l.room_no?.includes(q) || l.tower?.includes(q)
+      l.phone?.includes(q) || l.room_no?.includes(q) || l.tower?.includes(q) ||
+      combined.includes(qNorm) || combinedDash.includes(q)
     const matchProject = !filterProject || l.project_id === filterProject
     const matchStatus = filterStatus === 'all' ? true
       : filterStatus === 'in_pipeline' ? !!l.customer_id

@@ -79,11 +79,11 @@ function getChipStage(j: RoomJob): ChipStage {
 }
 
 const STAGE_META: Record<ChipStage, { label: string; bg: string; color: string; border: string; dot: string }> = {
-  wait:    { label: 'รอเปิดงาน',       bg: '#eeedfe', color: '#3c3489', border: '#afa9ec', dot: '#7f77dd' },
-  collect: { label: 'กำลังเก็บเงิน',   bg: '#faeeda', color: '#633806', border: '#ef9f27', dot: '#ef9f27' },
-  ready:   { label: 'รอส่งมอบ',        bg: '#e6f1fb', color: '#0c447c', border: '#85b7eb', dot: '#378add' },
-  overdue: { label: 'งวดเกินกำหนด',    bg: '#fcebeb', color: '#501313', border: '#f09595', dot: '#e24b4a' },
-  done:    { label: 'ส่งมอบแล้ว',      bg: '#eaf3de', color: '#173404', border: '#97c459', dot: '#639922' },
+  wait:    { label: 'รอเปิดงาน',     bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', color: 'var(--accent-purple)', border: 'color-mix(in srgb, var(--accent-purple) 30%, transparent)', dot: 'var(--accent-purple)' },
+  collect: { label: 'กำลังเก็บเงิน', bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },
+  ready:   { label: 'รอส่งมอบ',      bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)', color: 'var(--accent-blue)',   border: 'color-mix(in srgb, var(--accent-blue)   30%, transparent)', dot: 'var(--accent-blue)' },
+  overdue: { label: 'งวดเกินกำหนด',  bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)', color: 'var(--accent-red)',    border: 'color-mix(in srgb, var(--accent-red)    30%, transparent)', dot: 'var(--accent-red)' },
+  done:    { label: 'ส่งมอบแล้ว',    bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)', color: 'var(--accent-green)',  border: 'color-mix(in srgb, var(--accent-green)  30%, transparent)', dot: 'var(--accent-green)' },
 }
 
 function getFullStageInfo(job: FullJob) {
@@ -285,7 +285,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs" style={{ color: 'var(--text-2)' }}>
-                      % แต่ละงวด <span className={pctValid ? 'text-green-400' : 'text-red-400'}>(รวม {pctSum}%)</span>
+                      % แต่ละงวด <span style={{ color: pctValid ? 'var(--accent-green)' : 'var(--accent-red)' }}>(รวม {pctSum}%)</span>
                     </p>
                     {b2bPcts.slice(0, b2bCount).map((pct, i) => (
                       <div key={i} className="flex items-center gap-2">
@@ -317,8 +317,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                       style={{ background: 'var(--hover-bg)' }}>
                       <div>
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
-                        {p.trigger && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">เริ่มงาน</span>}
-                        {p.final && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">สุดท้าย</span>}
+                        {p.trigger && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>}
+                        {p.final && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', color: 'var(--accent-green)' }}>สุดท้าย</span>}
                       </div>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(p.amount)}</span>
                     </div>
@@ -343,13 +343,13 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
               <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
-                    className="w-4 h-4 rounded" style={{ accentColor: '#60a5fa' }} />
-                  <span className="text-xs font-medium" style={{ color: slipPosted ? '#60a5fa' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
+                    className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-blue)' }} />
+                  <span className="text-xs font-semibold" style={{ color: slipPosted ? 'var(--accent-blue)' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
                 </label>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input type="checkbox" checked={receiptPosted} onChange={e => setReceiptPosted(e.target.checked)}
-                    className="w-4 h-4 rounded" style={{ accentColor: '#4ade80' }} />
-                  <span className="text-xs font-medium" style={{ color: receiptPosted ? '#4ade80' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
+                    className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-green)' }} />
+                  <span className="text-xs font-semibold" style={{ color: receiptPosted ? 'var(--accent-green)' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
                 </label>
               </div>
               <div className="flex gap-2">
@@ -423,8 +423,8 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
                   <span className="text-sm font-bold">{fmtBaht(inst.amount)}</span>
                 </div>
                 <div className="flex gap-2 mt-0.5">
-                  {inst.is_work_trigger && <span className="text-[10px] text-indigo-400">เริ่มงาน</span>}
-                  {inst.is_final && <span className="text-[10px] text-amber-400">งวดสุดท้าย</span>}
+                  {inst.is_work_trigger && <span className="text-[10px]" style={{ color: 'var(--accent)' }}>เริ่มงาน</span>}
+                  {inst.is_final && <span className="text-[10px]" style={{ color: 'var(--accent-orange)' }}>งวดสุดท้าย</span>}
                   {inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                 </div>
               </button>
@@ -439,13 +439,13 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
           <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
-                className="w-4 h-4 rounded" style={{ accentColor: '#60a5fa' }} />
-              <span className="text-xs font-medium" style={{ color: slipPosted ? '#60a5fa' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-blue)' }} />
+              <span className="text-xs font-semibold" style={{ color: slipPosted ? 'var(--accent-blue)' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input type="checkbox" checked={receiptPosted} onChange={e => setReceiptPosted(e.target.checked)}
-                className="w-4 h-4 rounded" style={{ accentColor: '#4ade80' }} />
-              <span className="text-xs font-medium" style={{ color: receiptPosted ? '#4ade80' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-green)' }} />
+              <span className="text-xs font-semibold" style={{ color: receiptPosted ? 'var(--accent-green)' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
             </label>
           </div>
           <button onClick={save} disabled={saving || !selected}
@@ -543,7 +543,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
           </div>
           <button onClick={save} disabled={saving} className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
-            style={{ background: saving ? '#999' : '#059669' }}>
+            style={{ background: saving ? 'var(--text-3)' : 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
           </button>
         </div>
@@ -594,15 +594,15 @@ function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: st
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0">
           {inst.status === 'paid'
-            ? <CheckCircle2 size={14} className="text-green-400" />
+            ? <CheckCircle2 size={14} style={{ color: 'var(--accent-green)' }} />
             : <Circle size={14} style={{ color: 'var(--text-3)' }} />}
         </div>
         <div className="flex-1 min-w-0">
           <span className="text-xs" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
-          {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded bg-amber-500/15 text-amber-400">สุดท้าย</span>}
+          {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
         </div>
         <div className="text-right">
-          <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
+          <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-1)' }}>
             {fmtBaht(inst.amount)}
           </span>
           {inst.status === 'paid' && (
@@ -620,7 +620,7 @@ function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: st
               ) : (
                 <button onClick={() => { setDateVal(inst.paid_date || todayStr()); setEditingDate(true) }}
                   className="text-[10px] mt-0.5 flex items-center gap-0.5"
-                  style={{ color: inst.paid_date ? 'var(--text-3)' : '#f59e0b' }}>
+                  style={{ color: inst.paid_date ? 'var(--text-3)' : 'var(--accent-orange)' }}>
                   {inst.paid_date ? fmtDate(inst.paid_date) : '+ วันที่รับเงิน'}
                 </button>
               )}
@@ -631,7 +631,7 @@ function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: st
       {inst.status === 'paid' && (
         <div className="flex gap-2 mt-2 ml-7">
           <button onClick={toggleSlip} disabled={savingSlip}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
             style={{
               background: slipUrl ? 'rgba(96,165,250,0.12)' : 'var(--hover-bg)',
               border: `1px solid ${slipUrl ? 'rgba(96,165,250,0.3)' : 'var(--divider)'}`,
@@ -641,7 +641,7 @@ function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: st
             {slipUrl ? <CheckCircle2 size={11} /> : <Circle size={11} />} Slip
           </button>
           <button onClick={toggleReceipt} disabled={savingReceipt}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
             style={{
               background: receiptUrl ? 'rgba(74,222,128,0.12)' : 'var(--hover-bg)',
               border: `1px solid ${receiptUrl ? 'rgba(74,222,128,0.3)' : 'var(--divider)'}`,
@@ -673,10 +673,10 @@ function DocField({ jobId, field, label, value, onUpdate }: {
 
   return (
     <label className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] cursor-pointer transition-colors select-none"
-      style={{ background: checked ? 'rgba(34,197,94,0.08)' : 'var(--hover-bg)', border: `1px solid ${checked ? 'rgba(34,197,94,0.3)' : 'var(--divider)'}` }}>
+      style={{ background: checked ? 'color-mix(in srgb, var(--accent-green) 10%, transparent)' : 'var(--hover-bg)', border: `1px solid ${checked ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'var(--divider)'}` }}>
       <input type="checkbox" checked={checked} onChange={toggle} disabled={saving}
-        className="w-4 h-4 rounded flex-shrink-0" style={{ accentColor: '#4ade80' }} />
-      <span className="text-xs font-medium flex-1" style={{ color: checked ? '#4ade80' : 'var(--text-2)' }}>{label}</span>
+        className="w-4 h-4 rounded flex-shrink-0" style={{ accentColor: 'var(--accent-green)' }} />
+      <span className="text-xs font-semibold flex-1" style={{ color: checked ? 'var(--accent-green)' : 'var(--text-2)' }}>{label}</span>
       {saving && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>...</span>}
     </label>
   )
@@ -718,7 +718,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 rounded-[7px] font-bold text-xs text-white"
-                style={{ background: delivered ? '#059669' : activeStage === 3 ? '#f59e0b' : activeStage === 4 ? '#378add' : '#6366f1' }}>
+                style={{ background: delivered ? 'var(--accent-green)' : activeStage === 3 ? 'var(--accent-orange)' : activeStage === 4 ? 'var(--accent-blue)' : 'var(--accent)' }}>
                 {job.room_no}
               </span>
               <span className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{job.project_name}</span>
@@ -741,14 +741,14 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
             </div>
             {hasPlan && totalCount > 0 && (
               <div className="text-right">
-                <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? '#4ade80' : '#f59e0b' }}>
+                <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                   {paidCount}/{totalCount} งวด
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
                   เก็บแล้ว {fmtBaht(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))}
                 </p>
                 {overdueCount > 0 && (
-                  <p className="text-xs text-red-400 flex items-center justify-end gap-0.5 mt-0.5">
+                  <p className="text-xs flex items-center justify-end gap-0.5 mt-0.5" style={{ color: 'var(--accent-red)' }}>
                     <AlertTriangle size={10} /> {overdueCount} งวดเกิน
                   </p>
                 )}
@@ -766,21 +766,21 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   <div className="flex flex-col items-center gap-1">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center"
                       style={{
-                        background: s.done ? '#059669' : isActive ? 'rgba(99,102,241,0.15)' : 'var(--hover-bg)',
-                        border: s.done ? '1.5px solid #059669' : isActive ? '1.5px solid #6366f1' : '1.5px solid var(--divider)',
+                        background: s.done ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : isActive ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--hover-bg)',
+                        border: s.done ? `1.5px solid color-mix(in srgb, var(--accent-green) 60%, transparent)` : isActive ? '1.5px solid var(--accent)' : '1.5px solid var(--divider)',
                       }}>
                       {s.done
-                        ? <CheckCircle2 size={14} className="text-white" />
-                        : <Icon size={13} style={{ color: isActive ? '#6366f1' : 'var(--text-3)' }} />}
+                        ? <CheckCircle2 size={14} style={{ color: 'var(--accent-green)' }} />
+                        : <Icon size={13} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)' }} />}
                     </div>
-                    <span className="text-[9px] font-medium whitespace-nowrap"
-                      style={{ color: s.done ? '#059669' : isActive ? '#6366f1' : 'var(--text-3)' }}>
+                    <span className="text-[9px] font-semibold whitespace-nowrap"
+                      style={{ color: s.done ? 'var(--accent-green)' : isActive ? 'var(--accent)' : 'var(--text-3)' }}>
                       {s.label}
                     </span>
                   </div>
                   {idx < stages.length - 1 && (
                     <div className="flex-1 h-[1.5px] mx-1 mb-4"
-                      style={{ background: s.done ? '#059669' : 'var(--divider)' }} />
+                      style={{ background: s.done ? 'var(--accent-green)' : 'var(--divider)' }} />
                   )}
                 </div>
               )
@@ -798,7 +798,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   {instExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                 </button>
                 <button onClick={() => setActionModal('setup')}
-                  className="px-3 py-2.5 text-xs font-medium"
+                  className="px-3 py-2.5 text-xs font-semibold"
                   style={{ color: 'var(--accent)', borderLeft: '1px solid var(--divider)' }}>
                   แก้ไข
                 </button>
@@ -851,8 +851,8 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>
           {delivered ? (
             <div className="rounded-[12px] p-3 text-center"
-              style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)' }}>
-              <p className="text-sm font-semibold text-green-400">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
+              style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
               {job.warranty_end && (
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>
               )}
@@ -873,7 +873,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               {finalPaid && (
                 <button onClick={() => setActionModal('handover')}
                   className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
-                  style={{ background: '#059669' }}>
+                  style={{ background: 'var(--accent-green)' }}>
                   ส่งมอบ
                 </button>
               )}
@@ -881,7 +881,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           ) : (
             <button onClick={() => setActionModal('handover')}
               className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
-              style={{ background: '#059669' }}>
+              style={{ background: 'var(--accent-green)' }}>
               + บันทึกส่งมอบ
             </button>
           )}
@@ -929,7 +929,7 @@ function RoomCard({ job, onClick }: { job: RoomJob; onClick: () => void }) {
       <div className="flex items-center justify-between">
         <p className="text-[10px] truncate flex-1" style={{ color: 'var(--text-3)' }}>{job.sales_name || ''}</p>
         {job.has_plan && job.total_count > 0 && (
-          <p className="text-[10px] font-semibold ml-1 flex-shrink-0" style={{ color: job.paid_count === job.total_count ? '#4ade80' : '#f59e0b' }}>
+          <p className="text-[10px] font-semibold ml-1 flex-shrink-0" style={{ color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
             {job.paid_count}/{job.total_count}
           </p>
         )}
@@ -1170,7 +1170,7 @@ export default function MyDealsPage() {
               {/* Project header */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{name}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                <span className="text-xs px-2 py-0.5 rounded-[4px] font-semibold"
                   style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                   {active.length} ห้อง
                 </span>

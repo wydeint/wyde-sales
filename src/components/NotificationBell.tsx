@@ -44,7 +44,7 @@ export default function NotificationBell() {
           .order('due_date', { ascending: true })
           .limit(10),
         supabase.from('warranties')
-          .select('id, customer_name, room_no, warranty_end')
+          .select('id, room, warranty_end, customers(customer_name)')
           .not('warranty_end', 'is', null)
           .gte('warranty_end', today)
           .lte('warranty_end', thirtyDaysLater)
@@ -63,8 +63,8 @@ export default function NotificationBell() {
 
       const ew: ExpiringWarranty[] = (warranties || []).map((w: any) => ({
         id: w.id,
-        customer_name: w.customer_name || '—',
-        room_no: w.room_no || '—',
+        customer_name: w.customers?.customer_name || '—',
+        room_no: w.room || '—',
         warranty_end: w.warranty_end,
         days_left: Math.floor((new Date(w.warranty_end).getTime() - Date.now()) / 864e5),
       }))
@@ -94,7 +94,7 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen(v => !v)}
         className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 relative"
-        style={{ color: total > 0 ? '#f87171' : 'var(--text-3)' }}
+        style={{ color: total > 0 ? 'var(--accent-red)' : 'var(--text-3)' }}
         onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         aria-label="การแจ้งเตือน"
@@ -102,7 +102,7 @@ export default function NotificationBell() {
         <Bell size={14} />
         {total > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center text-white"
-            style={{ background: '#ef4444' }}>
+            style={{ background: 'var(--accent-red)' }}>
             {total > 9 ? '9+' : total}
           </span>
         )}
@@ -117,7 +117,7 @@ export default function NotificationBell() {
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
             <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>การแจ้งเตือน</span>
             {total > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>
+              <span className="text-xs px-2 py-0.5 rounded-[4px] font-bold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
                 {total} รายการ
               </span>
             )}
@@ -137,9 +137,9 @@ export default function NotificationBell() {
                 {/* Overdue Payments */}
                 {overduePayments.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 flex items-center gap-1.5" style={{ borderBottom: '1px solid var(--divider)', background: 'rgba(239,68,68,0.05)' }}>
-                      <AlertCircle size={11} style={{ color: '#f87171' }} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#f87171' }}>
+                    <div className="px-4 py-2 flex items-center gap-1.5" style={{ borderBottom: '1px solid var(--divider)', background: 'color-mix(in srgb, var(--accent-red) 5%, transparent)' }}>
+                      <AlertCircle size={11} style={{ color: 'var(--accent-red)' }} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent-red)' }}>
                         งวดเกินกำหนด ({overduePayments.length})
                       </span>
                     </div>
@@ -154,7 +154,7 @@ export default function NotificationBell() {
                             <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.customer_name}</p>
                             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{p.room_no} · เกิน {p.days_overdue} วัน</p>
                           </div>
-                          <span className="text-xs font-semibold" style={{ color: '#f87171' }}>{fmtBaht(p.amount)}</span>
+                          <span className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>{fmtBaht(p.amount)}</span>
                         </div>
                       </button>
                     ))}
@@ -170,9 +170,9 @@ export default function NotificationBell() {
                 {/* Expiring Warranties */}
                 {expiringWarranties.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 flex items-center gap-1.5" style={{ borderBottom: '1px solid var(--divider)', background: 'rgba(251,191,36,0.05)' }}>
-                      <ShieldAlert size={11} style={{ color: '#fbbf24' }} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#fbbf24' }}>
+                    <div className="px-4 py-2 flex items-center gap-1.5" style={{ borderBottom: '1px solid var(--divider)', background: 'color-mix(in srgb, var(--accent-orange) 5%, transparent)' }}>
+                      <ShieldAlert size={11} style={{ color: 'var(--accent-orange)' }} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent-orange)' }}>
                         ประกันใกล้หมด ({expiringWarranties.length})
                       </span>
                     </div>

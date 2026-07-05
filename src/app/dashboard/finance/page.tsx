@@ -84,7 +84,7 @@ interface Entry {
   ref_id: string
 }
 
-type Period = 'week' | 'month' | 'quarter' | 'year'
+type Period = 'today' | 'week' | 'month' | 'quarter' | 'year'
 
 type EntryDraft = {
   revenue_ex_vat: string
@@ -103,7 +103,7 @@ const PAY_STATUS = [
 ]
 const emptyEntry = { category: '', amount: 0, entry_date: new Date().toISOString().slice(0, 10), description: '', ref_id: '' }
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
-const PERIOD_LABELS: Record<Period, string> = { week: 'สัปดาห์', month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี' }
+const PERIOD_LABELS: Record<Period, string> = { today: 'วันนี้', week: 'สัปดาห์', month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี' }
 
 // ── Helpers ────────────────────────────────────────────────
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
@@ -117,6 +117,11 @@ const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 function getPeriodBounds(period: Period, offset: number): { start: string; end: string; label: string } {
   const now = new Date()
+  if (period === 'today') {
+    const d = new Date(now); d.setDate(now.getDate() + offset)
+    const s = ld(d)
+    return { start: s, end: s, label: offset === 0 ? 'วันนี้' : `${d.getDate()} ${MONTHS_TH[d.getMonth()]}` }
+  }
   if (period === 'week') {
     const base = new Date(now); base.setDate(now.getDate() + offset * 7)
     const dow = base.getDay() === 0 ? 6 : base.getDay() - 1
@@ -357,7 +362,7 @@ export default function FinancePage() {
         </div>
         {tab === 'expense' && (
           <button onClick={() => { setEditingEntry(null); setEntryForm(emptyEntry); setSaveError(''); setEntryOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}>
             <Plus size={15} />เพิ่มรายจ่าย
           </button>
@@ -391,7 +396,7 @@ export default function FinancePage() {
           {/* Period selector */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-              {(['week','month','quarter','year'] as Period[]).map(p => (
+              {(['today','week','month','quarter','year'] as Period[]).map(p => (
                 <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
                   className="px-3 py-1.5 text-xs font-semibold"
                   style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
@@ -399,15 +404,15 @@ export default function FinancePage() {
                 </button>
               ))}
             </div>
-            <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-lg" style={{ background: 'var(--hover-bg)' }}>
+            <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
               <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
             </button>
-            <span className="text-sm font-semibold px-3 py-1.5 rounded-xl ds-card" style={{ color: 'var(--text-1)' }}>
+            <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
               {label}
               {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
             </span>
             <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-              className="p-1.5 rounded-lg" style={{ background: 'var(--hover-bg)' }}>
+              className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
               <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
             </button>
           </div>
@@ -739,16 +744,16 @@ export default function FinancePage() {
               <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronLeft size={14} /></button>
               <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</span>
               <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronRight size={14} /></button>
-              {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
+              {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
               <div className="flex gap-1 p-1 rounded-[11px] ml-auto" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <button onClick={() => setSegDateMode('order')}
                   className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                  style={{ background: segDateMode === 'order' ? '#6366f1' : 'transparent', color: segDateMode === 'order' ? '#fff' : 'var(--text-2)' }}>
+                  style={{ background: segDateMode === 'order' ? 'var(--accent)' : 'transparent', color: segDateMode === 'order' ? '#fff' : 'var(--text-2)' }}>
                   วันที่สั่งงาน
                 </button>
                 <button onClick={() => setSegDateMode('deliver')}
                   className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                  style={{ background: segDateMode === 'deliver' ? '#6366f1' : 'transparent', color: segDateMode === 'deliver' ? '#fff' : 'var(--text-2)' }}>
+                  style={{ background: segDateMode === 'deliver' ? 'var(--accent)' : 'transparent', color: segDateMode === 'deliver' ? '#fff' : 'var(--text-2)' }}>
                   วันส่งมอบ
                 </button>
               </div>
@@ -756,7 +761,7 @@ export default function FinancePage() {
 
             {/* Total KPI */}
             <div className="rounded-[18px] p-5" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.25)' }}>
-              <p className="text-label-upper mb-1" style={{ color: '#818cf8' }}>รายได้รวมทั้งบริษัท ({label})</p>
+              <p className="text-label-upper mb-1" style={{ color: 'var(--accent)' }}>รายได้รวมทั้งบริษัท ({label})</p>
               <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fk(totalPeriod)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ใช้ {segDateMode === 'order' ? 'วันที่สั่งงาน (order date)' : 'วันส่งมอบจริง (actual deliver)'} เป็นเกณฑ์</p>
             </div>

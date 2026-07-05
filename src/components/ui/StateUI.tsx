@@ -36,7 +36,7 @@ export function PageError({ message, onRetry }: { message: string; onRetry: () =
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>{message}</p>
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 rounded-[9999px] text-sm font-semibold transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-pill)] text-sm font-semibold transition-colors"
           style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}
         >
           <RefreshCw size={14} aria-hidden="true" />ลองใหม่
@@ -75,7 +75,7 @@ export function TableError({ colSpan, message, onRetry }: { colSpan: number; mes
           <p className="text-sm" style={{ color: 'var(--text-2)' }}>โหลดข้อมูลไม่สำเร็จ</p>
           <button
             onClick={onRetry}
-            className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-[9999px] font-semibold"
+            className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-[var(--radius-pill)] font-semibold"
             style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}
           >
             <RefreshCw size={12} aria-hidden="true" />ลองใหม่

@@ -126,9 +126,10 @@ export default function WarrantyPage() {
 
   const filtered = warranties.filter(w => {
     const q = search.toLowerCase()
+    const qNorm = q.replace(/-/g, '')
     const matchSearch = !q ||
       ((w as any).customers?.customer_name || '').toLowerCase().includes(q) ||
-      (w.room || '').toLowerCase().includes(q)
+      (w.room || '').toLowerCase().replace(/-/g, '').includes(qNorm)
     const matchProject = !projectFilter || w.project_id === projectFilter
     const matchStatus = !statusFilter || computedStatus(w.warranty_end) === statusFilter
     return matchSearch && matchProject && matchStatus
@@ -149,7 +150,7 @@ export default function WarrantyPage() {
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามระยะเวลาประกันผลงาน</p>
         </div>
         <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-          className="flex items-center gap-2 btn-purple text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="flex items-center gap-2 btn-purple text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
           <Plus size={16} />เพิ่มประกัน
         </button>
       </div>
@@ -241,7 +242,7 @@ export default function WarrantyPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={st.badge || st.color}>{st.label}</span>
+                        <span className={st.color}>{st.label}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">

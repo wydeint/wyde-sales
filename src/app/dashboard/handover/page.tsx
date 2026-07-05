@@ -68,7 +68,7 @@ function RoomChip({ entry }: { entry: RoomEntry }) {
   if (entry.is_delivered) {
     return (
       <div className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
-        style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ade80' }}>
+        style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
         <CheckCircle2 size={10} />
         {entry.room_no}
       </div>
@@ -77,7 +77,7 @@ function RoomChip({ entry }: { entry: RoomEntry }) {
   if (entry.is_overdue) {
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
-        style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }}>
+        style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
         {entry.room_no}
         <span className="text-[10px] font-normal opacity-60">+{entry.days_overdue}d</span>
       </div>
@@ -234,7 +234,7 @@ export default function HandoverPage() {
               <p className="text-lg font-bold leading-tight" style={{ color: 'var(--text-1)' }}>
                 {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
               </p>
-              {deliveredRooms > 0 && <p className="text-[10px]" style={{ color: '#4ade80' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
+              {deliveredRooms > 0 && <p className="text-[10px]" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
             </div>
           </div>
           {/* Value */}
@@ -252,7 +252,7 @@ export default function HandoverPage() {
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
-                <p className="text-lg font-bold leading-tight" style={{ color: '#f87171' }}>{overdueRooms} ห้อง</p>
+                <p className="text-lg font-bold leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
               </div>
             </div>
           )}
@@ -280,7 +280,7 @@ export default function HandoverPage() {
                     <div className="flex items-center gap-3">
                       {projOverdue > 0 && (
                         <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-[4px]"
-                          style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }}>
+                          style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
                           {projOverdue} หลุด
                         </span>
                       )}

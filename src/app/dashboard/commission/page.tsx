@@ -39,9 +39,9 @@ function calcTier(revenue: number, tiers: Tier[]): { rate: number; amount: numbe
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  pending:  { label: 'รอดำเนินการ', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  icon: Clock },
-  approved: { label: 'อนุมัติแล้ว',  color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   icon: CheckCircle },
-  paid:     { label: 'จ่ายแล้ว',     color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   icon: Banknote },
+  pending:  { label: 'รอดำเนินการ', color: 'var(--accent-orange)', bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', icon: Clock },
+  approved: { label: 'อนุมัติแล้ว',  color: 'var(--accent-blue)',   bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)', icon: CheckCircle },
+  paid:     { label: 'จ่ายแล้ว',     color: 'var(--accent-green)',  bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)', icon: Banknote },
 }
 const STATUSES = ['pending', 'approved', 'paid'] as const
 

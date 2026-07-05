@@ -34,7 +34,6 @@ const NAV = [
       { href: '/dashboard/leads', icon: Database, label: 'Origin Pool' },
       { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects' },
       { href: '/dashboard/my-deals', icon: Briefcase, label: 'My Deals' },
-      { href: '/dashboard/daily-report', icon: ClipboardList, label: 'Daily Report' },
       { href: '/dashboard/events', icon: CalendarDays, label: 'Events' },
     ],
   },
@@ -56,6 +55,7 @@ const NAV = [
       { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้ส่งมอบ' },
       { href: '/dashboard/project-summary', icon: BarChart3, label: 'สรุปรายโครงการ' },
       { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
+      { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
       { href: '/dashboard/finance', icon: Wallet, label: 'Finance & Ledger' },
       { href: '/dashboard/commission', icon: DollarSign, label: 'Commission' },
     ],
@@ -65,7 +65,6 @@ const NAV = [
     color: null,
     dot: null,
     items: [
-      { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
       { href: '/dashboard/admin-data', icon: Database, label: 'Data Entry' },
       { href: '/dashboard/projects', icon: Building2, label: 'Projects' },
       { href: '/dashboard/users', icon: UserCog, label: 'Users' },
@@ -200,10 +199,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       <div className="flex-shrink-0 px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
         <div className="flex items-center gap-1.5">
           <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
-            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-purple))' }}>
             {userInitial}
           </div>
-          <span className="text-[11px] font-medium truncate flex-1" style={{ color: 'var(--text-3)' }}>
+          <span className="text-[11px] font-semibold truncate flex-1" style={{ color: 'var(--text-3)' }}>
             {userName || '...'}
           </span>
           <NotificationBell />

@@ -37,6 +37,7 @@ interface DetailJob {
   id: string
   po_no: string
   so_no: string
+  room_no: string
   work_type: string
   package_type: string
   order_date: string | null
@@ -127,7 +128,7 @@ function CustomerDetail({
       const [{ data: jobsRaw }, { data: warrantiesRaw }] = await Promise.all([
         supabase
           .from('jobs')
-          .select('id, po_no, so_no, work_type, package_type, order_date, revenue_ex_vat, revenue_inc_vat, voucher, working_status')
+          .select('id, po_no, so_no, room_no, work_type, package_type, order_date, revenue_ex_vat, revenue_inc_vat, voucher, working_status')
           .eq('customer_id', customer.id)
           .order('order_date', { ascending: false }),
         supabase
@@ -307,6 +308,7 @@ function CustomerDetail({
                           <div>
                             <p className="text-xs font-semibold" style={{ color: '#a78bfa' }}>📋 สั่งงาน</p>
                             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                              {job.room_no && <span className="font-mono mr-1" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</span>}
                               {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
                             </p>
                           </div>
@@ -378,11 +380,12 @@ function CustomerDetail({
                       {/* Job header */}
                       <div className="flex items-start justify-between mb-3">
                         <div>
+                          {job.room_no && <p className="text-sm font-semibold font-mono mb-0.5" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</p>}
                           <p className="text-xs" style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</p>
                         </div>
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{
-                          background: job.working_status === 'ส่งมอบแล้ว' ? 'rgba(52,211,153,0.15)' : 'var(--hover-bg)',
-                          color: job.working_status === 'ส่งมอบแล้ว' ? '#34d399' : 'var(--text-2)',
+                        <span className="text-xs px-2 py-0.5 rounded-[4px] font-semibold" style={{
+                          background: job.working_status === 'ส่งมอบแล้ว' ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'var(--hover-bg)',
+                          color: job.working_status === 'ส่งมอบแล้ว' ? 'var(--accent-green)' : 'var(--text-2)',
                         }}>{job.working_status || 'ดำเนินการ'}</span>
                       </div>
 
@@ -417,21 +420,21 @@ function CustomerDetail({
                             <span style={{ color: pct === 100 ? '#34d399' : 'var(--text-2)' }}>{pct}%</span>
                           </div>
                           <div className="h-1.5 rounded-full mb-2" style={{ background: 'var(--divider)' }}>
-                            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct === 100 ? '#34d399' : 'var(--accent)' }} />
+                            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--accent-green)' : 'var(--accent)' }} />
                           </div>
                           <div className="space-y-1">
                             {job.installments.map(inst => (
                               <div key={inst.id} className="flex items-center justify-between text-xs">
                                 <div className="flex items-center gap-1.5">
                                   {inst.status === 'paid'
-                                    ? <CheckCircle size={10} className="text-green-400 flex-shrink-0" />
+                                    ? <CheckCircle size={10} style={{ color: 'var(--accent-green)' }} className="flex-shrink-0" />
                                     : inst.status === 'overdue'
-                                    ? <AlertCircle size={10} className="text-red-400 flex-shrink-0" />
+                                    ? <AlertCircle size={10} style={{ color: 'var(--accent-red)' }} className="flex-shrink-0" />
                                     : <Clock size={10} className="flex-shrink-0" style={{ color: 'var(--text-3)' }} />
                                   }
                                   <span style={{ color: 'var(--text-2)' }}>{inst.installment_name}</span>
                                 </div>
-                                <span style={{ color: inst.status === 'paid' ? '#34d399' : inst.status === 'overdue' ? '#f87171' : 'var(--text-2)' }}>
+                                <span style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : inst.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-2)' }}>
                                   {fmt(inst.amount)} บ.
                                 </span>
                               </div>
@@ -444,7 +447,7 @@ function CustomerDetail({
                       {job.handover && (
                         <div className="mt-3 pt-3 flex items-center justify-between text-xs" style={{ borderTop: '1px solid var(--divider)' }}>
                           <span style={{ color: 'var(--text-3)' }}>ส่งมอบ</span>
-                          <span style={{ color: job.handover.work_status === 'ส่งมอบแล้ว' ? '#34d399' : 'var(--text-2)' }}>
+                          <span style={{ color: job.handover.work_status === 'ส่งมอบแล้ว' ? 'var(--accent-green)' : 'var(--text-2)' }}>
                             {job.handover.work_status}
                             {job.handover.delivery_date ? ' · ' + job.handover.delivery_date.slice(0, 10) : ''}
                           </span>
@@ -602,7 +605,8 @@ export default function CustomersPage() {
 
   const filtered = customers.filter(c => {
     const q = search.toLowerCase()
-    const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || c.interested_room?.toLowerCase().includes(q) || (c as any).projects?.name?.toLowerCase().includes(q)
+    const qNorm = q.replace(/-/g, '')
+    const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || (c.interested_room?.replace(/-/g, '').toLowerCase() || '').includes(qNorm) || (c as any).projects?.name?.toLowerCase().includes(q)
     const matchStatus = !filterStatus || c.status === filterStatus
     const matchProject = !filterProject || c.project_id === filterProject
     return matchSearch && matchStatus && matchProject
@@ -662,7 +666,7 @@ export default function CustomersPage() {
           if (!count) return null
           return (
             <button key={s.value} onClick={() => setFilterStatus(filterStatus === s.value ? '' : s.value)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${filterStatus === s.value ? s.color + ' ring-1 ring-current' : s.color + ' opacity-60 hover:opacity-100'}`}>
+              className={`px-3 py-1 rounded-[4px] text-xs font-semibold transition-all ${filterStatus === s.value ? s.color + ' ring-1 ring-current' : s.color + ' opacity-60 hover:opacity-100'}`}>
               {s.label} {count}
             </button>
           )
@@ -742,7 +746,9 @@ export default function CustomersPage() {
                       <button
                         onClick={() => deleteCustomer(c)}
                         disabled={deletingId === c.id}
-                        className="hover:text-red-400 transition-colors disabled:opacity-40"
+                        className="transition-colors disabled:opacity-40"
+                        onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent-red)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-2)'}
                         style={{ color: 'var(--text-2)' }}
                         title="ลบลูกค้า"
                       >
@@ -786,7 +792,7 @@ export default function CustomersPage() {
       {/* Edit / Add Modal */}
       <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'} size="lg">
         {saveError && (
-          <div role="alert" className="flex items-center gap-2 mb-4 p-3 rounded-[18px] text-xs" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+          <div role="alert" className="flex items-center gap-2 mb-4 p-3 rounded-[18px] text-xs" style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
             <AlertCircle size={14} aria-hidden="true" />{saveError}
           </div>
         )}

@@ -100,7 +100,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-        style={{ background: 'var(--sidebar-bg)', border: '1px solid var(--card-border)' }}>
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1">
             <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
@@ -116,12 +116,12 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
           {/* Summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-[10px]" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
-              <p className="text-[10px] text-green-400">รับแล้ว</p>
-              <p className="font-bold text-green-400 text-base">{f(job.paid_total)}</p>
+              <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
+              <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
             </div>
-            <div className="p-3 rounded-[10px]" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
-              <p className="text-[10px] text-red-400">คงเหลือ</p>
-              <p className="font-bold text-red-400 text-base">{f(job.unpaid_total)}</p>
+            <div className="p-3 rounded-[10px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
+              <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
+              <p className="font-bold text-base" style={{ color: 'var(--accent-red)' }}>{f(job.unpaid_total)}</p>
             </div>
           </div>
 
@@ -132,12 +132,12 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
             </p>
             <div className="space-y-2">
               {job.installments.map(inst => {
-                const txtColor = inst.status === 'paid' ? '#4ade80' : inst.status === 'overdue' ? '#f87171' : 'var(--text-3)'
+                const txtColor = inst.status === 'paid' ? 'var(--accent-green)' : inst.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-3)'
                 return (
                   <div key={inst.id} className="flex items-center gap-3 p-3 rounded-[10px]"
                     style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                      style={{ background: inst.status === 'paid' ? 'rgba(34,197,94,0.2)' : inst.status === 'overdue' ? 'rgba(239,68,68,0.2)' : 'var(--card-bg)', color: txtColor }}>
+                    <div className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                      style={{ background: inst.status === 'paid' ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : inst.status === 'overdue' ? 'color-mix(in srgb, var(--accent-red) 20%, transparent)' : 'var(--card-bg)', color: txtColor }}>
                       {inst.installment_no}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -269,8 +269,8 @@ export default function PaymentsPage() {
     if (filterProject) r = r.filter(j => j.project_id === filterProject)
     if (filterSales) r = r.filter(j => j.sales_name === filterSales)
     if (search.trim()) {
-      const q = search.toLowerCase()
-      r = r.filter(j => j.room_no.toLowerCase().includes(q) || j.customer_name.toLowerCase().includes(q))
+      const q = search.toLowerCase().replace(/-/g, '')
+      r = r.filter(j => (j.room_no.toLowerCase().replace(/-/g, '')).includes(q) || j.customer_name.toLowerCase().includes(search.toLowerCase()))
     }
     return r
   }, [rows, filterProject, filterSales, search])
@@ -315,14 +315,14 @@ export default function PaymentsPage() {
         {/* Summary */}
         <div className="flex gap-3 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
-            style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
-            <p className="text-[10px] text-green-400">รับแล้ว</p>
-            <p className="text-sm font-bold text-green-400">{f(totalPaid)}</p>
+            style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' }}>
+            <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
-            <p className="text-[10px] text-red-400">คงเหลือ</p>
-            <p className="text-sm font-bold text-red-400">{f(totalUnpaid)}</p>
+            style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
+            <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{f(totalUnpaid)}</p>
           </div>
           <p className="text-xs self-center" style={{ color: 'var(--text-3)' }}>{filtered.length} รายการ</p>
         </div>
@@ -375,11 +375,11 @@ export default function PaymentsPage() {
                   </td>
 
                   <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                    <p className="font-semibold" style={{ color: '#4ade80' }}>{f(job.paid_total)}</p>
+                    <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
                   </td>
 
                   <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                    <p className="font-semibold" style={{ color: job.unpaid_total > 0 ? '#f87171' : 'var(--text-3)' }}>
+                    <p className="font-semibold" style={{ color: job.unpaid_total > 0 ? 'var(--accent-red)' : 'var(--text-3)' }}>
                       {job.unpaid_total > 0 ? f(job.unpaid_total) : '—'}
                     </p>
                   </td>

@@ -38,7 +38,7 @@ const thisMonth = new Date().getMonth() + 1
 const thisQ = Math.floor((thisMonth - 1) / 3) + 1
 
 type ViewPeriod = 'month' | 'quarter' | 'year'
-type TabView = 'org' | 'sales' | 'team'
+type TabView = 'org' | 'sales'
 
 function getViewMonths(p: ViewPeriod): number[] {
   if (p === 'month') return [thisMonth]
@@ -283,7 +283,6 @@ export default function TargetsPage() {
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
-          {tab === 'team' && <div />}
         </div>
       </div>
 
@@ -300,11 +299,6 @@ export default function TargetsPage() {
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
             style={{ background: tab === 'sales' ? '#6366f1' : 'transparent', color: tab === 'sales' ? '#fff' : 'var(--text-2)' }}>
             <Users size={12} />เป้า Sales
-          </button>
-          <button onClick={() => setTab('team')}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'team' ? '#ec4899' : 'transparent', color: tab === 'team' ? '#fff' : 'var(--text-2)' }}>
-            <Users size={12} />ทีม Sales
           </button>
         </div>
 
@@ -503,8 +497,8 @@ export default function TargetsPage() {
             </div>
           )}
 
-          {/* ══ TEAM TAB ════════════════════════════════════ */}
-          {tab === 'team' && (() => {
+          {/* ══ SALES TARGETS TAB ═══════════════════════════ (placeholder removed) */}
+          {false && (() => {
             const TEAM_COLORS = ['#6366f1', '#ec4899']
             const managerIds = [...new Set(users.filter(u => u.manager_id).map(u => u.manager_id!))]
             const teamData = managerIds.map((mgrId, idx) => {

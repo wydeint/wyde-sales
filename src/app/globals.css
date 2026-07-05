@@ -51,6 +51,7 @@
 
 /* Light — iOS 26 Pastel */
 :root {
+  color-scheme: light;
   --bg-gradient: linear-gradient(135deg, #dde4ff 0%, #eafaf4 45%, #f5e8ff 100%);
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-border: rgba(255, 255, 255, 0.85);
@@ -80,6 +81,7 @@
 
 /* Dark — iOS 26 Deep Glass */
 .dark {
+  color-scheme: dark;
   --bg-gradient: linear-gradient(135deg, #0e0b1e 0%, #090d18 50%, #130b1f 100%);
   --glass-bg: rgba(255, 255, 255, 0.045);
   --glass-border: rgba(255, 255, 255, 0.085);
@@ -239,8 +241,19 @@ html:not(.dark) thead tr {
   transition: border-color 0.15s;
 }
 .field-input:focus { border-color: var(--accent); }
-.field-input::placeholder { color: var(--text-3); }
+.field-input::placeholder { color: var(--text-3); opacity: 0.5; }
 .field-input option { background: var(--card-bg, #fff); color: var(--text-1, #1e1b4b); }
+
+/* Native select dark-mode fix — must use solid colors; rgba/transparent fails in OS-rendered dropdown */
+.dark select,
+.dark .field-input {
+  color-scheme: dark;
+}
+.dark select option,
+.dark .field-input option {
+  background-color: #0e0b1e;
+  color: #f1f5f9;
+}
 
 /* ══════════════════════════════════════════
    Action button utilities

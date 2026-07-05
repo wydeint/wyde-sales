@@ -17,6 +17,7 @@ interface Installment {
   installment_no: number
   installment_name: string
   amount: number
+  paid_amount: number | null
   percentage: number
   status: 'pending' | 'paid' | 'overdue'
   due_date: string | null
@@ -334,20 +335,31 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
 }
 
 // ─── Record Payment Modal ──────────────────────────────────
-function PayModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; onSaved: () => void }) {
+function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () => void; onSaved: () => void; onError?: (msg: string) => void }) {
   const supabase = createClient()
   const pending = job.installments.filter(i => i.status !== 'paid').sort((a, b) => a.installment_no - b.installment_no)
   const [selected, setSelected] = useState<Installment | null>(pending[0] || null)
   const [paidDate, setPaidDate] = useState(today())
+  const [paidAmount, setPaidAmount] = useState(pending[0]?.amount || 0)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  function selectInst(inst: Installment) {
+    setSelected(inst)
+    setPaidAmount(inst.amount || 0)
+  }
 
   async function save() {
     if (!selected) return
-    setSaving(true)
+    if (!paidAmount) { setError('กรุณาระบุยอดเงิน'); return }
+    setSaving(true); setError('')
     if (selected.is_work_trigger && !job.work_start_date) {
       await supabase.from('jobs').update({ work_start_date: paidDate }).eq('id', job.id)
     }
-    await supabase.from('payments').update({ status: 'paid', paid_date: paidDate }).eq('id', selected.id)
+    const { error: e } = await supabase.from('payments').update({
+      status: 'paid', paid_date: paidDate, paid_amount: paidAmount,
+    }).eq('id', selected.id)
+    if (e) { const msg = e.message; setError(msg); onError?.(msg); setSaving(false); return }
     setSaving(false); onSaved(); onClose()
   }
 
@@ -369,7 +381,7 @@ function PayModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; on
             <p className="text-xs mb-2" style={{ color: 'var(--text-2)' }}>เลือกงวด</p>
             <div className="space-y-2">
               {pending.map(inst => (
-                <button key={inst.id} onClick={() => setSelected(inst)}
+                <button key={inst.id} onClick={() => selectInst(inst)}
                   className="w-full text-left px-4 py-3 rounded-[11px] border transition-all"
                   style={selected?.id === inst.id
                     ? { background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.4)', color: 'var(--text-1)' }
@@ -387,12 +399,22 @@ function PayModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; on
               ))}
             </div>
           </div>
-          <div>
-            <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-            <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
-              className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับ (฿)</label>
+              <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
+                className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}
+                placeholder="0" />
+            </div>
+            <div>
+              <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
+              <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+            </div>
           </div>
+          {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={save} disabled={saving || !selected}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
@@ -405,40 +427,52 @@ function PayModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; on
 }
 
 // ─── Handover Modal ────────────────────────────────────────
-function HandoverModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; onSaved: () => void }) {
+function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () => void; onSaved: () => void; onError?: (msg: string) => void }) {
   const supabase = createClient()
   const [deliverDate, setDeliverDate] = useState(today())
   const [warrantyMonths, setWarrantyMonths] = useState(12)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const finalInst = job.installments.find(i => i.is_final && i.status !== 'paid') || null
   const [markFinalPaid, setMarkFinalPaid] = useState(!!finalInst)
 
   async function save() {
-    setSaving(true)
+    setSaving(true); setError('')
     const wEnd = new Date(deliverDate)
     wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
     const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
 
-    await supabase.from('jobs').update({
+    const { error: e1 } = await supabase.from('jobs').update({
       actual_deliver_date: deliverDate,
       working_status: 'ส่งมอบแล้ว',
     }).eq('id', job.id)
+    if (e1) { const msg = 'บันทึกไม่สำเร็จ: ' + e1.message; setError(msg); onError?.(msg); setSaving(false); return }
 
     if (markFinalPaid && finalInst) {
       await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate }).eq('id', finalInst.id)
     }
-    await supabase.from('handovers').upsert({
+
+    const handoverPayload = {
       job_id: job.id,
-      customer_id: job.customer_id,
-      project_id: job.project_id,
+      customer_id: job.customer_id || null,
+      project_id: job.project_id || null,
       room: job.room_no,
       delivery_date: deliverDate,
       work_status: 'ส่งมอบแล้ว',
-    }, { onConflict: 'job_id' })
-    await supabase.from('warranties').upsert({
+    }
+    const { data: existingHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
+    if (existingHO) {
+      const { error: e2 } = await supabase.from('handovers').update(handoverPayload).eq('id', existingHO.id)
+      if (e2) { const msg = 'handovers: ' + e2.message; setError(msg); onError?.(msg); setSaving(false); return }
+    } else {
+      const { error: e2 } = await supabase.from('handovers').insert(handoverPayload)
+      if (e2) { const msg = 'handovers: ' + e2.message; setError(msg); onError?.(msg); setSaving(false); return }
+    }
+
+    const { error: e3 } = await supabase.from('warranties').upsert({
       id: `WAR-${job.id}`,
-      customer_id: job.customer_id,
-      project_id: job.project_id,
+      customer_id: job.customer_id || null,
+      project_id: job.project_id || null,
       room: job.room_no,
       handover_date: deliverDate,
       warranty_start: deliverDate,
@@ -446,6 +480,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: Job; onClose: () => voi
       warranty_months: warrantyMonths,
       status: 'active',
     }, { onConflict: 'id' })
+    if (e3) { setError('warranties: ' + e3.message); setSaving(false); return }
 
     setSaving(false); onSaved(); onClose()
   }
@@ -499,6 +534,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: Job; onClose: () => voi
             <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ประกันรันอัตโนมัติ {warrantyMonths} เดือน</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
           </div>
+          {error && <p className="text-xs text-red-400 rounded-[8px] px-3 py-2" style={{ background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : '#059669' }}>
@@ -523,13 +559,13 @@ function InstallmentRows({ installments }: { installments: Installment[] }) {
               : <Circle size={14} style={{ color: 'var(--text-3)' }} />}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
-            {inst.is_work_trigger && <span className="ml-1.5 text-[9px] px-1 rounded bg-indigo-500/15 text-indigo-400">เริ่มงาน</span>}
-            {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded bg-amber-500/15 text-amber-400">สุดท้าย</span>}
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
+            {inst.is_work_trigger && <span className="ml-1.5 text-[9px] px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>}
+            {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
           </div>
           <div className="text-right flex-shrink-0">
             <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
-              {fmtBaht(inst.amount)}
+              {fmtBaht(inst.status === 'paid' && inst.paid_amount != null ? inst.paid_amount : inst.amount)}
             </span>
             {inst.paid_date && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{fmtDate(inst.paid_date)}</p>}
           </div>
@@ -550,6 +586,12 @@ export default function JobDetailPage() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(false)
   const [modal, setModal] = useState<'setup' | 'pay' | 'handover' | null>(null)
+  const [toast, setToast] = useState('')
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 4000)
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -594,7 +636,8 @@ export default function JobDetailPage() {
         id: p.id,
         installment_no: p.installment_no,
         installment_name: p.installment_name,
-        amount: p.amount,
+        amount: p.amount || 0,
+        paid_amount: p.paid_amount ?? null,
         percentage: p.percentage || 0,
         status: p.status || 'pending',
         due_date: p.due_date || null,
@@ -702,10 +745,10 @@ export default function JobDetailPage() {
                         }}>
                         {s.done
                           ? <CheckCircle2 size={14} className="text-white" />
-                          : <Icon size={13} style={{ color: isActive ? '#6366f1' : 'var(--text-3)' }} />}
+                          : <Icon size={13} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)' }} />}
                       </div>
-                      <span className="text-[10px] font-medium whitespace-nowrap"
-                        style={{ color: s.done ? '#059669' : isActive ? '#6366f1' : 'var(--text-3)' }}>
+                      <span className="text-[10px] font-semibold whitespace-nowrap"
+                        style={{ color: s.done ? 'var(--accent-green)' : isActive ? 'var(--accent)' : 'var(--text-3)' }}>
                         {s.label}
                       </span>
                     </div>
@@ -779,8 +822,15 @@ export default function JobDetailPage() {
       </div>
 
       {modal === 'setup' && <SetupAndPayModal job={job} onClose={() => setModal(null)} onSaved={load} />}
-      {modal === 'pay' && <PayModal job={job} onClose={() => setModal(null)} onSaved={load} />}
-      {modal === 'handover' && <HandoverModal job={job} onClose={() => setModal(null)} onSaved={load} />}
+      {modal === 'pay' && <PayModal job={job} onClose={() => setModal(null)} onSaved={load} onError={showToast} />}
+      {modal === 'handover' && <HandoverModal job={job} onClose={() => setModal(null)} onSaved={load} onError={showToast} />}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] px-4 py-3 rounded-[12px] text-sm font-semibold text-white shadow-xl"
+          style={{ background: 'rgba(239,68,68,0.95)', backdropFilter: 'blur(8px)' }}>
+          ⚠️ {toast}
+        </div>
+      )}
     </div>
   )
 }

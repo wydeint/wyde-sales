@@ -38,6 +38,11 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     if (q.length < 2) { setResults([]); return }
     const timeout = setTimeout(async () => {
       setLoading(true)
+      // Build a dashed variant for room search: "D803" → "D-803", "Z101" → "Z-101"
+      const qDashed = q.replace(/([A-Za-z]+)([0-9]+)/g, '$1-$2')
+      const roomFilter = qDashed !== q
+        ? `customer_name.ilike.%${q}%,room_no.ilike.%${q}%,room_no.ilike.%${qDashed}%`
+        : `customer_name.ilike.%${q}%,room_no.ilike.%${q}%`
       const [{ data: customers }, { data: jobs }] = await Promise.all([
         supabase.from('customers')
           .select('id, customer_name, phone, status')
@@ -45,7 +50,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           .limit(5),
         supabase.from('jobs')
           .select('id, customer_name, room_no, working_status')
-          .or(`customer_name.ilike.%${q}%,room_no.ilike.%${q}%`)
+          .or(roomFilter)
           .limit(5),
       ])
 
@@ -76,7 +81,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   return (
     <div className="fixed inset-0 z-[300] flex items-start justify-center pt-20 px-4" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
-      <div className="relative w-full max-w-lg rounded-[18px] shadow-2xl overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
+      <div className="relative w-full max-w-lg rounded-[18px] shadow-2xl overflow-hidden" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid var(--glass-border)' }}
         onClick={e => e.stopPropagation()}>
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>

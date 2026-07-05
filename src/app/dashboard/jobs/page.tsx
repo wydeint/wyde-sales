@@ -78,13 +78,13 @@ type Job = {
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string; border: string }> = {
-  'ดำเนินการ':       { label: 'ดำเนินการ',     color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24', border: 'rgba(251,191,36,0.35)' },
-  'กำลังดำเนินการ': { label: 'กำลังดำเนินการ', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24', border: 'rgba(251,191,36,0.35)' },
-  'รับงาน':          { label: 'รับงาน',          color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',  dot: '#fbbf24', border: 'rgba(251,191,36,0.35)' },
-  'รอเอกสาร':       { label: 'รอเอกสาร',        color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   dot: '#60a5fa', border: 'rgba(96,165,250,0.35)' },
-  'รอส่งมอบ':       { label: 'รอส่งมอบ',         color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', dot: '#a78bfa', border: 'rgba(167,139,250,0.35)' },
-  'ส่งมอบแล้ว':     { label: 'ส่งมอบแล้ว',       color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  dot: '#4ade80', border: 'rgba(74,222,128,0.35)' },
-  'ยกเลิก':         { label: 'ยกเลิก',           color: '#f87171', bg: 'rgba(248,113,113,0.12)', dot: '#f87171', border: 'rgba(248,113,113,0.35)' },
+  'ดำเนินการ':       { label: 'ดำเนินการ',     color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
+  'กำลังดำเนินการ': { label: 'กำลังดำเนินการ', color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
+  'รับงาน':          { label: 'รับงาน',          color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
+  'รอเอกสาร':       { label: 'รอเอกสาร',        color: 'var(--accent-blue)',    bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)',  dot: 'var(--accent-blue)',    border: 'color-mix(in srgb, var(--accent-blue)   35%, transparent)' },
+  'รอส่งมอบ':       { label: 'รอส่งมอบ',         color: 'var(--accent-purple)',  bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)',  dot: 'var(--accent-purple)',  border: 'color-mix(in srgb, var(--accent-purple) 35%, transparent)' },
+  'ส่งมอบแล้ว':     { label: 'ส่งมอบแล้ว',       color: 'var(--accent-green)',   bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)',  dot: 'var(--accent-green)',   border: 'color-mix(in srgb, var(--accent-green)  35%, transparent)' },
+  'ยกเลิก':         { label: 'ยกเลิก',           color: 'var(--accent-red)',     bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)',  dot: 'var(--accent-red)',     border: 'color-mix(in srgb, var(--accent-red)    35%, transparent)' },
 }
 const DEFAULT_STATUS_CFG = STATUS_CFG['ดำเนินการ']
 
@@ -112,10 +112,10 @@ function JobCard({ job, paymentMap, onClick }: {
       className="w-full text-left rounded-[14px] p-3 flex flex-col gap-2 transition-all group"
       style={{
         background: 'var(--card-bg)',
-        border: `1px solid ${isOverdue ? 'rgba(248,113,113,0.35)' : 'var(--card-border)'}`,
+        border: `1px solid ${isOverdue ? 'color-mix(in srgb, var(--accent-red) 35%, transparent)' : 'var(--card-border)'}`,
       }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = isOverdue ? 'rgba(248,113,113,0.6)' : 'var(--accent)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = isOverdue ? 'rgba(248,113,113,0.35)' : 'var(--card-border)')}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = isOverdue ? 'color-mix(in srgb, var(--accent-red) 60%, transparent)' : 'var(--accent)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = isOverdue ? 'color-mix(in srgb, var(--accent-red) 35%, transparent)' : 'var(--card-border)')}
     >
       {/* room + status */}
       <div className="flex items-start justify-between gap-2">
@@ -135,13 +135,13 @@ function JobCard({ job, paymentMap, onClick }: {
       {/* work type + phone */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {job.work_type && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {job.work_type}
           </span>
         )}
         {job.package_type && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
             {job.package_type}
           </span>
@@ -156,7 +156,7 @@ function JobCard({ job, paymentMap, onClick }: {
       <div className="flex items-center justify-between gap-2">
         <div>
           {job.revenue_ex_vat ? (
-            <p className="text-xs font-bold" style={{ color: '#4ade80' }}>{f(job.revenue_ex_vat)}</p>
+            <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{f(job.revenue_ex_vat)}</p>
           ) : (
             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายได้</p>
           )}
@@ -164,12 +164,12 @@ function JobCard({ job, paymentMap, onClick }: {
         </div>
         <div className="flex items-center gap-1.5">
           {payment && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(248,113,113,0.12)', color: '#f87171' }}>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
               ค้าง {payment.installment_name}
             </span>
           )}
           {isOverdue && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
               เกินกำหนด
             </span>
           )}
@@ -267,7 +267,7 @@ export default function JobsPage() {
     ] = await Promise.all([
       supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
-      supabase.from('users').select('id, name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
+      supabase.from('users').select('id, name').eq('active', true).order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
     ])
@@ -300,9 +300,10 @@ export default function JobsPage() {
   useEffect(() => { load() }, [load])
 
   // ─── Commission auto-calc when revenue changes ───
-  function handleRevenueChange(val: number) {
-    const { rate, amount } = calcCommission(val, tiers)
-    setEditing(e => ({ ...e, revenue_ex_vat: val, revenue_inc_vat: Math.round(val * 1.07), commission_rate: rate, commission_amount: amount }))
+  function handleRevenueChange(incVat: number) {
+    const exVat = incVat ? Math.round(incVat / 1.07) : 0
+    const { rate, amount } = calcCommission(exVat, tiers)
+    setEditing(e => ({ ...e, revenue_inc_vat: incVat, revenue_ex_vat: exVat, commission_rate: rate, commission_amount: amount }))
   }
 
   // ─── Project select → load leads ───
@@ -373,9 +374,10 @@ export default function JobsPage() {
   // ─── Filter ───
   const filtered = jobs.filter(j => {
     const s = search.toLowerCase()
+    const sNorm = s.replace(/-/g, '')
     const name = (j.condo_leads as any)?.customer_name || j.customer_name || (j.customers as any)?.customer_name || ''
-    const matchSearch = !s || [j.po_no, j.so_no, j.id, name, (j.projects as any)?.name, j.room_no]
-      .some(v => v?.toLowerCase().includes(s))
+    const matchSearch = !s || [j.po_no, j.so_no, j.id, name, (j.projects as any)?.name]
+      .some(v => v?.toLowerCase().includes(s)) || (j.room_no?.toLowerCase().replace(/-/g, '') || '').includes(sNorm)
     const matchProj = !filterProject || j.project_id === filterProject
     const matchStatus = !filterStatus || j.working_status === filterStatus
     const matchSales = !filterSales || j.sales_id === filterSales
@@ -434,8 +436,8 @@ export default function JobsPage() {
           </button>
           {canWrite && (
             <button onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+              className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
+              style={{ background: 'var(--accent)' }}>
               <Plus size={15} /> เพิ่มงาน
             </button>
           )}
@@ -446,7 +448,7 @@ export default function JobsPage() {
       {(() => {
         const profit = totalRevenue - totalCost
         const gpPctAvg = totalRevenue > 0 ? (profit / totalRevenue * 100) : null
-        const gpColor = gpPctAvg === null ? 'var(--text-3)' : gpPctAvg >= 20 ? '#4ade80' : gpPctAvg >= 10 ? '#fbbf24' : '#f87171'
+        const gpColor = gpPctAvg === null ? 'var(--text-3)' : gpPctAvg >= 20 ? 'var(--accent-green)' : gpPctAvg >= 10 ? 'var(--accent-orange)' : 'var(--accent-red)'
         const overdueCount = filtered.filter(j => {
           if (j.working_status === 'ส่งมอบแล้ว' || j.working_status === 'ยกเลิก') return false
           if (!j.expected_finish_date) return false
@@ -456,7 +458,7 @@ export default function JobsPage() {
           <div className="grid grid-cols-3 gap-4">
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
-              <p className="text-lg font-bold" style={{ color: '#4ade80' }}>{f(totalRevenue)}</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
               <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
             <div className="ds-card p-4">
@@ -468,7 +470,7 @@ export default function JobsPage() {
             </div>
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
-              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? '#f87171' : '#4ade80' }}>
+              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                 {overdueCount} งาน
               </p>
               <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
@@ -538,7 +540,7 @@ export default function JobsPage() {
             onClick={() => setOpen(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[20px] p-6 space-y-5 pointer-events-auto"
-            style={{ background: 'var(--sidebar-bg)', border: '1px solid var(--card-border)' }}>
+            style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid var(--glass-border)' }}>
 
             {/* Modal header */}
             <div className="flex items-center justify-between">
@@ -561,7 +563,7 @@ export default function JobsPage() {
                   <div className="flex gap-2 mt-1">
                     {['B2C', 'B2B'].map(t => (
                       <button key={t} onClick={() => setEditing(e => ({ ...e, customer_type: t }))}
-                        className="px-4 py-2 rounded-full text-sm font-semibold"
+                        className="px-4 py-2 rounded-[var(--radius-sm)] text-sm font-semibold"
                         style={{
                           background: editing.customer_type === t ? 'var(--accent)' : 'var(--hover-bg)',
                           color: editing.customer_type === t ? '#fff' : 'var(--text-2)',
@@ -583,26 +585,31 @@ export default function JobsPage() {
                       </select>
                     </div>
 
-                    {/* Step 2: เลขห้อง (from condo_leads) */}
+                    {/* Step 2: เลขห้อง (from condo_leads or direct) */}
                     <div>
                       <label className="field-label">เลขห้อง</label>
-                      <select value={editing.lead_id ? String(editing.lead_id) : ''}
-                        onChange={e => handleLeadSelect(e.target.value)}
-                        className="field-input w-full mt-1"
-                        disabled={!editing.project_id}>
-                        <option value="">— เลือกห้อง —</option>
-                        {leads.map(l => (
-                          <option key={l.id} value={String(l.id)}>{l.room_no}</option>
-                        ))}
-                      </select>
+                      {leads.length > 0 ? (
+                        <select value={editing.lead_id ? String(editing.lead_id) : ''}
+                          onChange={e => handleLeadSelect(e.target.value)}
+                          className="field-input w-full mt-1"
+                          disabled={!editing.project_id}>
+                          <option value="">— เลือกห้อง —</option>
+                          {leads.map(l => (
+                            <option key={l.id} value={String(l.id)}>{l.room_no}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input value={editing.room_no || ''} onChange={e => setEditing(e2 => ({ ...e2, room_no: e.target.value }))}
+                          className="field-input w-full mt-1" placeholder="เช่น A-101" />
+                      )}
                     </div>
 
                     {/* Auto-filled customer info */}
                     {editing.customer_name && (
                       <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
                         style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                          style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                        <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                          style={{ background: 'var(--accent)' }}>
                           {editing.customer_name[0]}
                         </div>
                         <div>
@@ -689,18 +696,18 @@ export default function JobsPage() {
 
             {/* ── Section: Revenue & Cost ── */}
             <section>
-              <p className="text-label-upper mb-3" style={{ color: '#4ade80' }}>Revenue & Cost</p>
+              <p className="text-label-upper mb-3" style={{ color: 'var(--accent-green)' }}>Revenue & Cost</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="field-label">Revenue (Ex.VAT) ฿</label>
-                  <input type="number" value={editing.revenue_ex_vat || ''} onChange={e => handleRevenueChange(+e.target.value)}
+                  <label className="field-label">Revenue (Inc.VAT) ฿</label>
+                  <input type="number" value={editing.revenue_inc_vat || ''} onChange={e => handleRevenueChange(+e.target.value)}
                     className="field-input w-full mt-1" placeholder="0" />
                 </div>
                 <div>
-                  <label className="field-label">Revenue (Inc.VAT) ฿ <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>auto × 1.07</span></label>
+                  <label className="field-label">Revenue (Ex.VAT) ฿ <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>auto ÷ 1.07</span></label>
                   <div className="field-input mt-1 flex items-center gap-2" style={{ background: 'var(--hover-bg)' }}>
                     <span style={{ color: 'var(--text-1)', fontWeight: 600 }}>
-                      {editing.revenue_inc_vat ? f(editing.revenue_inc_vat) : '—'}
+                      {editing.revenue_ex_vat ? f(editing.revenue_ex_vat) : '—'}
                     </span>
                   </div>
                 </div>
@@ -725,7 +732,7 @@ export default function JobsPage() {
                     <Calculator size={12} style={{ color: 'var(--text-3)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>Profit / GP%</span>
                   </div>
-                  <p className="font-bold text-sm" style={{ color: profit >= 0 ? '#4ade80' : '#f87171' }}>
+                  <p className="font-bold text-sm" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
                     {f(profit)} <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>({gpPct}%)</span>
                   </p>
                 </div>
@@ -734,7 +741,7 @@ export default function JobsPage() {
 
             {/* ── Section: Commission ── */}
             <section>
-              <p className="text-label-upper mb-3" style={{ color: '#fbbf24' }}>Commission</p>
+              <p className="text-label-upper mb-3" style={{ color: 'var(--accent-orange)' }}>Commission</p>
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="field-label">Rate (อัตโนมัติจาก Revenue)</label>
@@ -760,7 +767,7 @@ export default function JobsPage() {
                   <div className="flex gap-2 mt-1">
                     {COMMISSION_STATUSES.map(s => (
                       <button key={s} onClick={() => setEditing(e => ({ ...e, commission_status: s }))}
-                        className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                        className="px-3 py-1.5 rounded-[var(--radius-sm)] text-xs font-semibold"
                         style={{
                           background: editing.commission_status === s ? 'var(--accent)' : 'var(--hover-bg)',
                           color: editing.commission_status === s ? '#fff' : 'var(--text-2)',
@@ -818,16 +825,16 @@ export default function JobsPage() {
             {/* Payment alert */}
             {editing.customer_id && paymentMap[editing.customer_id] && (
               <div className="rounded-[11px] p-3 flex items-center justify-between"
-                style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)' }}>
+                style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)' }}>
                 <div>
-                  <p className="text-xs font-semibold" style={{ color: '#f87171' }}>มีงวดค้างชำระ</p>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>มีงวดค้างชำระ</p>
                   <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
                     {paymentMap[editing.customer_id]!.installment_name} · {f(paymentMap[editing.customer_id]!.amount)}
                   </p>
                 </div>
                 <Link href="/dashboard/payments"
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-[8px] font-semibold"
-                  style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>
+                  style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
                   <Receipt size={12} /> ดูงวด
                 </Link>
               </div>
@@ -835,11 +842,11 @@ export default function JobsPage() {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-full text-sm"
+              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-[var(--radius-pill)] text-sm"
                 style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ยกเลิก</button>
               <button onClick={save} disabled={saving}
-                className="px-6 py-2 rounded-full text-sm font-semibold text-white"
-                style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', opacity: saving ? 0.7 : 1 }}>
+                className="px-6 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
+                style={{ background: 'var(--accent)', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>
             </div>

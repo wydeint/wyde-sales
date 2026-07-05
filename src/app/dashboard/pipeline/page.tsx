@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Plus, X, Phone, Mail, MessageCircle, Building2, Home,
@@ -36,13 +36,13 @@ interface DetailWarranty {
 
 // ─── Stage config ───────────────────────────────────────────
 const STAGES = [
-  { value: 'new',           label: 'ใหม่',         bg: 'rgba(59,130,246,0.08)',  border: '#3b82f680', text: '#60a5fa',  dot: '#60a5fa',  chip: 'rgba(59,130,246,0.15)' },
-  { value: 'interested',    label: 'สนใจ',          bg: 'rgba(6,182,212,0.08)',   border: '#06b6d480', text: '#22d3ee',  dot: '#22d3ee',  chip: 'rgba(6,182,212,0.15)'  },
-  { value: 'quoted',        label: 'เสนอราคาแล้ว',  bg: 'rgba(234,179,8,0.08)',   border: '#eab30880', text: '#fbbf24',  dot: '#fbbf24',  chip: 'rgba(234,179,8,0.15)'  },
-  { value: 'booked',        label: 'จอง',           bg: 'rgba(249,115,22,0.08)',  border: '#f9731680', text: '#fb923c',  dot: '#fb923c',  chip: 'rgba(249,115,22,0.15)' },
-  { value: 'close_pending', label: 'รอปิด',         bg: 'rgba(168,85,247,0.08)',  border: '#a855f780', text: '#c084fc',  dot: '#c084fc',  chip: 'rgba(168,85,247,0.15)' },
-  { value: 'closed',        label: 'ปิดแล้ว',       bg: 'rgba(34,197,94,0.08)',   border: '#22c55e80', text: '#4ade80',  dot: '#4ade80',  chip: 'rgba(34,197,94,0.15)'  },
-  { value: 'lost',          label: 'หลุด',          bg: 'rgba(239,68,68,0.08)',   border: '#ef444480', text: '#f87171',  dot: '#f87171',  chip: 'rgba(239,68,68,0.15)'  },
+  { value: 'new',           label: 'ใหม่',         bg: 'rgba(59,130,246,0.08)',  border: '#3b82f680', text: '#60a5fa',  dot: '#60a5fa',  badge: 'rgba(59,130,246,0.15)',  chip: 'rgba(59,130,246,0.45)' },
+  { value: 'interested',    label: 'สนใจ',          bg: 'rgba(6,182,212,0.08)',   border: '#06b6d480', text: '#22d3ee',  dot: '#22d3ee',  badge: 'rgba(6,182,212,0.15)',   chip: 'rgba(6,182,212,0.45)'  },
+  { value: 'quoted',        label: 'เสนอราคาแล้ว',  bg: 'rgba(234,179,8,0.08)',   border: '#eab30880', text: '#fbbf24',  dot: '#fbbf24',  badge: 'rgba(234,179,8,0.15)',   chip: 'rgba(234,179,8,0.45)'  },
+  { value: 'booked',        label: 'จอง',           bg: 'rgba(249,115,22,0.08)',  border: '#f9731680', text: '#fb923c',  dot: '#fb923c',  badge: 'rgba(249,115,22,0.15)',  chip: 'rgba(249,115,22,0.45)' },
+  { value: 'close_pending', label: 'รอปิด',         bg: 'rgba(168,85,247,0.08)',  border: '#a855f780', text: '#c084fc',  dot: '#c084fc',  badge: 'rgba(168,85,247,0.15)',  chip: 'rgba(168,85,247,0.45)' },
+  { value: 'closed',        label: 'ปิดแล้ว',       bg: 'rgba(34,197,94,0.08)',   border: '#22c55e80', text: '#4ade80',  dot: '#4ade80',  badge: 'rgba(34,197,94,0.15)',   chip: 'rgba(34,197,94,0.45)'  },
+  { value: 'lost',          label: 'หลุด',          bg: 'rgba(239,68,68,0.08)',   border: '#ef444480', text: '#f87171',  dot: '#f87171',  badge: 'rgba(239,68,68,0.15)',   chip: 'rgba(239,68,68,0.45)'  },
 ]
 const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
 
@@ -55,7 +55,7 @@ const SOURCE_OPTS = [
 
 const emptyForm = {
   customer_name: '', phone: '', email: '', line_id: '', source: '',
-  project_id: '', interested_room: '', budget: 0, status: 'new', assigned_to: '', notes: '',
+  project_id: '', interested_room: '', budget: 0, status: 'booked', assigned_to: '', notes: '',
 }
 
 const f = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '—'
@@ -68,7 +68,7 @@ function CustomerCard({ c, stage, onClick }: { c: Customer; stage: typeof STAGES
       <div className="flex items-start justify-between gap-1 mb-1">
         <p className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
         <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
-          style={{ background: stage.chip, color: stage.text, border: `1px solid ${stage.border}` }}>
+          style={{ background: stage.badge, color: stage.text, border: `1px solid ${stage.border}` }}>
           {stage.label}
         </span>
       </div>
@@ -164,14 +164,14 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
       {/* Centered Panel */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-        style={{ background: 'var(--sidebar-bg)', border: '1px solid var(--card-border)' }}>
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Header */}
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-base leading-snug" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</p>
-            <span className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full text-xs font-semibold"
-              style={{ background: stage.chip, color: stage.text }}>
+            <span className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-[4px] text-xs font-semibold"
+              style={{ background: stage.badge, color: stage.text }}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: stage.dot }} />
               {stage.label}
             </span>
@@ -275,22 +275,31 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
               </div>
 
               {/* Move stage */}
-              <div>
-                <p className="text-[10px] mb-1.5 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
+
+                {/* Stage pills — all except closed & lost */}
                 <div className="flex flex-wrap gap-1.5">
-                  {STAGES.filter(s => s.value !== customer.status).map(s => (
+                  {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
                     <button key={s.value} onClick={async () => {
-                      if (s.value === 'closed') { onStartJob(customer); return }
                       await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
                       onUpdate({ ...customer, status: s.value })
                     }}
-                      className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors"
-                      style={s.value === 'closed'
-                        ? { background: 'rgba(5,150,105,0.15)', color: '#34d399', border: '1px solid rgba(5,150,105,0.4)' }
-                        : { background: s.chip, color: s.text, border: `1px solid ${s.border}` }}>
-                      {s.value === 'closed' ? '⚡ เริ่มงาน' : `→ ${s.label}`}
+                      className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
+                      style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
+                      → {s.label}
                     </button>
                   ))}
+                  {customer.status !== 'lost' && (
+                    <button onClick={async () => {
+                      await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
+                      onUpdate({ ...customer, status: 'lost' })
+                    }}
+                      className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
+                      style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
+                      → หลุด
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -299,6 +308,9 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
               )}
             </div>
           )}
+
+          {/* Booking details panel */}
+          {customer.status === 'booked' && <BookingPanel customer={customer} onTriggerStart={() => onStartJob(customer)} />}
 
           {/* Jobs */}
           {!loadingDetail && jobs.length > 0 && (
@@ -357,6 +369,16 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
 }
 
 // ─── Start Job Modal ────────────────────────────────────────
+type BookingData = {
+  booking_value: number | null; customer_type: string | null; work_type: string | null; job_type: string | null
+  pay1_amount: number | null; pay1_date: string | null; pay1_done: boolean | null
+  pay2_amount: number | null; pay2_date: string | null; pay2_done: boolean | null
+  pay3_amount: number | null; pay3_date: string | null; pay3_done: boolean | null
+  pay4_amount: number | null; pay4_date: string | null; pay4_done: boolean | null
+  pay5_amount: number | null; pay5_date: string | null; pay5_done: boolean | null
+  pay6_amount: number | null; pay6_date: string | null; pay6_done: boolean | null
+}
+
 function StartJobModal({ customer, users, onClose, onSaved }: {
   customer: Customer; users: User[]
   onClose: () => void; onSaved: () => void
@@ -365,12 +387,52 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
   const [roomNo, setRoomNo] = useState(customer.interested_room || '')
   const [revenue, setRevenue] = useState(customer.budget || 0)
   const [workType, setWorkType] = useState('N-RPT/Event')
+  const [custType, setCustType] = useState<'B2C' | 'B2B'>('B2C')
+  const [pkgType, setPkgType] = useState('')
   const [orderDate, setOrderDate] = useState(todayStr())
   const [salesId, setSalesId] = useState(customer.assigned_to || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [booking, setBooking] = useState<BookingData | null>(null)
 
   const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
+  const revenueEx = revenue ? Math.round(revenue / 1.07) : 0
+
+  // Fetch booking data to pre-fill
+  useEffect(() => {
+    supabase.from('customers')
+      .select('booking_value,customer_type,work_type,job_type,pay1_amount,pay1_date,pay1_done,pay2_amount,pay2_date,pay2_done,pay3_amount,pay3_date,pay3_done,pay4_amount,pay4_date,pay4_done,pay5_amount,pay5_date,pay5_done,pay6_amount,pay6_date,pay6_done')
+      .eq('id', customer.id).single()
+      .then(({ data }) => {
+        if (!data) return
+        const b = data as BookingData
+        setBooking(b)
+        if (b.booking_value) setRevenue(b.booking_value)
+        if (b.work_type) setWorkType(b.work_type)
+        if (b.customer_type === 'B2B') setCustType('B2B')
+        if (b.job_type) setPkgType(b.job_type)
+      })
+  }, [customer.id])
+
+  // Derive installments from booking pay1..pay6
+  const bookingInstallments = React.useMemo(() => {
+    if (!booking) return []
+    const rows = []
+    for (let i = 1; i <= 6; i++) {
+      const amt = (booking as any)[`pay${i}_amount`]
+      if (amt) rows.push({
+        no: i,
+        name: i === 1 ? 'มัดจำ' : `งวดที่ ${i}`,
+        amount: amt,
+        due_date: (booking as any)[`pay${i}_date`] || null,
+        is_paid: !!((booking as any)[`pay${i}_done`]),
+        is_final: i === rows.length + 1, // will be set after
+      })
+    }
+    // mark last as final
+    if (rows.length > 0) rows[rows.length - 1].is_final = true
+    return rows
+  }, [booking])
 
   async function save() {
     if (!roomNo.trim()) { setError('กรุณาระบุเลขห้อง'); return }
@@ -389,21 +451,36 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
     // Upsert job-customer record (FK)
     await supabase.from('customers').upsert({
       id: customerId, project_id: customer.project_id,
-      customer_name: customer.customer_name, customer_type: 'B2C', status: 'active',
+      customer_name: customer.customer_name, customer_type: custType, status: 'active',
     }, { onConflict: 'id', ignoreDuplicates: true })
 
     // Insert job
     const { error: jobErr } = await supabase.from('jobs').insert({
       id: jobId, customer_id: customerId,
       project_id: customer.project_id, room_no: roomNo.trim(),
-      customer_name: customer.customer_name, customer_type: 'B2C',
-      work_type: workType, order_date: orderDate,
-      revenue_inc_vat: revenue, revenue_ex_vat: Math.round(revenue / 1.07),
+      customer_name: customer.customer_name, customer_type: custType,
+      work_type: workType, package_type: pkgType || null, order_date: orderDate,
+      revenue_inc_vat: revenue, revenue_ex_vat: revenueEx,
       transfer_amount: revenue, working_status: 'รับงาน',
       accounting_status: 'Backlog', sales_id: salesId || null,
     })
 
     if (jobErr) { setError('เกิดข้อผิดพลาด: ' + jobErr.message); setSaving(false); return }
+
+    // Migrate booking installments → payments table
+    if (bookingInstallments.length > 0) {
+      const payments = bookingInstallments.map(inst => ({
+        job_id: jobId,
+        installment_no: inst.no,
+        installment_name: inst.name,
+        amount: inst.amount,
+        status: inst.is_paid ? 'paid' : 'pending',
+        due_date: inst.due_date || null,
+        paid_date: inst.is_paid ? (inst.due_date || orderDate) : null,
+        is_final: inst.is_final,
+      }))
+      await supabase.from('payments').insert(payments)
+    }
 
     // Update pipeline prospect to closed
     await supabase.from('customers').update({ status: 'closed' }).eq('id', customer.id)
@@ -424,6 +501,27 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           <button onClick={onClose} style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
         <div className="p-5 space-y-3">
+          {/* Booking data banner */}
+          {booking && booking.booking_value && (
+            <div className="rounded-[10px] px-3 py-2.5 flex flex-col gap-1"
+              style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
+              <p className="text-[11px] font-semibold" style={{ color: 'var(--accent-green)' }}>พบข้อมูล Booking</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-2)' }}>
+                ฿{booking.booking_value.toLocaleString()} · {booking.customer_type || '—'} · {booking.job_type || '—'}
+                {bookingInstallments.length > 0 && ` · ${bookingInstallments.length} งวด`}
+              </p>
+              {bookingInstallments.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {bookingInstallments.map(inst => (
+                    <span key={inst.no} className="text-[10px] px-1.5 py-0.5 rounded-full"
+                      style={{ background: inst.is_paid ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : 'var(--hover-bg)', color: inst.is_paid ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                      {inst.name} ฿{inst.amount.toLocaleString()}{inst.is_paid ? ' ✓' : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>เลขห้อง *</p>
             <input value={roomNo} onChange={e => setRoomNo(e.target.value)} autoFocus
@@ -434,6 +532,23 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</p>
             <input type="number" value={revenue || ''} onChange={e => setRevenue(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
+            {revenue > 0 && <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ประเภทลูกค้า</p>
+              <select value={custType} onChange={e => setCustType(e.target.value as 'B2C' | 'B2B')}
+                className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle}>
+                <option value="B2C">B2C</option>
+                <option value="B2B">B2B</option>
+              </select>
+            </div>
+            <div>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>แพ็กเกจ</p>
+              <input value={pkgType} onChange={e => setPkgType(e.target.value)}
+                className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
+                style={inputStyle} placeholder="เช่น Standard" />
+            </div>
           </div>
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ประเภทงาน</p>
@@ -463,6 +578,280 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── BookingPanel ───────────────────────────────────────────
+type InstRow = { name: string; amount_inc: number; due_date: string; done: boolean }
+
+const B2C_PLANS = {
+  A: { label: 'Plan A (3 งวด)', slots: ['มัดจำ', 'งวดที่ 2', 'งวด Final'] },
+  B: { label: 'Plan B (2 งวด)', slots: ['มัดจำ', 'งวด Final'] },
+  C: { label: 'Plan C (เต็ม)',  slots: ['ชำระเต็มจำนวน'] },
+} as const
+
+function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTriggerStart?: () => void }) {
+  const customerId = customer.id
+  const supabase = createClient()
+  const [loading, setLoading]   = useState(true)
+  const [saving, setSaving]     = useState(false)
+  const [saveOk, setSaveOk]     = useState(false)
+  const [err, setErr]           = useState('')
+  const [revenueInc, setRevenueInc] = useState(0)
+  const [depositInc, setDepositInc] = useState(0)
+  const [depositDate, setDepositDate] = useState(todayStr())
+  const [custType, setCustType] = useState<'B2C' | 'B2B'>('B2C')
+  const [workType, setWorkType] = useState('')
+  const [pkgType, setPkgType]   = useState('')
+  const [plan, setPlan]         = useState<'A' | 'B' | 'C' | 'custom'>('A')
+  const [rows, setRows]         = useState<InstRow[]>([])
+
+  const revenueEx = revenueInc ? Math.round(revenueInc / 1.07) : 0
+  const instyle: React.CSSProperties = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase.from('customers')
+        .select('booking_value,deposit_cash,deposit_date,customer_type,work_type,job_type,pay1_amount,pay1_date,pay1_done,pay2_amount,pay2_date,pay2_done,pay3_amount,pay3_date,pay3_done,pay4_amount,pay4_date,pay4_done,pay5_amount,pay5_date,pay5_done,pay6_amount,pay6_date,pay6_done')
+        .eq('id', customerId).single()
+      if (data) {
+        const d = data as any
+        setRevenueInc(d.booking_value || 0)
+        setCustType((d.customer_type as 'B2C' | 'B2B') || 'B2C')
+        setWorkType(d.work_type || '')
+        setPkgType(d.job_type || '')
+
+        // Load installment rows from pay1..pay6 on the customer record
+        const loaded: InstRow[] = []
+        for (let i = 1; i <= 6; i++) {
+          const amt = d[`pay${i}_amount`]
+          if (amt) loaded.push({
+            name: i === 1 ? 'มัดจำ' : `งวดที่ ${i}`,
+            amount_inc: amt,
+            due_date: d[`pay${i}_date`] || todayStr(),
+            done: !!d[`pay${i}_done`],
+          })
+        }
+
+        // Primary deposit source: deposit_cash / deposit_date on customers record
+        let depAmt = d.deposit_cash || 0
+        let depDt  = d.deposit_date || todayStr()
+
+        // Fallback: pay1_amount on customers record
+        if (!depAmt && d.pay1_amount) { depAmt = d.pay1_amount; depDt = d.pay1_date || todayStr() }
+
+        // Fallback: first installment from payments table via linked job
+        if (!depAmt) {
+          const expectedCid = customer.project_id && customer.interested_room
+            ? `${customer.project_id}-${customer.interested_room}` : null
+          if (expectedCid) {
+            const { data: jobs } = await supabase.from('jobs').select('id')
+              .or(`customer_id.eq.${customerId},customer_id.eq.${expectedCid}`)
+              .limit(5)
+            const jobIds = (jobs || []).map((j: any) => j.id)
+            if (jobIds.length) {
+              const { data: pmts } = await supabase.from('payments').select('amount, due_date, paid_date, status')
+                .in('job_id', jobIds).order('installment_no').limit(1)
+              if (pmts && pmts[0]) {
+                depAmt = pmts[0].amount || 0
+                depDt  = pmts[0].paid_date || pmts[0].due_date || todayStr()
+                if (!loaded.length) {
+                  loaded.push({ name: 'มัดจำ', amount_inc: depAmt, due_date: depDt, done: pmts[0].status === 'paid' })
+                }
+              }
+            }
+          }
+        }
+
+        setDepositInc(depAmt)
+        setDepositDate(depDt)
+        if (loaded.length) { setRows(loaded); setPlan('custom') }
+      }
+      setLoading(false)
+    }
+    load()
+  }, [customerId])
+
+  function applyPlan(p: 'A' | 'B' | 'C') {
+    setPlan(p)
+    setRows(B2C_PLANS[p].slots.map((name, i) => ({
+      name,
+      amount_inc: i === 0 ? depositInc : 0,
+      due_date: i === 0 && depositDate ? depositDate : todayStr(),
+      done: i === 0 && depositInc > 0,
+    })))
+  }
+
+  function updRow(i: number, patch: Partial<InstRow>) {
+    setRows(prev => prev.map((r, j) => j === i ? { ...r, ...patch } : r))
+  }
+
+  async function save() {
+    setSaving(true); setErr(''); setSaveOk(false)
+    const payload: Record<string, unknown> = {
+      booking_value: revenueInc || null, deposit_cash: depositInc || null,
+      deposit_date: depositDate || null, deposit_done: depositInc > 0,
+      customer_type: custType, work_type: workType || null, job_type: pkgType || null,
+    }
+    for (let i = 1; i <= 6; i++) {
+      const r = rows[i - 1]
+      payload[`pay${i}_amount`] = r?.amount_inc || null
+      payload[`pay${i}_date`]   = r?.due_date || null
+      payload[`pay${i}_done`]   = r?.done || false
+    }
+    const { error: e } = await supabase.from('customers').update(payload).eq('id', customerId)
+    if (e) { setErr(e.message); setSaving(false); return }
+
+    // Auto-trigger start job if total paid ≥ 50% of booking value
+    const totalPaid = rows.filter(r => r.done).reduce((s, r) => s + (r.amount_inc || 0), 0)
+    const threshold = revenueInc ? revenueInc * 0.5 : 0
+    if (totalPaid >= threshold && threshold > 0 && onTriggerStart) {
+      onTriggerStart()
+    } else {
+      setSaveOk(true)
+    }
+    setSaving(false)
+  }
+
+  if (loading) return <div className="text-xs py-2" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</div>
+
+  const totalInst = rows.reduce((s, r) => s + (r.amount_inc || 0), 0)
+
+  return (
+    <div className="space-y-3 p-4 rounded-[12px]"
+      style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
+      <p className="text-xs font-semibold" style={{ color: 'var(--accent-orange)' }}>รายละเอียดการจอง</p>
+
+      {/* Revenue */}
+      <div>
+        <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
+        <input type="number" value={revenueInc || ''} onChange={e => setRevenueInc(Number(e.target.value))}
+          className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={instyle} placeholder="0" />
+        {revenueEx > 0 && <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>ก่อน VAT (7%): {f(revenueEx)}</p>}
+      </div>
+
+      {/* Deposit */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ยอดมัดจำ (inc. VAT)</p>
+          <input type="number" value={depositInc || ''} onChange={e => setDepositInc(Number(e.target.value))}
+            className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={instyle} placeholder="0" />
+        </div>
+        <div>
+          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>วันที่รับ</p>
+          <input type="date" value={depositDate} onChange={e => setDepositDate(e.target.value)}
+            className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={instyle} />
+        </div>
+      </div>
+
+      {/* Customer type */}
+      <div className="flex gap-1.5">
+        {(['B2C', 'B2B'] as const).map(t => (
+          <button key={t} onClick={() => setCustType(t)}
+            className="flex-1 py-1.5 rounded-[8px] text-xs font-semibold transition-all"
+            style={custType === t
+              ? { background: 'var(--accent)', color: '#fff' }
+              : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Work type + Package */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ประเภทงาน</p>
+          <select value={workType} onChange={e => setWorkType(e.target.value)}
+            className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={instyle}>
+            <option value="">— เลือก —</option>
+            {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>Package</p>
+          <input value={pkgType} onChange={e => setPkgType(e.target.value)}
+            className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={instyle} placeholder="เช่น Silver" />
+        </div>
+      </div>
+
+      {/* Payment plan */}
+      <div>
+        <p className="text-[10px] mb-1.5 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>แผนการชำระเงิน</p>
+        {custType === 'B2C' && (
+          <div className="flex gap-1.5 mb-2 flex-wrap">
+            {(['A', 'B', 'C'] as const).map(p => (
+              <button key={p} onClick={() => applyPlan(p)}
+                className="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-all"
+                style={plan === p
+                  ? { background: 'var(--accent)', color: '#fff' }
+                  : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                {B2C_PLANS[p].label}
+              </button>
+            ))}
+            <button onClick={() => { setPlan('custom'); if (!rows.length) setRows([{ name: 'งวดที่ 1', amount_inc: 0, due_date: todayStr(), done: false }]) }}
+              className="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-all"
+              style={plan === 'custom'
+                ? { background: 'var(--accent)', color: '#fff' }
+                : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+              Custom
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          {rows.map((r, i) => (
+            <div key={i} className="flex items-center gap-1">
+              <input value={r.name} onChange={e => updRow(i, { name: e.target.value })}
+                className="flex-1 min-w-0 px-2 py-1.5 rounded-[6px] text-xs focus:outline-none" style={instyle} />
+              <input type="number" value={r.amount_inc || ''} onChange={e => updRow(i, { amount_inc: Number(e.target.value) })}
+                className="w-24 px-2 py-1.5 rounded-[6px] text-xs focus:outline-none" style={instyle} placeholder="ยอด" />
+              <input type="date" value={r.due_date} onChange={e => updRow(i, { due_date: e.target.value })}
+                className="w-28 px-2 py-1.5 rounded-[6px] text-xs focus:outline-none" style={instyle} />
+              <button onClick={() => updRow(i, { done: !r.done })}
+                className="w-6 h-6 rounded-[4px] flex-shrink-0 flex items-center justify-center text-xs font-bold"
+                style={r.done
+                  ? { background: 'var(--accent-green)', color: '#fff' }
+                  : { background: 'var(--hover-bg)', color: 'var(--text-3)', border: '1px solid var(--divider)' }}>
+                ✓
+              </button>
+              <button onClick={() => setRows(rows.filter((_, j) => j !== i))}
+                className="w-5 h-5 flex-shrink-0 flex items-center justify-center" style={{ color: 'var(--text-3)' }}>
+                <X size={10} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {rows.length < 6 && (
+          <button onClick={() => setRows([...rows, { name: `งวดที่ ${rows.length + 1}`, amount_inc: 0, due_date: todayStr(), done: false }])}
+            className="mt-1.5 text-[11px] flex items-center gap-1" style={{ color: 'var(--text-3)' }}>
+            <Plus size={11} /> เพิ่มงวด
+          </button>
+        )}
+
+        {rows.length > 0 && revenueInc > 0 && (
+          <p className="text-[10px] mt-1.5" style={{ color: totalInst === revenueInc ? 'var(--accent-green)' : 'var(--text-3)' }}>
+            รวมงวด: {f(totalInst)} / {f(revenueInc)}
+            {totalInst === revenueInc ? ' ✓' : ''}
+          </p>
+        )}
+      </div>
+
+      {err && <p className="text-xs" style={{ color: 'var(--accent-red)' }}>{err}</p>}
+      {saveOk && <p className="text-xs" style={{ color: 'var(--accent-green)' }}>บันทึกแล้ว ✓</p>}
+
+      {(() => {
+        const totalPaid = rows.filter(r => r.done).reduce((s, r) => s + (r.amount_inc || 0), 0)
+        const willStart = revenueInc > 0 && totalPaid >= revenueInc * 0.5
+        return (
+          <button onClick={save} disabled={saving}
+            className="w-full py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
+            style={{ background: saving ? 'var(--text-3)' : willStart ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+            {saving ? 'กำลังบันทึก...' : willStart ? '⚡ บันทึกและเริ่มงานอัตโนมัติ' : 'บันทึกการจอง'}
+          </button>
+        )
+      })()}
     </div>
   )
 }
@@ -542,7 +931,7 @@ export default function ProspectsKanbanPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeStage, setActiveStage] = useState('new')
+  const [activeStage, setActiveStage] = useState('booked')
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [addModal, setAddModal] = useState(false)
   const [startJobCustomer, setStartJobCustomer] = useState<Customer | null>(null)
@@ -607,9 +996,9 @@ export default function ProspectsKanbanPage() {
             const active = activeStage === s.value
             return (
               <button key={s.value} onClick={() => setActiveStage(s.value)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all"
                 style={{
-                  background: active ? s.chip : 'var(--hover-bg)',
+                  background: active ? s.badge : 'var(--hover-bg)',
                   color: active ? s.text : 'var(--text-3)',
                   border: `1px solid ${active ? s.border : 'var(--divider)'}`,
                   opacity: active ? 1 : 0.6,

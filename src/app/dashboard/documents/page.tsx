@@ -228,7 +228,8 @@ export default function DocumentsPage() {
 
   const filtered = jobs.filter(j => {
     const q = search.toLowerCase()
-    const matchSearch = !q || j.customer_name?.toLowerCase().includes(q) || j.room_no?.toLowerCase().includes(q)
+    const qNorm = q.replace(/-/g, '')
+    const matchSearch = !q || j.customer_name?.toLowerCase().includes(q) || (j.room_no?.replace(/-/g, '').toLowerCase() || '').includes(qNorm)
     const matchProject = !projectFilter || j.project_id === projectFilter
     const matchSales = !salesFilter || j.sales_id === salesFilter
     const matchStatus = !statusFilter || j.working_status === statusFilter

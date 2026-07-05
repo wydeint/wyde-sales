@@ -29,6 +29,14 @@ interface JobOption {
 interface EventOption { id: string; eventName: string; projectId: string; projectName: string; eventDate: string }
 
 // ─── Helpers ──────────────────────────────────────────────
+// Dash-flexible room search: "D803" → also tries "D-803" for DB ilike queries
+const buildRoomOr = (q: string, base: string) => {
+  const d = q.replace(/([A-Za-z]+)([0-9]+)/g, '$1-$2')
+  return d !== q ? `${base},room_no.ilike.%${d}%` : base
+}
+// For frontend includes: strip dashes from both sides before comparing
+const normRoom = (s: string) => s.replace(/-/g, '').toLowerCase()
+
 const fmtBaht = (n: number) => {
   if (n >= 1000000) return '฿' + (n / 1000000).toFixed(1) + 'M'
   if (n >= 1000) return '฿' + Math.round(n / 1000) + 'k'
@@ -63,7 +71,7 @@ function Sheet({ open, onClose, title, children }: {
       style={{ position: 'fixed', inset: 0, zIndex: 200 }}
     >
       {/* backdrop */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} />
 
       {/* floating card — 5mm below the top banner, measured live */}
       <div
@@ -75,7 +83,7 @@ function Sheet({ open, onClose, title, children }: {
           left: PAD,
           right: PAD,
           bottom: PAD,
-          background: 'var(--sidebar-bg)',
+          background: 'var(--glass-bg)',
           border: '1px solid var(--glass-border)',
           borderRadius: 18,
           backdropFilter: 'blur(24px)',
@@ -130,7 +138,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
     const { data, error } = await supabase
       .from('condo_leads')
       .select('id, customer_name, phone, room_no, tower, project_id')
-      .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .or(buildRoomOr(q, `customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`))
       .order('customer_name')
       .limit(15)
     if (error) console.error('OriginPoolSheet search error:', error)
@@ -186,7 +194,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
     const { data } = await supabase
       .from('jobs')
       .select('id, customer_name, room_no, working_status, work_start_date, work_days, revenue_ex_vat, projects:project_id(name), sales:sales_id(name)')
-      .or(`customer_name.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .or(buildRoomOr(q, `customer_name.ilike.%${q}%,room_no.ilike.%${q}%`))
       .not('working_status', 'eq', 'ยกเลิก')
       .order('customer_name')
       .limit(10)
@@ -236,15 +244,15 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
                     <p className="text-[9px] mb-0.5" style={t3}>สถานะ</p>
-                    <p className="text-xs font-semibold truncate" style={{ color: '#d97706' }}>{j.working_status || '—'}</p>
+                    <p className="text-xs font-semibold truncate" style={{ color: 'var(--accent-orange)' }}>{j.working_status || '—'}</p>
                   </div>
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
                     <p className="text-[9px] mb-0.5" style={t3}>เริ่มงาน</p>
                     <p className="text-xs" style={t1}>{fmtDate(j.work_start_date)}</p>
                   </div>
-                  <div className="rounded-xl p-2 text-center" style={over > 0 ? { ...sheetCardDark, background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)' } : sheetCardDark}>
+                  <div className="rounded-xl p-2 text-center" style={over > 0 ? { ...sheetCardDark, background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-red) 30%, transparent)' } : sheetCardDark}>
                     <p className="text-[9px] mb-0.5" style={t3}>ครบสัญญา</p>
-                    <p className={`text-xs font-semibold`} style={{ color: over > 0 ? '#dc2626' : 'var(--text-1)' }}>
+                    <p className={`text-xs font-semibold`} style={{ color: over > 0 ? 'var(--accent-red)' : 'var(--text-1)' }}>
                       {over > 0 ? `เกิน ${over}ว` : fmtDate(end)}
                     </p>
                   </div>
@@ -296,17 +304,14 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     timerRef.current = setTimeout(() => doSearch(v), 300)
   }
 
-  const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-    new: { label: 'ใหม่', color: 'text-blue-400' },
-    following: { label: 'ติดตาม', color: 'text-yellow-400' },
-    interested: { label: 'สนใจ', color: 'text-emerald-400' },
-    not_interested: { label: 'ไม่สนใจ', color: 'text-red-400' },
-    booked: { label: 'จอง', color: 'text-purple-400' },
+  const STATUS_LABEL: Record<string, string> = {
+    new: 'ใหม่', following: 'ติดตาม', interested: 'สนใจ',
+    not_interested: 'ไม่สนใจ', booked: 'จอง',
   }
 
   const STATUS_COLOR: Record<string, string> = {
-    new: '#2563eb', following: '#d97706', interested: '#16a34a',
-    not_interested: '#dc2626', booked: '#7c3aed',
+    new: 'var(--accent-blue)', following: 'var(--accent-orange)', interested: 'var(--accent-green)',
+    not_interested: 'var(--accent-red)', booked: 'var(--accent-purple)',
   }
 
   return (
@@ -321,13 +326,13 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
         {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
         <div className="space-y-2">
           {results.map((c: any) => {
-            const s = STATUS_LABEL[c.status] || { label: c.status || '—', color: '' }
+            const sLabel = STATUS_LABEL[c.status] || c.status || '—'
             const sColor = STATUS_COLOR[c.status] || 'var(--text-2)'
             return (
               <div key={c.id} style={sheetCard}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="font-semibold" style={t1}>{c.customer_name}</p>
-                  <span className="text-xs font-semibold" style={{ color: sColor }}>{s.label}</span>
+                  <span className="text-xs font-semibold" style={{ color: sColor }}>{sLabel}</span>
                 </div>
                 <p className="text-xs" style={t2}>{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-xs mt-1" style={{ color: 'var(--accent-blue)' }}>📞 {c.phone}</p>}
@@ -373,7 +378,7 @@ function EventAddSheet({ open, onClose, events }: {
       .from('condo_leads')
       .select('id, customer_name, phone, room_no, tower, project_id')
       .eq('project_id', selectedEvent.projectId)
-      .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .or(buildRoomOr(q, `customer_name.ilike.%${q}%,phone.ilike.%${q}%,room_no.ilike.%${q}%`))
       .order('customer_name')
       .limit(15)
     if (error) console.error('EventAddSheet search error:', error)
@@ -418,10 +423,10 @@ function EventAddSheet({ open, onClose, events }: {
   }
 
   const STATUS_OPTIONS = [
-    { value: 'interested',    label: 'สนใจ ติดตามต่อ', activeColor: '#16a34a', activeBg: '#dcfce7' },
-    { value: 'booked',        label: 'Booked',           activeColor: '#1d4ed8', activeBg: '#dbeafe' },
-    { value: 'not_interested',label: 'ไม่สนใจ',         activeColor: '#b91c1c', activeBg: '#fee2e2' },
-    { value: 'not_met',       label: 'ไม่ได้พบ',        activeColor: '#92400e', activeBg: '#fef3c7' },
+    { value: 'interested',    label: 'สนใจ ติดตามต่อ', activeColor: 'var(--accent-green)',  activeBg: 'color-mix(in srgb, var(--accent-green)  15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-green)  40%, transparent)' },
+    { value: 'booked',        label: 'Booked',           activeColor: 'var(--accent-blue)',   activeBg: 'color-mix(in srgb, var(--accent-blue)   15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-blue)   40%, transparent)' },
+    { value: 'not_interested',label: 'ไม่สนใจ',         activeColor: 'var(--accent-red)',    activeBg: 'color-mix(in srgb, var(--accent-red)    15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-red)    40%, transparent)' },
+    { value: 'not_met',       label: 'ไม่ได้พบ',        activeColor: 'var(--accent-orange)', activeBg: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-orange) 40%, transparent)' },
   ]
 
   return (
@@ -497,7 +502,7 @@ function EventAddSheet({ open, onClose, events }: {
                 <button key={s.value} onClick={() => setStatus(s.value)}
                   className="py-3 rounded-[11px] text-sm font-semibold transition-all border"
                   style={status === s.value
-                    ? { background: s.activeBg, color: s.activeColor, borderColor: s.activeColor }
+                    ? { background: s.activeBg, color: s.activeColor, borderColor: s.activeBorder }
                     : { background: 'var(--hover-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
                   {s.label}
                 </button>
@@ -512,7 +517,8 @@ function EventAddSheet({ open, onClose, events }: {
               style={{ ...sheetInputStyle, fontSize: 14 }} />
           </div>
           <button onClick={save} disabled={saving}
-            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors text-base">
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
+            style={{ background: 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'เพิ่มในรายชื่อ Event'}
           </button>
         </div>
@@ -580,7 +586,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
 
   const filteredJobs = jobs.filter(j =>
     !search || j.customerName.toLowerCase().includes(search.toLowerCase()) ||
-    j.roomNo.toLowerCase().includes(search.toLowerCase()) ||
+    normRoom(j.roomNo).includes(normRoom(search)) ||
     j.projectName.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -622,7 +628,8 @@ function QuickPaySheet({ open, onClose, jobs }: {
             ← เลือกลูกค้าอื่น
           </button>
           <button onClick={resetAndClose}
-            className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-full text-sm font-semibold">
+            className="w-full py-3 rounded-[var(--radius-pill)] text-sm font-semibold"
+            style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>
             ไปตั้งแผนชำระ →
           </button>
         </div>
@@ -644,7 +651,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
                   style={sheetCard}>
                   <div className="text-left">
                     <p className="font-semibold text-sm" style={t1}>{inst.installment_name}</p>
-                    {inst.is_work_trigger && <p className="text-xs mt-0.5" style={{ color: '#d97706' }}>⚡ ชำระแล้วเริ่มงาน</p>}
+                    {inst.is_work_trigger && <p className="text-xs mt-0.5" style={{ color: 'var(--accent-orange)' }}>⚡ ชำระแล้วเริ่มงาน</p>}
                   </div>
                   <div className="text-right">
                     <p className="font-bold" style={{ color: 'var(--accent-green)' }}>{fmtBaht(inst.amount)}</p>
@@ -666,7 +673,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
             <p className="text-3xl font-bold mb-1" style={t1}>{fmtBaht(selectedInst.amount)}</p>
             <p className="text-xs" style={t2}>{selectedInst.installment_name}</p>
             {selectedInst.is_work_trigger && (
-              <p className="text-xs mt-2" style={{ color: '#d97706' }}>⚡ ชำระงวดนี้ → เริ่มนับวันงาน</p>
+              <p className="text-xs mt-2" style={{ color: 'var(--accent-orange)' }}>⚡ ชำระงวดนี้ → เริ่มนับวันงาน</p>
             )}
           </div>
           <div>
@@ -697,7 +704,8 @@ function QuickPaySheet({ open, onClose, jobs }: {
             ))}
           </div>
           <button onClick={confirmPay} disabled={saving}
-            className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors text-base">
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
+            style={{ background: 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันรับเงิน'}
           </button>
         </div>
@@ -720,7 +728,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
 
   const filteredJobs = jobs.filter(j =>
     !search || j.customerName.toLowerCase().includes(search.toLowerCase()) ||
-    j.roomNo.toLowerCase().includes(search.toLowerCase())
+    normRoom(j.roomNo).includes(normRoom(search))
   )
 
   function selectB2bCount(n: number) {
@@ -838,13 +846,15 @@ function PlanSetupSheet({ open, onClose, jobs }: {
           <p className="text-xs mb-3" style={t2}>ประเภทลูกค้า</p>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setStep('b2c')}
-              className="py-5 bg-blue-500/15 border border-blue-500/30 rounded-[18px] font-semibold text-center" style={{ color: 'var(--accent-blue)' }}>
+              className="py-5 rounded-[18px] font-semibold text-center border"
+              style={{ background: 'color-mix(in srgb, var(--accent-blue) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-blue) 30%, transparent)', color: 'var(--accent-blue)' }}>
               <div className="text-2xl mb-1">👤</div>
               B2C
               <p className="text-xs font-normal mt-1" style={t3}>บุคคลธรรมดา</p>
             </button>
             <button onClick={() => setStep('b2b')}
-              className="py-5 bg-purple-500/15 border border-purple-500/30 rounded-[18px] font-semibold text-center" style={{ color: 'var(--accent-purple)' }}>
+              className="py-5 rounded-[18px] font-semibold text-center border"
+              style={{ background: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-purple) 30%, transparent)', color: 'var(--accent-purple)' }}>
               <div className="text-2xl mb-1">🏢</div>
               B2B
               <p className="text-xs font-normal mt-1" style={t3}>นิติบุคคล</p>
@@ -874,7 +884,8 @@ function PlanSetupSheet({ open, onClose, jobs }: {
                     ))}
                   </div>
                   <button onClick={() => saveInstallments(insts)} disabled={saving}
-                    className="w-full py-3 bg-indigo-500/30 border border-indigo-500/40 rounded-full text-sm font-semibold disabled:opacity-40" style={{ color: 'var(--accent)' }}>
+                    className="w-full py-3 rounded-[var(--radius-pill)] text-sm font-semibold disabled:opacity-40 border"
+                    style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)', borderColor: 'color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--accent)' }}>
                     {saving ? 'กำลังบันทึก...' : `เลือกแผน ${plan}`}
                   </button>
                 </div>
@@ -894,8 +905,10 @@ function PlanSetupSheet({ open, onClose, jobs }: {
             <div className="flex gap-2">
               {[2, 3, 4, 5, 6].map(n => (
                 <button key={n} onClick={() => selectB2bCount(n)}
-                  className={`flex-1 py-3 rounded-[8px] text-sm font-semibold transition-colors ${b2bCount === n ? 'bg-purple-500/30 border border-purple-500/40' : ''}`}
-                  style={b2bCount === n ? { color: 'var(--accent-purple)' } : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                  className="flex-1 py-3 rounded-[8px] text-sm font-semibold transition-colors border"
+                  style={b2bCount === n
+                    ? { background: 'color-mix(in srgb, var(--accent-purple) 20%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-purple) 40%, transparent)', color: 'var(--accent-purple)' }
+                    : { background: 'var(--hover-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
                   {n}
                 </button>
               ))}
@@ -914,11 +927,12 @@ function PlanSetupSheet({ open, onClose, jobs }: {
               </div>
             ))}
           </div>
-          <div className={`text-center text-sm mb-4 ${totalPct === 100 ? 'text-emerald-400' : 'text-red-400'}`}>
+          <div className="text-center text-sm mb-4" style={{ color: totalPct === 100 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
             รวม {totalPct}% {totalPct !== 100 && '— ต้องรวมได้ 100%'}
           </div>
           <button onClick={saveB2BInstallments} disabled={saving || totalPct !== 100}
-            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors">
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors"
+            style={{ background: 'var(--accent-purple)' }}>
             {saving ? 'กำลังบันทึก...' : 'บันทึกแผนชำระ B2B'}
           </button>
         </div>
@@ -992,7 +1006,7 @@ function DeliverSheet({ open, onClose, jobs }: {
   const filteredJobs = jobs.filter(j =>
     j.workingStatus !== 'ส่งมอบแล้ว' && (
       !search || j.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      j.roomNo.toLowerCase().includes(search.toLowerCase()) ||
+      normRoom(j.roomNo).includes(normRoom(search)) ||
       j.projectName.toLowerCase().includes(search.toLowerCase())
     )
   )
@@ -1037,9 +1051,9 @@ function DeliverSheet({ open, onClose, jobs }: {
           {checkingPlan ? (
             <p className="text-center text-sm" style={t2}>กำลังตรวจสอบ...</p>
           ) : !canDeliver ? (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-[18px] p-4 text-center">
-              <AlertTriangle size={24} className="mx-auto text-red-400 mb-2" />
-              <p className="text-red-400 font-semibold text-sm">ยังชำระไม่ครบ</p>
+            <div className="rounded-[18px] p-4 text-center" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
+              <AlertTriangle size={24} className="mx-auto mb-2" style={{ color: 'var(--accent-red)' }} />
+              <p className="font-semibold text-sm" style={{ color: 'var(--accent-red)' }}>ยังชำระไม่ครบ</p>
               <p className="text-xs mt-1" style={t2}>ต้องชำระงวดสุดท้ายก่อนจึงจะส่งมอบได้</p>
             </div>
           ) : (
@@ -1056,7 +1070,8 @@ function DeliverSheet({ open, onClose, jobs }: {
                   className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <button onClick={saveDelivery} disabled={saving}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors text-base">
+                className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
+                style={{ background: 'var(--accent-green)' }}>
                 {saving ? 'กำลังบันทึก...' : '✅ ยืนยันส่งมอบงาน'}
               </button>
             </>
@@ -1088,8 +1103,8 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
   }, [open, jobs])
 
   const STATUS_OPTIONS = [
-    { value: 'in_progress', label: 'กำลังดำเนินการ', color: 'text-amber-400 bg-amber-500/15' },
-    { value: 'ready_to_deliver', label: 'รอส่งมอบ', color: 'text-blue-400 bg-blue-500/15' },
+    { value: 'in_progress',      label: 'กำลังดำเนินการ', activeStyle: { color: 'var(--accent-orange)', background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' } },
+    { value: 'ready_to_deliver', label: 'รอส่งมอบ',        activeStyle: { color: 'var(--accent-blue)',   background: 'color-mix(in srgb, var(--accent-blue)   15%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-blue)   35%, transparent)' } },
   ]
 
   async function updateStatus(jobId: string, status: string) {
@@ -1106,7 +1121,7 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
 
   const filtered = jobs.filter(j =>
     j.workingStatus !== 'ส่งมอบแล้ว' && (
-      !search || j.customerName.toLowerCase().includes(search.toLowerCase()) || j.roomNo.toLowerCase().includes(search.toLowerCase())
+      !search || j.customerName.toLowerCase().includes(search.toLowerCase()) || normRoom(j.roomNo).includes(normRoom(search))
     )
   )
 
@@ -1134,8 +1149,8 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
               <div className="flex gap-2">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s.value} onClick={() => updateStatus(j.id, s.value)}
-                    className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${jobStatuses[j.id] === s.value ? s.color : ''}`}
-                    style={jobStatuses[j.id] !== s.value ? { background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' } : undefined}>
+                    className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors border"
+                    style={jobStatuses[j.id] === s.value ? s.activeStyle : { background: 'var(--card-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
                     {s.label}
                   </button>
                 ))}
@@ -1183,17 +1198,17 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
         {loading ? <p className="text-center py-8 text-sm" style={t2}>กำลังโหลด...</p>
           : items.length === 0 ? (
             <div className="text-center py-8">
-              <CheckCircle2 size={32} className="mx-auto text-green-500/50 mb-3" />
+              <CheckCircle2 size={32} className="mx-auto mb-3" style={{ color: 'color-mix(in srgb, var(--accent-green) 50%, transparent)' }} />
               <p style={t2}>ไม่มีงานเกินกำหนด 🎉</p>
             </div>
           ) : items.map((j: any) => (
-            <div key={j.id} className="bg-red-500/8 border border-red-500/20 rounded-[18px] p-3 mb-2">
+            <div key={j.id} className="rounded-[18px] p-3 mb-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-sm" style={t1}>{j.customer_name}</p>
                   <p className="text-xs" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                 </div>
-                <span className="text-red-400 font-bold text-sm">เกิน {j.daysOverdue} วัน</span>
+                <span className="font-bold text-sm" style={{ color: 'var(--accent-red)' }}>เกิน {j.daysOverdue} วัน</span>
               </div>
               <p className="text-xs mt-1.5" style={t3}>ครบ {fmtDate(j.endDate)} · {(j.sales as any)?.name || '—'}</p>
             </div>
@@ -1236,7 +1251,7 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
   }, [open])
 
   const STATUS_STYLE: Record<string, string> = {
-    pending: 'text-amber-400', approved: 'text-emerald-400', paid: 'text-blue-400', rejected: 'text-red-400'
+    pending: 'var(--accent-orange)', approved: 'var(--accent-green)', paid: 'var(--accent-blue)', rejected: 'var(--accent-red)'
   }
 
   return (
@@ -1249,11 +1264,11 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                 <p className="text-[9px] mb-1" style={t3}>รวมทั้งหมด</p>
                 <p className="font-bold text-sm" style={t1}>{fmtBaht(summary.total)}</p>
               </div>
-              <div className="bg-amber-500/10 rounded-[18px] p-3 text-center">
+              <div className="rounded-[18px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)' }}>
                 <p className="text-[9px] mb-1" style={t3}>รอยืนยัน</p>
-                <p className="text-amber-400 font-bold text-sm">{fmtBaht(summary.pending)}</p>
+                <p className="font-bold text-sm" style={{ color: 'var(--accent-orange)' }}>{fmtBaht(summary.pending)}</p>
               </div>
-              <div className="bg-emerald-500/10 rounded-[18px] p-3 text-center">
+              <div className="rounded-[18px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)' }}>
                 <p className="text-[9px] mb-1" style={t3}>อนุมัติแล้ว</p>
                 <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(summary.approved)}</p>
               </div>
@@ -1268,7 +1283,7 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-sm" style={t1}>{fmtBaht(c.amount || 0)}</p>
-                      <p className={`text-xs ${STATUS_STYLE[c.status] || ''}`} style={!STATUS_STYLE[c.status] ? t2 : undefined}>{c.status}</p>
+                      <p className="text-xs" style={{ color: STATUS_STYLE[c.status] || 'var(--text-2)' }}>{c.status}</p>
                     </div>
                   </div>
                 </div>
@@ -1310,7 +1325,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     setLoading(true)
     const { data } = await supabase.from('jobs')
       .select('id, customer_name, room_no, projects:project_id(name), quotation1_url, quotation2_url, id_card_url, sale_slip_url, sale_receipt_url, delivery_doc_url, satisfaction_url')
-      .or(`customer_name.ilike.%${q}%,room_no.ilike.%${q}%`)
+      .or(buildRoomOr(q, `customer_name.ilike.%${q}%,room_no.ilike.%${q}%`))
       .not('working_status', 'eq', 'ยกเลิก')
       .order('customer_name').limit(10)
     setJobs(data || [])
@@ -1370,7 +1385,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                     <p className="text-xs mt-0.5" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold ${filled === DOC_FIELDS.length ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    <span className="text-xs font-semibold" style={{ color: filled === DOC_FIELDS.length ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                       {filled}/{DOC_FIELDS.length}
                     </span>
                     <ChevronRight size={16} style={t3} />
@@ -1392,8 +1407,8 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
             {DOC_FIELDS.map(f => (
               <div key={f.key}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${urls[f.key] ? 'bg-emerald-400' : ''}`}
-                    style={!urls[f.key] ? { background: 'var(--divider)' } : undefined} />
+                  <span className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ background: urls[f.key] ? 'var(--accent-green)' : 'var(--divider)' }} />
                   <label className="text-xs" style={t2}>{f.label}</label>
                 </div>
                 <input
@@ -1407,7 +1422,8 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
             ))}
           </div>
           <button onClick={saveUrls} disabled={saving}
-            className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold rounded-full transition-colors">
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors"
+            style={{ background: 'var(--accent-purple)' }}>
             {saving ? 'กำลังบันทึก...' : '💾 บันทึกเอกสาร'}
           </button>
         </div>
@@ -1476,35 +1492,37 @@ export default function QuickPage() {
   useEffect(() => { load() }, [load])
 
   // ─── Button layout: 3 rows × 4 cols = 12 buttons ──────
-  type Btn = { key: string; icon: LucideIcon; label: string; iconColor: string; bg: string; badge?: number; sheet?: string; href?: string }
-  type Row = { header: string; color: string; buttons: Btn[] }
+  type Btn = { key: string; icon: LucideIcon; label: string; iconColor: string; btnStyle: React.CSSProperties; badge?: number; sheet?: string; href?: string }
+  type Row = { header: string; headerColor: string; buttons: Btn[] }
+
+  const cm = (v: string, pct: number) => `color-mix(in srgb, ${v} ${pct}%, transparent)`
 
   const ROWS: Row[] = [
     {
-      header: 'ลูกค้า', color: 'text-blue-400',
+      header: 'ลูกค้า', headerColor: 'var(--accent-blue)',
       buttons: [
-        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: '#2563eb', bg: 'bg-blue-500/10 border-blue-500/25',       sheet: 'clients' },
-        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: '#4f46e5', bg: 'bg-indigo-500/10 border-indigo-500/25',   sheet: 'prospects' },
-        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: '#059669', bg: 'bg-emerald-500/10 border-emerald-500/25',  sheet: 'event' },
-        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: '#0891b2', bg: 'bg-cyan-500/10 border-cyan-500/25',        sheet: 'lookup' },
+        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: 'var(--accent-blue)',   btnStyle: { background: cm('var(--accent-blue)',   10), borderColor: cm('var(--accent-blue)',   25) }, sheet: 'clients' },
+        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: 'var(--accent)',        btnStyle: { background: cm('var(--accent)',         10), borderColor: cm('var(--accent)',         25) }, sheet: 'prospects' },
+        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: 'var(--accent-green)',  btnStyle: { background: cm('var(--accent-green)',  10), borderColor: cm('var(--accent-green)',  25) }, sheet: 'event' },
+        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: 'var(--accent-blue)',   btnStyle: { background: cm('var(--accent-blue)',   10), borderColor: cm('var(--accent-blue)',   25) }, sheet: 'lookup' },
       ]
     },
     {
-      header: 'การเงิน & งาน', color: 'text-amber-400',
+      header: 'การเงิน & งาน', headerColor: 'var(--accent-orange)',
       buttons: [
-        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: '#d97706', bg: 'bg-amber-500/10 border-amber-500/25',   badge: widgets.pendingInstallments, sheet: 'pay' },
-        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: '#7c3aed', bg: 'bg-purple-500/10 border-purple-500/25', sheet: 'docs' },
-        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: '#16a34a', bg: 'bg-green-500/10 border-green-500/25',   badge: widgets.readyToDeliver, sheet: 'deliver' },
-        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: '#0284c7', bg: 'bg-sky-500/10 border-sky-500/25',       sheet: 'handover' },
+        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: 'var(--accent-orange)', btnStyle: { background: cm('var(--accent-orange)', 10), borderColor: cm('var(--accent-orange)', 25) }, badge: widgets.pendingInstallments, sheet: 'pay' },
+        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: { background: cm('var(--accent-purple)', 10), borderColor: cm('var(--accent-purple)', 25) }, sheet: 'docs' },
+        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: 'var(--accent-green)',  btnStyle: { background: cm('var(--accent-green)',  10), borderColor: cm('var(--accent-green)',  25) }, badge: widgets.readyToDeliver, sheet: 'deliver' },
+        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: 'var(--accent-blue)',   btnStyle: { background: cm('var(--accent-blue)',   10), borderColor: cm('var(--accent-blue)',   25) }, sheet: 'handover' },
       ]
     },
     {
-      header: 'ส่วนตัว', color: 'text-rose-400',
+      header: 'ส่วนตัว', headerColor: 'var(--accent-red)',
       buttons: [
-        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: '#dc2626', bg: widgets.overdueJobs > 0 ? 'bg-red-500/15 border-red-500/30' : '', badge: widgets.overdueJobs, sheet: 'overdue' },
-        { key: 'report',     icon: ClipboardList,   label: 'Daily\nReport',   iconColor: '#6366f1', bg: 'bg-indigo-500/10 border-indigo-500/25', href: '/dashboard/daily-report' },
-        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: '#ca8a04', bg: 'bg-yellow-500/10 border-yellow-500/25', sheet: 'commission' },
-        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: '#64748b', bg: 'bg-slate-500/10 border-slate-500/25',   href: '/dashboard' },
+        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: 'var(--accent-red)',    btnStyle: widgets.overdueJobs > 0 ? { background: cm('var(--accent-red)', 15), borderColor: cm('var(--accent-red)', 30) } : { background: 'var(--card-bg)', borderColor: 'var(--card-border)' }, badge: widgets.overdueJobs, sheet: 'overdue' },
+        { key: 'mydeals',    icon: Briefcase,       label: 'My\nDeals',       iconColor: 'var(--accent)',        btnStyle: { background: cm('var(--accent)',         10), borderColor: cm('var(--accent)',         25) }, href: '/dashboard/my-deals' },
+        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: 'var(--accent-orange)', btnStyle: { background: cm('var(--accent-orange)', 10), borderColor: cm('var(--accent-orange)', 25) }, sheet: 'commission' },
+        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: 'var(--text-3)',        btnStyle: { background: cm('var(--text-3)',         10), borderColor: cm('var(--text-3)',         25) }, href: '/dashboard' },
       ]
     }
   ]
@@ -1545,16 +1563,16 @@ export default function QuickPage() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'งานกำลังทำ', value: widgets.inProgressJobs, sub: `${widgets.overdueJobs > 0 ? widgets.overdueJobs + ' เกินกำหนด' : 'ปกติทุกงาน'}`, color: 'text-amber-400', bg: 'bg-amber-500/8 border-amber-500/20' },
-              { label: 'งวดรอชำระ', value: widgets.pendingInstallments, sub: fmtBaht(widgets.pendingAmount), color: 'text-blue-400', bg: 'bg-blue-500/8 border-blue-500/20' },
-              { label: 'รอส่งมอบ', value: widgets.readyToDeliver, sub: 'งานเสร็จแล้ว', color: 'text-green-400', bg: 'bg-green-500/8 border-green-500/20' },
-              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', color: widgets.overdueJobs > 0 ? 'text-red-400' : '', bg: widgets.overdueJobs > 0 ? 'bg-red-500/8 border-red-500/20' : '' },
+              { label: 'งานกำลังทำ', value: widgets.inProgressJobs, sub: `${widgets.overdueJobs > 0 ? widgets.overdueJobs + ' เกินกำหนด' : 'ปกติทุกงาน'}`, varColor: 'var(--accent-orange)' },
+              { label: 'งวดรอชำระ', value: widgets.pendingInstallments, sub: fmtBaht(widgets.pendingAmount), varColor: 'var(--accent-blue)' },
+              { label: 'รอส่งมอบ', value: widgets.readyToDeliver, sub: 'งานเสร็จแล้ว', varColor: 'var(--accent-green)' },
+              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กด ⚠️ ดูรายละเอียด', varColor: widgets.overdueJobs > 0 ? 'var(--accent-red)' : 'var(--text-3)' },
             ].map(w => (
-              <div key={w.label} className={`rounded-[18px] p-4 border ${w.bg}`}
-                style={!w.bg ? { background: 'var(--card-bg)', borderColor: 'var(--divider)' } : undefined}>
+              <div key={w.label} className="rounded-[18px] p-4 border"
+                style={{ background: cm(w.varColor, 8), borderColor: cm(w.varColor, 20) }}>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{w.label}</p>
-                <p className={`text-kpi-number ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.value}</p>
-                <p className={`text-xs mt-1 opacity-60 ${w.color}`} style={!w.color ? { color: 'var(--text-3)' } : undefined}>{w.sub}</p>
+                <p className="text-kpi-number" style={{ color: w.varColor }}>{w.value}</p>
+                <p className="text-xs mt-1 opacity-60" style={{ color: w.varColor }}>{w.sub}</p>
               </div>
             ))}
           </div>
@@ -1565,17 +1583,17 @@ export default function QuickPage() {
       <div className="px-5 pb-6">
         {ROWS.map(row => (
           <div key={row.header} className="mb-5">
-            <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${row.color}`}>{row.header}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: row.headerColor }}>{row.header}</p>
             <div className="grid grid-cols-4 gap-2.5">
               {row.buttons.map(btn => (
                 <button
                   key={btn.key}
                   onClick={() => handleAction(btn)}
-                  className={`relative flex flex-col items-center gap-1.5 p-3 rounded-[18px] border transition-all active:scale-95 ${btn.bg}`}
-                  style={{ minHeight: 80, ...(!btn.bg ? { background: 'var(--card-bg)', borderColor: 'var(--divider)' } : {}) }}
+                  className="relative flex flex-col items-center gap-1.5 p-3 rounded-[18px] border transition-all active:scale-95"
+                  style={{ minHeight: 80, ...btn.btnStyle }}
                 >
                   {btn.badge !== undefined && btn.badge > 0 && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold z-10">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold z-10" style={{ background: 'var(--accent-red)' }}>
                       {btn.badge > 9 ? '9+' : btn.badge}
                     </div>
                   )}

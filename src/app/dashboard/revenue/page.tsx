@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List, ChevronDown } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
@@ -105,6 +105,7 @@ export default function RevenuePage() {
   const [filterCustType, setFilterCustType] = useState('')
   const [filterWorkType, setFilterWorkType] = useState('')
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
+  const [expandedSales, setExpandedSales] = useState<Set<string>>(new Set())
 
   // Unique users
   const users = useMemo(() => {
@@ -432,16 +433,25 @@ export default function RevenuePage() {
               {bySales.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-10 text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
               ) : bySales.map(s => {
-                const cost = periodJobs.filter(j => {
+                const salesJobs = periodJobs.filter(j => {
                   const salesData = j.sales as any
                   return salesData?.name === s.name
-                }).reduce((sum, j) => sum + (j.cost || 0), 0)
+                })
+                const cost = salesJobs.reduce((sum, j) => sum + (j.cost || 0), 0)
                 const profit = s.revenueEx - cost
                 const gp = s.revenueEx > 0 ? (profit / s.revenueEx * 100).toFixed(1) : '—'
+                const expanded = expandedSales.has(s.name)
                 return (
-                  <tr key={s.name} style={{ borderBottom: '1px solid var(--divider)' }}>
+                  <React.Fragment key={s.name}>
+                  <tr style={{ borderBottom: expanded ? 'none' : '1px solid var(--divider)', cursor: 'pointer' }}
+                    onClick={() => {
+                      const next = new Set(expandedSales)
+                      next.has(s.name) ? next.delete(s.name) : next.add(s.name)
+                      setExpandedSales(next)
+                    }}>
                     <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text-1)' }}>
                       <div className="flex items-center gap-2">
+                        <ChevronDown size={12} style={{ color: 'var(--text-3)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', flexShrink: 0 }} />
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-bold"
                           style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
                           {s.name[0]}
@@ -456,6 +466,36 @@ export default function RevenuePage() {
                     <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
                     <td className="px-4 py-3" style={{ color: '#fbbf24' }}>{s.commission ? f(s.commission) : '—'}</td>
                   </tr>
+                  {expanded && (
+                    <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                      <td colSpan={7} className="px-4 pb-3 pt-0">
+                        <div className="rounded-[10px] overflow-hidden" style={{ background: 'var(--active-bg)', border: '1px solid var(--divider)' }}>
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                                {['ห้อง', 'โครงการ', 'ลูกค้า', 'วันส่งมอบ', 'ประเภทงาน', 'Revenue (Inc.VAT)'].map(h => (
+                                  <th key={h} className="text-left px-3 py-2 font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {salesJobs.map(j => (
+                                <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
+                                  <td className="px-3 py-2 font-mono font-semibold" style={{ color: 'var(--accent)' }}>{j.room_no || '—'}</td>
+                                  <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{(j.projects as any)?.name || j.project_id || '—'}</td>
+                                  <td className="px-3 py-2" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
+                                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{j.actual_deliver_date?.slice(0, 10) || '—'}</td>
+                                  <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{j.work_type || '—'}</td>
+                                  <td className="px-3 py-2 font-bold" style={{ color: '#4ade80' }}>{f(j.revenue_inc_vat)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 )
               })}
               {/* Total row */}

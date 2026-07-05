@@ -89,7 +89,7 @@ export default function ProjectsPage() {
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Projects</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการข้อมูลโครงการ</p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
           <Plus size={16} />เพิ่มโครงการ
         </button>
       </div>

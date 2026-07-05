@@ -523,9 +523,9 @@ export default function CustomersPage() {
       { data: p, error: pErr },
       { data: u, error: uErr },
     ] = await Promise.all([
-      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, projects(name), users!customers_assigned_to_fkey(name)').order('created_at', { ascending: false }),
+      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, projects(name), users!customers_assigned_to_fkey(name)').order('customer_name'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
-      supabase.from('users').select('id,name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
+      supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
     if (cErr || pErr || uErr) {
       setFetchError((cErr ?? pErr ?? uErr)!.message)

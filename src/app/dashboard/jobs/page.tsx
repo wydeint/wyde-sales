@@ -265,9 +265,9 @@ export default function JobsPage() {
       { data: tierData },
       { data: paymentsData },
     ] = await Promise.all([
-      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('created_at', { ascending: false }),
+      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('room_no'),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
-      supabase.from('users').select('id, name').eq('active', true).order('name'),
+      supabase.from('users').select('id, name').eq('active', true).eq('role', 'sales').order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
     ])

@@ -104,7 +104,7 @@ export default function EventsPage() {
     const [{ data: ev, error: e1 }, { data: pr }, { data: u }] = await Promise.all([
       supabase.from('events').select('*').order('event_date', { ascending: false }),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
-      supabase.from('users').select('id,name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
+      supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setEvents(ev || [])

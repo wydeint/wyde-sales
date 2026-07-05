@@ -124,7 +124,7 @@ export default function TargetsPage() {
     ] = await Promise.all([
       supabase.from('org_targets').select('*').eq('year', filterYear).order('month'),
       supabase.from('sales_targets').select('*, users(name), projects(name)').eq('year', filterYear).order('month'),
-      supabase.from('users').select('id,name,manager_id').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
+      supabase.from('users').select('id,name,manager_id').eq('active', true).eq('role', 'sales').order('name'),
       supabase.from('projects').select('id,name').order('name'),
       // ยอดขาย: order_date ในปีนั้น
       supabase.from('jobs').select('sales_id, revenue_ex_vat, order_date')

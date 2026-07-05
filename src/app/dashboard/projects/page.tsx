@@ -36,7 +36,7 @@ export default function ProjectsPage() {
   async function load() {
     setLoading(true)
     setFetchError('')
-    const { data, error } = await supabase.from('projects').select('*').order('id')
+    const { data, error } = await supabase.from('projects').select('*').order('name')
     if (error) { setFetchError(error.message); setLoading(false); return }
     setProjects(data || [])
     setLoading(false)

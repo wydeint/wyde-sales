@@ -131,7 +131,7 @@ export default function LeadsPage() {
     const [{ data: l, error: e1 }, { data: p }, { data: u }] = await Promise.all([
       supabase.from('condo_leads').select('*, projects(name)').order('tower').order('room_no'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
-      supabase.from('users').select('id,name').eq('active', true).in('role', ['sales', 'admin_sales']).order('name'),
+      supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setLeads((l as any) || [])

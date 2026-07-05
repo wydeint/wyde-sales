@@ -958,7 +958,7 @@ export default function MyDealsPage() {
       .from('jobs')
       .select('id, room_no, project_id, customer_name, actual_deliver_date, projects(name), sales:users!sales_id(name), installments:payments(status, is_final)')
       .neq('working_status', 'ยกเลิก')
-      .order('order_date', { ascending: false })
+      .order('room_no')
 
     if (!data) { setLoading(false); return }
 

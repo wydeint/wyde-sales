@@ -222,7 +222,7 @@ export default function PaymentsPage() {
     const [{ data: jobsRaw }, { data: pData }, { data: uData }] = await Promise.all([
       supabase.from('jobs').select(
         'id, room_no, project_id, customer_name, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name)'
-      ).neq('working_status', 'ยกเลิก').order('project_id'),
+      ).neq('working_status', 'ยกเลิก').order('room_no'),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).order('name'),
     ])

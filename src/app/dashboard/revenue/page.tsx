@@ -16,7 +16,7 @@ type DeliveredJob = {
   customer_type: string
   package_type: string
   revenue_ex_vat: number
-  revenue_inc_vat: number
+  revenue_inc_vat: number | null
   cost: number
   actual_deliver_date: string
   delivery_lot: string
@@ -32,6 +32,7 @@ type DeliveredJob = {
 
 type Period = 'week' | 'month' | 'quarter' | 'year'
 
+const jobRev = (j: { revenue_inc_vat: number | null; revenue_ex_vat: number }) => j.revenue_inc_vat ?? j.revenue_ex_vat ?? 0
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 const fk = (v: number) => {
   if (v >= 1_000_000) return '฿' + (v / 1_000_000).toFixed(2) + 'M'
@@ -161,12 +162,12 @@ export default function RevenuePage() {
     [allJobs, prevBounds]
   )
 
-  const totalRevenue = periodJobs.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+  const totalRevenue = periodJobs.reduce((s, j) => s + (jobRev(j)), 0)
   const totalRevenueEx = periodJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const totalCost = periodJobs.reduce((s, j) => s + (j.cost || 0), 0)
   const totalProfit = totalRevenueEx - totalCost
   const totalCommission = periodJobs.reduce((s, j) => s + (j.commission_amount || 0), 0)
-  const prevRevenue = prevJobs.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+  const prevRevenue = prevJobs.reduce((s, j) => s + (jobRev(j)), 0)
   const growthPct = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue * 100).toFixed(1) : null
   const unitCount = periodJobs.length
 
@@ -178,7 +179,7 @@ export default function RevenuePage() {
       const name = salesData?.name || 'ไม่ระบุ'
       const key = j.sales_id || name
       const cur = map.get(key) || { name, revenue: 0, revenueEx: 0, units: 0, commission: 0 }
-      map.set(key, { name, revenue: cur.revenue + (j.revenue_inc_vat || 0), revenueEx: cur.revenueEx + (j.revenue_ex_vat || 0), units: cur.units + 1, commission: cur.commission + (j.commission_amount || 0) })
+      map.set(key, { name, revenue: cur.revenue + (jobRev(j)), revenueEx: cur.revenueEx + (j.revenue_ex_vat || 0), units: cur.units + 1, commission: cur.commission + (j.commission_amount || 0) })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -190,7 +191,7 @@ export default function RevenuePage() {
       const projectData = j.projects as any
       const name = projectData?.name || j.project_id || 'ไม่ระบุ'
       const cur = map.get(name) || { name, revenue: 0, units: 0, jobs: [] }
-      map.set(name, { name, revenue: cur.revenue + (j.revenue_inc_vat || 0), units: cur.units + 1, jobs: [...cur.jobs, j] })
+      map.set(name, { name, revenue: cur.revenue + (jobRev(j)), units: cur.units + 1, jobs: [...cur.jobs, j] })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -200,7 +201,7 @@ export default function RevenuePage() {
     const map = new Map<string, number>()
     periodJobs.forEach(j => {
       const s = j.accounting_status || 'Backlog'
-      map.set(s, (map.get(s) || 0) + (j.revenue_inc_vat || 0))
+      map.set(s, (map.get(s) || 0) + (jobRev(j)))
     })
     return [...map.entries()].map(([status, revenue]) => ({ status, revenue })).sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -215,7 +216,7 @@ export default function RevenuePage() {
     return Array.from({ length: 12 }, (_, m) => {
       const mStart = new Date(y, m, 1)
       const mEnd = new Date(y, m + 1, 0, 23, 59, 59)
-      const rev = allJobs.filter(j => inRange(j.actual_deliver_date, mStart, mEnd)).reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+      const rev = allJobs.filter(j => inRange(j.actual_deliver_date, mStart, mEnd)).reduce((s, j) => s + (jobRev(j)), 0)
       return { month: m + 1, label: mStart.toLocaleDateString('th-TH', { month: 'short' }), revenue: rev }
     })
   }, [allJobs, period, start])
@@ -486,7 +487,7 @@ export default function RevenuePage() {
                                   <td className="px-3 py-2" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
                                   <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{j.actual_deliver_date?.slice(0, 10) || '—'}</td>
                                   <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{j.work_type || '—'}</td>
-                                  <td className="px-3 py-2 font-bold" style={{ color: '#4ade80' }}>{f(j.revenue_inc_vat)}</td>
+                                  <td className="px-3 py-2 font-bold" style={{ color: '#4ade80' }}>{f(jobRev(j))}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -578,7 +579,7 @@ export default function RevenuePage() {
                               </td>
                               <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{j.work_type || '—'}</td>
                               <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{(j.sales as any)?.name || '—'}</td>
-                              <td className="px-4 py-2 font-bold text-right whitespace-nowrap" style={{ color: '#4ade80' }}>{f(j.revenue_inc_vat || 0)}</td>
+                              <td className="px-4 py-2 font-bold text-right whitespace-nowrap" style={{ color: '#4ade80' }}>{f(jobRev(j))}</td>
                               <td className="px-4 py-2 text-right whitespace-nowrap" style={{ color: gp !== null ? (gp >= 30 ? '#4ade80' : gp >= 15 ? '#fbbf24' : '#f87171') : 'var(--text-3)' }}>
                                 {gp !== null ? gp.toFixed(1) + '%' : '—'}
                               </td>
@@ -620,7 +621,7 @@ export default function RevenuePage() {
               ) : periodJobs.map(j => {
                 const profit = (j.revenue_ex_vat || 0) - (j.cost || 0)
                 const gp = j.revenue_ex_vat > 0 ? (profit / j.revenue_ex_vat * 100).toFixed(0) : '—'
-                const revDisplay = j.revenue_inc_vat || 0
+                const revDisplay = jobRev(j)
                 return (
                   <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                     <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>

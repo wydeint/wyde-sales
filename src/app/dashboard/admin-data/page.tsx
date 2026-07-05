@@ -125,10 +125,221 @@ const TABLES: TableDef[] = [
       { key: 'id', label: 'ID', type: 'readonly', width: 130 },
       { key: 'name', label: 'ชื่อ', type: 'text', width: 140 },
       { key: 'email', label: 'Email', type: 'text', width: 180 },
-      { key: 'role', label: 'Role', type: 'select', options: ['sales', 'sales_mgr', 'admin', 'qc', 'finance'], width: 110 },
+      { key: 'role', label: 'Role', type: 'select', options: ['sales', 'sales_mgr', 'admin', 'admin_sales', 'qc', 'finance', 'executive'], width: 120 },
       { key: 'level', label: 'Level', type: 'text', width: 90 },
       { key: 'dept', label: 'Dept', type: 'text', width: 90 },
       { key: 'active', label: 'Active', type: 'boolean', width: 80 },
+    ],
+  },
+  {
+    label: 'Handovers', table: 'handovers', orderBy: 'handover_date',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'job_id', label: 'Job ID', type: 'text', width: 150 },
+      { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
+      { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
+      { key: 'room', label: 'ห้อง', type: 'text', width: 90 },
+      { key: 'handover_date', label: 'วันส่งมอบ', type: 'date', width: 120 },
+      { key: 'delivery_date', label: 'Delivery Date', type: 'date', width: 120 },
+      { key: 'status', label: 'สถานะ', type: 'text', width: 100 },
+      { key: 'work_status', label: 'สถานะงาน', type: 'text', width: 120 },
+      { key: 'job_start_date', label: 'เริ่มงาน', type: 'date', width: 110 },
+      { key: 'expected_completion', label: 'กำหนดเสร็จ', type: 'date', width: 120 },
+      { key: 'work_days', label: 'วันทำงาน', type: 'number', width: 90 },
+      { key: 'total_amount', label: 'ยอดรวม', type: 'number', width: 120 },
+      { key: 'final_payment_date', label: 'รับเงินสุดท้าย', type: 'date', width: 130 },
+      { key: 'warranty_days', label: 'ประกัน (วัน)', type: 'number', width: 100 },
+      { key: 'warranty_end', label: 'หมดประกัน', type: 'date', width: 120 },
+      { key: 'defect_noted', label: 'มีข้อบกพร่อง', type: 'boolean', width: 110 },
+      { key: 'defect_details', label: 'รายละเอียดข้อบกพร่อง', type: 'text', width: 180 },
+      { key: 'commission_triggered', label: 'Commission', type: 'boolean', width: 110 },
+      { key: 'client_type', label: 'ประเภทลูกค้า', type: 'text', width: 120 },
+      { key: 'sales_sign_date', label: 'วันเซ็น (Sales)', type: 'date', width: 130 },
+      { key: 'customer_sign_date', label: 'วันเซ็น (ลูกค้า)', type: 'date', width: 130 },
+      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
+    ],
+  },
+  {
+    label: 'Events', table: 'events', orderBy: 'event_date',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'event_name', label: 'ชื่ออีเวนต์', type: 'text', width: 200 },
+      { key: 'event_type', label: 'ประเภท', type: 'text', width: 120 },
+      { key: 'event_date', label: 'วันที่', type: 'date', width: 120 },
+      { key: 'location', label: 'สถานที่', type: 'text', width: 150 },
+      { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
+      { key: 'project_name', label: 'โครงการ', type: 'text', width: 150 },
+      { key: 'total_attendees', label: 'ผู้เข้าร่วม', type: 'number', width: 110 },
+      { key: 'line_adds', label: 'Add LINE', type: 'number', width: 90 },
+      { key: 'created_by', label: 'บันทึกโดย', type: 'text', width: 120 },
+      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 200 },
+    ],
+  },
+  {
+    label: 'Event Customers', table: 'event_customers', orderBy: 'created_at',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'event_id', label: 'Event ID', type: 'text', width: 140 },
+      { key: 'customer_name', label: 'ชื่อลูกค้า', type: 'text', width: 150 },
+      { key: 'phone', label: 'โทร', type: 'text', width: 120 },
+      { key: 'email', label: 'Email', type: 'text', width: 160 },
+      { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
+      { key: 'interested_project_id', label: 'สนใจโครงการ', type: 'text', width: 130 },
+      { key: 'room_no', label: 'ห้อง', type: 'text', width: 90 },
+      { key: 'interested_room', label: 'ห้องที่สนใจ', type: 'text', width: 110 },
+      { key: 'sales_id', label: 'Sales ID', type: 'text', width: 100 },
+      { key: 'status', label: 'สถานะ', type: 'text', width: 100 },
+      { key: 'booking_type', label: 'ประเภทจอง', type: 'text', width: 110 },
+      { key: 'booked_date', label: 'วันจอง', type: 'date', width: 110 },
+      { key: 'booked_value', label: 'มูลค่าจอง', type: 'number', width: 120 },
+      { key: 'deposit_amount', label: 'มัดจำ', type: 'number', width: 100 },
+      { key: 'line_added', label: 'Add LINE', type: 'boolean', width: 90 },
+      { key: 'converted_to_customer_id', label: 'Customer ID', type: 'text', width: 130 },
+      { key: 'lead_id', label: 'Lead ID', type: 'text', width: 100 },
+      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
+    ],
+  },
+  {
+    label: 'Commissions', table: 'commissions', orderBy: 'created_at',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'sales_person_id', label: 'Sales ID', type: 'text', width: 130 },
+      { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
+      { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
+      { key: 'room', label: 'ห้อง', type: 'text', width: 90 },
+      { key: 'sale_price', label: 'ราคาขาย', type: 'number', width: 130 },
+      { key: 'commission_rate', label: 'อัตรา (%)', type: 'number', width: 100 },
+      { key: 'commission_amount', label: 'Commission', type: 'number', width: 130 },
+      { key: 'bonus', label: 'Bonus', type: 'number', width: 110 },
+      { key: 'total_commission', label: 'รวม Commission', type: 'number', width: 140 },
+      { key: 'status', label: 'สถานะ', type: 'select', options: ['pending', 'approved', 'paid', 'cancelled'], width: 110 },
+      { key: 'paid_date', label: 'วันจ่าย', type: 'date', width: 110 },
+      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
+    ],
+  },
+  {
+    label: 'Commission Settings', table: 'commission_settings', orderBy: 'sort_order',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 80 },
+      { key: 'tier_name', label: 'Tier', type: 'text', width: 150 },
+      { key: 'revenue_min', label: 'รายได้ขั้นต่ำ', type: 'number', width: 130 },
+      { key: 'revenue_max', label: 'รายได้สูงสุด', type: 'number', width: 130 },
+      { key: 'rate', label: 'อัตรา (%)', type: 'number', width: 100 },
+      { key: 'sort_order', label: 'ลำดับ', type: 'number', width: 80 },
+      { key: 'active', label: 'Active', type: 'boolean', width: 80 },
+    ],
+  },
+  {
+    label: 'Condo Leads', table: 'condo_leads', orderBy: 'booking_date',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 80 },
+      { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
+      { key: 'customer_name', label: 'ชื่อลูกค้า', type: 'text', width: 150 },
+      { key: 'phone', label: 'โทร', type: 'text', width: 120 },
+      { key: 'email', label: 'Email', type: 'text', width: 160 },
+      { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
+      { key: 'tower', label: 'ตึก', type: 'text', width: 80 },
+      { key: 'room_no', label: 'ห้อง', type: 'text', width: 90 },
+      { key: 'model_id', label: 'Model ID', type: 'text', width: 100 },
+      { key: 'model_name', label: 'ชื่อแบบ', type: 'text', width: 130 },
+      { key: 'contract_price', label: 'ราคาสัญญา', type: 'number', width: 130 },
+      { key: 's00_budget', label: 'งบ S00', type: 'number', width: 110 },
+      { key: 'total_payment', label: 'รับเงินรวม', type: 'number', width: 120 },
+      { key: 'booking_date', label: 'วันจอง', type: 'date', width: 110 },
+      { key: 'transfer_date', label: 'วันโอน', type: 'date', width: 110 },
+      { key: 'origin_sales', label: 'Sales (ต้นสังกัด)', type: 'text', width: 140 },
+      { key: 'consent', label: 'Consent', type: 'text', width: 100 },
+    ],
+  },
+  {
+    label: 'Daily Reports', table: 'daily_reports', orderBy: 'date',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'date', label: 'วันที่', type: 'date', width: 110 },
+      { key: 'sales_person_id', label: 'Sales ID', type: 'text', width: 130 },
+      { key: 'calls', label: 'โทร', type: 'number', width: 70 },
+      { key: 'visits', label: 'เยี่ยม', type: 'number', width: 70 },
+      { key: 'follow_ups', label: 'Follow up', type: 'number', width: 90 },
+      { key: 'new_leads', label: 'New Leads', type: 'number', width: 90 },
+      { key: 'leads_created', label: 'Leads Created', type: 'number', width: 110 },
+      { key: 'quotations_sent', label: 'ใบเสนอ', type: 'number', width: 90 },
+      { key: 'quotation_value', label: 'มูลค่าใบเสนอ', type: 'number', width: 130 },
+      { key: 'bookings_count', label: 'จอง', type: 'number', width: 70 },
+      { key: 'booking_value', label: 'มูลค่าจอง', type: 'number', width: 120 },
+      { key: 'deposit_amount', label: 'มัดจำ', type: 'number', width: 100 },
+      { key: 'payment_50_amount', label: '50%', type: 'number', width: 100 },
+      { key: 'payment_100_amount', label: '100%', type: 'number', width: 100 },
+      { key: 'revenue', label: 'รายได้', type: 'number', width: 110 },
+      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
+    ],
+  },
+  {
+    label: 'Documents', table: 'documents', orderBy: 'created_at',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
+      { key: 'doc_name', label: 'ชื่อเอกสาร', type: 'text', width: 180 },
+      { key: 'doc_type', label: 'ประเภท', type: 'text', width: 120 },
+      { key: 'file_url', label: 'URL', type: 'text', width: 200 },
+      { key: 'issued_date', label: 'วันออก', type: 'date', width: 110 },
+      { key: 'expiry_date', label: 'วันหมดอายุ', type: 'date', width: 120 },
+      { key: 'status', label: 'สถานะ', type: 'text', width: 100 },
+      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
+    ],
+  },
+  {
+    label: 'Finance Entries', table: 'finance_entries', orderBy: 'entry_date',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 80 },
+      { key: 'type', label: 'ประเภท', type: 'select', options: ['income', 'expense'], width: 100 },
+      { key: 'category', label: 'หมวดหมู่', type: 'text', width: 130 },
+      { key: 'amount', label: 'จำนวนเงิน', type: 'number', width: 120 },
+      { key: 'entry_date', label: 'วันที่', type: 'date', width: 110 },
+      { key: 'description', label: 'รายละเอียด', type: 'text', width: 200 },
+      { key: 'ref_id', label: 'Ref ID', type: 'text', width: 130 },
+      { key: 'created_by', label: 'บันทึกโดย', type: 'text', width: 120 },
+    ],
+  },
+  {
+    label: 'Org Targets', table: 'org_targets', orderBy: 'year',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'year', label: 'ปี', type: 'number', width: 80 },
+      { key: 'month', label: 'เดือน', type: 'number', width: 80 },
+      { key: 'target_sales_value', label: 'เป้าขาย', type: 'number', width: 130 },
+      { key: 'target_delivery_value', label: 'เป้าส่งมอบ', type: 'number', width: 130 },
+    ],
+  },
+  {
+    label: 'Sales Targets', table: 'sales_targets', orderBy: 'year',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'user_id', label: 'User ID', type: 'text', width: 130 },
+      { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
+      { key: 'year', label: 'ปี', type: 'number', width: 80 },
+      { key: 'month', label: 'เดือน', type: 'number', width: 80 },
+      { key: 'working_days', label: 'วันทำงาน', type: 'number', width: 90 },
+      { key: 'target_calls', label: 'เป้าโทร', type: 'number', width: 90 },
+      { key: 'target_visits', label: 'เป้าเยี่ยม', type: 'number', width: 90 },
+      { key: 'target_leads', label: 'เป้า Leads', type: 'number', width: 100 },
+      { key: 'target_prospects', label: 'เป้า Prospects', type: 'number', width: 120 },
+      { key: 'target_quotations', label: 'เป้าใบเสนอ', type: 'number', width: 110 },
+      { key: 'target_quotation_value', label: 'เป้ามูลค่าใบเสนอ', type: 'number', width: 150 },
+      { key: 'target_bookings', label: 'เป้าจอง', type: 'number', width: 100 },
+      { key: 'target_booking_value', label: 'เป้ามูลค่าจอง', type: 'number', width: 140 },
+      { key: 'target_closed', label: 'เป้าปิดงาน', type: 'number', width: 110 },
+      { key: 'target_sales_value', label: 'เป้าขาย', type: 'number', width: 110 },
+      { key: 'target_delivery_value', label: 'เป้าส่งมอบ', type: 'number', width: 120 },
+      { key: 'target_revenue', label: 'เป้ารายได้', type: 'number', width: 110 },
+    ],
+  },
+  {
+    label: 'Payment Followups', table: 'payment_followups', orderBy: 'created_at',
+    cols: [
+      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
+      { key: 'payment_id', label: 'Payment ID', type: 'text', width: 150 },
+      { key: 'note', label: 'หมายเหตุ', type: 'text', width: 220 },
+      { key: 'followed_by', label: 'บันทึกโดย', type: 'text', width: 130 },
     ],
   },
 ]
@@ -249,9 +460,43 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
   )
 }
 
+// ─── Password Gate ─────────────────────────────────────────
+function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+  const [pw, setPw] = useState('')
+  const [err, setErr] = useState(false)
+  function attempt() {
+    if (pw === 'Wyde2026') { onUnlock() }
+    else { setErr(true); setPw('') }
+  }
+  return (
+    <div className="h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
+      <div className="w-80 rounded-[16px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="flex items-center gap-2 mb-6">
+          <AlertTriangle size={18} className="text-amber-400" />
+          <h2 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>Admin Data Entry</h2>
+        </div>
+        <p className="text-xs mb-5" style={{ color: 'var(--text-2)' }}>หน้านี้ต้องใช้รหัสผ่านเพื่อเข้าถึง</p>
+        <input
+          type="password" value={pw} onChange={e => { setPw(e.target.value); setErr(false) }}
+          onKeyDown={e => e.key === 'Enter' && attempt()}
+          placeholder="รหัสผ่าน"
+          autoFocus
+          className="w-full px-4 py-2.5 rounded-[10px] text-sm mb-3 outline-none"
+          style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
+        />
+        {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง</p>}
+        <button onClick={attempt} className="w-full py-2.5 rounded-[10px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+          เข้าสู่ระบบ
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ─────────────────────────────────────────────
 export default function AdminDataPage() {
   const supabase = createClient()
+  const [unlocked, setUnlocked] = useState(false)
   const [activeTab, setActiveTab] = useState(0)
   const [rows, setRows] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(true)
@@ -355,6 +600,8 @@ export default function AdminDataPage() {
   }
 
   const inputBg = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
+
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
 
   return (
     <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>

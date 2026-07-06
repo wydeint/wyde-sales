@@ -245,10 +245,6 @@ html:not(.dark) thead tr {
 .field-input option { background: var(--card-bg, #fff); color: var(--text-1, #1e1b4b); }
 
 /* Native select dark-mode fix — must use solid colors; rgba/transparent fails in OS-rendered dropdown */
-.dark select,
-.dark .field-input {
-  color-scheme: dark;
-}
 .dark select option,
 .dark .field-input option {
   background-color: #0e0b1e;

@@ -79,14 +79,14 @@
   --radius-pill: 9999px;
 }
 
-/* Dark — iOS 26 Deep Glass */
+/* Dark — Elevated Dark */
 .dark {
   color-scheme: dark;
   --bg-gradient: linear-gradient(135deg, #0e0b1e 0%, #090d18 50%, #130b1f 100%);
-  --glass-bg: rgba(255, 255, 255, 0.09);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  --sidebar-bg: rgba(12, 9, 24, 0.92);
+  --glass-bg: #221c3a;
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0,0,0,0.3);
+  --sidebar-bg: rgba(10, 8, 20, 0.96);
   --sidebar-border: rgba(255, 255, 255, 0.07);
   --input-bg: rgba(255, 255, 255, 0.07);
   --hover-bg: rgba(255, 255, 255, 0.07);
@@ -95,8 +95,8 @@
   --text-1: #f1f5f9;
   --text-2: #94a3b8;
   --text-3: #7d8fa8;   /* ≥4.5:1 on dark glass — WCAG AA */
-  --card-bg: rgba(255,255,255,0.07);
-  --card-border: rgba(255,255,255,0.11);
+  --card-bg: #1a1530;
+  --card-border: rgba(255,255,255,0.10);
   --accent: #818cf8;
   --accent-green: #34d399;
   --accent-purple: #a78bfa;

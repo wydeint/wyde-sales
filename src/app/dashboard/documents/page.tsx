@@ -81,20 +81,24 @@ const DOC_SCHEMA: DocCategory[] = [
 ]
 
 // ─── Auto-checked logic ────────────────────────────────────
-// ส่งมอบแล้ว → เอกสารครบทั้งหมด
-// booked/closed → เอกสารช่วงขายครบ
-// payment.status === 'paid' → สลิป + ใบเสร็จงวดนั้นครบ
+// ส่งมอบแล้ว (working_status) → เอกสารทุกอย่างครบ
+// จอง (customerStatus)        → เอกสารส่วนลูกค้าครบ
+// ดำเนินการ (customerStatus)  → เอกสารส่วนลูกค้าและงวดแรกครบ
 
 function isAutoCheckedSaleDoc(job: Job): boolean {
-  return job.working_status === 'ส่งมอบแล้ว' || ['booked', 'closed'].includes(job.customerStatus)
+  return job.working_status === 'ส่งมอบแล้ว'
+    || job.customerStatus === 'จอง'
+    || job.customerStatus === 'ดำเนินการ'
 }
 
 function isAutoCheckedDeliveryDoc(job: Job): boolean {
   return job.working_status === 'ส่งมอบแล้ว'
 }
 
-function isAutoCheckedPaymentDoc(payment: Payment): boolean {
-  return payment.status === 'paid'
+function isAutoCheckedPaymentDoc(payment: Payment, job: Job): boolean {
+  if (job.working_status === 'ส่งมอบแล้ว') return true
+  if (job.customerStatus === 'ดำเนินการ' && payment.installment_no === 1) return true
+  return false
 }
 
 function effectiveChecked(job: Job, cat: string, urlVal: string | null): boolean {
@@ -245,8 +249,8 @@ export default function DocumentsPage() {
     }
     for (const p of job.payments) {
       total += 2
-      if (isAutoCheckedPaymentDoc(p) || !!p.slip_url) done++
-      if (isAutoCheckedPaymentDoc(p) || !!p.receipt_url) done++
+      if (isAutoCheckedPaymentDoc(p, job) || !!p.slip_url) done++
+      if (isAutoCheckedPaymentDoc(p, job) || !!p.receipt_url) done++
     }
     total += 2
     if (effectiveChecked(job, 'delivery', job.delivery_doc_url)) done++
@@ -388,7 +392,7 @@ export default function DocumentsPage() {
                               <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังไม่มีงวดชำระ</p>
                             ) : (
                               job.payments.map(pay => {
-                                const autoPayment = isAutoCheckedPaymentDoc(pay)
+                                const autoPayment = isAutoCheckedPaymentDoc(pay, job)
                                 return (
                                   <div key={pay.id} className="space-y-2">
                                     <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>

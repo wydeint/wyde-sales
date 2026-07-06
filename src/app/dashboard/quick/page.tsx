@@ -573,7 +573,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
       file_urls: urls.length > 0 ? urls : null,
     }).eq('id', selectedInst.id)
 
-    if (selectedInst.is_work_trigger && selectedJob && !selectedJob.workStartDate) {
+    if (selectedInst.is_work_trigger && selectedJob) {
       await supabase.from('jobs').update({ work_start_date: paidDate }).eq('id', selectedJob.id)
     }
     setSaving(false)

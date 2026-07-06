@@ -256,6 +256,13 @@ html:not(.dark) thead tr {
   color: #f1f5f9;
 }
 
+/* iOS date/number input — force correct color scheme so text is readable */
+input[type="date"], input[type="number"] { color-scheme: light; }
+.dark input[type="date"], .dark input[type="number"] { color-scheme: dark; }
+
+/* iOS safe area bottom padding for bottom sheets */
+.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+
 /* ══════════════════════════════════════════
    Action button utilities
    (replaces scattered hardcoded hex #238636 / #7c3aed / #1f6feb across pages)

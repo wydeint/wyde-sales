@@ -126,49 +126,65 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
-      <div className="relative w-full max-w-sm h-full flex flex-col shadow-2xl"
-        style={{ background: 'var(--card-bg)', borderLeft: '1px solid var(--divider)' }}
-        onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50" onClick={onClose}
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}>
+
+      {/* Desktop: right panel — Mobile: bottom sheet */}
+      <div onClick={e => e.stopPropagation()}
+        className="absolute flex flex-col shadow-2xl
+          bottom-0 left-0 right-0 rounded-t-[20px] max-h-[90dvh]
+          md:bottom-auto md:top-0 md:left-auto md:right-0 md:w-96 md:h-full md:rounded-none md:rounded-l-[20px]"
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+
+        {/* Drag handle (mobile only) */}
+        <div className="flex justify-center pt-3 pb-1 md:hidden">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--divider)' }} />
+        </div>
+
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
-          <div className="flex-1">
-            <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{form.room_no}</p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>{form.project_name}</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-base truncate" style={{ color: 'var(--text-1)' }}>{form.room_no}</p>
+            <p className="text-sm truncate" style={{ color: 'var(--text-3)' }}>{form.project_name}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}><X size={16} /></button>
+          <button onClick={onClose}
+            className="flex-shrink-0 flex items-center justify-center rounded-full"
+            style={{ width: 36, height: 36, background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <X size={16} />
+          </button>
         </div>
+
         {/* Fields */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
           <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>วันเริ่มงาน</label>
+            <label className="field-label mb-2 block">วันเริ่มงาน</label>
             <input type="date" value={form.work_start_date}
               onChange={e => setForm(f => ({ ...f, work_start_date: e.target.value }))}
-              className="w-full px-3 py-2 rounded-[8px] text-sm field-input"
-              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+              className="field-input text-base" style={{ minHeight: 44 }} />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-3)' }}>
+              ⚡ อัพเดทอัตโนมัติเมื่อเซลล์บันทึกการชำระงวดเริ่มงาน
+            </p>
           </div>
           <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>จำนวนวันทำงาน</label>
-            <input type="number" value={form.work_days} min={1}
+            <label className="field-label mb-2 block">จำนวนวันทำงาน</label>
+            <input type="number" value={form.work_days} min={1} inputMode="numeric"
               onChange={e => setForm(f => ({ ...f, work_days: e.target.value }))}
-              className="w-full px-3 py-2 rounded-[8px] text-sm field-input"
-              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+              className="field-input text-base" style={{ minHeight: 44 }} />
           </div>
           <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>วันส่งมอบจริง</label>
+            <label className="field-label mb-2 block">วันส่งมอบจริง</label>
             <input type="date" value={form.actual_deliver_date}
               onChange={e => setForm(f => ({ ...f, actual_deliver_date: e.target.value }))}
-              className="w-full px-3 py-2 rounded-[8px] text-sm field-input"
-              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+              className="field-input text-base" style={{ minHeight: 44 }} />
           </div>
         </div>
+
         {/* Save */}
-        <div className="px-5 py-4" style={{ borderTop: '1px solid var(--divider)' }}>
+        <div className="px-5 py-4 pb-safe" style={{ borderTop: '1px solid var(--divider)' }}>
           <button onClick={save} disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] text-sm font-semibold disabled:opacity-50"
-            style={{ background: 'var(--accent)', color: '#fff' }}>
-            <Save size={14} />
+            className="w-full flex items-center justify-center gap-2 rounded-[12px] font-semibold disabled:opacity-50"
+            style={{ background: 'var(--accent)', color: '#fff', minHeight: 48, fontSize: 15 }}>
+            <Save size={15} />
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

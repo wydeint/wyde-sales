@@ -31,6 +31,7 @@ interface RoomEntry {
   is_delivered: boolean
   is_overdue: boolean
   days_overdue: number          // 0 if not overdue
+  no_start_date: boolean        // true = ไม่มี work_start_date
 }
 
 // ─── Helpers ───────────────────────────────────────────────
@@ -74,6 +75,16 @@ function RoomChip({ entry }: { entry: RoomEntry }) {
       </div>
     )
   }
+  if (entry.no_start_date) {
+    return (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
+        style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: '1px solid color-mix(in srgb, #f59e0b 30%, transparent)', color: '#f59e0b' }}
+        title="ยังไม่มีวันเริ่มงาน (work_start_date)">
+        {entry.room_no}
+        <span className="text-[10px] font-normal opacity-70">ไม่มีวันเริ่ม</span>
+      </div>
+    )
+  }
   if (entry.is_overdue) {
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
@@ -104,7 +115,7 @@ export default function HandoverPage() {
       .from('jobs')
       .select('id, room_no, project_id, revenue_inc_vat, work_start_date, work_days, actual_deliver_date, working_status, projects(name), sales:users!sales_id(name)')
       .neq('working_status', 'ยกเลิก')
-      .not('work_start_date', 'is', null)
+      .or('work_start_date.not.is.null,actual_deliver_date.not.is.null')
       .order('project_id')
     setJobs((data as any) || [])
     setLoading(false)
@@ -115,19 +126,27 @@ export default function HandoverPage() {
   // Build room entries with display_month logic
   const entries: RoomEntry[] = useMemo(() => {
     return jobs.map(j => {
-      const expected = addDays(j.work_start_date!, j.work_days ?? 45)
-      const expected_month = expected.slice(0, 7)
+      const no_start_date = !j.work_start_date
       const is_delivered = !!j.actual_deliver_date
       const actual_month = j.actual_deliver_date?.slice(0, 7) ?? null
-      const days_over = !is_delivered ? Math.max(0, daysDiff(expected)) : 0
-      const is_overdue = !is_delivered && expected < TODAY.toISOString().slice(0, 10)
+
+      // If no work_start_date: can't calculate expected date
+      const expected = no_start_date
+        ? (j.actual_deliver_date ?? TODAY.toISOString().slice(0, 10))
+        : addDays(j.work_start_date!, j.work_days ?? 45)
+      const expected_month = expected.slice(0, 7)
+
+      const days_over = (!is_delivered && !no_start_date) ? Math.max(0, daysDiff(expected)) : 0
+      const is_overdue = !is_delivered && !no_start_date && expected < TODAY.toISOString().slice(0, 10)
 
       // Which month does this room appear under?
       let display_month: string
       if (is_delivered) {
         display_month = actual_month!
+      } else if (no_start_date) {
+        display_month = THIS_MONTH // no start date → always show in current month
       } else if (is_overdue) {
-        display_month = THIS_MONTH // overdue always shows in current month
+        display_month = THIS_MONTH
       } else {
         display_month = expected_month
       }
@@ -144,6 +163,7 @@ export default function HandoverPage() {
         is_delivered,
         is_overdue,
         days_overdue: days_over,
+        no_start_date,
       }
     })
   }, [jobs])
@@ -177,6 +197,7 @@ export default function HandoverPage() {
   const totalRooms = monthEntries.length
   const deliveredRooms = monthEntries.filter(e => e.is_delivered).length
   const overdueRooms = monthEntries.filter(e => e.is_overdue).length
+  const noStartRooms = monthEntries.filter(e => e.no_start_date && !e.is_delivered).length
   const totalValue = monthEntries.reduce((s, e) => s + e.revenue, 0)
   const deliveredValue = monthEntries.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0)
 
@@ -252,6 +273,16 @@ export default function HandoverPage() {
               <div>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
                 <p className="text-lg font-bold leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
+              </div>
+            </div>
+          )}
+          {/* No start date */}
+          {noStartRooms > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
+                <p className="text-lg font-bold leading-tight" style={{ color: '#f59e0b' }}>{noStartRooms} ห้อง</p>
               </div>
             </div>
           )}

@@ -66,15 +66,6 @@ function daysDiff(dateStr: string): number {
 
 // ─── RoomChip ───────────────────────────────────────────────
 function RoomChip({ entry }: { entry: RoomEntry }) {
-  if (entry.is_delivered) {
-    return (
-      <div className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
-        style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
-        <CheckCircle2 size={10} />
-        {entry.room_no}
-      </div>
-    )
-  }
   if (entry.no_start_date) {
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
@@ -82,6 +73,15 @@ function RoomChip({ entry }: { entry: RoomEntry }) {
         title="ยังไม่มีวันเริ่มงาน (work_start_date)">
         {entry.room_no}
         <span className="text-[10px] font-normal opacity-70">ไม่มีวันเริ่ม</span>
+      </div>
+    )
+  }
+  if (entry.is_delivered) {
+    return (
+      <div className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
+        style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
+        <CheckCircle2 size={10} />
+        {entry.room_no}
       </div>
     )
   }
@@ -197,7 +197,7 @@ export default function HandoverPage() {
   const totalRooms = monthEntries.length
   const deliveredRooms = monthEntries.filter(e => e.is_delivered).length
   const overdueRooms = monthEntries.filter(e => e.is_overdue).length
-  const noStartRooms = monthEntries.filter(e => e.no_start_date && !e.is_delivered).length
+  const noStartRooms = monthEntries.filter(e => e.no_start_date).length
   const totalValue = monthEntries.reduce((s, e) => s + e.revenue, 0)
   const deliveredValue = monthEntries.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0)
 

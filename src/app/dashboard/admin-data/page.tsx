@@ -478,6 +478,7 @@ export default function AdminDataPage() {
   const supabase = createClient()
   const [unlocked, setUnlocked] = useState(false)
   const [activeTab, setActiveTab] = useState(0)
+  const [activeGroup, setActiveGroup] = useState('Core')
   const [rows, setRows] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -615,26 +616,34 @@ export default function AdminDataPage() {
           </div>
         )}
 
-        {/* Tabs — grouped */}
-        <div className="space-y-1.5">
-          {GROUPS.map(grp => {
-            const items = TABLES.map((t, i) => ({ t, i })).filter(({ t }) => t.group === grp)
-            if (!items.length) return null
-            return (
-              <div key={grp} className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[9px] font-bold uppercase tracking-widest w-14 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{grp}</span>
-                {items.map(({ t, i }) => (
-                  <button key={t.table} onClick={() => { setActiveTab(i); setSearch(''); setFilterProject('') }}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all"
-                    style={activeTab === i
-                      ? { background: 'var(--accent)', color: '#fff' }
-                      : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            )
-          })}
+        {/* Tabs — Finance style: group row + table row */}
+        <div className="space-y-2">
+          {/* Row 1: group selector */}
+          <div className="flex gap-1 rounded-[11px] p-1 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            {GROUPS.map(grp => (
+              <button key={grp} onClick={() => {
+                setActiveGroup(grp)
+                const first = TABLES.findIndex(t => t.group === grp)
+                if (first !== -1) { setActiveTab(first); setSearch(''); setFilterProject('') }
+              }}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+                style={{ background: activeGroup === grp ? 'var(--accent)' : 'transparent', color: activeGroup === grp ? '#fff' : 'var(--text-2)' }}>
+                {grp}
+              </button>
+            ))}
+          </div>
+          {/* Row 2: table selector for active group */}
+          <div className="flex gap-1 flex-wrap">
+            {TABLES.map((t, i) => t.group !== activeGroup ? null : (
+              <button key={t.table} onClick={() => { setActiveTab(i); setSearch(''); setFilterProject('') }}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+                style={activeTab === i
+                  ? { background: 'var(--accent)', color: '#fff' }
+                  : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

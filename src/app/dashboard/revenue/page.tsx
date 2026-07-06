@@ -30,7 +30,7 @@ type DeliveredJob = {
   sales?: { name: string }
 }
 
-type Period = 'week' | 'month' | 'quarter' | 'year'
+type Period = 'today' | 'week' | 'month' | 'quarter' | 'year'
 
 const jobRev = (j: { revenue_inc_vat: number | null; revenue_ex_vat: number }) => j.revenue_inc_vat ?? j.revenue_ex_vat ?? 0
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
@@ -51,6 +51,13 @@ function getWeekRange(date: Date): { start: Date; end: Date; label: string } {
 
 function getPeriodBounds(period: Period, offset: number): { start: Date; end: Date; label: string } {
   const now = new Date()
+  if (period === 'today') {
+    const d = new Date(now); d.setDate(now.getDate() + offset)
+    const start = new Date(d); start.setHours(0, 0, 0, 0)
+    const end = new Date(d); end.setHours(23, 59, 59, 999)
+    const label = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+    return { start, end, label }
+  }
   if (period === 'week') {
     const base = new Date(now); base.setDate(now.getDate() + offset * 7)
     return getWeekRange(base)
@@ -80,7 +87,7 @@ function inRange(dateStr: string, start: Date, end: Date) {
 }
 
 const PERIOD_LABELS: Record<Period, string> = {
-  week: 'สัปดาห์', month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี'
+  today: 'วันนี้', week: 'สัปดาห์', month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี'
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -230,60 +237,61 @@ export default function RevenuePage() {
     <div className="page-content space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>รายได้ส่งมอบ</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="field-input" style={{ width: 'auto' }}>
-            <option value="">B2C + B2B</option>
-            <option value="B2C">B2C</option>
-            <option value="B2B">B2B</option>
-          </select>
-          <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-            className="field-input" style={{ width: 'auto' }}>
-            <option value="">ทุกประเภทงาน</option>
-            {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
-          </select>
-          {/* Sales filter */}
-          <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-            className="field-input" style={{ width: 'auto' }}>
-            <option value="">ทุก Sales</option>
-            {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
-          {/* Period tabs */}
-          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-            {(['week', 'month', 'quarter', 'year'] as Period[]).map(p => (
-              <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-                className="px-3 py-2 text-xs font-semibold"
-                style={{
-                  background: period === p ? 'var(--accent)' : 'var(--hover-bg)',
-                  color: period === p ? '#fff' : 'var(--text-2)',
-                }}>
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* Period navigation */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-          <ChevronLeft size={16} />
-        </button>
-        <div className="ds-card px-5 py-2 text-sm font-semibold flex-1 text-center"
-          style={{ color: 'var(--text-1)' }}>
-          {label}
-          {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
+      {/* View tabs — same style as Finance */}
+      <div className="flex gap-1 rounded-[11px] p-1 mb-5 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+        {([['summary', BarChart3, 'สรุป'], ['sales', Users, 'รายคน'], ['project', Building2, 'รายโครงการ'], ['list', List, 'รายงาน']] as const).map(([v, Icon, lbl]) => (
+          <button key={v} onClick={() => setView(v)}
+            className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
+            style={{ background: view === v ? 'var(--accent)' : 'transparent', color: view === v ? '#fff' : 'var(--text-2)' }}>
+            <Icon size={14} />{lbl}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter + Period row — same style as Finance */}
+      <div className="flex items-center gap-3 flex-wrap mb-5">
+        <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
+          className="field-input" style={{ width: 'auto' }}>
+          <option value="">B2C + B2B</option>
+          <option value="B2C">B2C</option>
+          <option value="B2B">B2B</option>
+        </select>
+        <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
+          className="field-input" style={{ width: 'auto' }}>
+          <option value="">ทุกประเภทงาน</option>
+          {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
+        </select>
+        <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+          className="field-input" style={{ width: 'auto' }}>
+          <option value="">ทุก Sales</option>
+          {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+        </select>
+        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          {(['today', 'week', 'month', 'quarter', 'year'] as Period[]).map(p => (
+            <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
+              className="px-3 py-1.5 text-xs font-semibold"
+              style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
         </div>
-        <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-[8px]"
-          disabled={offset >= 0}
-          style={{ background: 'var(--hover-bg)', color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }}>
-          <ChevronRight size={16} />
+        <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
+          <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
+        </button>
+        <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
+          {label}
+          {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
+        </span>
+        <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
+          className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
+          <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
         </button>
       </div>
 
@@ -352,20 +360,6 @@ export default function RevenuePage() {
         </div>
       )}
 
-      {/* View tabs */}
-      <div className="flex gap-2">
-        {([['summary', BarChart3, 'สรุป'], ['sales', Users, 'รายคน'], ['project', Building2, 'รายโครงการ'], ['list', List, 'รายงาน']] as const).map(([v, Icon, lbl]) => (
-          <button key={v} onClick={() => setView(v)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-[11px] text-sm font-semibold"
-            style={{
-              background: view === v ? 'var(--active-bg)' : 'var(--hover-bg)',
-              color: view === v ? 'var(--accent)' : 'var(--text-2)',
-            }}>
-            <Icon size={13} />
-            {lbl}
-          </button>
-        ))}
-      </div>
 
       {/* ── Summary view ── */}
       {view === 'summary' && (

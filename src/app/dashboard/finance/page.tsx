@@ -389,33 +389,33 @@ export default function FinancePage() {
         })}
       </div>
 
+      {/* Period selector — always visible regardless of tab */}
+      <div className="flex items-center gap-3 flex-wrap mb-5">
+        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          {(['today','week','month','quarter','year'] as Period[]).map(p => (
+            <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
+              className="px-3 py-1.5 text-xs font-semibold"
+              style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
+          <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
+        </button>
+        <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
+          {label}
+          {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
+        </span>
+        <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
+          className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
+          <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
+        </button>
+      </div>
+
       {/* ── Tab: Overview ─────────────────────────────────── */}
       {tab === 'overview' && (
         <div className="space-y-5">
-
-          {/* Period selector */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-              {(['today','week','month','quarter','year'] as Period[]).map(p => (
-                <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-                  className="px-3 py-1.5 text-xs font-semibold"
-                  style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
-                  {PERIOD_LABELS[p]}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-              <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
-            </button>
-            <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
-              {label}
-              {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
-            </span>
-            <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-              className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-              <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
-            </button>
-          </div>
 
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

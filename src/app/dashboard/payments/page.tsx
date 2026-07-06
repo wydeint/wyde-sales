@@ -193,27 +193,39 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
             <p className="text-[10px] uppercase tracking-widest mb-3 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
             <div className="space-y-2">
               {[
-                { url: job.quotation1_url, label: 'ใบเสนอราคา 1', short: 'Q1' },
-                { url: job.quotation2_url, label: 'ใบเสนอราคา 2', short: 'Q2' },
-                { url: job.id_card_url, label: 'บัตรประชาชนลูกค้า', short: 'ID' },
-                { url: job.delivery_doc_url, label: 'ใบส่งมอบ', short: 'HO' },
-                { url: job.satisfaction_url, label: 'แบบประเมินความพึงพอใจ', short: 'SAT' },
-                { url: job.sale_slip_url, label: 'สลิปการขาย', short: 'SLP' },
-                { url: job.sale_receipt_url, label: 'ใบเสร็จการขาย', short: 'RCP' },
-              ].map(d => (
-                <div key={d.short} className="flex items-center gap-2.5 p-2.5 rounded-[8px]"
-                  style={{ background: d.url ? 'rgba(99,102,241,0.06)' : 'var(--hover-bg)', border: `1px solid ${d.url ? 'rgba(99,102,241,0.2)' : 'var(--divider)'}` }}>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded w-9 text-center flex-shrink-0"
-                    style={{ background: d.url ? 'rgba(99,102,241,0.15)' : 'var(--card-bg)', color: d.url ? 'var(--accent)' : 'var(--text-3)' }}>
-                    {d.short}
-                  </span>
-                  <span className="text-xs flex-1 truncate" style={{ color: d.url ? 'var(--text-1)' : 'var(--text-3)' }}>{d.label}</span>
-                  {d.url
-                    ? <a href={d.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={12} style={{ color: 'var(--accent)' }} /></a>
-                    : <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>—</span>
-                  }
-                </div>
-              ))}
+                { url: job.quotation1_url, label: 'ใบเสนอราคา 1', short: 'Q1', auto: autoCheckedSale(job) },
+                { url: job.quotation2_url, label: 'ใบเสนอราคา 2', short: 'Q2', auto: autoCheckedSale(job) },
+                { url: job.id_card_url, label: 'บัตรประชาชนลูกค้า', short: 'ID', auto: autoCheckedSale(job) },
+                { url: job.sale_slip_url, label: 'สลิปการขาย', short: 'SLP', auto: autoCheckedSale(job) },
+                { url: job.sale_receipt_url, label: 'ใบเสร็จการขาย', short: 'RCP', auto: autoCheckedSale(job) },
+                { url: job.delivery_doc_url, label: 'ใบส่งมอบ', short: 'HO', auto: autoCheckedDelivery(job) },
+                { url: job.satisfaction_url, label: 'แบบประเมินความพึงพอใจ', short: 'SAT', auto: autoCheckedDelivery(job) },
+              ].map(d => {
+                const checked = !!d.url || d.auto
+                const isAuto = !d.url && d.auto
+                return (
+                  <div key={d.short} className="flex items-center gap-2.5 p-2.5 rounded-[8px]"
+                    style={{
+                      background: checked ? (isAuto ? 'rgba(52,211,153,0.06)' : 'rgba(99,102,241,0.06)') : 'var(--hover-bg)',
+                      border: `1px solid ${checked ? (isAuto ? 'rgba(52,211,153,0.2)' : 'rgba(99,102,241,0.2)') : 'var(--divider)'}`,
+                    }}>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded w-9 text-center flex-shrink-0"
+                      style={{
+                        background: checked ? (isAuto ? 'rgba(52,211,153,0.15)' : 'rgba(99,102,241,0.15)') : 'var(--card-bg)',
+                        color: checked ? (isAuto ? '#34d399' : 'var(--accent)') : 'var(--text-3)',
+                      }}>
+                      {d.short}
+                    </span>
+                    <span className="text-xs flex-1 truncate" style={{ color: checked ? 'var(--text-1)' : 'var(--text-3)' }}>{d.label}</span>
+                    {d.url
+                      ? <a href={d.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={12} style={{ color: 'var(--accent)' }} /></a>
+                      : isAuto
+                        ? <span className="text-[10px]" style={{ color: '#34d399' }}>อัตโนมัติ</span>
+                        : <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>—</span>
+                    }
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

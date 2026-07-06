@@ -1167,18 +1167,22 @@ export default function MyDealsPage() {
             <ChevronDown size={12} />
           </button>
           {jumpOpen && (
-            <div className="absolute right-0 top-full mt-1 w-56 rounded-[12px] shadow-xl z-30 py-1 overflow-hidden"
-              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-              {grouped.map(g => (
-                <button key={g.pid} onClick={() => jumpToProject(g.pid)}
-                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-[var(--hover-bg)] flex items-center justify-between"
-                  style={{ color: 'var(--text-1)' }}>
-                  <span className="truncate flex-1">{g.name}</span>
-                  <span className="text-xs ml-2 flex-shrink-0" style={{ color: 'var(--text-3)' }}>
-                    {g.active.length} ห้อง
-                  </span>
-                </button>
-              ))}
+            <div className="absolute right-0 top-full mt-1 rounded-[11px] shadow-lg z-30 overflow-hidden"
+              style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid var(--glass-border)', minWidth: 220, maxWidth: 320 }}>
+              <div className="overflow-y-auto" style={{ maxHeight: 280 }}>
+                {grouped.map(g => (
+                  <button key={g.pid} onClick={() => jumpToProject(g.pid)}
+                    className="w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors"
+                    style={{ color: 'var(--text-1)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    <span className="truncate flex-1">{g.name}</span>
+                    <span className="text-xs ml-3 flex-shrink-0" style={{ color: 'var(--text-3)' }}>
+                      {g.active.length} ห้อง
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

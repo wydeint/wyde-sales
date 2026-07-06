@@ -32,6 +32,8 @@ interface JobRow {
   satisfaction_url: string | null
   sale_receipt_url: string | null
   sale_slip_url: string | null
+  working_status: string
+  customer_status: string
   installments: Installment[]
   paid_total: number
   unpaid_total: number
@@ -43,18 +45,33 @@ interface User { id: string; name: string }
 // ─── Helpers ───────────────────────────────────────────────
 const f = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '฿0'
 
-function DocIcon({ url, label, short }: { url: string | null; label: string; short: string }) {
-  const has = !!url
+// ─── Auto-check rules ──────────────────────────────────────
+// ส่งมอบแล้ว → เอกสารทุกอย่างครบ
+// จอง / ดำเนินการ (customerStatus) → เอกสารส่วนลูกค้าครบ
+function autoCheckedSale(job: JobRow) {
+  return job.working_status === 'ส่งมอบแล้ว' || job.customer_status === 'จอง' || job.customer_status === 'ดำเนินการ'
+}
+function autoCheckedDelivery(job: JobRow) {
+  return job.working_status === 'ส่งมอบแล้ว'
+}
+
+function DocIcon({ url, label, short, auto }: { url: string | null; label: string; short: string; auto?: boolean }) {
+  const has = !!url || !!auto
+  const isAuto = !url && !!auto
   return (
     <a href={url || undefined} target="_blank" rel="noopener noreferrer"
-      onClick={e => { if (!url) e.preventDefault() }} title={label}
+      onClick={e => { if (!url) e.preventDefault() }} title={isAuto ? `${label} (ติ๊กอัตโนมัติตามสถานะ)` : label}
       className="flex flex-col items-center gap-0.5 transition-opacity"
-      style={{ opacity: has ? 1 : 0.25, cursor: has ? 'pointer' : 'default', textDecoration: 'none' }}>
+      style={{ opacity: has ? 1 : 0.25, cursor: url ? 'pointer' : 'default', textDecoration: 'none' }}>
       <div className="w-7 h-7 rounded flex items-center justify-center"
-        style={{ background: has ? 'rgba(99,102,241,0.15)' : 'var(--hover-bg)', color: has ? 'var(--accent)' : 'var(--text-3)', border: `1px solid ${has ? 'rgba(99,102,241,0.3)' : 'var(--divider)'}` }}>
+        style={{
+          background: has ? (isAuto ? 'rgba(52,211,153,0.12)' : 'rgba(99,102,241,0.15)') : 'var(--hover-bg)',
+          color: has ? (isAuto ? '#34d399' : 'var(--accent)') : 'var(--text-3)',
+          border: `1px solid ${has ? (isAuto ? 'rgba(52,211,153,0.3)' : 'rgba(99,102,241,0.3)') : 'var(--divider)'}`,
+        }}>
         {has ? <FileText size={12} /> : <span className="text-[9px] font-bold">{short}</span>}
       </div>
-      <span className="text-[9px]" style={{ color: has ? 'var(--accent)' : 'var(--text-3)' }}>{short}</span>
+      <span className="text-[9px]" style={{ color: has ? (isAuto ? '#34d399' : 'var(--accent)') : 'var(--text-3)' }}>{short}</span>
     </a>
   )
 }
@@ -222,7 +239,7 @@ export default function PaymentsPage() {
     setLoading(true)
     const [{ data: jobsRaw }, { data: pData }, { data: uData }] = await Promise.all([
       supabase.from('jobs').select(
-        'id, room_no, project_id, customer_name, sales_id, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name)'
+        'id, room_no, project_id, customer_name, sales_id, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name), customers:customer_id(status)'
       ).neq('working_status', 'ยกเลิก').order('room_no'),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).order('name'),
@@ -254,6 +271,8 @@ export default function PaymentsPage() {
         id_card_url: j.id_card_url, delivery_doc_url: j.delivery_doc_url,
         satisfaction_url: j.satisfaction_url,
         sale_receipt_url: j.sale_receipt_url, sale_slip_url: j.sale_slip_url,
+        working_status: j.working_status || '',
+        customer_status: (j as any).customers?.status || '',
         installments: insts, paid_total, unpaid_total,
       }
     })
@@ -388,15 +407,17 @@ export default function PaymentsPage() {
 
                   <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
                     <div className="flex gap-1.5">
-                      <DocIcon url={job.quotation1_url} label="ใบเสนอราคา 1" short="Q1" />
-                      <DocIcon url={job.quotation2_url} label="ใบเสนอราคา 2" short="Q2" />
-                      <DocIcon url={job.id_card_url} label="บัตรประชาชน" short="ID" />
-                      <DocIcon url={job.delivery_doc_url} label="ใบส่งมอบ" short="HO" />
-                      <DocIcon url={job.satisfaction_url} label="แบบประเมิน" short="SAT" />
-                      <DocIcon url={job.sale_slip_url} label="สลิปการขาย" short="SLP" />
-                      <DocIcon url={job.sale_receipt_url} label="ใบเสร็จ" short="RCP" />
+                      <DocIcon url={job.quotation1_url} label="ใบเสนอราคา 1" short="Q1" auto={autoCheckedSale(job)} />
+                      <DocIcon url={job.quotation2_url} label="ใบเสนอราคา 2" short="Q2" auto={autoCheckedSale(job)} />
+                      <DocIcon url={job.id_card_url} label="บัตรประชาชน" short="ID" auto={autoCheckedSale(job)} />
+                      <DocIcon url={job.sale_slip_url} label="สลิปการขาย" short="SLP" auto={autoCheckedSale(job)} />
+                      <DocIcon url={job.sale_receipt_url} label="ใบเสร็จ (ช่วงขาย)" short="RCP" auto={autoCheckedSale(job)} />
+                      <DocIcon url={job.delivery_doc_url} label="ใบส่งมอบ" short="HO" auto={autoCheckedDelivery(job)} />
+                      <DocIcon url={job.satisfaction_url} label="แบบประเมิน" short="SAT" auto={autoCheckedDelivery(job)} />
                     </div>
-                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>{docsDone}/4 เอกสารหลัก</p>
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
+                      {[job.quotation1_url, job.id_card_url, job.sale_slip_url, job.sale_receipt_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length}/6 เอกสาร
+                    </p>
                   </td>
                 </tr>
               )

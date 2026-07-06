@@ -66,6 +66,8 @@ interface FullJob {
   id_card_url: string | null
   delivery_doc_url: string | null
   satisfaction_url: string | null
+  sale_slip_url: string | null
+  sale_receipt_url: string | null
 }
 
 // ─── Stage helpers ─────────────────────────────────────────
@@ -864,7 +866,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               <span className="text-xs">เอกสาร</span>
               <div className="flex items-center gap-2">
                 <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>
-                  {[job.quotation1_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length}/4
+                  {[job.quotation1_url, job.quotation2_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url, job.sale_slip_url, job.sale_receipt_url].filter(Boolean).length}/7
                 </span>
                 {docsExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
               </div>
@@ -881,6 +883,10 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   value={job.delivery_doc_url} onUpdate={v => updateDocField('delivery_doc_url', v)} />
                 <DocField jobId={job.id} field="satisfaction_url" label="แบบประเมินความพึงพอใจ"
                   value={job.satisfaction_url} onUpdate={v => updateDocField('satisfaction_url', v)} />
+                <DocField jobId={job.id} field="sale_slip_url" label="สลิปการขาย"
+                  value={job.sale_slip_url} onUpdate={v => updateDocField('sale_slip_url', v)} />
+                <DocField jobId={job.id} field="sale_receipt_url" label="ใบเสร็จรับเงิน (ช่วงขาย)"
+                  value={job.sale_receipt_url} onUpdate={v => updateDocField('sale_receipt_url', v)} />
               </div>
             )}
           </div>
@@ -1085,6 +1091,8 @@ export default function MyDealsPage() {
       id_card_url: raw.id_card_url || null,
       delivery_doc_url: raw.delivery_doc_url || null,
       satisfaction_url: raw.satisfaction_url || null,
+      sale_slip_url: raw.sale_slip_url || null,
+      sale_receipt_url: raw.sale_receipt_url || null,
       installments: ((raw as any).installments || []).map((p: any) => ({
         id: p.id,
         installment_no: p.installment_no,

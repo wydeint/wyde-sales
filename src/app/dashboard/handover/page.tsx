@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 
@@ -65,49 +66,56 @@ function daysDiff(dateStr: string): number {
 }
 
 // ─── RoomChip ───────────────────────────────────────────────
-function RoomChip({ entry }: { entry: RoomEntry }) {
+function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void }) {
+  const base = "cursor-pointer transition-opacity hover:opacity-70 active:opacity-50"
   if (entry.no_start_date) {
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
+      <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: '1px solid color-mix(in srgb, #f59e0b 30%, transparent)', color: '#f59e0b' }}
-        title="ยังไม่มีวันเริ่มงาน (work_start_date)">
+        title="ยังไม่มีวันเริ่มงาน — คลิกเพื่อแก้ไข">
         {entry.room_no}
-        <span className="text-[10px] font-normal opacity-70">ไม่มีวันเริ่ม</span>
-      </div>
+      </button>
     )
   }
   if (entry.is_delivered) {
     return (
-      <div className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
+      <button onClick={onClick} className={`${base} flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
         <CheckCircle2 size={10} />
         {entry.room_no}
-      </div>
+      </button>
     )
   }
   if (entry.is_overdue) {
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold"
+      <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
         {entry.room_no}
         <span className="text-[10px] font-normal opacity-60">+{entry.days_overdue}d</span>
-      </div>
+      </button>
     )
   }
   return (
-    <div className="px-2.5 py-1 rounded-[6px] text-xs font-semibold"
+    <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
       {entry.room_no}
-    </div>
+    </button>
   )
 }
 
 // ─── Main ───────────────────────────────────────────────────
 export default function HandoverPage() {
   const supabase = createClient()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(THIS_MONTH)
+  const [selectedMonth, setSelectedMonth] = useState(() => searchParams.get('month') || THIS_MONTH)
+
+  function openJob(jobId: string) {
+    const returnTo = `/dashboard/handover?month=${selectedMonth}`
+    router.push(`/dashboard/my-deals?job=${jobId}&returnTo=${encodeURIComponent(returnTo)}`)
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -322,7 +330,7 @@ export default function HandoverPage() {
                   </div>
                   {/* Room chips */}
                   <div className="p-4 flex flex-wrap gap-2">
-                    {rooms.map(r => <RoomChip key={r.id} entry={r} />)}
+                    {rooms.map(r => <RoomChip key={r.id} entry={r} onClick={() => openJob(r.id)} />)}
                   </div>
                 </div>
               )

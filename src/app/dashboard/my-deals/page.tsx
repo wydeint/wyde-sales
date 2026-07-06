@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Search, X, ChevronRight, ChevronDown, Zap,
@@ -1000,6 +1001,8 @@ function RoomCard({ job, onClick }: { job: RoomJob; onClick: () => void }) {
 // ─── Main Page ─────────────────────────────────────────────
 export default function MyDealsPage() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [jobs, setJobs] = useState<RoomJob[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -1010,6 +1013,7 @@ export default function MyDealsPage() {
   const [jumpOpen, setJumpOpen] = useState(false)
   const jumpRef = useRef<HTMLDivElement>(null)
   const projectRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const returnTo = searchParams.get('returnTo')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -1042,6 +1046,12 @@ export default function MyDealsPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Auto-open drawer from ?job= param (e.g. navigated from Handover)
+  useEffect(() => {
+    const jobId = searchParams.get('job')
+    if (jobId) openDrawer(jobId)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Click outside jump dropdown
   useEffect(() => {
@@ -1115,6 +1125,7 @@ export default function MyDealsPage() {
   function closeDrawer() {
     setSelectedJobId(null)
     setDrawerJob(null)
+    if (returnTo) router.push(returnTo)
   }
 
   async function handleRefresh() {

@@ -15,10 +15,11 @@ interface SearchableSelectProps {
   placeholder?: string
   className?: string
   style?: React.CSSProperties
+  alignRight?: boolean
 }
 
 export default function SearchableSelect({
-  value, onChange, options, placeholder = 'ทั้งหมด', className = '', style,
+  value, onChange, options, placeholder = 'ทั้งหมด', className = '', style, alignRight = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -82,6 +83,7 @@ export default function SearchableSelect({
             minWidth: '100%',
             width: 'max-content',
             maxWidth: 280,
+            ...(alignRight ? { right: 0, left: 'auto' } : {}),
           }}
         >
           {/* Search input */}

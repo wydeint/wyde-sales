@@ -650,6 +650,7 @@ export default function CustomersPage() {
           onChange={v => setFilterProject(v)}
           options={projectFilterOptions}
           placeholder="ทุกโครงการ"
+          alignRight
         />
       </div>
 

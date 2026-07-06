@@ -387,22 +387,37 @@ export default function JobsPage() {
   })
 
   function exportCSV() {
-    const headers = ['ลูกค้า','โครงการ','ห้อง','Job ID','ประเภทงาน','PO','SO','Revenue (Ex.VAT)','Cost','GP%','Commission','Voucher','สถานะ','Sales','วันส่งมอบ']
+    const headers = [
+      'ลูกค้า', 'เบอร์โทร', 'ประเภทลูกค้า', 'โครงการ', 'ห้อง', 'Job ID',
+      'ประเภทงาน', 'แพ็กเกจ', 'PO', 'SO',
+      'วันสั่งงาน', 'วันเริ่มงาน', 'วันกำหนดส่ง', 'วันส่งมอบ (จริง)',
+      'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'ยอดโอน', 'Voucher', 'Cost', 'GP%',
+      'Commission Rate%', 'Commission', 'สถานะ Commission',
+      'สถานะงาน', 'Sales',
+    ]
     const rows = filtered.map(j => {
       const name = (j.condo_leads as any)?.customer_name || j.customer_name || ''
+      const phone = (j.condo_leads as any)?.phone || ''
       const project = (j.projects as any)?.name || ''
+      const sales = (j.sales as any)?.name || ''
       const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
       const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(1) : ''
-      const sales = (j.sales as any)?.name || ''
-      const deliver = j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH') : ''
-      return [name, project, j.room_no || '', j.id, j.work_type || '', j.po_no || '', j.so_no || '',
-        j.revenue_ex_vat || 0, j.cost || 0, gp, j.commission_amount || 0, j.voucher || 0,
-        j.working_status || '', sales, deliver]
+      const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH') : ''
+      const commStatusLabel: Record<string, string> = { pending: 'รอ', approved: 'อนุมัติ', paid: 'จ่ายแล้ว' }
+      return [
+        name, phone, j.customer_type || '', project, j.room_no || '', j.id,
+        j.work_type || '', j.package_type || '', j.po_no || '', j.so_no || '',
+        fmt(j.order_date), fmt((j as any).work_start_date), fmt(j.expected_finish_date), fmt(j.actual_deliver_date),
+        j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.transfer_amount || 0, j.voucher || 0, j.cost || 0, gp,
+        j.commission_rate ? (j.commission_rate * 100).toFixed(2) : '', j.commission_amount || 0,
+        commStatusLabel[j.commission_status] || j.commission_status || '',
+        j.working_status || '', sales,
+      ]
     })
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = 'wyde-clients.csv'; a.click()
+    const a = document.createElement('a'); a.href = url; a.download = `wyde-clients-${new Date().toISOString().slice(0,10)}.csv`; a.click()
     URL.revokeObjectURL(url)
   }
 

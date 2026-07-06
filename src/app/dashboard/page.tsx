@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const [allJobs, setAllJobs] = useState<Job[]>([])
   const [reports, setReports] = useState<any[]>([])
   const [orgTarget, setOrgTarget] = useState<OrgTarget | null>(null)
+  const [todayPayments, setTodayPayments] = useState<{ paid_amount: number }[]>([])
 
   const [filterCustType, setFilterCustType] = useState('')
   const [filterWorkType, setFilterWorkType] = useState('')
@@ -47,18 +48,21 @@ export default function DashboardPage() {
       const now = new Date()
       const ms = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
 
+      const todayStr = now.toISOString().slice(0, 10)
       const [
         { data: { user } },
         { data: customers, error: custErr },
         { data: jobs, error: jobErr },
         { data: reps, error: repErr },
         { data: ot },
+        { data: todayPmts },
       ] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('customers').select('status, budget, customer_type'),
         supabase.from('jobs').select('id,order_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
         supabase.from('daily_reports').select('*, users(name)').gte('date', ms).order('date', { ascending: false }),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value').eq('year', now.getFullYear()).eq('month', now.getMonth() + 1).maybeSingle(),
+        supabase.from('payments').select('paid_amount').eq('status', 'paid').eq('paid_date', todayStr),
       ])
 
       if (custErr || jobErr || repErr) {
@@ -76,6 +80,7 @@ export default function DashboardPage() {
       setAllJobs((jobs || []) as unknown as Job[])
       setReports(reps || [])
       setOrgTarget(ot as OrgTarget | null)
+      setTodayPayments((todayPmts || []) as { paid_amount: number }[])
       setLoading(false)
     }
     load()
@@ -332,7 +337,14 @@ export default function DashboardPage() {
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{todayDelivered.length} รายการ</p>
             </div>
-            {todaySales.length === 0 && todayDelivered.length === 0 && (
+            <div style={{ borderTop: '1px solid var(--divider)', paddingTop: 16 }}>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยอดเงินเข้าวันนี้</p>
+              <p className="text-kpi-number leading-none" style={{ color: '#a78bfa' }}>
+                {f(todayPayments.reduce((s, p) => s + (p.paid_amount || 0), 0))}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{todayPayments.length} รายการ</p>
+            </div>
+            {todaySales.length === 0 && todayDelivered.length === 0 && todayPayments.length === 0 && (
               <p className="text-xs text-center pt-2" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายการวันนี้</p>
             )}
           </div>

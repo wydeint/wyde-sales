@@ -1068,7 +1068,7 @@ export default function MyDealsPage() {
     setDrawerJob(null)
     const { data: raw } = await supabase
       .from('jobs')
-      .select('*, projects(name), sales:users!sales_id(name), installments:payments(*)')
+      .select('*, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, slip_url, receipt_url)')
       .eq('id', jobId)
       .single()
 

@@ -188,10 +188,10 @@ export default function LeadsPage() {
     const valid = importRows.filter(r => r._valid)
     if (!valid.length) return
     setImporting(true)
-    let done = 0, skipped = 0, dup = importRows.filter(r => r._dup).length
-    for (const row of valid) {
+    const dup = importRows.filter(r => r._dup).length
+    const payloads = valid.map(row => {
       const { _valid, _error, _dup, ...data } = row
-      const payload = {
+      return {
         ...data,
         project_id: data.project_id || null,
         transfer_date: data.transfer_date || null,
@@ -205,11 +205,10 @@ export default function LeadsPage() {
         s00_budget: data.s00_budget || null,
         total_payment: data.total_payment || null,
       }
-      const { error } = await supabase.from('condo_leads').insert(payload)
-      if (error) skipped++; else done++
-    }
+    })
+    const { error } = await supabase.from('condo_leads').insert(payloads)
     setImporting(false)
-    setImportResult({ done, skipped, dup })
+    setImportResult({ done: error ? 0 : valid.length, skipped: error ? valid.length : 0, dup })
     setImportRows([])
     load()
   }

@@ -44,7 +44,6 @@ const NAV = [
     items: [
       { href: '/dashboard/customers', icon: Users, label: 'ลูกค้า' },
       { href: '/dashboard/handover', icon: ClipboardList, label: 'Handover' },
-      { href: '/dashboard/documents', icon: FileText, label: 'เอกสารลูกค้า' },
       { href: '/dashboard/payments', icon: Receipt, label: 'ชำระเงิน & เอกสาร' },
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
     ],

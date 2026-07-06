@@ -255,27 +255,6 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Daily Reports', table: 'daily_reports', orderBy: 'date', group: 'Admin',
-    cols: [
-      { key: 'id', label: 'ID', type: 'readonly', width: 150 },
-      { key: 'date', label: 'วันที่', type: 'date', width: 110 },
-      { key: 'sales_person_id', label: 'Sales ID', type: 'text', width: 130 },
-      { key: 'calls', label: 'โทร', type: 'number', width: 70 },
-      { key: 'visits', label: 'เยี่ยม', type: 'number', width: 70 },
-      { key: 'follow_ups', label: 'Follow up', type: 'number', width: 90 },
-      { key: 'new_leads', label: 'New Leads', type: 'number', width: 90 },
-      { key: 'leads_created', label: 'Leads Created', type: 'number', width: 110 },
-      { key: 'quotations_sent', label: 'ใบเสนอ', type: 'number', width: 90 },
-      { key: 'quotation_value', label: 'มูลค่าใบเสนอ', type: 'number', width: 130 },
-      { key: 'bookings_count', label: 'จอง', type: 'number', width: 70 },
-      { key: 'booking_value', label: 'มูลค่าจอง', type: 'number', width: 120 },
-      { key: 'deposit_amount', label: 'มัดจำ', type: 'number', width: 100 },
-      { key: 'payment_50_amount', label: '50%', type: 'number', width: 100 },
-      { key: 'payment_100_amount', label: '100%', type: 'number', width: 100 },
-      { key: 'revenue', label: 'รายได้', type: 'number', width: 110 },
-      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
-    ],
-  },
   {
     label: 'Documents', table: 'documents', orderBy: 'created_at', group: 'Operations',
     cols: [
@@ -602,8 +581,6 @@ export default function AdminDataPage() {
     else setSelectedIds(new Set(filtered.map(r => String(r.id))))
   }
 
-  const inputBg = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
-
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
 
   return (
@@ -615,29 +592,27 @@ export default function AdminDataPage() {
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหา..."
-              className="pl-8 pr-7 py-1.5 rounded-[8px] text-sm focus:outline-none w-44" style={inputBg} />
+              className="field-input pl-8 pr-7 w-44" />
             {search && (
               <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
                 <X size={12} style={{ color: 'var(--text-3)' }} />
               </button>
             )}
           </div>
-          <button onClick={load} className="px-3 py-1.5 rounded-[8px] text-xs" style={inputBg}>รีเฟรช</button>
+          <button onClick={load} className="btn-util text-xs">รีเฟรช</button>
         </div>
 
         {/* Project filter (only for tables with project_id) */}
         {hasProjectFilter && (
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs" style={{ color: 'var(--text-3)' }}>โครงการ</span>
+            <label className="field-label">โครงการ</label>
             <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-              className="px-3 py-1.5 rounded-[8px] text-sm outline-none"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+              className="field-input" style={{ width: 'auto', minWidth: 160 }}>
               <option value="">ทั้งหมด</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             {filterProject && (
-              <button onClick={() => setFilterProject('')} className="text-xs px-2 py-1 rounded"
-                style={{ color: 'var(--text-3)' }}>✕ ล้าง</button>
+              <button onClick={() => setFilterProject('')} className="btn-util text-xs">✕ ล้าง</button>
             )}
           </div>
         )}

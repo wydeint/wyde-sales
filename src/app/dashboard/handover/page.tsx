@@ -105,7 +105,6 @@ export default function HandoverPage() {
       .select('id, room_no, project_id, revenue_inc_vat, work_start_date, work_days, actual_deliver_date, working_status, projects(name), sales:users!sales_id(name)')
       .neq('working_status', 'ยกเลิก')
       .not('work_start_date', 'is', null)
-      .not('work_days', 'is', null)
       .order('project_id')
     setJobs((data as any) || [])
     setLoading(false)
@@ -116,7 +115,7 @@ export default function HandoverPage() {
   // Build room entries with display_month logic
   const entries: RoomEntry[] = useMemo(() => {
     return jobs.map(j => {
-      const expected = addDays(j.work_start_date!, j.work_days!)
+      const expected = addDays(j.work_start_date!, j.work_days ?? 45)
       const expected_month = expected.slice(0, 7)
       const is_delivered = !!j.actual_deliver_date
       const actual_month = j.actual_deliver_date?.slice(0, 7) ?? null

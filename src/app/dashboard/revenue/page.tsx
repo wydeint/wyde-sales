@@ -255,44 +255,50 @@ export default function RevenuePage() {
         ))}
       </div>
 
-      {/* Filter + Period row — same style as Finance */}
-      <div className="flex items-center gap-3 flex-wrap mb-5">
-        <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-          className="field-input" style={{ width: 'auto' }}>
-          <option value="">B2C + B2B</option>
-          <option value="B2C">B2C</option>
-          <option value="B2B">B2B</option>
-        </select>
-        <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-          className="field-input" style={{ width: 'auto' }}>
-          <option value="">ทุกประเภทงาน</option>
-          {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
-        </select>
-        <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="field-input" style={{ width: 'auto' }}>
-          <option value="">ทุก Sales</option>
-          {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-        </select>
-        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-          {(['today', 'week', 'month', 'quarter', 'year'] as Period[]).map(p => (
-            <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-              className="px-3 py-1.5 text-xs font-semibold"
-              style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
+      {/* Filter + Period rows */}
+      <div className="flex flex-col gap-3 mb-5">
+        {/* Row 1: Filters + Period tabs */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
+            className="field-input" style={{ width: 'auto' }}>
+            <option value="">B2C + B2B</option>
+            <option value="B2C">B2C</option>
+            <option value="B2B">B2B</option>
+          </select>
+          <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
+            className="field-input" style={{ width: 'auto' }}>
+            <option value="">ทุกประเภทงาน</option>
+            {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
+          </select>
+          <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+            className="field-input" style={{ width: 'auto' }}>
+            <option value="">ทุก Sales</option>
+            {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            {(['today', 'week', 'month', 'quarter', 'year'] as Period[]).map(p => (
+              <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
+                className="px-3 py-1.5 text-xs font-semibold"
+                style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
         </div>
-        <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-          <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
-        </button>
-        <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
-          {label}
-          {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
-        </span>
-        <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-          className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-          <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
-        </button>
+        {/* Row 2: Period nav — always its own row */}
+        <div className="flex items-center gap-2">
+          <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', minWidth: 36, minHeight: 36 }}>
+            <ChevronLeft size={16} style={{ color: 'var(--text-2)' }} />
+          </button>
+          <span className="flex-1 text-center text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
+            {label}
+            {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
+          </span>
+          <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
+            className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', minWidth: 36, minHeight: 36 }}>
+            <ChevronRight size={16} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

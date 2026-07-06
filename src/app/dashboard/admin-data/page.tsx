@@ -255,7 +255,6 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-  {
     label: 'Documents', table: 'documents', orderBy: 'created_at', group: 'Operations',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },

@@ -68,20 +68,6 @@ function Th({ label, sortKey, current, dir, onSort, right = true }: {
   )
 }
 
-// ─── Filter chip ─────────────────────────────────────────────────────────────
-function FilterChip({ label, active, color, onClick }: { label: string; active: boolean; color: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick}
-      className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
-      style={{
-        background: active ? color : 'var(--hover-bg)',
-        color: active ? '#fff' : 'var(--text-2)',
-        border: `1px solid ${active ? 'transparent' : 'var(--divider)'}`,
-      }}>
-      {label}
-    </button>
-  )
-}
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function ProjectSummaryPage() {
@@ -214,75 +200,70 @@ export default function ProjectSummaryPage() {
 
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
-        <h1 className="text-lg font-bold mb-4" style={{ color: 'var(--text-1)' }}>สรุปรายโครงการ</h1>
 
-        {/* Summary cards */}
-        <div className="flex gap-3 flex-wrap mb-4">
-          <StatCard icon={Building2} label="โครงการที่มีงาน" value={`${filtered.length}`} color="var(--accent)" />
-          <StatCard icon={TrendingUp} label="ห้องทั้งหมด" value={totals.units.toLocaleString()} sub="(ตามที่บันทึก)" color="#60a5fa" />
-          <StatCard icon={CheckCircle2} label="Wyde Clients"
-            value={`${totals.jobs} ห้อง`}
-            sub={`B2C ${totalB2C} · B2B ${totalB2B}`} color="#4ade80" />
-          <StatCard icon={DollarSign} label="รายได้รวม" value={fM(totals.rev)}
-            sub={`ส่งมอบแล้ว ${fM(totals.revDel)}`} color="#fbbf24" />
+        {/* Title */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>สรุปรายโครงการ</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ภาพรวมห้อง ยอด Wyde Clients และรายได้ แยกตามโครงการ</p>
+          </div>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>
         </div>
 
-        {/* Breakdown mini summary */}
-        <div className="flex flex-wrap gap-2 mb-3">
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           {[
-            { label: 'B2C · RPT',   count: totals.b2c_rpt,  color: '#22c55e' },
-            { label: 'B2C · N-RPT', count: totals.b2c_nrpt, color: '#6366f1' },
-            { label: 'B2B · RPT',   count: totals.b2b_rpt,  color: '#10b981' },
-            { label: 'B2B · N-RPT', count: totals.b2b_nrpt, color: '#8b5cf6' },
-          ].filter(x => x.count > 0).map(x => (
-            <div key={x.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-              style={{ background: `${x.color}18`, border: `1px solid ${x.color}40`, color: x.color }}>
-              {x.label} <span className="font-bold">{x.count}</span>
-            </div>
-          ))}
-          {totalRPT > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-              style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80' }}>
-              RPT รวม <span className="font-bold">{totalRPT}</span>
-            </div>
-          )}
-          {totalNRPT > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-              style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#818cf8' }}>
-              N-RPT รวม <span className="font-bold">{totalNRPT}</span>
-            </div>
-          )}
+            { icon: Building2, label: 'โครงการที่มีงาน', value: `${filtered.length}`, sub: `จากทั้งหมด ${rows.length}`, color: 'var(--accent)' },
+            { icon: TrendingUp, label: 'ห้องทั้งหมด', value: totals.units.toLocaleString(), sub: 'ตามที่บันทึก', color: '#60a5fa' },
+            { icon: CheckCircle2, label: 'Wyde Clients', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: '#4ade80' },
+            { icon: DollarSign, label: 'รายได้รวม', value: fM(totals.rev), sub: `ส่งมอบแล้ว ${fM(totals.revDel)}`, color: '#fbbf24' },
+          ].map(k => {
+            const Icon = k.icon
+            return (
+              <div key={k.label} className="ds-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon size={13} style={{ color: k.color }} />
+                  <span className="text-card-title" style={{ color: 'var(--text-3)' }}>{k.label}</span>
+                </div>
+                <p className="text-kpi-number" style={{ color: k.color }}>{k.value}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
+              </div>
+            )
+          })}
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-4 flex-wrap">
+        {/* Filter row — Finance pill style */}
+        <div className="flex items-center gap-3 flex-wrap">
           <select value={search} onChange={e => setSearch(e.target.value)}
             className="field-input" style={{ width: '13rem' }}>
             <option value="">— ทุกโครงการ —</option>
             {rows.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
           </select>
 
-          {/* Customer type */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider mr-1" style={{ color: 'var(--text-3)' }}>ลูกค้า</span>
-            <FilterChip label="ทั้งหมด" active={custFilter === 'all'}  color="var(--accent)" onClick={() => setCustFilter('all')} />
-            <FilterChip label="B2C"    active={custFilter === 'B2C'}  color="#4ade80"      onClick={() => setCustFilter('B2C')} />
-            <FilterChip label="B2B"    active={custFilter === 'B2B'}  color="#60a5fa"      onClick={() => setCustFilter('B2B')} />
+          <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            {(['all', 'B2C', 'B2B'] as CustFilter[]).map(v => (
+              <button key={v} onClick={() => setCustFilter(v)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+                style={{ background: custFilter === v ? 'var(--accent)' : 'transparent', color: custFilter === v ? '#fff' : 'var(--text-2)' }}>
+                {v === 'all' ? 'ลูกค้าทั้งหมด' : v}
+              </button>
+            ))}
           </div>
 
-          {/* Work type */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider mr-1" style={{ color: 'var(--text-3)' }}>งาน</span>
-            <FilterChip label="ทั้งหมด" active={workFilter === 'all'}   color="var(--accent)" onClick={() => setWorkFilter('all')} />
-            <FilterChip label="RPT"    active={workFilter === 'RPT'}   color="#22c55e"      onClick={() => setWorkFilter('RPT')} />
-            <FilterChip label="N-RPT"  active={workFilter === 'N-RPT'} color="#6366f1"      onClick={() => setWorkFilter('N-RPT')} />
+          <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            {(['all', 'RPT', 'N-RPT'] as WorkFilter[]).map(v => (
+              <button key={v} onClick={() => setWorkFilter(v)}
+                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+                style={{ background: workFilter === v ? 'var(--accent)' : 'transparent', color: workFilter === v ? '#fff' : 'var(--text-2)' }}>
+                {v === 'all' ? 'งานทั้งหมด' : v}
+              </button>
+            ))}
           </div>
 
           <label className="flex items-center gap-1.5 cursor-pointer select-none text-xs" style={{ color: 'var(--text-2)' }}>
             <input type="checkbox" checked={hideEmpty} onChange={e => setHideEmpty(e.target.checked)} className="rounded" />
             ซ่อนโครงการที่ยังไม่มีงาน
           </label>
-          <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>
         </div>
       </div>
 
@@ -430,21 +411,3 @@ export default function ProjectSummaryPage() {
   )
 }
 
-function StatCard({ icon: Icon, label, value, sub, color }: {
-  icon: any; label: string; value: string; sub?: string; color: string
-}) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
-      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-      <div className="w-8 h-8 rounded-[8px] flex items-center justify-center flex-shrink-0"
-        style={{ background: `${color}18` }}>
-        <Icon size={16} style={{ color }} />
-      </div>
-      <div>
-        <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{label}</p>
-        <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text-1)' }}>{value}</p>
-        {sub && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{sub}</p>}
-      </div>
-    </div>
-  )
-}

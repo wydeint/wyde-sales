@@ -1510,28 +1510,28 @@ export default function QuickPage() {
     {
       header: 'ลูกค้า', headerColor: 'var(--accent-blue)',
       buttons: [
-        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: 'var(--accent-blue)',   btnStyle: { background: cm('var(--accent-blue)',   10), borderColor: cm('var(--accent-blue)',   25) }, sheet: 'clients' },
-        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: 'var(--accent)',        btnStyle: { background: cm('var(--accent)',         10), borderColor: cm('var(--accent)',         25) }, sheet: 'prospects' },
-        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: 'var(--accent-green)',  btnStyle: { background: cm('var(--accent-green)',  10), borderColor: cm('var(--accent-green)',  25) }, sheet: 'event' },
-        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: 'var(--accent-blue)',   btnStyle: { background: cm('var(--accent-blue)',   10), borderColor: cm('var(--accent-blue)',   25) }, sheet: 'lookup' },
+        { key: 'clients',   icon: Briefcase,    label: 'Wyde\nClients',   iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'clients' },
+        { key: 'prospects', icon: Users,         label: 'Prospects',        iconColor: 'var(--accent)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'prospects' },
+        { key: 'event',     icon: CalendarDays,  label: 'ลูกค้า\nEvent',   iconColor: 'var(--accent-green)',  btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'event' },
+        { key: 'lookup',    icon: Database,      label: 'ค้นหา\nลูกค้า',  iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'lookup' },
       ]
     },
     {
       header: 'การเงิน & งาน', headerColor: 'var(--accent-orange)',
       buttons: [
-        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: 'var(--accent-orange)', btnStyle: { background: cm('var(--accent-orange)', 10), borderColor: cm('var(--accent-orange)', 25) }, badge: widgets.pendingInstallments, sheet: 'pay' },
-        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: { background: cm('var(--accent-purple)', 10), borderColor: cm('var(--accent-purple)', 25) }, sheet: 'docs' },
-        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: 'var(--accent-green)',  btnStyle: { background: cm('var(--accent-green)',  10), borderColor: cm('var(--accent-green)',  25) }, badge: widgets.readyToDeliver, sheet: 'deliver' },
-        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: 'var(--accent-blue)',   btnStyle: { background: cm('var(--accent-blue)',   10), borderColor: cm('var(--accent-blue)',   25) }, sheet: 'handover' },
+        { key: 'pay',      icon: Receipt,         label: 'บันทึก\nรับเงิน', iconColor: 'var(--accent-orange)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.pendingInstallments, sheet: 'pay' },
+        { key: 'docs',     icon: FileText,         label: 'เอกสาร\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'docs' },
+        { key: 'deliver',  icon: ArrowRightLeft,   label: 'บันทึก\nส่งมอบ', iconColor: 'var(--accent-green)',  btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.readyToDeliver, sheet: 'deliver' },
+        { key: 'handover', icon: ClipboardList,    label: 'สถานะ\nงาน',     iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'handover' },
       ]
     },
     {
       header: 'ส่วนตัว', headerColor: 'var(--accent-red)',
       buttons: [
-        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: 'var(--accent-red)',    btnStyle: widgets.overdueJobs > 0 ? { background: cm('var(--accent-red)', 15), borderColor: cm('var(--accent-red)', 30) } : { background: 'var(--card-bg)', borderColor: 'var(--card-border)' }, badge: widgets.overdueJobs, sheet: 'overdue' },
-        { key: 'mydeals',    icon: Briefcase,       label: 'My\nDeals',       iconColor: 'var(--accent)',        btnStyle: { background: cm('var(--accent)',         10), borderColor: cm('var(--accent)',         25) }, href: '/dashboard/my-deals' },
-        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: 'var(--accent-orange)', btnStyle: { background: cm('var(--accent-orange)', 10), borderColor: cm('var(--accent-orange)', 25) }, sheet: 'commission' },
-        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: 'var(--text-3)',        btnStyle: { background: cm('var(--text-3)',         10), borderColor: cm('var(--text-3)',         25) }, href: '/dashboard' },
+        { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: 'var(--accent-red)',    btnStyle: widgets.overdueJobs > 0 ? { background: cm('var(--accent-red)', 15), borderColor: cm('var(--accent-red)', 30) } : { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.overdueJobs, sheet: 'overdue' },
+        { key: 'mydeals',    icon: Briefcase,       label: 'My\nDeals',       iconColor: 'var(--accent)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, href: '/dashboard/my-deals' },
+        { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: 'var(--accent-orange)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'commission' },
+        { key: 'home',       icon: LayoutDashboard, label: 'หน้าหลัก',       iconColor: 'var(--text-3)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, href: '/dashboard' },
       ]
     }
   ]

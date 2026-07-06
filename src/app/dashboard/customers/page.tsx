@@ -597,7 +597,7 @@ export default function CustomersPage() {
 
   const projectOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
   const userOptions = [{ value: '', label: '— เลือก Sales —' }, ...users.map(u => ({ value: u.id, label: u.name }))]
-  const statusOptions = [{ value: '', label: 'ทุกสถานะ' }, ...STATUS_LIST.map(s => ({ value: s.value, label: s.label }))]
+
   const projectFilterOptions = [{ value: '', label: 'ทุกโครงการ' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
 
   // Reset to page 1 whenever filters change
@@ -646,11 +646,6 @@ export default function CustomersPage() {
             style={{ color: 'var(--text-1)' }}
           />
         </div>
-        <label htmlFor="filter-status" className="sr-only">กรองตามสถานะ</label>
-        <select id="filter-status" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="field-input" style={{ width: 'auto' }}>
-          {statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
         <SearchableSelect
           value={filterProject}
           onChange={v => setFilterProject(v)}

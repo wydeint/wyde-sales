@@ -171,15 +171,17 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>ประเภทลูกค้า</span>
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
             <option value="B2B">B2B</option>
           </select>
+          <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>ประเภทงาน</span>
           <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
-            <option value="">ทุกประเภทงาน</option>
+            <option value="">ทุกประเภท</option>
             {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
           </select>
         </div>

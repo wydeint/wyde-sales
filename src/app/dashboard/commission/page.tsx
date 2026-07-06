@@ -163,16 +163,15 @@ export default function CommissionPage() {
           const Icon = cfg.icon
           const count = jobs.filter(j => getStatus(j) === s).length
           return (
-            <button key={s} onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
-              className="rounded-[18px] p-4 text-left transition-all"
-              style={{ background: filterStatus === s ? cfg.bg : 'var(--card-bg)', border: `1px solid ${filterStatus === s ? cfg.color + '50' : 'var(--divider)'}` }}>
+            <div key={s} className="rounded-[18px] p-4"
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <Icon size={14} style={{ color: cfg.color }} />
                 <p className="text-card-title" style={{ color: cfg.color }}>{cfg.label}</p>
               </div>
               <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(v)}</p>
               <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>{count} งาน</p>
-            </button>
+            </div>
           )
         })}
       </div>

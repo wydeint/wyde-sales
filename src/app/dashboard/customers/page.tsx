@@ -621,7 +621,7 @@ export default function CustomersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>ลูกค้าใน Pipeline</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าและ Pipeline การขาย</p>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>รายชื่อลูกค้าและ Pipeline การขาย</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setEditing(null); setForm(emptyForm); setSaveError(''); setOpen(true) }}
@@ -632,18 +632,17 @@ export default function CustomersPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap">
+      <div className="flex gap-3 mb-4 flex-wrap items-center">
         <label htmlFor={searchId} className="sr-only">ค้นหาลูกค้า</label>
-        <div className="flex items-center gap-2 rounded-lg px-3 py-2 flex-1 min-w-[200px]"
-          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <Search size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} aria-hidden="true" />
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input
             id={searchId}
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อ ห้อง โครงการ เบอร์..."
-            className="bg-transparent text-sm outline-none flex-1"
-            style={{ color: 'var(--text-1)' }}
+            className="w-full pl-9 pr-4 py-2.5 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}
           />
         </div>
         <SearchableSelect
@@ -654,14 +653,21 @@ export default function CustomersPage() {
         />
       </div>
 
-      {/* Summary chips */}
-      <div className="flex gap-2 mb-4 flex-wrap">
+      {/* Status filter pills */}
+      <div className="flex gap-1 rounded-[11px] p-1 mb-4 w-fit flex-wrap"
+        style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+        <button onClick={() => setFilterStatus('')}
+          className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+          style={{ background: !filterStatus ? 'var(--accent)' : 'transparent', color: !filterStatus ? '#fff' : 'var(--text-2)' }}>
+          ทั้งหมด {customers.length}
+        </button>
         {STATUS_LIST.map(s => {
           const count = customers.filter(c => c.status === s.value).length
           if (!count) return null
           return (
             <button key={s.value} onClick={() => setFilterStatus(filterStatus === s.value ? '' : s.value)}
-              className={`px-3 py-1 rounded-[4px] text-xs font-semibold transition-all ${filterStatus === s.value ? s.color + ' ring-1 ring-current' : s.color + ' opacity-60 hover:opacity-100'}`}>
+              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+              style={{ background: filterStatus === s.value ? 'var(--accent)' : 'transparent', color: filterStatus === s.value ? '#fff' : 'var(--text-2)' }}>
               {s.label} {count}
             </button>
           )

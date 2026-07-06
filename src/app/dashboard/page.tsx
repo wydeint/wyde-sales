@@ -142,6 +142,10 @@ export default function DashboardPage() {
 
   const recentReports = reports.slice(0, 6)
   const pipelineMax = Math.max(...pipeline.map(p => p.count), 1)
+
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const todaySales = useMemo(() => jobs.filter(j => j.order_date?.slice(0, 10) === todayStr), [jobs, todayStr])
+  const todayDelivered = useMemo(() => jobs.filter(j => j.actual_deliver_date?.slice(0, 10) === todayStr && j.working_status === 'ส่งมอบแล้ว'), [jobs, todayStr])
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'อรุณสวัสดิ์' : hour < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น'
   const rankIcon = (i: number) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
@@ -304,6 +308,36 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+        {/* Today's sales & delivery */}
+        <div className="ds-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={15} style={{ color: '#f97316' }} />
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>วันนี้</h2>
+            <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>
+              {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+            </span>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยอดขายวันนี้</p>
+              <p className="text-kpi-number leading-none" style={{ color: '#f97316' }}>
+                {f(todaySales.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0))}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{todaySales.length} รายการ</p>
+            </div>
+            <div style={{ borderTop: '1px solid var(--divider)', paddingTop: 16 }}>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบวันนี้</p>
+              <p className="text-kpi-number leading-none" style={{ color: '#4ade80' }}>
+                {f(todayDelivered.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0))}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{todayDelivered.length} รายการ</p>
+            </div>
+            {todaySales.length === 0 && todayDelivered.length === 0 && (
+              <p className="text-xs text-center pt-2" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายการวันนี้</p>
+            )}
+          </div>
+        </div>
+
         {/* Pipeline Funnel */}
         <div className="ds-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -337,7 +371,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Sales Leaderboard */}
+        {/* Sales Leaderboard this month */}
         <div className="ds-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <Award size={15} style={{ color: '#fbbf24' }} />
@@ -352,46 +386,10 @@ export default function DashboardPage() {
                   <span className="text-base w-6 flex-shrink-0">{rankIcon(i)}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{p.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      โทร {p.calls} · เยี่ยม {p.visits}
-                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>โทร {p.calls} · เยี่ยม {p.visits}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    {p.value > 0 && (
-                      <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f(p.value)}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Daily Reports */}
-        <div className="ds-card p-5">
-          <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>Daily Report ล่าสุด</h2>
-          {recentReports.length === 0 ? (
-            <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายงาน</p>
-          ) : (
-            <div className="space-y-3">
-              {recentReports.map(r => (
-                <div key={r.id} className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>
-                      {(r.users as any)?.name || '—'}
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      {new Date(r.date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' })}
-                      {' · '}โทร {r.calls || 0} · เยี่ยม {r.visits || 0}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    {(r.booking_value || 0) > 0 && (
-                      <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f(r.booking_value)}</p>
-                    )}
-                    {(r.quotation_value || 0) > 0 && (
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>เสนอ {f(r.quotation_value)}</p>
-                    )}
+                    {p.value > 0 && <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f(p.value)}</p>}
                   </div>
                 </div>
               ))}

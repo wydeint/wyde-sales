@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CheckCircle2, X, Save } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 
 // ─── Types ─────────────────────────────────────────────────
@@ -103,22 +102,105 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   )
 }
 
+// ─── Edit Drawer ────────────────────────────────────────────
+interface EditState {
+  id: string; room_no: string; project_name: string
+  work_start_date: string; work_days: string; actual_deliver_date: string
+}
+
+function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: () => void; onSaved: () => void }) {
+  const supabase = createClient()
+  const [form, setForm] = useState(entry)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setSaving(true)
+    await supabase.from('jobs').update({
+      work_start_date: form.work_start_date || null,
+      work_days: form.work_days ? parseInt(form.work_days) : null,
+      actual_deliver_date: form.actual_deliver_date || null,
+    }).eq('id', form.id)
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
+      <div className="relative w-full max-w-sm h-full flex flex-col shadow-2xl"
+        style={{ background: 'var(--card-bg)', borderLeft: '1px solid var(--divider)' }}
+        onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <div className="flex-1">
+            <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{form.room_no}</p>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>{form.project_name}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg" style={{ color: 'var(--text-3)' }}><X size={16} /></button>
+        </div>
+        {/* Fields */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          <div>
+            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>วันเริ่มงาน</label>
+            <input type="date" value={form.work_start_date}
+              onChange={e => setForm(f => ({ ...f, work_start_date: e.target.value }))}
+              className="w-full px-3 py-2 rounded-[8px] text-sm field-input"
+              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>จำนวนวันทำงาน</label>
+            <input type="number" value={form.work_days} min={1}
+              onChange={e => setForm(f => ({ ...f, work_days: e.target.value }))}
+              className="w-full px-3 py-2 rounded-[8px] text-sm field-input"
+              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          </div>
+          <div>
+            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-3)' }}>วันส่งมอบจริง</label>
+            <input type="date" value={form.actual_deliver_date}
+              onChange={e => setForm(f => ({ ...f, actual_deliver_date: e.target.value }))}
+              className="w-full px-3 py-2 rounded-[8px] text-sm field-input"
+              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          </div>
+        </div>
+        {/* Save */}
+        <div className="px-5 py-4" style={{ borderTop: '1px solid var(--divider)' }}>
+          <button onClick={save} disabled={saving}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[10px] text-sm font-semibold disabled:opacity-50"
+            style={{ background: 'var(--accent)', color: '#fff' }}>
+            <Save size={14} />
+            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ───────────────────────────────────────────────────
 export default function HandoverPage() {
   const supabase = createClient()
-  const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedMonth, setSelectedMonth] = useState(THIS_MONTH)
+  const [editEntry, setEditEntry] = useState<EditState | null>(null)
 
   useEffect(() => {
     const m = new URLSearchParams(window.location.search).get('month')
     if (m) setSelectedMonth(m)
   }, [])
 
-  function openJob(jobId: string) {
-    const returnTo = `/dashboard/handover?month=${selectedMonth}`
-    router.push(`/dashboard/my-deals?job=${jobId}&returnTo=${encodeURIComponent(returnTo)}`)
+  function openEdit(entry: RoomEntry) {
+    const job = jobs.find(j => j.id === entry.id)
+    if (!job) return
+    setEditEntry({
+      id: job.id,
+      room_no: job.room_no,
+      project_name: entry.project_name,
+      work_start_date: job.work_start_date || '',
+      work_days: job.work_days != null ? String(job.work_days) : '45',
+      actual_deliver_date: job.actual_deliver_date || '',
+    })
   }
 
   const load = useCallback(async () => {
@@ -220,6 +302,7 @@ export default function HandoverPage() {
 
   return (
     <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+      {editEntry && <EditDrawer entry={editEntry} onClose={() => setEditEntry(null)} onSaved={load} />}
 
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -334,7 +417,7 @@ export default function HandoverPage() {
                   </div>
                   {/* Room chips */}
                   <div className="p-4 flex flex-wrap gap-2">
-                    {rooms.map(r => <RoomChip key={r.id} entry={r} onClick={() => openJob(r.id)} />)}
+                    {rooms.map(r => <RoomChip key={r.id} entry={r} onClick={() => openEdit(r)} />)}
                   </div>
                 </div>
               )

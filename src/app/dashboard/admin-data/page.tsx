@@ -20,11 +20,14 @@ interface TableDef {
   table: string
   orderBy: string
   cols: ColDef[]
+  group: string
 }
+
+const GROUPS = ['Core', 'Operations', 'Sales', 'Finance', 'Admin']
 
 const TABLES: TableDef[] = [
   {
-    label: 'Jobs', table: 'jobs', orderBy: 'order_date',
+    label: 'Jobs', table: 'jobs', orderBy: 'order_date', group: 'Core',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 160 },
       { key: 'room_no', label: 'ห้อง', type: 'text', width: 90 },
@@ -52,7 +55,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Payments', table: 'payments', orderBy: 'created_at',
+    label: 'Payments', table: 'payments', orderBy: 'created_at', group: 'Core',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 160 },
       { key: 'job_id', label: 'Job ID', type: 'text', width: 150 },
@@ -73,7 +76,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Customers', table: 'customers', orderBy: 'created_at',
+    label: 'Customers', table: 'customers', orderBy: 'created_at', group: 'Core',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 130 },
       { key: 'customer_name', label: 'ชื่อลูกค้า', type: 'text', width: 150 },
@@ -92,7 +95,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Projects', table: 'projects', orderBy: 'name',
+    label: 'Projects', table: 'projects', orderBy: 'name', group: 'Core',
     cols: [
       { key: 'id', label: 'ID', type: 'text', width: 120 },
       { key: 'name', label: 'ชื่อโครงการ', type: 'text', width: 180 },
@@ -105,7 +108,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Warranties', table: 'warranties', orderBy: 'warranty_end',
+    label: 'Warranties', table: 'warranties', orderBy: 'warranty_end', group: 'Operations',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 140 },
       { key: 'room', label: 'ห้อง', type: 'text', width: 90 },
@@ -120,7 +123,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Users', table: 'users', orderBy: 'name',
+    label: 'Users', table: 'users', orderBy: 'name', group: 'Admin',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 130 },
       { key: 'name', label: 'ชื่อ', type: 'text', width: 140 },
@@ -132,7 +135,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Handovers', table: 'handovers', orderBy: 'handover_date',
+    label: 'Handovers', table: 'handovers', orderBy: 'handover_date', group: 'Operations',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'job_id', label: 'Job ID', type: 'text', width: 150 },
@@ -160,7 +163,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Events', table: 'events', orderBy: 'event_date',
+    label: 'Events', table: 'events', orderBy: 'event_date', group: 'Sales',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'event_name', label: 'ชื่ออีเวนต์', type: 'text', width: 200 },
@@ -176,7 +179,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Event Customers', table: 'event_customers', orderBy: 'created_at',
+    label: 'Event Customers', table: 'event_customers', orderBy: 'created_at', group: 'Sales',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'event_id', label: 'Event ID', type: 'text', width: 140 },
@@ -200,7 +203,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Commissions', table: 'commissions', orderBy: 'created_at',
+    label: 'Commissions', table: 'commissions', orderBy: 'created_at', group: 'Finance',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'sales_person_id', label: 'Sales ID', type: 'text', width: 130 },
@@ -218,7 +221,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Commission Settings', table: 'commission_settings', orderBy: 'sort_order',
+    label: 'Commission Settings', table: 'commission_settings', orderBy: 'sort_order', group: 'Finance',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 80 },
       { key: 'tier_name', label: 'Tier', type: 'text', width: 150 },
@@ -230,7 +233,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Condo Leads', table: 'condo_leads', orderBy: 'booking_date',
+    label: 'Condo Leads', table: 'condo_leads', orderBy: 'booking_date', group: 'Sales',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 80 },
       { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
@@ -252,7 +255,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Daily Reports', table: 'daily_reports', orderBy: 'date',
+    label: 'Daily Reports', table: 'daily_reports', orderBy: 'date', group: 'Admin',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'date', label: 'วันที่', type: 'date', width: 110 },
@@ -274,7 +277,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Documents', table: 'documents', orderBy: 'created_at',
+    label: 'Documents', table: 'documents', orderBy: 'created_at', group: 'Operations',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
@@ -288,7 +291,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Finance Entries', table: 'finance_entries', orderBy: 'entry_date',
+    label: 'Finance Entries', table: 'finance_entries', orderBy: 'entry_date', group: 'Finance',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 80 },
       { key: 'type', label: 'ประเภท', type: 'select', options: ['income', 'expense'], width: 100 },
@@ -301,7 +304,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Org Targets', table: 'org_targets', orderBy: 'year',
+    label: 'Org Targets', table: 'org_targets', orderBy: 'year', group: 'Admin',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'year', label: 'ปี', type: 'number', width: 80 },
@@ -311,7 +314,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Sales Targets', table: 'sales_targets', orderBy: 'year',
+    label: 'Sales Targets', table: 'sales_targets', orderBy: 'year', group: 'Admin',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'user_id', label: 'User ID', type: 'text', width: 130 },
@@ -334,7 +337,7 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Payment Followups', table: 'payment_followups', orderBy: 'created_at',
+    label: 'Payment Followups', table: 'payment_followups', orderBy: 'created_at', group: 'Operations',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'payment_id', label: 'Payment ID', type: 'text', width: 150 },
@@ -639,17 +642,26 @@ export default function AdminDataPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto">
-          {TABLES.map((t, i) => (
-            <button key={t.table} onClick={() => { setActiveTab(i); setSearch(''); setFilterProject('') }}
-              className="flex-shrink-0 px-4 py-2 rounded-[8px] text-xs font-semibold transition-all"
-              style={activeTab === i
-                ? { background: 'var(--accent)', color: '#fff' }
-                : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
-              {t.label}
-            </button>
-          ))}
+        {/* Tabs — grouped */}
+        <div className="space-y-1.5">
+          {GROUPS.map(grp => {
+            const items = TABLES.map((t, i) => ({ t, i })).filter(({ t }) => t.group === grp)
+            if (!items.length) return null
+            return (
+              <div key={grp} className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[9px] font-bold uppercase tracking-widest w-14 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{grp}</span>
+                {items.map(({ t, i }) => (
+                  <button key={t.table} onClick={() => { setActiveTab(i); setSearch(''); setFilterProject('') }}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all"
+                    style={activeTab === i
+                      ? { background: 'var(--accent)', color: '#fff' }
+                      : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            )
+          })}
         </div>
       </div>
 

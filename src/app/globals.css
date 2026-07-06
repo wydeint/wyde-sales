@@ -332,7 +332,10 @@ html:not(.dark) thead tr {
 /* Standard page wrapper — use on the root div of every dashboard page */
 .page-content {
   padding: var(--space-lg);
-  max-width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 @media (max-width: 640px) {
   .page-content { padding: var(--space-md); }

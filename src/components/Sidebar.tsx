@@ -42,7 +42,6 @@ const NAV = [
     color: 'text-sky-400',
     dot: 'bg-sky-400',
     items: [
-      { href: '/dashboard/handover', icon: ArrowRightLeft, label: 'Handover' },
       { href: '/dashboard/payments', icon: Receipt, label: 'ชำระเงิน & เอกสาร' },
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
     ],

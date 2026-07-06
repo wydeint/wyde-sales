@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 
@@ -107,10 +107,14 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
 export default function HandoverPage() {
   const supabase = createClient()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(() => searchParams.get('month') || THIS_MONTH)
+  const [selectedMonth, setSelectedMonth] = useState(THIS_MONTH)
+
+  useEffect(() => {
+    const m = new URLSearchParams(window.location.search).get('month')
+    if (m) setSelectedMonth(m)
+  }, [])
 
   function openJob(jobId: string) {
     const returnTo = `/dashboard/handover?month=${selectedMonth}`

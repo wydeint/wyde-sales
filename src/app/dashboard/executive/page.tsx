@@ -241,58 +241,54 @@ export default function ExecutivePage() {
     <div className="page-content space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Sales Performance</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>ยอดขายนับจาก order_date · ยอดส่งมอบจาก actual_deliver_date</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="field-input" style={{ width: 'auto' }}>
-            <option value="">B2C + B2B</option>
-            <option value="B2C">B2C</option>
-            <option value="B2B">B2B</option>
-          </select>
-          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-            {PERIODS.map(p => (
-              <button key={p.key} onClick={() => { setPeriod(p.key); setOffset(0) }}
-                className="px-3 py-1.5 text-xs font-semibold"
-                style={{ background: period === p.key ? 'var(--accent)' : 'var(--hover-bg)', color: period === p.key ? '#fff' : 'var(--text-2)' }}>
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* Main tab */}
-      <div className="flex gap-1 rounded-[11px] p-1 w-fit" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
+      {/* Tab bar — same style as Finance */}
+      <div className="flex gap-1 rounded-[11px] p-1 mb-5 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
         <button onClick={() => setMainTab('performance')}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
           style={{ background: mainTab === 'performance' ? 'var(--accent)' : 'transparent', color: mainTab === 'performance' ? '#fff' : 'var(--text-2)' }}>
-          <BarChart3 size={12} />Sales Performance
+          <BarChart3 size={14} />Sales Performance
         </button>
         <button onClick={() => setMainTab('team')}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
           style={{ background: mainTab === 'team' ? '#ec4899' : 'transparent', color: mainTab === 'team' ? '#fff' : 'var(--text-2)' }}>
-          <Users size={12} />ทีม Sales
+          <Users size={14} />ทีม Sales
         </button>
       </div>
 
-      {/* Period navigation */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-          <ChevronLeft size={15} />
-        </button>
-        <div className="ds-card px-5 py-2 text-sm font-semibold flex-1 text-center" style={{ color: 'var(--text-1)' }}>
-          {label}
-          {offset === 0 && <span className="ml-2 text-xs px-2 py-0.5 rounded-[4px] font-semibold" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>ปัจจุบัน</span>}
+      {/* Period + filter row — same style as Finance, always visible */}
+      <div className="flex items-center gap-3 flex-wrap mb-5">
+        <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
+          className="field-input" style={{ width: 'auto' }}>
+          <option value="">B2C + B2B</option>
+          <option value="B2C">B2C</option>
+          <option value="B2B">B2B</option>
+        </select>
+        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          {PERIODS.map(p => (
+            <button key={p.key} onClick={() => { setPeriod(p.key); setOffset(0) }}
+              className="px-3 py-1.5 text-xs font-semibold"
+              style={{ background: period === p.key ? 'var(--accent)' : 'var(--hover-bg)', color: period === p.key ? '#fff' : 'var(--text-2)' }}>
+              {p.label}
+            </button>
+          ))}
         </div>
+        <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
+          <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
+        </button>
+        <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
+          {label}
+          {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
+        </span>
         <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-          className="p-2 rounded-[8px]"
-          style={{ background: 'var(--hover-bg)', color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }}>
-          <ChevronRight size={15} />
+          className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
+          <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
         </button>
       </div>
 

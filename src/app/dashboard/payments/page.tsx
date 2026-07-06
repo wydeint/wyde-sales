@@ -303,12 +303,12 @@ export default function PaymentsPage() {
             {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2"><X size={10} style={{ color: 'var(--text-3)' }} /></button>}
           </div>
           <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-            className="px-3 py-1.5 rounded-[8px] text-xs focus:outline-none" style={inputStyle}>
+            className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุกโครงการ</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-            className="px-3 py-1.5 rounded-[8px] text-xs focus:outline-none" style={inputStyle}>
+            className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุก Sales</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>

@@ -237,22 +237,19 @@ export default function RevenuePage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="rounded-[8px] px-3 py-2 text-sm outline-none"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            className="field-input" style={{ width: 'auto' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
             <option value="B2B">B2B</option>
           </select>
           <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-            className="rounded-[8px] px-3 py-2 text-sm outline-none"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุกประเภทงาน</option>
             {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
           </select>
           {/* Sales filter */}
           <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-            className="rounded-[8px] px-3 py-2 text-sm outline-none"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุก Sales</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>

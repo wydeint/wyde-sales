@@ -315,7 +315,7 @@ export default function TargetsPage() {
 
         {/* Year */}
         <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))}
-          className="rounded-lg px-3 py-2 text-sm outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           {[thisYear - 1, thisYear, thisYear + 1].map(y => (
             <option key={y} value={y}>{y + 543} (พ.ศ.)</option>
           ))}

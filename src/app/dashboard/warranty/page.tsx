@@ -178,14 +178,12 @@ export default function WarrantyPage() {
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
         </div>
         <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
-          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
-          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุกโครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
-          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุกสถานะ</option>
           {STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>

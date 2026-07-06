@@ -648,7 +648,7 @@ export default function CustomersPage() {
         </div>
         <label htmlFor="filter-status" className="sr-only">กรองตามสถานะ</label>
         <select id="filter-status" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="field-input rounded-lg px-3 py-2 text-sm outline-none">
+          className="field-input" style={{ width: 'auto' }}>
           {statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <SearchableSelect

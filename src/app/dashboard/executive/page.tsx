@@ -248,8 +248,7 @@ export default function ExecutivePage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
-            className="rounded-[8px] px-3 py-1.5 text-sm outline-none"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            className="field-input" style={{ width: 'auto' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
             <option value="B2B">B2B</option>

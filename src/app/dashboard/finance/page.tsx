@@ -1095,8 +1095,7 @@ export default function FinancePage() {
             {/* toolbar */}
             <div className="flex items-center gap-3 flex-wrap">
               <select value={entryProjectFilter} onChange={e => setEntryProjectFilter(e.target.value)}
-                className="rounded-[8px] px-3 py-2 text-sm focus:outline-none"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+                className="field-input" style={{ width: 'auto' }}>
                 <option value="">ทุกโครงการ ({entryJobs.length} งาน)</option>
                 {entryProjects.map(([id, name]) => (
                   <option key={id} value={id}>{name} ({entryJobs.filter(j => j.project_id === id).length})</option>

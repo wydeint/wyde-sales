@@ -346,7 +346,7 @@ function CellInput({ col, value, onChange }: {
   if (col.type === 'select' && col.options) {
     return (
       <select value={String(value ?? '')} onChange={e => onChange(e.target.value)}
-        style={{ ...inputStyle, height: 26 }}>
+        className="field-input" style={{ padding: '2px 6px', fontSize: 12, height: 26 }}>
         <option value="">—</option>
         {col.options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -355,7 +355,7 @@ function CellInput({ col, value, onChange }: {
   if (col.type === 'boolean') {
     return (
       <select value={value === true ? 'true' : value === false ? 'false' : ''} onChange={e => onChange(e.target.value === 'true')}
-        style={{ ...inputStyle, height: 26 }}>
+        className="field-input" style={{ padding: '2px 6px', fontSize: 12, height: 26 }}>
         <option value="">—</option>
         <option value="true">Yes</option>
         <option value="false">No</option>
@@ -413,8 +413,7 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
           <div>
             <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-2)' }}>Field ที่ต้องการเปลี่ยน</label>
             <select value={col} onChange={e => { setCol(e.target.value); setVal('') }}
-              className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+              className="field-input">
               {editableCols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
           </div>

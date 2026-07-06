@@ -200,8 +200,7 @@ export default function CommissionPage() {
 
         {/* Sales filter */}
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="rounded-[8px] px-3 py-2 text-sm outline-none"
-          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="all">— Sales ทั้งหมด —</option>
           {salesList.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select>

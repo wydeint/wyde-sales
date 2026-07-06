@@ -539,7 +539,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
             <div>
               <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ประเภทลูกค้า</p>
               <select value={custType} onChange={e => setCustType(e.target.value as 'B2C' | 'B2B')}
-                className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle}>
+                className="field-input">
                 <option value="B2C">B2C</option>
                 <option value="B2B">B2B</option>
               </select>
@@ -554,7 +554,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ประเภทงาน</p>
             <select value={workType} onChange={e => setWorkType(e.target.value)}
-              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle}>
+              className="field-input">
               {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
@@ -566,7 +566,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Sales</p>
             <select value={salesId} onChange={e => setSalesId(e.target.value)}
-              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle}>
+              className="field-input">
               <option value="">— เลือก —</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
@@ -764,7 +764,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
         <div>
           <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ประเภทงาน</p>
           <select value={workType} onChange={e => setWorkType(e.target.value)}
-            className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={instyle}>
+            className="field-input">
             <option value="">— เลือก —</option>
             {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>

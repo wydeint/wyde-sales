@@ -257,8 +257,7 @@ export default function ProjectSummaryPage() {
         {/* Filters */}
         <div className="flex items-center gap-4 flex-wrap">
           <select value={search} onChange={e => setSearch(e.target.value)}
-            className="px-3 py-1.5 rounded-[8px] text-sm outline-none w-52"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-1)', border: '1px solid var(--divider)' }}>
+            className="field-input" style={{ width: '13rem' }}>
             <option value="">— ทุกโครงการ —</option>
             {rows.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
           </select>

@@ -494,27 +494,23 @@ export default function JobsPage() {
           placeholder="ทุกโครงการ"
         />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="rounded-[8px] px-3 py-2 text-sm outline-none"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุกสถานะ</option>
           {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="rounded-[8px] px-3 py-2 text-sm outline-none"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุก Sales</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
         <select value={filterCustomerType} onChange={e => setFilterCustomerType(e.target.value)}
-          className="rounded-[8px] px-3 py-2 text-sm outline-none"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">B2C + B2B</option>
           <option value="B2C">B2C</option>
           <option value="B2B">B2B</option>
         </select>
         <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
-          className="rounded-[8px] px-3 py-2 text-sm outline-none"
-          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุกประเภทงาน</option>
           {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List, ChevronDown } from 'lucide-react'
+import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List, ChevronDown, FileDown } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 // ─────────────────────────────────────────
@@ -230,6 +230,34 @@ export default function RevenuePage() {
 
   const trendMax = Math.max(...monthlyTrend.map(t => t.revenue), 1)
 
+  function exportCSV() {
+    const headers = [
+      'ลูกค้า', 'ประเภทลูกค้า', 'โครงการ', 'ห้อง', 'Job ID',
+      'ประเภทงาน', 'แพ็กเกจ',
+      'วันส่งมอบ (จริง)',
+      'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'Cost', 'GP%',
+      'Commission', 'สถานะงาน', 'Sales',
+    ]
+    const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH') : ''
+    const rows = periodJobs.map(j => {
+      const project = (j.projects as any)?.name || ''
+      const sales = (j.sales as any)?.name || ''
+      const gp = (j.revenue_ex_vat || 0) > 0 ? ((((j.revenue_ex_vat || 0) - (j.cost || 0)) / j.revenue_ex_vat) * 100).toFixed(1) : ''
+      return [
+        j.customer_name || '', j.customer_type || '', project, j.room_no || '', j.id,
+        j.work_type || '', j.package_type || '',
+        fmt(j.actual_deliver_date),
+        j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.cost || 0, gp,
+        j.commission_amount || 0, j.working_status || '', sales,
+      ]
+    })
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `revenue-${label.replace(/\s/g, '-')}.csv`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) return <PageSpinner />
   if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
@@ -242,6 +270,11 @@ export default function RevenuePage() {
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>รายได้ส่งมอบ</h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว</p>
         </div>
+        <button onClick={exportCSV}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
+          style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
+          <FileDown size={13} /> Export CSV
+        </button>
       </div>
 
       {/* View tabs — same style as Finance */}

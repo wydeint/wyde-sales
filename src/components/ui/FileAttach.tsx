@@ -1,13 +1,14 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Paperclip, FileText, ImageIcon, ExternalLink, Loader2 } from 'lucide-react'
+import { Paperclip, FileText, ImageIcon, ExternalLink, Loader2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface JobFile {
   id: string
   file_name: string
   file_url: string
+  drive_file_id: string | null
   created_at: string
 }
 
@@ -26,6 +27,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<JobFile[]>([])
   const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [pendingNames, setPendingNames] = useState<string[]>([])
 
@@ -33,7 +35,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
 
   async function loadFiles() {
     if (!jobId && !customerId) return
-    let q = supabase.from('job_files').select('*').order('created_at', { ascending: false })
+    let q = supabase.from('job_files').select('id, file_name, file_url, drive_file_id, created_at').order('created_at', { ascending: false })
     if (jobId) q = q.eq('job_id', jobId)
     else if (customerId) q = q.eq('customer_id', customerId)
     const { data } = await q
@@ -90,6 +92,22 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
     await loadFiles()
   }
 
+  async function deleteFile(f: JobFile) {
+    if (!confirm('ลบไฟล์ "' + f.file_name + '" ออกจากระบบและ Google Drive?')) return
+    setDeletingId(f.id)
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch('/api/drive/delete', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {}),
+      },
+      body: JSON.stringify({ job_file_id: f.id, drive_file_id: f.drive_file_id }),
+    })
+    setDeletingId(null)
+    await loadFiles()
+  }
+
   const isJpg = (name: string) => /\.(jpg|jpeg)$/i.test(name)
 
   return (
@@ -140,15 +158,28 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
       {files.length > 0 && (
         <div className="space-y-1">
           {files.map(f => (
-            <a key={f.id} href={f.file_url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 rounded-[8px] transition-colors"
+            <div key={f.id} className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
               style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               {isJpg(f.file_name)
                 ? <ImageIcon size={12} style={{ color: '#4ade80' }} />
                 : <FileText size={12} style={{ color: '#f87171' }} />}
-              <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-1)' }}>{f.file_name}</span>
-              <ExternalLink size={11} style={{ color: 'var(--text-3)' }} />
-            </a>
+              <a href={f.file_url} target="_blank" rel="noopener noreferrer"
+                className="flex-1 flex items-center gap-1 min-w-0">
+                <span className="text-xs truncate" style={{ color: 'var(--text-1)' }}>{f.file_name}</span>
+                <ExternalLink size={11} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+              </a>
+              <button
+                onClick={() => deleteFile(f)}
+                disabled={deletingId === f.id}
+                className="flex-shrink-0 p-1 rounded transition-colors disabled:opacity-40"
+                style={{ color: 'var(--text-3)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
+                {deletingId === f.id
+                  ? <Loader2 size={11} className="animate-spin" />
+                  : <Trash2 size={11} />}
+              </button>
+            </div>
           ))}
         </div>
       )}

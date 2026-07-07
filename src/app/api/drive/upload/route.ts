@@ -60,9 +60,11 @@ export async function POST(req: NextRequest) {
     const projectFolderId = await findOrCreateFolder(drive, projectName, rootId)
     const roomFolderId = await findOrCreateFolder(drive, roomNo, projectFolderId)
 
+    const authHeader = req.headers.get('Authorization')
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      authHeader ? { global: { headers: { Authorization: authHeader } } } : {},
     )
 
     const uploaded: { name: string; url: string; id: string }[] = []

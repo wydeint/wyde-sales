@@ -64,16 +64,20 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
     setPendingNames(selected.map(f => f.name))
     setUploading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
     const form = new FormData()
     if (jobId) form.append('job_id', jobId)
     if (customerId) form.append('customer_id', customerId)
     form.append('project_name', projectName)
     form.append('room_no', roomNo)
-    if (user?.id) form.append('user_id', user.id)
+    if (session?.user?.id) form.append('user_id', session.user.id)
     selected.forEach(f => form.append('files', f))
 
-    const res = await fetch('/api/drive/upload', { method: 'POST', body: form })
+    const res = await fetch('/api/drive/upload', {
+      method: 'POST',
+      headers: session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {},
+      body: form,
+    })
     const json = await res.json()
 
     setUploading(false)

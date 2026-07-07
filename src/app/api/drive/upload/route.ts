@@ -4,7 +4,7 @@ import { Readable } from 'stream'
 import { createClient } from '@supabase/supabase-js'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'application/pdf']
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_SIZE = 5 * 1024 * 1024
 const MAX_FILES = 10
 
 function getDriveClient() {
@@ -18,16 +18,23 @@ function getDriveClient() {
   return google.drive({ version: 'v3', auth })
 }
 
-async function findOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
+async function findOrCreateFolder(
+  drive: ReturnType<typeof google.drive>,
+  name: string,
+  parentId: string,
+): Promise<string> {
   const safe = name.replace(/[/\\?%*:|"<>]/g, '-').trim()
   const res = await drive.files.list({
     q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
   })
   if (res.data.files && res.data.files.length > 0) return res.data.files[0].id!
   const folder = await drive.files.create({
     requestBody: { name: safe, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
     fields: 'id',
+    supportsAllDrives: true,
   })
   return folder.data.id!
 }
@@ -42,12 +49,14 @@ export async function POST(req: NextRequest) {
     const userId = formData.get('user_id') as string | null
     const files = formData.getAll('files') as File[]
 
-    if (!files.length) return NextResponse.json({ error: 'No files provided' }, { status: 400 })
-    if (files.length > MAX_FILES) return NextResponse.json({ error: `Maximum ${MAX_FILES} files per upload` }, { status: 400 })
+    if (!files.length) return NextResponse.json({ error: 'ไม่พบไฟล์' }, { status: 400 })
+    if (files.length > MAX_FILES) return NextResponse.json({ error: `เลือกได้สูงสุด ${MAX_FILES} ไฟล์` }, { status: 400 })
 
     for (const file of files) {
-      if (!ALLOWED_TYPES.includes(file.type)) return NextResponse.json({ error: `File "${file.name}" must be JPG or PDF` }, { status: 400 })
-      if (file.size > MAX_SIZE) return NextResponse.json({ error: `File "${file.name}" exceeds 5MB limit` }, { status: 400 })
+      if (!ALLOWED_TYPES.includes(file.type))
+        return NextResponse.json({ error: `"${file.name}" ต้องเป็น JPG หรือ PDF เท่านั้น` }, { status: 400 })
+      if (file.size > MAX_SIZE)
+        return NextResponse.json({ error: `"${file.name}" ขนาดเกิน 5MB` }, { status: 400 })
     }
 
     const drive = getDriveClient()
@@ -66,20 +75,18 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(await file.arrayBuffer())
       const stream = Readable.from(buffer)
       const res = await drive.files.create({
-        requestBody: {
-          name: file.name,
-          parents: [roomFolderId],
-        },
+        requestBody: { name: file.name, parents: [roomFolderId] },
         media: { mimeType: file.type, body: stream },
         fields: 'id,webViewLink',
+        supportsAllDrives: true,
       })
       const fileId = res.data.id!
       const fileUrl = res.data.webViewLink!
 
-      // Make file readable by anyone with link
       await drive.permissions.create({
         fileId,
         requestBody: { role: 'reader', type: 'anyone' },
+        supportsAllDrives: true,
       })
 
       await supabase.from('job_files').insert({
@@ -98,6 +105,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, files: uploaded })
   } catch (err: any) {
     console.error('Drive upload error:', err)
-    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Upload ล้มเหลว' }, { status: 500 })
   }
 }

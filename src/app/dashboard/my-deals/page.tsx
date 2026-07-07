@@ -39,6 +39,7 @@ interface Installment {
   paid_date: string | null
   is_work_trigger: boolean
   is_final: boolean
+  channel: string | null
   slip_url: string | null
   receipt_url: string | null
 }
@@ -595,10 +596,50 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
   )
 }
 
+// ─── LINE message generator ────────────────────────────────
+interface LineJobCtx {
+  project_name: string
+  room_no: string
+  customer_name: string
+  sales_name: string
+  revenue_inc_vat: number
+  voucher?: number
+  working_status: string
+}
+
+function generateLineMsg(job: LineJobCtx, inst: Installment): string {
+  const isDelivered = job.working_status === 'ส่งมอบแล้ว'
+  const isFirst = inst.installment_no === 1
+  const type = isDelivered ? 'ลูกค้าเก่า ส่งมอบ' : isFirst ? 'ลูกค้าใหม่' : 'ลูกค้าเก่า'
+
+  const d = inst.paid_date ? new Date(inst.paid_date) : new Date()
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(2)
+  const dateStr = `${dd}/${mm}/${yy}`
+
+  const fmt = (n: number) => n.toLocaleString('th-TH')
+  const paid = inst.paid_amount ?? inst.amount
+
+  let lines = [
+    `Wyde Int. (${type})`,
+    `วันที่ : ${dateStr}`,
+    `โครงการ : ${job.project_name}`,
+    `ห้อง : ${job.room_no}`,
+    `ลูกค้าชื่อ : ${job.customer_name}`,
+    `Sales Wyde : ${job.sales_name}`,
+    `Package : ${fmt(job.revenue_inc_vat)} บาท`,
+  ]
+  if (job.voucher && job.voucher > 0) lines.push(`หัก Voucher : ${fmt(job.voucher)} บาท`)
+  lines.push(`${inst.installment_name} : ${fmt(paid)} บาท`)
+  if (inst.channel) lines.push(`ชำระผ่านทาง : ${inst.channel}`)
+  return lines.join('\n')
+}
+
 // ─── Deal Drawer (right panel) ─────────────────────────────
 // ─── Doc field component ───────────────────────────────────
 // ─── InstRow — inline paid_date edit ───────────────────────
-function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: string | null) => void }) {
+function InstRow({ inst, job, onDateSaved }: { inst: Installment; job: LineJobCtx; onDateSaved: (d: string | null) => void }) {
   const supabase = createClient()
   const [editingDate, setEditingDate] = useState(false)
   const [dateVal, setDateVal] = useState(inst.paid_date || todayStr())
@@ -607,6 +648,15 @@ function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: st
   const [receiptUrl, setReceiptUrl] = useState(inst.receipt_url)
   const [savingSlip, setSavingSlip] = useState(false)
   const [savingReceipt, setSavingReceipt] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  function copyLine() {
+    const msg = generateLineMsg(job, { ...inst, paid_date: dateVal })
+    navigator.clipboard.writeText(msg).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   async function saveDate() {
     setSaving(true)
@@ -692,6 +742,15 @@ function InstRow({ inst, onDateSaved }: { inst: Installment; onDateSaved: (d: st
               opacity: savingReceipt ? 0.5 : 1,
             }}>
             {receiptUrl ? <CheckCircle2 size={11} /> : <Circle size={11} />} ใบเสร็จ
+          </button>
+          <button onClick={copyLine}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
+            style={{
+              background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(0,185,107,0.08)',
+              border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(0,185,107,0.25)'}`,
+              color: copied ? '#4ade80' : '#00b96b',
+            }}>
+            {copied ? <CheckCircle2 size={11} /> : '💬'} {copied ? 'คัดลอกแล้ว!' : 'LINE'}
           </button>
         </div>
       )}
@@ -849,7 +908,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               {instExpanded && (
                 <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
                   {job.installments.sort((a, b) => a.installment_no - b.installment_no).map(inst => (
-                    <InstRow key={inst.id} inst={inst}
+                    <InstRow key={inst.id} inst={inst} job={job}
                       onDateSaved={newDate => setJob(prev => ({
                         ...prev,
                         installments: prev.installments.map(i => i.id === inst.id ? { ...i, paid_date: newDate } : i)
@@ -1026,7 +1085,7 @@ export default function MyDealsPage() {
     setLoading(true)
     const { data } = await supabase
       .from('jobs')
-      .select('id, room_no, project_id, customer_name, actual_deliver_date, work_start_date, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, slip_url, receipt_url)')
+      .select('id, room_no, project_id, customer_name, actual_deliver_date, work_start_date, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url)')
       .neq('working_status', 'ยกเลิก')
       .order('room_no')
 
@@ -1075,7 +1134,7 @@ export default function MyDealsPage() {
     setDrawerJob(null)
     const { data: raw } = await supabase
       .from('jobs')
-      .select('*, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, slip_url, receipt_url)')
+      .select('*, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url)')
       .eq('id', jobId)
       .single()
 
@@ -1122,6 +1181,7 @@ export default function MyDealsPage() {
         paid_amount: p.paid_amount ?? null,
         is_work_trigger: !!p.is_work_trigger,
         is_final: !!p.is_final,
+        channel: p.channel || null,
         slip_url: p.slip_url || null,
         receipt_url: p.receipt_url || null,
       })),

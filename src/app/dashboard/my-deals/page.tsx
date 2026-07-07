@@ -7,6 +7,7 @@ import {
   Search, X, ChevronRight, ChevronDown, Zap,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle,
 } from 'lucide-react'
+import FileAttach from '@/components/ui/FileAttach'
 
 // ─── Types ────────────────────────────────────────────────
 type ClientType = 'B2C' | 'B2B'
@@ -890,6 +891,12 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   value={job.sale_receipt_url} onUpdate={v => updateDocField('sale_receipt_url', v)} />
               </div>
             )}
+          </div>
+        </div>
+
+          {/* File Attachments */}
+          <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
+            <FileAttach jobId={job.id} projectName={job.project_name} roomNo={job.room_no} />
           </div>
         </div>
 

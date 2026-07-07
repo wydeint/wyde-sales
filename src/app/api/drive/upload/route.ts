@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { google } from 'googleapis'
+import { Readable } from 'stream'
+import { createClient } from '@supabase/supabase-js'
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'application/pdf']
+const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_FILES = 10
+
+function getDriveClient() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    },
+    scopes: ['https://www.googleapis.com/auth/drive'],
+  })
+  return google.drive({ version: 'v3', auth })
+}
+
+async function findOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
+  const safe = name.replace(/[/\\?%*:|"<>]/g, '-').trim()
+  const res = await drive.files.list({
+    q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id)',
+  })
+  if (res.data.files && res.data.files.length > 0) return res.data.files[0].id!
+  const folder = await drive.files.create({
+    requestBody: { name: safe, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
+    fields: 'id',
+  })
+  return folder.data.id!
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData()
+    const jobId = formData.get('job_id') as string | null
+    const customerId = formData.get('customer_id') as string | null
+    const projectName = (formData.get('project_name') as string) || 'Unknown Project'
+    const roomNo = (formData.get('room_no') as string) || 'Unknown Room'
+    const userId = formData.get('user_id') as string | null
+    const files = formData.getAll('files') as File[]
+
+    if (!files.length) return NextResponse.json({ error: 'No files provided' }, { status: 400 })
+    if (files.length > MAX_FILES) return NextResponse.json({ error: `Maximum ${MAX_FILES} files per upload` }, { status: 400 })
+
+    for (const file of files) {
+      if (!ALLOWED_TYPES.includes(file.type)) return NextResponse.json({ error: `File "${file.name}" must be JPG or PDF` }, { status: 400 })
+      if (file.size > MAX_SIZE) return NextResponse.json({ error: `File "${file.name}" exceeds 5MB limit` }, { status: 400 })
+    }
+
+    const drive = getDriveClient()
+    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER!
+    const projectFolderId = await findOrCreateFolder(drive, projectName, rootId)
+    const roomFolderId = await findOrCreateFolder(drive, roomNo, projectFolderId)
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+
+    const uploaded: { name: string; url: string; id: string }[] = []
+
+    for (const file of files) {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const stream = Readable.from(buffer)
+      const res = await drive.files.create({
+        requestBody: {
+          name: file.name,
+          parents: [roomFolderId],
+        },
+        media: { mimeType: file.type, body: stream },
+        fields: 'id,webViewLink',
+      })
+      const fileId = res.data.id!
+      const fileUrl = res.data.webViewLink!
+
+      // Make file readable by anyone with link
+      await drive.permissions.create({
+        fileId,
+        requestBody: { role: 'reader', type: 'anyone' },
+      })
+
+      await supabase.from('job_files').insert({
+        job_id: jobId || null,
+        customer_id: customerId || null,
+        file_name: file.name,
+        file_url: fileUrl,
+        drive_file_id: fileId,
+        drive_folder_id: roomFolderId,
+        uploaded_by: userId || null,
+      })
+
+      uploaded.push({ name: file.name, url: fileUrl, id: fileId })
+    }
+
+    return NextResponse.json({ success: true, files: uploaded })
+  } catch (err: any) {
+    console.error('Drive upload error:', err)
+    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 })
+  }
+}

@@ -6,6 +6,7 @@ import {
   Plus, X, Phone, Mail, MessageCircle, Building2, Home,
   Banknote, FileText, Pencil, Save, ChevronRight,
 } from 'lucide-react'
+import FileAttach from '@/components/ui/FileAttach'
 import { PageSpinner } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
@@ -345,6 +346,15 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
               </div>
             </div>
           )}
+
+          {/* File Attachments */}
+          <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
+            <FileAttach
+              customerId={customer.id}
+              projectName={(customer as any).projects?.name || customer.project_id || ''}
+              roomNo={customer.interested_room || ''}
+            />
+          </div>
 
           {/* Warranties */}
           {!loadingDetail && warranties.length > 0 && (

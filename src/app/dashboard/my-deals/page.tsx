@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  Search, X, ChevronRight, ChevronDown, Zap,
+  Search, X, ChevronRight, ChevronDown, Zap, Pencil,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
@@ -596,6 +596,91 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
   )
 }
 
+// ─── Revenue Card (editable) ───────────────────────────────
+function RevenueCard({ job, onUpdated }: {
+  job: { id: string; revenue_ex_vat: number; revenue_inc_vat: number }
+  onUpdated: (exVat: number, incVat: number) => void
+}) {
+  const supabase = createClient()
+  const [editing, setEditing] = useState(false)
+  const [exVat, setExVat] = useState(String(job.revenue_ex_vat || ''))
+  const [incVat, setIncVat] = useState(String(job.revenue_inc_vat || ''))
+  const [saving, setSaving] = useState(false)
+
+  function openEdit() {
+    setExVat(String(job.revenue_ex_vat || ''))
+    setIncVat(String(job.revenue_inc_vat || ''))
+    setEditing(true)
+  }
+
+  function autoCalcInc() {
+    const ex = parseFloat(exVat)
+    if (!isNaN(ex)) setIncVat(String(Math.round(ex * 1.07)))
+  }
+
+  async function save() {
+    setSaving(true)
+    const ex = parseFloat(exVat) || 0
+    const inc = parseFloat(incVat) || 0
+    await supabase.from('jobs').update({ revenue_ex_vat: ex, revenue_inc_vat: inc }).eq('id', job.id)
+    onUpdated(ex, inc)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
+
+  if (editing) {
+    return (
+      <div className="rounded-[12px] p-4" style={{ background: 'var(--hover-bg)', border: '1px solid var(--accent)' }}>
+        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>แก้ไขมูลค่างาน</p>
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา ex. VAT (บาท)</label>
+            <input type="number" value={exVat} onChange={e => setExVat(e.target.value)}
+              onBlur={autoCalcInc}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
+              style={inputStyle} placeholder="0" />
+          </div>
+          <div>
+            <label className="text-xs mb-1 flex items-center justify-between" style={{ color: 'var(--text-3)' }}>
+              <span>ราคา inc. VAT (บาท)</span>
+              <button onClick={autoCalcInc} className="text-[10px] px-2 py-0.5 rounded" style={{ color: 'var(--accent)', background: 'var(--active-bg)' }}>
+                คำนวณ ×1.07
+              </button>
+            </label>
+            <input type="number" value={incVat} onChange={e => setIncVat(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
+              style={inputStyle} placeholder="0" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-3">
+          <button onClick={() => setEditing(false)} className="flex-1 py-2 rounded-[8px] text-sm" style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>ยกเลิก</button>
+          <button onClick={save} disabled={saving} className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
+            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-[12px] p-4 flex items-center justify-between"
+      style={{ background: 'var(--hover-bg)' }}>
+      <div>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
+        <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenue_inc_vat || job.revenue_ex_vat)}</p>
+        {job.revenue_ex_vat > 0 && (
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ex. VAT {fmtBaht(job.revenue_ex_vat)}</p>
+        )}
+      </div>
+      <button onClick={openEdit} className="p-2 rounded-[8px] transition-colors" style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>
+        <Pencil size={14} />
+      </button>
+    </div>
+  )
+}
+
 // ─── LINE message generator ────────────────────────────────
 interface LineJobCtx {
   project_name: string
@@ -791,7 +876,6 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
   const [docsExpanded, setDocsExpanded] = useState(false)
   useEffect(() => { setJob(initialJob) }, [initialJob])
   const { hasPlan, finalPaid, delivered, paidCount, totalCount, pendingInstallments, activeStage } = getFullStageInfo(job)
-  const revenue = job.revenue_inc_vat || job.revenue_ex_vat || 0
   const overdueCount = job.installments.filter(i => i.status === 'overdue').length
 
   function updateDocField(field: keyof FullJob, val: string | null) {
@@ -835,18 +919,15 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Revenue */}
-          <div className="rounded-[12px] p-4 flex items-center justify-between"
-            style={{ background: 'var(--hover-bg)' }}>
-            <div>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
-              <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--text-1)' }}>{fmtBaht(revenue)}</p>
-            </div>
-            {hasPlan && totalCount > 0 && (
+          <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
+          {hasPlan && totalCount > 0 && (
+            <div className="rounded-[12px] px-4 py-3 flex items-center justify-between"
+              style={{ background: 'var(--hover-bg)' }}>
+              <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+                {paidCount}/{totalCount} งวด
+              </p>
               <div className="text-right">
-                <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
-                  {paidCount}/{totalCount} งวด
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                   เก็บแล้ว {fmtBaht(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))}
                 </p>
                 {overdueCount > 0 && (
@@ -855,8 +936,8 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   </p>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Stage bar */}
           <div className="flex items-center">

@@ -613,9 +613,18 @@ function RevenueCard({ job, onUpdated }: {
     setEditing(true)
   }
 
-  function autoCalcInc() {
-    const ex = parseFloat(exVat)
-    if (!isNaN(ex)) setIncVat(String(Math.round(ex * 1.07)))
+  function handleExChange(v: string) {
+    setExVat(v)
+    const n = parseFloat(v)
+    if (!isNaN(n) && n > 0) setIncVat(String(Math.round(n * 1.07)))
+    else setIncVat('')
+  }
+
+  function handleIncChange(v: string) {
+    setIncVat(v)
+    const n = parseFloat(v)
+    if (!isNaN(n) && n > 0) setExVat(String(Math.round(n / 1.07)))
+    else setExVat('')
   }
 
   async function save() {
@@ -633,23 +642,17 @@ function RevenueCard({ job, onUpdated }: {
   if (editing) {
     return (
       <div className="rounded-[12px] p-4" style={{ background: 'var(--hover-bg)', border: '1px solid var(--accent)' }}>
-        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>แก้ไขมูลค่างาน</p>
+        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>แก้ไขมูลค่างาน (VAT 7%)</p>
         <div className="space-y-2">
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา ex. VAT (บาท)</label>
-            <input type="number" value={exVat} onChange={e => setExVat(e.target.value)}
-              onBlur={autoCalcInc}
+            <input type="number" value={exVat} onChange={e => handleExChange(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={inputStyle} placeholder="0" />
           </div>
           <div>
-            <label className="text-xs mb-1 flex items-center justify-between" style={{ color: 'var(--text-3)' }}>
-              <span>ราคา inc. VAT (บาท)</span>
-              <button onClick={autoCalcInc} className="text-[10px] px-2 py-0.5 rounded" style={{ color: 'var(--accent)', background: 'var(--active-bg)' }}>
-                คำนวณ ×1.07
-              </button>
-            </label>
-            <input type="number" value={incVat} onChange={e => setIncVat(e.target.value)}
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา inc. VAT (บาท)</label>
+            <input type="number" value={incVat} onChange={e => handleIncChange(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={inputStyle} placeholder="0" />
           </div>

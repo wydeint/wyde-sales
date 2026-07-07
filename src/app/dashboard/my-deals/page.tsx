@@ -898,7 +898,6 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
             <FileAttach jobId={job.id} projectName={job.project_name} roomNo={job.room_no} />
           </div>
-        </div>
 
         {/* Actions */}
         <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>

@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     const drive = getDriveClient()
-    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER!
+    const rootId = (process.env.GOOGLE_DRIVE_ROOT_FOLDER || '').replace(/^﻿/, '').trim()
     const projectFolderId = await findOrCreateFolder(drive, projectName, rootId)
     const roomFolderId = await findOrCreateFolder(drive, roomNo, projectFolderId)
 

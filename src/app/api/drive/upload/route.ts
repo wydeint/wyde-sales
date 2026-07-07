@@ -26,11 +26,14 @@ async function findOrCreateFolder(
   const res = await drive.files.list({
     q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
   })
   if (res.data.files && res.data.files.length > 0) return res.data.files[0].id!
   const folder = await drive.files.create({
     requestBody: { name: safe, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
     fields: 'id',
+    supportsAllDrives: true,
   })
   return folder.data.id!
 }
@@ -76,6 +79,7 @@ export async function POST(req: NextRequest) {
         requestBody: { name: file.name, parents: [roomFolderId] },
         media: { mimeType: file.type, body: stream },
         fields: 'id,webViewLink',
+        supportsAllDrives: true,
       })
       const fileId = res.data.id!
       const fileUrl = res.data.webViewLink!
@@ -83,6 +87,7 @@ export async function POST(req: NextRequest) {
       await drive.permissions.create({
         fileId,
         requestBody: { role: 'reader', type: 'anyone' },
+        supportsAllDrives: true,
       })
 
       await supabase.from('job_files').insert({

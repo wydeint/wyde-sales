@@ -89,6 +89,34 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot
 const DEFAULT_STATUS_CFG = STATUS_CFG['ดำเนินการ']
 
 // ─────────────────────────────────────────
+// Room number helpers
+// ─────────────────────────────────────────
+
+// Extract tower letter from project name: last segment after '-' if single letter (e.g. TOR06-Z → Z)
+function towerFromProject(projectName: string): string | null {
+  const parts = projectName.trim().split('-')
+  const last = parts[parts.length - 1]?.trim()
+  return last && /^[A-Za-z]$/.test(last) ? last.toUpperCase() : null
+}
+
+// Normalize room_no: "123" → "Z-123", "a123" → "A-123", "A-123" → "A-123"
+function normalizeRoomNo(input: string, projectName: string): string {
+  const s = input.trim().toUpperCase()
+  if (!s) return s
+  // Already in X-NNN format
+  if (/^[A-Z]-\d+$/.test(s)) return s
+  // Pure digits → prepend tower from project name
+  if (/^\d+$/.test(s)) {
+    const tower = towerFromProject(projectName)
+    return tower ? `${tower}-${s}` : s
+  }
+  // Letter + digits (A123) → A-123
+  const m = s.match(/^([A-Z])(\d+)$/)
+  if (m) return `${m[1]}-${m[2]}`
+  return s
+}
+
+// ─────────────────────────────────────────
 // JobCard
 // ─────────────────────────────────────────
 function JobCard({ job, paymentMap, onClick }: {
@@ -237,6 +265,8 @@ export default function JobsPage() {
   const [saving, setSaving] = useState(false)
   const [nextId, setNextId] = useState('JOB-001')
   const [fetchError, setFetchError] = useState('')
+  const [roomNormalized, setRoomNormalized] = useState('')
+  const [roomDupWarning, setRoomDupWarning] = useState<string | null>(null)
 
   // ─── Load leads by project ───
   const loadLeads = useCallback(async (projectId: string) => {
@@ -329,10 +359,27 @@ export default function JobsPage() {
     })
   }
 
+  // ─── Room no change: normalize + duplicate check ───
+  function handleRoomNoChange(raw: string, projectId?: string, currentJobId?: string) {
+    setEditing(e => ({ ...e, room_no: raw }))
+    const pid = projectId || editing.project_id || ''
+    const projectName = projects.find(p => p.id === pid)?.name || ''
+    const normalized = normalizeRoomNo(raw, projectName)
+    setRoomNormalized(normalized !== raw.trim().toUpperCase() ? normalized : '')
+    const dup = normalized ? jobs.find(j =>
+      j.id !== currentJobId &&
+      j.project_id === pid &&
+      normalizeRoomNo(j.room_no || '', projectName) === normalized
+    ) : undefined
+    setRoomDupWarning(dup ? `ห้อง ${normalized} มีอยู่แล้วในโครงการนี้ (${dup.id})` : null)
+  }
+
   // ─── Open Add ───
   function openAdd() {
     setEditing({ ...emptyJob(), id: nextId, sales_id: myId })
     setLeads([])
+    setRoomNormalized('')
+    setRoomDupWarning(null)
     setOpen(true)
   }
 
@@ -340,14 +387,21 @@ export default function JobsPage() {
   function openEdit(j: Job) {
     setEditing({ ...j })
     if (j.project_id) loadLeads(j.project_id)
+    setRoomNormalized('')
+    setRoomDupWarning(null)
     setOpen(true)
   }
 
   // ─── Save ───
   async function save() {
     if (!editing.id) return
+    if (roomDupWarning) return
     setSaving(true)
-    const payload: any = { ...editing }
+    const projectName = projects.find(p => p.id === editing.project_id)?.name || ''
+    const payload: any = {
+      ...editing,
+      room_no: editing.room_no ? normalizeRoomNo(editing.room_no, projectName) : editing.room_no,
+    }
     delete payload.customers
     delete payload.projects
     delete payload.sales
@@ -610,8 +664,15 @@ export default function JobsPage() {
                           ))}
                         </select>
                       ) : (
-                        <input value={editing.room_no || ''} onChange={e => setEditing(e2 => ({ ...e2, room_no: e.target.value }))}
-                          className="field-input w-full mt-1" placeholder="เช่น A-101" />
+                        <input value={editing.room_no || ''}
+                          onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
+                          className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
+                      )}
+                      {roomNormalized && !roomDupWarning && (
+                        <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
+                      )}
+                      {roomDupWarning && (
+                        <p className="text-xs mt-1 font-semibold" style={{ color: '#f87171' }}>⚠ {roomDupWarning}</p>
                       )}
                     </div>
 
@@ -651,8 +712,15 @@ export default function JobsPage() {
                     </div>
                     <div>
                       <label className="field-label">เลขห้อง / สถานที่</label>
-                      <input value={editing.room_no || ''} onChange={e => setEditing(e2 => ({ ...e2, room_no: e.target.value }))}
-                        className="field-input w-full mt-1" placeholder="เช่น A201 หรือ ชั้น 3" />
+                      <input value={editing.room_no || ''}
+                        onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
+                        className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
+                      {roomNormalized && !roomDupWarning && (
+                        <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
+                      )}
+                      {roomDupWarning && (
+                        <p className="text-xs mt-1 font-semibold" style={{ color: '#f87171' }}>⚠ {roomDupWarning}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -855,9 +923,9 @@ export default function JobsPage() {
             <div className="flex items-center justify-end gap-3 pt-2">
               <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-[var(--radius-pill)] text-sm"
                 style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ยกเลิก</button>
-              <button onClick={save} disabled={saving}
+              <button onClick={save} disabled={saving || !!roomDupWarning}
                 className="px-6 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
-                style={{ background: 'var(--accent)', opacity: saving ? 0.7 : 1 }}>
+                style={{ background: 'var(--accent)', opacity: (saving || roomDupWarning) ? 0.5 : 1 }}>
                 {saving ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>
             </div>

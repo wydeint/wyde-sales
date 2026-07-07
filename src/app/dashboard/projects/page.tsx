@@ -22,6 +22,24 @@ const empty = {
   id: '', name: '', developer: '', location: '', tower_count: 1, total_units: 0, active: true, notes: ''
 }
 
+// Fuzzy similarity: tokenize both, count overlapping tokens
+function similarProjects(input: string, projects: Project[], excludeId?: string): Project[] {
+  const norm = (s: string) => s.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim()
+  const tokens = (s: string) => norm(s).split(' ').filter(t => t.length >= 2)
+  const inp = norm(input)
+  const inpTokens = tokens(input)
+  if (!inp || inpTokens.length === 0) return []
+  return projects.filter(p => {
+    if (p.id === excludeId) return false
+    const pn = norm(p.name)
+    const pt = tokens(p.name)
+    // Substring match
+    if (pn.includes(inp) || inp.includes(pn)) return true
+    // Token overlap ≥ 1
+    return inpTokens.some(t => pt.includes(t))
+  })
+}
+
 export default function ProjectsPage() {
   const supabase = createClient()
   const [projects, setProjects] = useState<Project[]>([])
@@ -32,6 +50,7 @@ export default function ProjectsPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [fetchError, setFetchError] = useState('')
+  const [similarWarning, setSimilarWarning] = useState<Project[]>([])
 
   async function load() {
     setLoading(true)
@@ -48,6 +67,7 @@ export default function ProjectsPage() {
     setEditing(null)
     setForm(empty)
     setSaveError('')
+    setSimilarWarning([])
     setOpen(true)
   }
 
@@ -55,7 +75,13 @@ export default function ProjectsPage() {
     setEditing(p)
     setForm({ id: p.id, name: p.name, developer: p.developer, location: p.location, tower_count: p.tower_count, total_units: p.total_units, active: p.active, notes: p.notes })
     setSaveError('')
+    setSimilarWarning([])
     setOpen(true)
+  }
+
+  function handleNameChange(val: string) {
+    setForm(f => ({ ...f, name: val }))
+    setSimilarWarning(similarProjects(val, projects, editing?.id))
   }
 
   async function save() {
@@ -160,7 +186,20 @@ export default function ProjectsPage() {
             </div>
           )}
           <div className="col-span-2">
-            <Input label="ชื่อโครงการ *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="เช่น Origin Place Phetkasem" />
+            <Input label="ชื่อโครงการ *" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="เช่น Origin Place Phetkasem" />
+            {similarWarning.length > 0 && (
+              <div className="mt-2 p-3 rounded-[8px] text-xs" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--text-2)' }}>
+                <p className="font-semibold mb-1.5" style={{ color: '#fbbf24' }}>⚠ พบโครงการที่ชื่อคล้ายกัน — ตรวจสอบก่อนสร้างใหม่</p>
+                <ul className="space-y-0.5">
+                  {similarWarning.map(p => (
+                    <li key={p.id} className="flex items-center gap-2">
+                      <span className="font-mono" style={{ color: 'var(--accent)' }}>{p.id}</span>
+                      <span>{p.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           <Input label="Developer" value={form.developer} onChange={e => setForm({ ...form, developer: e.target.value })} placeholder="เช่น Origin Property" />
           <Input label="ที่ตั้ง" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="เช่น ลาดพร้าว กรุงเทพ" />

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  Search, X, ChevronRight, ChevronDown, Zap, Pencil,
+  Search, X, ChevronRight, ChevronDown, Zap, Pencil, Trash2, Loader2,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
@@ -724,7 +724,7 @@ function generateLineMsg(job: LineJobCtx, inst: Installment): string {
 // ─── Deal Drawer (right panel) ─────────────────────────────
 // ─── Doc field component ───────────────────────────────────
 // ─── InstRow — inline paid_date edit ───────────────────────
-function InstRow({ inst, job, onDateSaved }: { inst: Installment; job: LineJobCtx; onDateSaved: (d: string | null) => void }) {
+function InstRow({ inst, job, onDateSaved, onDeleted }: { inst: Installment; job: LineJobCtx; onDateSaved: (d: string | null) => void; onDeleted?: () => void }) {
   const supabase = createClient()
   const [editingDate, setEditingDate] = useState(false)
   const [dateVal, setDateVal] = useState(inst.paid_date || todayStr())
@@ -734,6 +734,15 @@ function InstRow({ inst, job, onDateSaved }: { inst: Installment; job: LineJobCt
   const [savingSlip, setSavingSlip] = useState(false)
   const [savingReceipt, setSavingReceipt] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function deleteInst() {
+    if (!confirm(`ลบงวด "${inst.installment_name}" (${fmtBaht(inst.amount)}) ออกจากระบบ?`)) return
+    setDeleting(true)
+    await supabase.from('payments').delete().eq('id', inst.id)
+    setDeleting(false)
+    onDeleted?.()
+  }
 
   function copyLine() {
     const msg = generateLineMsg(job, { ...inst, paid_date: dateVal })
@@ -836,6 +845,13 @@ function InstRow({ inst, job, onDateSaved }: { inst: Installment; job: LineJobCt
               color: copied ? '#4ade80' : '#00b96b',
             }}>
             {copied ? <CheckCircle2 size={11} /> : '💬'} {copied ? 'คัดลอกแล้ว!' : 'LINE'}
+          </button>
+          <button onClick={deleteInst} disabled={deleting}
+            className="flex items-center gap-1 px-2 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95 disabled:opacity-40"
+            style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-3)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
+            {deleting ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
           </button>
         </div>
       )}
@@ -993,6 +1009,10 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                       onDateSaved={newDate => setJob(prev => ({
                         ...prev,
                         installments: prev.installments.map(i => i.id === inst.id ? { ...i, paid_date: newDate } : i)
+                      }))}
+                      onDeleted={() => setJob(prev => ({
+                        ...prev,
+                        installments: prev.installments.filter(i => i.id !== inst.id)
                       }))} />
                   ))}
                 </div>

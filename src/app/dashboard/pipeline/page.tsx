@@ -477,18 +477,24 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
 
     if (jobErr) { setError('เกิดข้อผิดพลาด: ' + jobErr.message); setSaving(false); return }
 
-    // Migrate booking installments → payments table
+    // Migrate booking installments → payments table (deduplicate deposit)
     if (bookingInstallments.length > 0) {
-      const payments = bookingInstallments.map(inst => ({
+      // Remove duplicate deposit: if row 1 and row 2 have same amount and both paid, keep only row 1
+      const deduped = bookingInstallments.filter((inst, idx, arr) => {
+        if (idx === 0) return true
+        const prev = arr[idx - 1]
+        return !(inst.amount === prev.amount && inst.is_paid && prev.is_paid)
+      })
+      const payments = deduped.map((inst, i) => ({
         job_id: jobId,
-        installment_no: inst.no,
+        installment_no: i + 1,
         installment_name: inst.name,
         amount: inst.amount,
         status: inst.is_paid ? 'paid' : 'pending',
         due_date: inst.due_date || null,
         paid_date: inst.is_paid ? (inst.due_date || orderDate) : null,
         paid_amount: inst.is_paid ? inst.amount : null,
-        is_final: inst.is_final,
+        is_final: i === deduped.length - 1,
       }))
       await supabase.from('payments').insert(payments)
     }

@@ -8,14 +8,13 @@ const MAX_SIZE = 5 * 1024 * 1024
 const MAX_FILES = 10
 
 function getDriveClient() {
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  })
-  return google.drive({ version: 'v3', auth })
+  const oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    'https://developers.google.com/oauthplayground',
+  )
+  oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN })
+  return google.drive({ version: 'v3', auth: oAuth2Client })
 }
 
 async function findOrCreateFolder(
@@ -27,14 +26,11 @@ async function findOrCreateFolder(
   const res = await drive.files.list({
     q: `name='${safe}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
-    supportsAllDrives: true,
-    includeItemsFromAllDrives: true,
   })
   if (res.data.files && res.data.files.length > 0) return res.data.files[0].id!
   const folder = await drive.files.create({
     requestBody: { name: safe, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
     fields: 'id',
-    supportsAllDrives: true,
   })
   return folder.data.id!
 }
@@ -50,13 +46,13 @@ export async function POST(req: NextRequest) {
     const files = formData.getAll('files') as File[]
 
     if (!files.length) return NextResponse.json({ error: 'ไม่พบไฟล์' }, { status: 400 })
-    if (files.length > MAX_FILES) return NextResponse.json({ error: `เลือกได้สูงสุด ${MAX_FILES} ไฟล์` }, { status: 400 })
+    if (files.length > MAX_FILES) return NextResponse.json({ error: 'เลือกได้สูงสุด ' + MAX_FILES + ' ไฟล์' }, { status: 400 })
 
     for (const file of files) {
       if (!ALLOWED_TYPES.includes(file.type))
-        return NextResponse.json({ error: `"${file.name}" ต้องเป็น JPG หรือ PDF เท่านั้น` }, { status: 400 })
+        return NextResponse.json({ error: '"' + file.name + '" ต้องเป็น JPG หรือ PDF เท่านั้น' }, { status: 400 })
       if (file.size > MAX_SIZE)
-        return NextResponse.json({ error: `"${file.name}" ขนาดเกิน 5MB` }, { status: 400 })
+        return NextResponse.json({ error: '"' + file.name + '" ขนาดเกิน 5MB' }, { status: 400 })
     }
 
     const drive = getDriveClient()
@@ -78,7 +74,6 @@ export async function POST(req: NextRequest) {
         requestBody: { name: file.name, parents: [roomFolderId] },
         media: { mimeType: file.type, body: stream },
         fields: 'id,webViewLink',
-        supportsAllDrives: true,
       })
       const fileId = res.data.id!
       const fileUrl = res.data.webViewLink!
@@ -86,7 +81,6 @@ export async function POST(req: NextRequest) {
       await drive.permissions.create({
         fileId,
         requestBody: { role: 'reader', type: 'anyone' },
-        supportsAllDrives: true,
       })
 
       await supabase.from('job_files').insert({

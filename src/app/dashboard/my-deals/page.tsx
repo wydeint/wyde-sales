@@ -1310,60 +1310,59 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               )}
             </div>
           )}
-        </div>
-
-        {/* Actions */}
-        <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>
-          {delivered ? (
-            <div className="space-y-2">
-              <div className="rounded-[12px] p-3 text-center"
-                style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
-                <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
-                {job.warranty_end && (
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>
-                )}
+          {/* Action buttons */}
+          <div className="pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
+            {delivered ? (
+              <div className="space-y-2">
+                <div className="rounded-[12px] p-3 text-center"
+                  style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
+                  {job.warranty_end && (
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setActionModal('pay')}
+                    className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
+                    style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                    แก้ไขงวดเงิน
+                  </button>
+                  <button onClick={() => setActionModal('handover')}
+                    className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
+                    style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                    แก้ไขวันส่งมอบ
+                  </button>
+                </div>
               </div>
+            ) : !hasPlan ? (
+              <button onClick={() => setActionModal('setup')}
+                className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                style={{ background: 'var(--accent)' }}>
+                + ตั้งแผนชำระเงิน & รับเงินงวดแรก
+              </button>
+            ) : pendingInstallments.length > 0 ? (
               <div className="flex gap-2">
                 <button onClick={() => setActionModal('pay')}
-                  className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
-                  style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                  แก้ไขงวดเงิน
+                  className="flex-1 py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                  style={{ background: 'var(--accent)' }}>
+                  + บันทึกรับเงิน
                 </button>
-                <button onClick={() => setActionModal('handover')}
-                  className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
-                  style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                  แก้ไขวันส่งมอบ
-                </button>
+                {finalPaid && (
+                  <button onClick={() => setActionModal('handover')}
+                    className="flex-1 py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                    style={{ background: 'var(--accent-green)' }}>
+                    ส่งมอบ
+                  </button>
+                )}
               </div>
-            </div>
-          ) : !hasPlan ? (
-            <button onClick={() => setActionModal('setup')}
-              className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
-              style={{ background: 'var(--accent)' }}>
-              + ตั้งแผนชำระเงิน & รับเงินงวดแรก
-            </button>
-          ) : pendingInstallments.length > 0 ? (
-            <div className="flex gap-2">
-              <button onClick={() => setActionModal('pay')}
-                className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
-                style={{ background: 'var(--accent)' }}>
-                + บันทึกรับเงิน
+            ) : (
+              <button onClick={() => setActionModal('handover')}
+                className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                style={{ background: 'var(--accent-green)' }}>
+                + บันทึกส่งมอบ
               </button>
-              {finalPaid && (
-                <button onClick={() => setActionModal('handover')}
-                  className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
-                  style={{ background: 'var(--accent-green)' }}>
-                  ส่งมอบ
-                </button>
-              )}
-            </div>
-          ) : (
-            <button onClick={() => setActionModal('handover')}
-              className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
-              style={{ background: 'var(--accent-green)' }}>
-              + บันทึกส่งมอบ
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
       </div>
@@ -1641,7 +1640,7 @@ export default function MyDealsPage() {
   const totalActive = useMemo(() => jobs.filter(j => !j.actual_deliver_date).length, [jobs])
 
   return (
-    <div className="min-h-screen p-4 md:p-6" style={{ background: 'var(--page-bg)' }}>
+    <div className="min-h-screen p-4 md:p-6" style={{ background: 'var(--bg-gradient)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex-1">

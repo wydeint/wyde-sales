@@ -507,6 +507,15 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
             </div>
           )}
         </div>
+        {editing && (
+          <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>
+            <button onClick={save} disabled={saving}
+              className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+              style={{ background: saving ? 'var(--text-3)' : 'var(--accent)' }}>
+              {saving ? 'กำลังบันทึก...' : '💾 บันทึกข้อมูล'}
+            </button>
+          </div>
+        )}
       </div>
       </div>
 
@@ -1298,7 +1307,7 @@ export default function ProspectsKanbanPage() {
   }
 
   if (loading) return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+    <div className="h-screen flex flex-col" style={{ background: 'var(--bg-gradient)' }}>
       <div className="flex-shrink-0 px-6 pt-5 pb-3">
         <div className="h-6 w-28 rounded-lg mb-1 animate-pulse" style={{ background: 'var(--hover-bg)' }} />
         <div className="h-3 w-16 rounded-lg animate-pulse" style={{ background: 'var(--hover-bg)' }} />
@@ -1323,7 +1332,7 @@ export default function ProspectsKanbanPage() {
   })
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+    <div className="h-screen flex flex-col" style={{ background: 'var(--bg-gradient)' }}>
 
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-3">

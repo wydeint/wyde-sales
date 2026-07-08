@@ -57,7 +57,6 @@ type Job = {
   order_date: string
   revenue_ex_vat: number
   revenue_inc_vat: number
-  transfer_amount: number
   voucher: number
   cost: number
   working_status: string
@@ -219,7 +218,6 @@ const emptyJob = (): Partial<Job> => ({
   commission_status: 'pending',
   revenue_ex_vat: 0,
   revenue_inc_vat: 0,
-  transfer_amount: 0,
   contract_date: '',
   work_start_date: '',
   plan_transfer_month: '',
@@ -339,7 +337,7 @@ export default function JobsPage() {
   function handleRevenueChange(incVat: number) {
     const exVat = incVat ? Math.round(incVat / 1.07) : 0
     const { rate, amount } = calcCommission(exVat, tiers)
-    setEditing(e => ({ ...e, revenue_inc_vat: incVat, revenue_ex_vat: exVat, transfer_amount: incVat, commission_rate: rate, commission_amount: amount }))
+    setEditing(e => ({ ...e, revenue_inc_vat: incVat, revenue_ex_vat: exVat, commission_rate: rate, commission_amount: amount }))
   }
 
   // ─── Project select → load leads ───
@@ -459,7 +457,7 @@ export default function JobsPage() {
       'ลูกค้า', 'เบอร์โทร', 'ประเภทลูกค้า', 'โครงการ', 'ห้อง', 'Job ID',
       'ประเภทงาน', 'แพ็กเกจ', 'PO', 'SO',
       'วันสั่งงาน', 'วันเริ่มงาน', 'วันกำหนดส่ง', 'วันส่งมอบ (จริง)',
-      'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'ยอดโอน', 'Voucher', 'Cost', 'GP%',
+      'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'Voucher', 'Cost', 'GP%',
       'Commission Rate%', 'Commission', 'สถานะ Commission',
       'สถานะงาน', 'Sales',
     ]
@@ -476,7 +474,7 @@ export default function JobsPage() {
         name, phone, j.customer_type || '', project, j.room_no || '', j.id,
         j.work_type || '', j.package_type || '', j.po_no || '', j.so_no || '',
         fmt(j.order_date), fmt((j as any).work_start_date), fmt(j.expected_finish_date), fmt(j.actual_deliver_date),
-        j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.transfer_amount || 0, j.voucher || 0, j.cost || 0, gp,
+        j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.voucher || 0, j.cost || 0, gp,
         j.commission_rate ? (j.commission_rate * 100).toFixed(2) : '', j.commission_amount || 0,
         commStatusLabel[j.commission_status] || j.commission_status || '',
         j.working_status || '', sales,
@@ -808,11 +806,6 @@ export default function JobsPage() {
                       {editing.revenue_ex_vat ? f(editing.revenue_ex_vat) : '—'}
                     </span>
                   </div>
-                </div>
-                <div>
-                  <label className="field-label">ยอดโอน (จาก Origin) ฿</label>
-                  <input type="number" value={editing.transfer_amount || ''} onChange={e => setEditing(e2 => ({ ...e2, transfer_amount: +e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="0" />
                 </div>
                 <div>
                   <label className="field-label">Voucher / ส่วนลด ฿</label>

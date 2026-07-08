@@ -255,6 +255,9 @@ export default function JobsPage() {
   const [myId, setMyId] = useState('')
   const [loading, setLoading] = useState(true)
 
+  // Quick filter
+  const [filterNoSO, setFilterNoSO] = useState(false)
+
   // Filters
   const [search, setSearch] = useState('')
   const [filterProject, setFilterProject] = useState('')
@@ -449,8 +452,11 @@ export default function JobsPage() {
     const matchSales = !filterSales || j.sales_id === filterSales
     const matchWorkType = !filterWorkType || j.work_type === filterWorkType
     const matchCustomerType = !filterCustomerType || j.customer_type === filterCustomerType
-    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType
+    const matchNoSO = !filterNoSO || !j.so_no?.trim()
+    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType && matchNoSO
   })
+
+  const noSOCount = jobs.filter(j => !j.so_no?.trim() && j.working_status !== 'ยกเลิก').length
 
   function exportCSV() {
     const headers = [
@@ -559,6 +565,27 @@ export default function JobsPage() {
           </div>
         )
       })()}
+
+      {/* Quick filter chips */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => setFilterNoSO(v => !v)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+          style={{
+            background: filterNoSO ? 'var(--accent)' : 'var(--card-bg)',
+            color: filterNoSO ? '#fff' : 'var(--text-2)',
+            border: `1px solid ${filterNoSO ? 'var(--accent)' : 'var(--card-border)'}`,
+          }}
+        >
+          ไม่มี SO
+          {noSOCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
+              style={{ background: filterNoSO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: filterNoSO ? '#fff' : 'var(--accent-red)' }}>
+              {noSOCount}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="ds-card p-4 flex flex-wrap gap-3">

@@ -49,6 +49,9 @@ interface ImportRow {
   _valid: boolean
   _error: string
   _dup: boolean
+  _dupId?: number        // id ของ record ที่ซ้ำในระบบ
+  _dupUpdate: boolean    // true = มีข้อมูลที่เปลี่ยนแปลง → ควร update
+  _changes: string[]     // รายการ field ที่เปลี่ยน
 }
 
 // Column mapping for Origin CRM xlsx export
@@ -120,7 +123,7 @@ export default function LeadsPage() {
   const [showImport, setShowImport] = useState(false)
   const [importRows, setImportRows] = useState<ImportRow[]>([])
   const [importing, setImporting] = useState(false)
-  const [importResult, setImportResult] = useState<{ done: number; skipped: number; dup: number } | null>(null)
+  const [importResult, setImportResult] = useState<{ inserted: number; updated: number; skipped: number; error: string } | null>(null)
   const [addingId, setAddingId] = useState<number | null>(null)
   const [addError, setAddError] = useState<string>('')
   const [fetchError, setFetchError] = useState('')
@@ -146,10 +149,11 @@ export default function LeadsPage() {
   async function handleFile(file: File) {
     setImportResult(null)
     const rawRows = await parseXlsxLeads(file)
-    const existingKeys = new Set(leads.map(l => `${l.project_id}|${l.tower}|${l.room_no}`))
+    // Build lookup map: "project_id|room_no" → existing lead
+    const existingMap = new Map(leads.map(l => [`${l.project_id}|${(l.room_no || '').trim().toUpperCase()}`, l]))
 
     const parsed: ImportRow[] = rawRows.map(row => {
-      const m: any = { _valid: true, _error: '', _dup: false }
+      const m: any = { _valid: true, _error: '', _dup: false, _dupUpdate: false, _changes: [] }
       for (const [h, val] of Object.entries(row)) {
         const dbField = LEAD_MAP[h] || LEAD_MAP[h.trim()]
         if (dbField) m[dbField] = val
@@ -166,17 +170,36 @@ export default function LeadsPage() {
         const byName = projects.find(p => p.name.toLowerCase().includes(m._project_name.toLowerCase()))
         if (byName) m.project_id = byName.id
       }
-      // Clean
+      // Clean numeric/date fields
       m.contract_price = numVal(m.contract_price)
       m.s00_budget = numVal(m.s00_budget)
       m.total_payment = numVal(m.total_payment)
       m.transfer_date = fmtDate(m.transfer_date)
       m.booking_date = fmtDate(m.booking_date)
       m.consent = m.consent || ''
-      // Check dup
-      const key = `${m.project_id}|${m.tower}|${m.room_no}`
-      if (existingKeys.has(key)) { m._dup = true; m._valid = false; m._error = 'มีในระบบแล้ว' }
-      if (!m.customer_name) { m._valid = false; m._error = 'ไม่มีชื่อ' }
+      if (!m.customer_name) { m._valid = false; m._error = 'ไม่มีชื่อ'; delete m._project_name; return m as ImportRow }
+      // Normalize room_no
+      const roomNorm = (m.room_no || '').trim().toUpperCase()
+      m.room_no = roomNorm
+      // Check duplicate
+      const key = `${m.project_id}|${roomNorm}`
+      const existing = existingMap.get(key)
+      if (existing) {
+        m._dup = true
+        m._valid = false
+        m._dupId = existing.id
+        // Detect what changed (fields worth updating)
+        const changes: string[] = []
+        if (m.customer_name && m.customer_name !== existing.customer_name) changes.push('ชื่อ')
+        if (m.transfer_date && m.transfer_date !== existing.transfer_date) changes.push('วันโอน')
+        if (m.s00_budget && m.s00_budget !== existing.s00_budget) changes.push('S00')
+        if (m.contract_price && m.contract_price !== existing.contract_price) changes.push('ราคาสัญญา')
+        if (m.phone && m.phone !== existing.phone) changes.push('เบอร์')
+        if (m.origin_sales && m.origin_sales !== existing.origin_sales) changes.push('เซลล์ Origin')
+        m._changes = changes
+        m._dupUpdate = changes.length > 0
+        m._error = changes.length > 0 ? `ซ้ำ — มีการเปลี่ยนแปลง: ${changes.join(', ')}` : 'ซ้ำ — ข้อมูลเหมือนเดิม'
+      }
       delete m._project_name
       return m as ImportRow
     }).filter(r => r.customer_name || r._error)
@@ -185,13 +208,18 @@ export default function LeadsPage() {
   }
 
   async function doImport() {
-    const valid = importRows.filter(r => r._valid)
-    if (!valid.length) return
+    const toInsert = importRows.filter(r => r._valid)
+    const toUpdate = importRows.filter(r => r._dup && r._dupUpdate)
+    if (!toInsert.length && !toUpdate.length) return
     setImporting(true)
-    const dup = importRows.filter(r => r._dup).length
-    const payloads = valid.map(row => {
-      const { _valid, _error, _dup, ...data } = row
-      return {
+
+    let insertedCount = 0
+    let updatedCount = 0
+    let errorMsg = ''
+
+    // INSERT new records
+    if (toInsert.length) {
+      const payloads = toInsert.map(({ _valid, _error, _dup, _dupId, _dupUpdate, _changes, ...data }) => ({
         ...data,
         project_id: data.project_id || null,
         transfer_date: data.transfer_date || null,
@@ -204,11 +232,33 @@ export default function LeadsPage() {
         contract_price: data.contract_price || null,
         s00_budget: data.s00_budget || null,
         total_payment: data.total_payment || null,
-      }
-    })
-    const { error } = await supabase.from('condo_leads').insert(payloads)
+      }))
+      const { error } = await supabase.from('condo_leads').insert(payloads)
+      if (error) errorMsg = error.message
+      else insertedCount = toInsert.length
+    }
+
+    // UPDATE changed duplicates (only safe fields — don't touch status/job_id/customer_id)
+    for (const row of toUpdate) {
+      const { error } = await supabase.from('condo_leads').update({
+        customer_name: row.customer_name,
+        phone: row.phone || null,
+        email: row.email || null,
+        contract_price: row.contract_price || null,
+        s00_budget: row.s00_budget || null,
+        total_payment: row.total_payment || null,
+        transfer_date: row.transfer_date || null,
+        booking_date: row.booking_date || null,
+        model_name: row.model_name || null,
+        consent: row.consent || null,
+        origin_sales: row.origin_sales || null,
+      }).eq('id', row._dupId!)
+      if (!error) updatedCount++
+    }
+
+    const skipped = importRows.filter(r => r._dup && !r._dupUpdate).length
     setImporting(false)
-    setImportResult({ done: error ? 0 : valid.length, skipped: error ? valid.length : 0, dup })
+    setImportResult({ inserted: insertedCount, updated: updatedCount, skipped, error: errorMsg })
     setImportRows([])
     load()
   }
@@ -310,11 +360,23 @@ export default function LeadsPage() {
           <h3 className="text-card-title mb-3" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
           {importResult ? (
             <div className="text-center py-4">
-              <CheckCircle size={32} className="mx-auto mb-2 text-green-400" />
-              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>นำเข้าสำเร็จ</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>
-                เพิ่ม {importResult.done} ราย · ข้าม {importResult.skipped} ราย · ซ้ำ {importResult.dup} ราย
+              {importResult.error ? (
+                <XCircle size={32} className="mx-auto mb-2 text-red-400" />
+              ) : (
+                <CheckCircle size={32} className="mx-auto mb-2 text-green-400" />
+              )}
+              <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
+                {importResult.error ? 'เกิดข้อผิดพลาด' : 'นำเข้าสำเร็จ'}
               </p>
+              {importResult.error ? (
+                <p className="text-sm mt-1" style={{ color: 'var(--accent-red)' }}>{importResult.error}</p>
+              ) : (
+                <div className="flex justify-center gap-4 mt-2 text-sm">
+                  {importResult.inserted > 0 && <span className="text-green-400">✅ เพิ่มใหม่ {importResult.inserted} ราย</span>}
+                  {importResult.updated > 0 && <span style={{ color: 'var(--accent-orange)' }}>🔄 อัปเดต {importResult.updated} ราย</span>}
+                  {importResult.skipped > 0 && <span style={{ color: 'var(--text-3)' }}>⏭ ข้าม {importResult.skipped} ราย</span>}
+                </div>
+              )}
               <button onClick={() => { setImportResult(null); setShowImport(false) }}
                 className="mt-3 px-5 py-2 text-sm rounded-[8px] text-white" style={{ background: 'var(--accent)' }}>
                 ปิด
@@ -340,7 +402,8 @@ export default function LeadsPage() {
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                   พบ {importRows.length} แถว &nbsp;·&nbsp;
                   <span className="text-green-400">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
-                  <span className="text-amber-400">🔁 {importRows.filter(r => r._dup).length} ซ้ำ</span> &nbsp;·&nbsp;
+                  <span style={{ color: 'var(--accent-orange)' }}>🔄 {importRows.filter(r => r._dup && r._dupUpdate).length} อัปเดต</span> &nbsp;·&nbsp;
+                  <span className="text-amber-400">⏭ {importRows.filter(r => r._dup && !r._dupUpdate).length} ซ้ำ/เหมือนเดิม</span> &nbsp;·&nbsp;
                   <span className="text-red-400">❌ {importRows.filter(r => !r._valid && !r._dup).length} error</span>
                 </p>
                 <button onClick={() => setImportRows([])} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
@@ -360,9 +423,13 @@ export default function LeadsPage() {
                     {importRows.slice(0, 100).map((r, i) => (
                       <tr key={i} style={{ borderBottom: '1px solid var(--divider)', background: r._dup ? 'rgba(245,158,11,0.05)' : !r._valid ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
                         <td className="px-3 py-1.5">
-                          {r._valid ? <CheckCircle size={11} className="text-green-400" />
-                            : r._dup ? <span title={r._error} className="text-amber-400 text-xs">↩</span>
-                            : <span title={r._error}><XCircle size={11} className="text-red-400" /></span>}
+                          {r._valid
+                            ? <CheckCircle size={11} className="text-green-400" />
+                            : r._dup && r._dupUpdate
+                              ? <span title={r._error} className="text-xs font-bold" style={{ color: 'var(--accent-orange)' }}>🔄</span>
+                              : r._dup
+                                ? <span title={r._error} className="text-xs" style={{ color: 'var(--text-3)' }}>⏭</span>
+                                : <span title={r._error}><XCircle size={11} className="text-red-400" /></span>}
                         </td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.tower}-{r.room_no}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
@@ -377,10 +444,17 @@ export default function LeadsPage() {
               </div>
               <div className="flex justify-end gap-3 mt-3">
                 <button onClick={() => setImportRows([])} className="px-4 py-2 text-sm" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
-                <button onClick={doImport} disabled={importing || importRows.filter(r => r._valid).length === 0}
+                <button onClick={doImport}
+                  disabled={importing || (importRows.filter(r => r._valid).length === 0 && importRows.filter(r => r._dup && r._dupUpdate).length === 0)}
                   className="px-5 py-2 text-sm rounded-[8px] text-white disabled:opacity-50 flex items-center gap-2"
                   style={{ background: 'var(--accent)' }}>
-                  {importing ? 'กำลังนำเข้า...' : `นำเข้า ${importRows.filter(r => r._valid).length} ราย`}
+                  {importing ? 'กำลังนำเข้า...' : (() => {
+                    const ins = importRows.filter(r => r._valid).length
+                    const upd = importRows.filter(r => r._dup && r._dupUpdate).length
+                    if (ins && upd) return `เพิ่ม ${ins} + อัปเดต ${upd} ราย`
+                    if (upd) return `อัปเดต ${upd} ราย`
+                    return `นำเข้า ${ins} ราย`
+                  })()}
                 </button>
               </div>
             </>

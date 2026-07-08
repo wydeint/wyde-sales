@@ -114,10 +114,16 @@
 ══════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { height: 100%; }
+html {
+  height: 100%;
+  overflow: hidden;          /* iOS: prevent body bounce */
+  overscroll-behavior: none;
+}
 
 body {
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;          /* iOS: lock body — scroll lives inside containers */
+  overscroll-behavior: none;
   background: var(--bg-gradient);
   background-attachment: fixed;
   color: var(--text-1);

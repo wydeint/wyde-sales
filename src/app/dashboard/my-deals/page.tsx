@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  Search, X, ChevronRight, ChevronDown, Zap, Pencil, Trash2, Loader2, Plus,
+  Search, X, ChevronRight, ChevronDown, Pencil, Trash2, Loader2, Plus,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
@@ -60,6 +60,7 @@ interface FullJob {
   sales_name: string
   payment_plan_type: string | null
   work_days: number | null
+  order_date: string | null
   contract_date: string | null
   work_start_date: string | null
   warranty_end: string | null
@@ -128,7 +129,15 @@ const B2C_PLANS = [
   { value: 'B', label: 'แบบ B — 50% + 50%', desc: '2 งวด' },
   { value: 'C', label: 'แบบ C — มัดจำ + 50% + 50%', desc: '3 งวด' },
 ]
+const B2B_PLANS = [
+  { value: 'po_bill', label: 'PO → วางบิลเมื่อจบงาน', desc: '1 งวด (วางบิลส่งมอบ 100%)' },
+  { value: 'custom', label: 'กำหนดงวดเอง', desc: 'ระบุ % แต่ละงวด' },
+]
 const WORK_DAYS_OPTIONS = [30, 45, 60, 90]
+
+function calcB2BSingleInstallment(total: number) {
+  return [{ no: 1, name: 'วางบิลเมื่อส่งมอบงาน', pct: 100, amount: total, trigger: false, final: true }]
+}
 
 function calcB2CInstallments(plan: string, total: number, deposit: number) {
   if (plan === 'A') return [{ no: 1, name: 'ชำระเต็มจำนวน 100%', pct: 100, amount: total, trigger: true, final: true }]
@@ -138,11 +147,12 @@ function calcB2CInstallments(plan: string, total: number, deposit: number) {
   ]
   if (plan === 'C') {
     const dep = deposit > 0 ? deposit : Math.round(total * 0.1)
-    const rest = (total - dep) / 2
+    const first50 = Math.round(total * 0.5)
+    const last50 = total - dep - first50
     return [
       { no: 1, name: 'มัดจำจองสิทธิ์', pct: Math.round((dep / total) * 100), amount: dep, trigger: false, final: false },
-      { no: 2, name: 'ชำระ 50% แรก เริ่มงาน', pct: Math.round((rest / total) * 100), amount: rest, trigger: true, final: false },
-      { no: 3, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: Math.round((rest / total) * 100), amount: rest, trigger: false, final: true },
+      { no: 2, name: 'ชำระ 50% แรก เริ่มงาน', pct: 50, amount: first50, trigger: true, final: false },
+      { no: 3, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: Math.round((last50 / total) * 100), amount: last50, trigger: false, final: true },
     ]
   }
   return []
@@ -161,9 +171,11 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const supabase = createClient()
   const [clientType, setClientType] = useState<ClientType>(job.customer_type || 'B2C')
   const [plan, setPlan] = useState(job.payment_plan_type || 'B')
-  const [workDays, setWorkDays] = useState(job.work_days || 45)
+  const [workDays, setWorkDays] = useState(job.work_days || 60)
   const [depositAmount, setDepositAmount] = useState(0)
   const [firstPaidAmount, setFirstPaidAmount] = useState(0)
+  const [b2bPlan, setB2bPlan] = useState('po_bill')
+  const [b2bPoDate, setB2bPoDate] = useState(todayStr())
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(todayStr())
@@ -178,6 +190,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const total = job.revenue_inc_vat || job.revenue_ex_vat || 0
   const pctSum = b2bPcts.slice(0, b2bCount).reduce((a, b) => a + b, 0)
   const pctValid = Math.abs(pctSum - 100) < 0.01
+  const isSingleB2B = clientType === 'B2B' && b2bPlan === 'po_bill'
 
   function updateB2bCount(n: number) {
     setB2bCount(n)
@@ -188,17 +201,19 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
 
   const preview = clientType === 'B2C'
     ? calcB2CInstallments(plan, total, depositAmount)
-    : calcB2BInstallments(b2bCount, total, b2bPcts.slice(0, b2bCount))
+    : isSingleB2B
+      ? calcB2BSingleInstallment(total)
+      : calcB2BInstallments(b2bCount, total, b2bPcts.slice(0, b2bCount))
   const firstInst = preview[0]
 
   async function save() {
-    if (clientType === 'B2B' && !pctValid) return
+    if (clientType === 'B2B' && !isSingleB2B && !pctValid) return
     setSaving(true)
     await supabase.from('jobs').update({
       customer_type: clientType,
-      payment_plan_type: clientType === 'B2C' ? plan : String(b2bCount),
+      payment_plan_type: clientType === 'B2C' ? plan : isSingleB2B ? 'po_bill' : String(b2bCount),
       work_days: workDays,
-      work_start_date: firstInst?.trigger ? paidDate : null,
+      work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
     }).eq('id', job.id)
     await supabase.from('payments').delete().eq('job_id', job.id)
     await supabase.from('payments').insert(preview.map((p, i) => ({
@@ -211,14 +226,14 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       installment_name: p.name,
       percentage: p.pct,
       amount: p.amount,
-      status: i === 0 ? 'paid' : 'pending',
-      paid_date: i === 0 ? paidDate : null,
-      paid_amount: i === 0 ? (firstPaidAmount || p.amount) : null,
-      channel: i === 0 ? (channel || null) : null,
+      status: isSingleB2B ? 'pending' : (i === 0 ? 'paid' : 'pending'),
+      paid_date: isSingleB2B ? null : (i === 0 ? paidDate : null),
+      paid_amount: isSingleB2B ? null : (i === 0 ? (firstPaidAmount || p.amount) : null),
+      channel: isSingleB2B ? null : (i === 0 ? (channel || null) : null),
       is_work_trigger: p.trigger,
       is_final: p.final,
-      slip_url: i === 0 ? (slipUrl.trim() || (slipPosted ? 'posted' : null)) : null,
-      receipt_url: i === 0 ? (receiptUrl.trim() || (receiptPosted ? 'posted' : null)) : null,
+      slip_url: isSingleB2B ? null : (i === 0 ? (slipUrl.trim() || (slipPosted ? 'posted' : null)) : null),
+      receipt_url: isSingleB2B ? null : (i === 0 ? (receiptUrl.trim() || (receiptPosted ? 'posted' : null)) : null),
     })))
     setSaving(false); onSaved(); onClose()
   }
@@ -287,29 +302,55 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
               {clientType === 'B2B' && (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs mb-2" style={{ color: 'var(--text-2)' }}>จำนวนงวด</p>
-                    <div className="flex gap-2">
-                      {[2, 3, 4, 5, 6].map(n => (
-                        <button key={n} onClick={() => updateB2bCount(n)}
-                          className="flex-1 py-2 rounded-[11px] text-sm font-semibold border"
-                          style={b2bCount === n ? btnActive : btnIdle}>{n}</button>
+                    <p className="text-xs mb-2" style={{ color: 'var(--text-2)' }}>รูปแบบ B2B</p>
+                    <div className="space-y-2">
+                      {B2B_PLANS.map(p => (
+                        <button key={p.value} onClick={() => setB2bPlan(p.value)}
+                          className="w-full text-left px-4 py-3 rounded-[11px] border"
+                          style={b2bPlan === p.value
+                            ? { background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.4)', color: 'var(--text-1)' }
+                            : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                          <p className="text-sm font-semibold">{p.label}</p>
+                          <p className="text-xs opacity-60 mt-0.5">{p.desc}</p>
+                        </button>
                       ))}
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-xs" style={{ color: 'var(--text-2)' }}>
-                      % แต่ละงวด <span style={{ color: pctValid ? 'var(--accent-green)' : 'var(--accent-red)' }}>(รวม {pctSum}%)</span>
-                    </p>
-                    {b2bPcts.slice(0, b2bCount).map((pct, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className="text-xs w-14" style={{ color: 'var(--text-2)' }}>งวดที่ {i + 1}</span>
-                        <input type="number" value={pct}
-                          onChange={e => { const np = [...b2bPcts]; np[i] = Number(e.target.value); setB2bPcts(np) }}
-                          className="w-16 rounded-[8px] px-2 py-1.5 text-sm text-center focus:outline-none" style={inputStyle} />
-                        <span className="text-xs flex-1" style={{ color: 'var(--text-2)' }}>{fmtBaht(Math.round((pct / 100) * total))}</span>
+                  {isSingleB2B && (
+                    <div>
+                      <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันรับ PO / วันเริ่มงาน</label>
+                      <input type="date" value={b2bPoDate} onChange={e => setB2bPoDate(e.target.value)}
+                        className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                    </div>
+                  )}
+                  {!isSingleB2B && (
+                    <>
+                      <div>
+                        <p className="text-xs mb-2" style={{ color: 'var(--text-2)' }}>จำนวนงวด</p>
+                        <div className="flex gap-2">
+                          {[2, 3, 4, 5, 6].map(n => (
+                            <button key={n} onClick={() => updateB2bCount(n)}
+                              className="flex-1 py-2 rounded-[11px] text-sm font-semibold border"
+                              style={b2bCount === n ? btnActive : btnIdle}>{n}</button>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="space-y-2">
+                        <p className="text-xs" style={{ color: 'var(--text-2)' }}>
+                          % แต่ละงวด <span style={{ color: pctValid ? 'var(--accent-green)' : 'var(--accent-red)' }}>(รวม {pctSum}%)</span>
+                        </p>
+                        {b2bPcts.slice(0, b2bCount).map((pct, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <span className="text-xs w-14" style={{ color: 'var(--text-2)' }}>งวดที่ {i + 1}</span>
+                            <input type="number" value={pct}
+                              onChange={e => { const np = [...b2bPcts]; np[i] = Number(e.target.value); setB2bPcts(np) }}
+                              className="w-16 rounded-[8px] px-2 py-1.5 text-sm text-center focus:outline-none" style={inputStyle} />
+                            <span className="text-xs flex-1" style={{ color: 'var(--text-2)' }}>{fmtBaht(Math.round((pct / 100) * total))}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
               <div>
@@ -338,8 +379,13 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                   ))}
                 </div>
               </div>
-              <button onClick={() => setStep('pay')} className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
-                style={{ background: 'var(--accent)' }}>ถัดไป → บันทึกงวดแรก</button>
+              <button
+                onClick={() => isSingleB2B ? save() : setStep('pay')}
+                disabled={saving}
+                className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+                style={{ background: saving ? '#999' : 'var(--accent)' }}>
+                {isSingleB2B ? (saving ? 'กำลังบันทึก...' : 'บันทึกแผน') : 'ถัดไป → บันทึกงวดแรก'}
+              </button>
             </>
           ) : (
             <>
@@ -1413,38 +1459,192 @@ function CardSkeleton() {
   )
 }
 
-function RoomCard({ job, onClick }: { job: RoomJob; onClick: () => void }) {
+function RoomCard({ job, onClick, onDelete }: { job: RoomJob; onClick: () => void; onDelete: () => void }) {
   const stage = getChipStage(job)
   const meta = STAGE_META[stage]
   const isDone = stage === 'done'
 
   return (
-    <button onClick={onClick}
-      title={[job.customer_name, job.sales_name].filter(Boolean).join(' · ')}
-      className="ds-card w-full text-left p-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
-      style={{ opacity: isDone ? 0.65 : 1 }}>
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="font-semibold text-sm leading-snug truncate" style={{ color: isDone ? 'var(--text-3)' : 'var(--text-1)' }}>
-          {job.room_no}
-          {job.customer_name && <span className="font-normal text-xs ml-1.5" style={{ color: 'var(--text-3)' }}>{job.customer_name}</span>}
-        </p>
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+    <div
+      className="relative group w-full rounded-[14px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', opacity: isDone ? 0.7 : 1 }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
+      onClick={onClick}
+    >
+      {/* Row 1: room_no + subtitle | badge */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-sm truncate" style={{ color: isDone ? 'var(--text-3)' : 'var(--text-1)' }}>{job.room_no}</p>
+          <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
+            {job.customer_name || '—'}{job.project_name ? ` · ${job.project_name}` : ''}
+          </p>
+        </div>
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 mt-0.5"
           style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
           {meta.label}
         </span>
       </div>
-      {job.total_amount > 0 && (
-        <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'var(--text-2)' }}>{fmtBaht(job.total_amount)}</p>
-      )}
-      <div className="flex items-center justify-between mt-1">
-        <p className="text-[10px] truncate flex-1" style={{ color: 'var(--text-3)' }}>{job.sales_name || ''}</p>
-        {job.has_plan && job.total_count > 0 && (
-          <p className="text-[10px] font-semibold ml-2 flex-shrink-0" style={{ color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+      {/* Row 2: payment chips */}
+      {job.has_plan && job.total_count > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+            style={{ background: 'var(--hover-bg)', color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
             {job.paid_count}/{job.total_count} งวด
-          </p>
-        )}
+          </span>
+          {job.has_overdue && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+              style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
+              เกินกำหนด
+            </span>
+          )}
+        </div>
+      )}
+      {/* Row 3: amount + sales + chevron */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {job.total_amount > 0
+            ? <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{fmtBaht(job.total_amount)}</p>
+            : <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยังไม่มีมูลค่า</p>}
+          {job.sales_name && <p className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>{job.sales_name}</p>}
+        </div>
+        <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
-    </button>
+      {/* Delete button */}
+      <button
+        onClick={e => { e.stopPropagation(); onDelete() }}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+        title="ลบงาน"
+      >
+        <Trash2 size={11} />
+      </button>
+    </div>
+  )
+}
+
+// ─── Add Job Modal ──────────────────────────────────────────
+function AddJobModal({ onClose, onSaved }: { onClose: () => void; onSaved: (jobId: string) => void }) {
+  const supabase = createClient()
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
+  const [users, setUsers] = useState<{ id: string; name: string }[]>([])
+  const [projectId, setProjectId] = useState('')
+  const [roomNo, setRoomNo] = useState('')
+  const [customerName, setCustomerName] = useState('')
+  const [revenue, setRevenue] = useState('')
+  const [customerType, setCustomerType] = useState<'B2C' | 'B2B'>('B2B')
+  const [salesId, setSalesId] = useState('')
+  const [workStartDate, setWorkStartDate] = useState(todayStr())
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('projects').select('id,name').eq('active', true).order('name'),
+      supabase.from('users').select('id,name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
+    ]).then(([{ data: p }, { data: u }]) => {
+      setProjects((p as any) || [])
+      setUsers((u as any) || [])
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function save() {
+    if (!roomNo.trim() || !customerName.trim()) return
+    setSaving(true)
+    const { count } = await supabase.from('jobs').select('*', { count: 'exact', head: true })
+    const jobId = `JOB-${String((count || 0) + 1).padStart(4, '0')}`
+    const inc = parseFloat(revenue) || 0
+    await supabase.from('jobs').insert({
+      id: jobId,
+      project_id: projectId || null,
+      room_no: roomNo.trim(),
+      customer_name: customerName.trim(),
+      customer_type: customerType,
+      revenue_inc_vat: inc,
+      revenue_ex_vat: inc ? Math.round(inc / 1.07) : 0,
+      working_status: 'รับงาน',
+      work_start_date: workStartDate,
+      sales_id: salesId || null,
+    })
+    setSaving(false)
+    onSaved(jobId)
+  }
+
+  const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[88vh] overflow-y-auto"
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>เพิ่มงานใหม่</h3>
+          <button onClick={onClose} style={{ color: 'var(--text-2)' }}><X size={18} /></button>
+        </div>
+        <div className="p-5 space-y-3">
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>โครงการ</label>
+            <select value={projectId} onChange={e => setProjectId(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none appearance-none" style={inputStyle}>
+              <option value="">— เลือก —</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>เลขห้อง *</label>
+              <input value={roomNo} onChange={e => setRoomNo(e.target.value)} autoFocus
+                className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} placeholder="A-101" />
+            </div>
+            <div>
+              <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>ประเภท</label>
+              <div className="flex gap-1.5 mt-1">
+                {(['B2B', 'B2C'] as const).map(t => (
+                  <button key={t} onClick={() => setCustomerType(t)}
+                    className="flex-1 py-1.5 rounded-[8px] text-xs font-semibold"
+                    style={customerType === t
+                      ? { background: 'var(--accent)', color: '#fff' }
+                      : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>ชื่อลูกค้า / บริษัท *</label>
+            <input value={customerName} onChange={e => setCustomerName(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</label>
+            <input type="number" value={revenue} onChange={e => setRevenue(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} placeholder="0" />
+            {parseFloat(revenue) > 0 && (
+              <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{Math.round(parseFloat(revenue) / 1.07).toLocaleString()}</p>
+            )}
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>วันรับงาน / วันรับ PO</label>
+            <input type="date" value={workStartDate} onChange={e => setWorkStartDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>Sales</label>
+            <select value={salesId} onChange={e => setSalesId(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none appearance-none" style={inputStyle}>
+              <option value="">— เลือก —</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
+          <button onClick={save} disabled={saving || !roomNo.trim() || !customerName.trim()}
+            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white disabled:opacity-40"
+            style={{ background: 'var(--accent)' }}>
+            {saving ? 'กำลังบันทึก...' : '+ เพิ่มงาน'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -1462,9 +1662,7 @@ export default function MyDealsPage() {
   const [drawerJob, setDrawerJob] = useState<FullJob | null>(null)
   const [drawerLoading, setDrawerLoading] = useState(false)
   const [salesUsers, setSalesUsers] = useState<string[]>([])
-  const [jumpOpen, setJumpOpen] = useState(false)
-  const jumpRef = useRef<HTMLDivElement>(null)
-  const projectRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [addJobOpen, setAddJobOpen] = useState(false)
   const [returnTo] = useState(() =>
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('returnTo') : null
   )
@@ -1475,6 +1673,7 @@ export default function MyDealsPage() {
       .from('jobs')
       .select('id, room_no, project_id, customer_name, actual_deliver_date, work_start_date, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url)')
       .neq('working_status', 'ยกเลิก')
+      .neq('working_status', 'จอง')
       .order('room_no')
 
     const { data: usersData } = await supabase.from('users').select('name').eq('active', true).eq('dept', 'Sales Executive').order('name')
@@ -1505,20 +1704,19 @@ export default function MyDealsPage() {
 
   useEffect(() => { load() }, [load])
 
+  async function deleteJob(job: RoomJob) {
+    if (!confirm(`ลบงาน "${job.room_no}" (${job.customer_name || ''}) ?\nงวดชำระทั้งหมดจะถูกลบด้วย`)) return
+    await supabase.from('payments').delete().eq('job_id', job.id)
+    await supabase.from('jobs').delete().eq('id', job.id)
+    setJobs(prev => prev.filter(j => j.id !== job.id))
+    if (selectedJobId === job.id) { setSelectedJobId(null); setDrawerJob(null) }
+  }
+
   // Auto-open drawer from ?job= param (e.g. navigated from Handover)
   useEffect(() => {
     const jobId = new URLSearchParams(window.location.search).get('job')
     if (jobId) openDrawer(jobId)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Click outside jump dropdown
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (jumpRef.current && !jumpRef.current.contains(e.target as Node)) setJumpOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
 
   async function openDrawer(jobId: string) {
     setSelectedJobId(jobId)
@@ -1544,13 +1742,14 @@ export default function MyDealsPage() {
       room_no: raw.room_no || '',
       customer_name: raw.customer_name || '',
       customer_type: raw.customer_type || 'B2C',
-      revenue_inc_vat: raw.revenue_inc_vat || 0,
+      revenue_inc_vat: raw.revenue_inc_vat || raw.revenue_ex_vat || 0,
       revenue_ex_vat: raw.revenue_ex_vat || 0,
       working_status: raw.working_status || '',
       actual_deliver_date: raw.actual_deliver_date || null,
       sales_name: (raw as any).sales?.name || '',
       payment_plan_type: raw.payment_plan_type || null,
       work_days: raw.work_days || null,
+      order_date: raw.order_date || null,
       contract_date: raw.contract_date || null,
       work_start_date: raw.work_start_date || null,
       warranty_end: war?.warranty_end || null,
@@ -1592,12 +1791,6 @@ export default function MyDealsPage() {
     if (selectedJobId) await openDrawer(selectedJobId)
   }
 
-  function jumpToProject(pid: string) {
-    const el = projectRefs.current[pid]
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setJumpOpen(false)
-  }
-
   const projectOptions = useMemo(() => {
     const seen = new Map<string, string>()
     jobs.forEach(j => { if (j.project_id && !seen.has(j.project_id)) seen.set(j.project_id, j.project_name) })
@@ -1633,7 +1826,7 @@ export default function MyDealsPage() {
   const totalActive = useMemo(() => jobs.filter(j => !j.actual_deliver_date).length, [jobs])
 
   return (
-    <div className="min-h-screen p-4 md:p-6" style={{ background: 'var(--bg-gradient)' }}>
+    <div className="min-h-screen p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex-1">
@@ -1645,35 +1838,11 @@ export default function MyDealsPage() {
           )}
         </div>
 
-        {/* Jump to project */}
-        <div className="relative" ref={jumpRef}>
-          <button onClick={() => setJumpOpen(o => !o)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-sm"
-            style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-            <Zap size={13} />
-            Jump to project
-            <ChevronDown size={12} />
-          </button>
-          {jumpOpen && (
-            <div className="absolute right-0 top-full mt-1 rounded-[11px] shadow-lg z-30 overflow-hidden"
-              style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid var(--glass-border)', minWidth: 220, maxWidth: 320 }}>
-              <div className="overflow-y-auto" style={{ maxHeight: 280 }}>
-                {grouped.map(g => (
-                  <button key={g.pid} onClick={() => jumpToProject(g.pid)}
-                    className="w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors"
-                    style={{ color: 'var(--text-1)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <span className="truncate flex-1">{g.name}</span>
-                    <span className="text-xs ml-3 flex-shrink-0" style={{ color: 'var(--text-3)' }}>
-                      {g.active.length} ห้อง
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <button onClick={() => setAddJobOpen(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-semibold text-white"
+          style={{ background: 'var(--accent)' }}>
+          <Plus size={14} /> เพิ่มงาน
+        </button>
 
         </div>
 
@@ -1767,7 +1936,7 @@ export default function MyDealsPage() {
       ) : (
         <div className="space-y-8">
           {grouped.map(({ pid, name, active, done }) => (
-            <div key={pid} ref={el => { projectRefs.current[pid] = el }}>
+            <div key={pid}>
               {/* Project header */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{name}</span>
@@ -1784,7 +1953,7 @@ export default function MyDealsPage() {
               {active.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {active.map(j => (
-                    <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} />
+                    <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} onDelete={() => deleteJob(j)} />
                   ))}
                 </div>
               )}
@@ -1802,7 +1971,7 @@ export default function MyDealsPage() {
                   {doneExpanded[pid] && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-2">
                       {done.map(j => (
-                        <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} />
+                        <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} onDelete={() => deleteJob(j)} />
                       ))}
                     </div>
                   )}
@@ -1829,6 +1998,18 @@ export default function MyDealsPage() {
       {/* Deal Drawer */}
       {drawerJob && !drawerLoading && (
         <DealDrawer job={drawerJob} onClose={closeDrawer} onRefresh={handleRefresh} />
+      )}
+
+      {/* Add Job Modal */}
+      {addJobOpen && (
+        <AddJobModal
+          onClose={() => setAddJobOpen(false)}
+          onSaved={async (jobId) => {
+            setAddJobOpen(false)
+            await load()
+            await openDrawer(jobId)
+          }}
+        />
       )}
     </div>
   )

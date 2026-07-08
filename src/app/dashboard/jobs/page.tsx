@@ -71,6 +71,9 @@ type Job = {
   commission_amount: number
   commission_status: string
   notes: string
+  contract_date: string
+  work_start_date: string
+  plan_transfer_month: string
   customers?: { customer_name: string; room_no: string }
   projects?: { name: string }
   sales?: { name: string }
@@ -183,8 +186,8 @@ function JobCard({ job, paymentMap, onClick }: {
       {/* revenue + badges + chevron */}
       <div className="flex items-center justify-between gap-2">
         <div>
-          {job.revenue_ex_vat ? (
-            <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{f(job.revenue_ex_vat)}</p>
+          {job.revenue_inc_vat ? (
+            <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{f(job.revenue_inc_vat)}</p>
           ) : (
             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายได้</p>
           )}
@@ -217,6 +220,9 @@ const emptyJob = (): Partial<Job> => ({
   revenue_ex_vat: 0,
   revenue_inc_vat: 0,
   transfer_amount: 0,
+  contract_date: '',
+  work_start_date: '',
+  plan_transfer_month: '',
   voucher: 0,
   cost: 0,
   commission_rate: 0,
@@ -333,7 +339,7 @@ export default function JobsPage() {
   function handleRevenueChange(incVat: number) {
     const exVat = incVat ? Math.round(incVat / 1.07) : 0
     const { rate, amount } = calcCommission(exVat, tiers)
-    setEditing(e => ({ ...e, revenue_inc_vat: incVat, revenue_ex_vat: exVat, commission_rate: rate, commission_amount: amount }))
+    setEditing(e => ({ ...e, revenue_inc_vat: incVat, revenue_ex_vat: exVat, transfer_amount: incVat, commission_rate: rate, commission_amount: amount }))
   }
 
   // ─── Project select → load leads ───
@@ -385,7 +391,12 @@ export default function JobsPage() {
 
   // ─── Open Edit ───
   function openEdit(j: Job) {
-    setEditing({ ...j })
+    const editData = { ...j }
+    // B2B: fill company_name from customer_name if missing
+    if (editData.customer_type === 'B2B' && !editData.company_name && editData.customer_name) {
+      editData.company_name = editData.customer_name
+    }
+    setEditing(editData)
     if (j.project_id) loadLeads(j.project_id)
     setRoomNormalized('')
     setRoomDupWarning(null)
@@ -414,6 +425,9 @@ export default function JobsPage() {
     payload.expected_finish_date = payload.expected_finish_date || null
     payload.actual_deliver_date = payload.actual_deliver_date || null
     payload.commission_month = payload.commission_month || null
+    payload.contract_date = payload.contract_date || null
+    payload.work_start_date = payload.work_start_date || null
+    payload.plan_transfer_month = payload.plan_transfer_month || null
     const isNew = !jobs.find(j => j.id === editing.id)
     if (isNew) {
       await supabase.from('jobs').insert([payload])
@@ -763,6 +777,11 @@ export default function JobsPage() {
                     className="field-input w-full mt-1" />
                 </div>
                 <div>
+                  <label className="field-label">วันเซ็นสัญญา</label>
+                  <input type="date" value={editing.contract_date || ''} onChange={e => setEditing(e2 => ({ ...e2, contract_date: e.target.value }))}
+                    className="field-input w-full mt-1" />
+                </div>
+                <div>
                   <label className="field-label">Sales</label>
                   <select value={editing.sales_id || ''} onChange={e => setEditing(e2 => ({ ...e2, sales_id: e.target.value }))}
                     className="field-input w-full mt-1">
@@ -874,6 +893,16 @@ export default function JobsPage() {
                   <label className="field-label">สถานะห้อง</label>
                   <input value={editing.room_status || ''} onChange={e => setEditing(e2 => ({ ...e2, room_status: e.target.value }))}
                     className="field-input w-full mt-1" placeholder="เช่น ดำเนินการ / รอตรวจรับ" />
+                </div>
+                <div>
+                  <label className="field-label">วันเริ่มงานจริง</label>
+                  <input type="date" value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
+                    className="field-input w-full mt-1" />
+                </div>
+                <div>
+                  <label className="field-label">เดือน Transfer ห้อง (Origin)</label>
+                  <input type="month" value={(editing as any).plan_transfer_month || ''} onChange={e => setEditing(e2 => ({ ...e2, plan_transfer_month: e.target.value }))}
+                    className="field-input w-full mt-1" />
                 </div>
                 <div>
                   <label className="field-label">วันที่คาดส่งมอบ</label>

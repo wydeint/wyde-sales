@@ -4,10 +4,11 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Plus, X, Phone, Mail, MessageCircle, Building2, Home,
-  Banknote, FileText, Pencil, Save, ChevronRight, Search, Copy, Check,
-  CheckCircle2, Circle,
+  Banknote, FileText, Pencil, Save, ChevronRight, ChevronDown, Search, Copy, Check,
+  CheckCircle2, Circle, Trash2,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
+import { DealDrawer, FullJob, loadFullJob } from '@/components/ui/JobDrawer'
 import { PageSpinner } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
@@ -65,7 +66,12 @@ const emptyForm = {
   project_id: '', interested_room: '', budget: 0, status: 'booked', assigned_to: '', notes: '',
 }
 
-const f = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '—'
+const f = (n: number) => {
+  if (!n) return '—'
+  if (n >= 1_000_000) return `฿${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`
+  if (n >= 1_000) return `฿${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}K`
+  return '฿' + n.toLocaleString('th-TH')
+}
 const fdate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
 // ─── Skeleton card ──────────────────────────────────────────
@@ -85,33 +91,57 @@ function CardSkeleton() {
 }
 
 // ─── CustomerCard ───────────────────────────────────────────
-function CustomerCard({ c, stage, onClick }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void }) {
+function CustomerCard({ c, stage, onClick, onDelete }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: () => void }) {
   return (
-    <button onClick={onClick} className="ds-card w-full text-left p-3 transition-all hover:scale-[1.01] active:scale-[0.99]">
-      <div className="flex items-start justify-between gap-1 mb-1">
-        <p className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+    <div className="relative group w-full rounded-[14px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
+      onClick={onClick}
+    >
+      {/* Row 1: room number + stage badge */}
+      <div className="flex items-start justify-between gap-1 min-w-0">
+        <p className="font-bold text-sm truncate min-w-0 flex-1" style={{ color: 'var(--accent)' }}>
+          {c.interested_room ? `ห้อง ${c.interested_room}` : '—'}
+        </p>
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
           style={{ background: stage.badge, color: stage.text, border: `1px solid ${stage.border}` }}>
           {stage.label}
         </span>
       </div>
-      {(c as any).projects?.name && (
-        <p className="text-[11px] mb-1.5 truncate" style={{ color: 'var(--text-3)' }}>{(c as any).projects.name}</p>
+      {/* Row 2: customer name */}
+      <p className="text-xs truncate w-full" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
+      {/* Row 3: source chip */}
+      {c.source && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold self-start max-w-full truncate"
+          style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+          {c.source}
+        </span>
       )}
-      <div className="flex items-center justify-between mt-1">
-        {c.interested_room
-          ? <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ห้อง {c.interested_room}</span>
-          : <span />}
-        {c.budget > 0 && <span className="text-[10px] font-semibold" style={{ color: 'var(--text-2)' }}>{f(c.budget)}</span>}
+      {/* Row 4: budget + sales */}
+      <div className="flex items-center justify-between gap-1 mt-auto min-w-0">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          {c.budget > 0
+            ? <p className="text-xs font-bold truncate" style={{ color: 'var(--accent-green)' }}>{f(c.budget)}</p>
+            : <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ไม่ระบุงบ</p>}
+          {(c as any).users?.name && <p className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>{(c as any).users.name}</p>}
+        </div>
+        <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
-      {(c as any).users?.name && (
-        <p className="text-[10px] mt-1 truncate" style={{ color: 'var(--text-3)' }}>{(c as any).users.name}</p>
-      )}
-    </button>
+      {/* Delete button */}
+      <button
+        onClick={e => { e.stopPropagation(); onDelete() }}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+        title="ลบ"
+      >
+        <Trash2 size={11} />
+      </button>
+    </div>
   )
 }
 
-// ─── CustomerDrawer ─────────────────────────────────────────
+// ─── ProspectDrawer ─────────────────────────────────────────
 function CancelModal({ onClose, onConfirm }: {
   onClose: () => void
   onConfirm: (type: 'forfeit' | 'refund', amount: number, date: string, notes: string) => Promise<void>
@@ -188,6 +218,29 @@ function CancelModal({ onClose, onConfirm }: {
   )
 }
 
+async function createBookedJob(customer: Customer, supabase: ReturnType<typeof createClient>): Promise<string> {
+  const { count } = await supabase.from('jobs').select('*', { count: 'exact', head: true })
+  const jobNum = String((count || 0) + 1).padStart(4, '0')
+  const jobId = `JOB-${jobNum}`
+  // Fetch booking_value if available (admin may have recorded it separately)
+  const { data: extra } = await supabase.from('customers').select('booking_value').eq('id', customer.id).single()
+  const revInc = (extra as any)?.booking_value || customer.budget || 0
+  await supabase.from('jobs').insert({
+    id: jobId,
+    customer_id: customer.id,
+    project_id: customer.project_id || null,
+    room_no: customer.interested_room || '',
+    customer_name: customer.customer_name,
+    revenue_inc_vat: revInc,
+    revenue_ex_vat: revInc ? Math.round(revInc / 1.07) : 0,
+    working_status: 'จอง',
+    order_date: customer.created_at ? customer.created_at.slice(0, 10) : null,
+    work_start_date: null,
+    sales_id: customer.assigned_to || null,
+  })
+  return jobId
+}
+
 function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJob }: {
   customer: Customer; projects: Project[]; users: User[]
   onClose: () => void; onUpdate: (c: Customer) => void
@@ -204,6 +257,9 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
   const [showCancel, setShowCancel] = useState(false)
   const [showCancelSection, setShowCancelSection] = useState(false)
   const [cancelConfirmed, setCancelConfirmed] = useState(false)
+  const [docsExpanded, setDocsExpanded] = useState(false)
+  const [bookedJob, setBookedJob] = useState<FullJob | null>(null)
+  const [loadingBookedJob, setLoadingBookedJob] = useState(customer.status === 'booked')
 
   useEffect(() => {
     let cancelled = false
@@ -243,6 +299,20 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
     return () => { cancelled = true }
   }, [customer.id])
 
+  async function loadOrCreateBookedJob() {
+    setLoadingBookedJob(true)
+    const { data: existing } = await supabase.from('jobs').select('id')
+      .eq('customer_id', customer.id).not('working_status', 'eq', 'ยกเลิก').order('id').limit(1).single()
+    let jobId = existing?.id
+    if (!jobId) { jobId = await createBookedJob(customer, supabase) }
+    if (jobId) { const j = await loadFullJob(jobId); setBookedJob(j) }
+    setLoadingBookedJob(false)
+  }
+
+  useEffect(() => {
+    if (customer.status === 'booked') { loadOrCreateBookedJob() }
+  }, [customer.id, customer.status]) // eslint-disable-line react-hooks/exhaustive-deps
+
   async function save() {
     setSaving(true)
     const payload: Record<string, unknown> = {
@@ -257,30 +327,69 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
     setEditing(false)
   }
 
-  const fv = (k: keyof typeof form) => (v: unknown) => setForm(prev => ({ ...prev, [k]: v }))
+  // ── Booked: render DealDrawer with stage-move topSlot ──────
+  if (customer.status === 'booked') {
+    const stagePills = (
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
+        <div className="flex flex-wrap gap-1.5">
+          {STAGES.filter(s => s.value !== 'booked' && s.value !== 'closed').map(s => (
+            <button key={s.value} onClick={async () => {
+              await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
+              onUpdate({ ...customer, status: s.value })
+            }}
+              className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold"
+              style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
+              → {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+    if (loadingBookedJob) return (
+      <>
+        <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="text-xs" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</div>
+        </div>
+      </>
+    )
+    if (bookedJob) return (
+      <DealDrawer job={bookedJob} onClose={onClose} onRefresh={loadOrCreateBookedJob} topSlot={stagePills} />
+    )
+    return null
+  }
 
   return (
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={onClose} />
-      {/* Centered Panel */}
+      {/* Panel */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
         style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
 
-        {/* Header */}
-        <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-base leading-snug" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</p>
-            <span className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-[4px] text-xs font-semibold"
-              style={{ background: stage.badge, color: stage.text }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: stage.dot }} />
-              {stage.label}
-            </span>
+        {/* Header — like DealDrawer */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-1 rounded-[8px] font-bold text-xs"
+                style={{ background: stage.badge, color: stage.text }}>
+                {stage.label}
+              </span>
+              {customer.interested_room && (
+                <span className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>ห้อง {customer.interested_room}</span>
+              )}
+            </div>
+            <p className="font-bold text-sm mt-1 truncate" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>
+              {(customer as any).projects?.name || ''}
+              {(customer as any).users?.name ? ` · ${(customer as any).users.name}` : ''}
+            </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
             <button onClick={() => setEditing(e => !e)}
-              className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+              className="p-2 rounded-[8px]" style={{ background: editing ? 'var(--accent)' : 'var(--hover-bg)', color: editing ? '#fff' : 'var(--text-2)' }}>
               <Pencil size={14} />
             </button>
             <button onClick={onClose} className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
@@ -289,9 +398,57 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+          {/* Budget card */}
+          <div className="rounded-[12px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
+            <div>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>งบประมาณ</p>
+              <p className="text-xl font-bold mt-0.5" style={{ color: customer.budget > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
+                {customer.budget > 0 ? f(customer.budget) : 'ไม่ระบุ'}
+              </p>
+            </div>
+            {customer.source && (
+              <span className="text-[11px] px-2 py-1 rounded-[6px] font-semibold"
+                style={{ background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                {customer.source}
+              </span>
+            )}
+          </div>
+
+          {/* ย้ายสถานะ — always at top like stage bar in DealDrawer */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
+            <div className="flex flex-wrap gap-1.5">
+              {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
+                <button key={s.value} onClick={async () => {
+                  if (s.value === 'booked') {
+                    await createBookedJob(customer, supabase)
+                  } else {
+                    await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
+                  }
+                  onUpdate({ ...customer, status: s.value })
+                }}
+                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
+                  style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
+                  → {s.label}
+                </button>
+              ))}
+              {customer.status !== 'lost' && (
+                <button onClick={async () => {
+                  await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
+                  onUpdate({ ...customer, status: 'lost' })
+                }}
+                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
+                  style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
+                  → หลุด
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Edit form */}
-          {editing ? (
+          {editing && (
             <div className="space-y-3 p-4 rounded-[12px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>แก้ไขข้อมูล</p>
               <Input label="ชื่อลูกค้า" value={form.customer_name} onChange={e => setForm(p => ({ ...p, customer_name: e.target.value }))} />
@@ -324,7 +481,7 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
                 /></div>
               <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={2} />
               <div className="flex gap-2 pt-1">
-                <button onClick={() => setEditing(false)} className="flex-1 py-2 rounded-[8px] text-sm border" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
+                <button onClick={() => setEditing(false)} className="flex-1 py-2 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
                 <button onClick={save} disabled={saving}
                   className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white flex items-center justify-center gap-1.5"
                   style={{ background: saving ? '#666' : 'var(--accent)' }}>
@@ -332,10 +489,11 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
                 </button>
               </div>
             </div>
-          ) : (
-            /* Read-only info */
+          )}
+
+          {/* Contact + info (read-only, always visible) */}
+          {!editing && (
             <div className="space-y-3">
-              {/* Contact row */}
               <div className="flex gap-2 flex-wrap">
                 {customer.phone && (
                   <a href={`tel:${customer.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs"
@@ -356,111 +514,21 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
                   </span>
                 )}
               </div>
-
-              {/* Info grid */}
-              <div className="grid grid-cols-2 gap-2">
-                {(customer as any).projects?.name && (
-                  <InfoItem icon={<Building2 size={12} />} label="โครงการ" value={(customer as any).projects.name} />
-                )}
-                {customer.interested_room && (
-                  <InfoItem icon={<Home size={12} />} label="ห้องที่สนใจ" value={customer.interested_room} />
-                )}
-                {customer.budget > 0 && (
-                  <InfoItem icon={<Banknote size={12} />} label="งบประมาณ" value={f(customer.budget)} />
-                )}
-                {customer.source && (
-                  <InfoItem icon={<FileText size={12} />} label="ช่องทาง" value={customer.source} />
-                )}
-                {(customer as any).users?.name && (
-                  <InfoItem icon={<ChevronRight size={12} />} label="มอบหมาย" value={(customer as any).users.name} />
-                )}
-              </div>
-
-              {/* Move stage */}
-              <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
-
-                {/* Stage pills — all except closed & lost */}
-                <div className="flex flex-wrap gap-1.5">
-                  {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
-                    <button key={s.value} onClick={async () => {
-                      await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
-                      onUpdate({ ...customer, status: s.value })
-                    }}
-                      className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
-                      style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
-                      → {s.label}
-                    </button>
-                  ))}
-                  {customer.status !== 'lost' && (
-                    <button onClick={async () => {
-                      await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
-                      onUpdate({ ...customer, status: 'lost' })
-                    }}
-                      className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
-                      style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
-                      → หลุด
-                    </button>
-                  )}
-                </div>
-              </div>
-
               {customer.notes && (
                 <div className="p-3 rounded-[10px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{customer.notes}</div>
               )}
             </div>
           )}
 
-          {/* Jobs — right below customer info */}
-          {!loadingDetail && jobs.length > 0 && (
-            <div>
-              <p className="text-[10px] mb-2 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งาน / Jobs</p>
-              <div className="space-y-2">
-                {jobs.map(j => (
-                  <div key={j.id} className="rounded-[10px] p-3 text-xs" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold" style={{ color: 'var(--text-1)' }}>{j.work_type || 'งาน'} · {j.package_type}</span>
-                      <span style={{ color: 'var(--text-3)' }}>{fdate(j.order_date)}</span>
-                    </div>
-                    {j.revenue_inc_vat > 0 && <p style={{ color: 'var(--accent)' }}>{f(j.revenue_inc_vat)}</p>}
-                    {j.working_status && (
-                      <span className="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px]"
-                        style={{
-                          background: j.working_status === 'ส่งมอบแล้ว' ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)',
-                          color: j.working_status === 'ส่งมอบแล้ว' ? 'var(--accent-green)' : 'var(--accent-orange)',
-                        }}>
-                        {j.working_status}
-                      </span>
-                    )}
-                    {j.installments.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {j.installments.map(inst => (
-                          <div key={inst.id} className="flex items-center justify-between">
-                            <span style={{ color: 'var(--text-2)' }}>{inst.installment_name}</span>
-                            <span className="flex items-center gap-1.5">
-                              <span style={{ color: inst.status === 'paid' ? '#4ade80' : inst.status === 'overdue' ? '#f87171' : 'var(--text-3)' }}>
-                                {inst.status === 'paid' ? '✓' : inst.status === 'overdue' ? '!' : '○'}
-                              </span>
-                              <span style={{ color: 'var(--text-2)' }}>{f(inst.amount)}</span>
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Warranties */}
           {!loadingDetail && warranties.length > 0 && (
-            <div>
-              <p className="text-[10px] mb-2 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</p>
-              <div className="space-y-2">
+            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+              <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</span>
+              </div>
+              <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
                 {warranties.map(w => (
-                  <div key={w.id} className="rounded-[10px] p-3 text-xs flex items-center justify-between"
-                    style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+                  <div key={w.id} className="px-4 py-2.5 flex items-center justify-between text-xs">
                     <span style={{ color: 'var(--text-2)' }}>ห้อง {w.room} · {w.warranty_months} เดือน</span>
                     <span style={{ color: w.status === 'active' ? '#4ade80' : 'var(--text-3)' }}>{fdate(w.warranty_end)}</span>
                   </div>
@@ -469,32 +537,47 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
             </div>
           )}
 
-          {/* Booking details panel (งวดชำระเงิน) */}
-          {customer.status === 'booked' && <BookingPanel customer={customer} onTriggerStart={() => onStartJob(customer)} />}
+          {/* Booking installments — for booked customers, open by default */}
+          {customer.status === 'booked' && (
+            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+              <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งวดชำระเงินจอง</span>
+              </div>
+              <div className="p-4">
+                <BookingPanel customer={customer} onTriggerStart={() => onStartJob(customer)} />
+              </div>
+            </div>
+          )}
 
-          {/* เอกสาร — linked to first job's doc fields */}
+          {/* Documents — collapsible like DealDrawer */}
           {!loadingDetail && jobs.length > 0 && (() => {
             const j = jobs[0]
             const docCount = [j.quotation1_url, j.quotation2_url, j.id_card_url, j.delivery_doc_url, j.satisfaction_url].filter(Boolean).length
             return (
               <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-                <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
-                    เอกสาร {docCount}/5
-                  </span>
-                </div>
-                <div className="px-3 pb-2">
-                  <DocProspectField jobId={j.id} field="quotation1_url" label="ใบเสนอราคา 1" value={j.quotation1_url}
-                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, quotation1_url: v } : jj))} />
-                  <DocProspectField jobId={j.id} field="quotation2_url" label="ใบเสนอราคา 2" value={j.quotation2_url}
-                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, quotation2_url: v } : jj))} />
-                  <DocProspectField jobId={j.id} field="id_card_url" label="บัตรประชาชนลูกค้า" value={j.id_card_url}
-                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, id_card_url: v } : jj))} />
-                  <DocProspectField jobId={j.id} field="delivery_doc_url" label="ใบส่งมอบ" value={j.delivery_doc_url}
-                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, delivery_doc_url: v } : jj))} />
-                  <DocProspectField jobId={j.id} field="satisfaction_url" label="แบบประเมินความพึงพอใจ" value={j.satisfaction_url}
-                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, satisfaction_url: v } : jj))} />
-                </div>
+                <button className="w-full flex items-center justify-between px-4 py-2.5"
+                  style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}
+                  onClick={() => setDocsExpanded(e => !e)}>
+                  <span className="text-xs">เอกสาร</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{docCount}/5</span>
+                    {docsExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                  </div>
+                </button>
+                {docsExpanded && (
+                  <div className="px-3 pb-2">
+                    <DocProspectField jobId={j.id} field="quotation1_url" label="ใบเสนอราคา 1" value={j.quotation1_url}
+                      onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, quotation1_url: v } : jj))} />
+                    <DocProspectField jobId={j.id} field="quotation2_url" label="ใบเสนอราคา 2" value={j.quotation2_url}
+                      onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, quotation2_url: v } : jj))} />
+                    <DocProspectField jobId={j.id} field="id_card_url" label="บัตรประชาชนลูกค้า" value={j.id_card_url}
+                      onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, id_card_url: v } : jj))} />
+                    <DocProspectField jobId={j.id} field="delivery_doc_url" label="ใบส่งมอบ" value={j.delivery_doc_url}
+                      onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, delivery_doc_url: v } : jj))} />
+                    <DocProspectField jobId={j.id} field="satisfaction_url" label="แบบประเมินความพึงพอใจ" value={j.satisfaction_url}
+                      onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, satisfaction_url: v } : jj))} />
+                  </div>
+                )}
               </div>
             )
           })()}
@@ -508,7 +591,7 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
             />
           </div>
 
-          {/* Cancel — hidden behind toggle */}
+          {/* Cancel — hidden behind toggle (booked only) */}
           {customer.status === 'booked' && (
             <div>
               <button
@@ -535,16 +618,19 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
               )}
             </div>
           )}
+
+          {/* Action — เริ่มงาน for booked */}
+          {customer.status === 'booked' && (
+            <div className="pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
+              <button
+                onClick={() => onStartJob(customer)}
+                className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                style={{ background: '#059669' }}>
+                ⚡ เริ่มงาน
+              </button>
+            </div>
+          )}
         </div>
-        {editing && (
-          <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>
-            <button onClick={save} disabled={saving}
-              className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
-              style={{ background: saving ? 'var(--text-3)' : 'var(--accent)' }}>
-              {saving ? 'กำลังบันทึก...' : '💾 บันทึกข้อมูล'}
-            </button>
-          </div>
-        )}
       </div>
       </div>
 
@@ -890,6 +976,7 @@ function DocProspectField({ jobId, field, label, value, onUpdate }: {
     </button>
   )
 }
+
 
 function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTriggerStart?: () => void }) {
   const customerId = customer.id
@@ -1366,6 +1453,13 @@ export default function ProspectsKanbanPage() {
     setSelectedCustomer(updated)
   }
 
+  async function deleteCustomer(c: Customer) {
+    if (!confirm(`ลบ "${c.customer_name}" ออกจาก Pipeline?\nข้อมูลจะหายถาวร`)) return
+    await supabase.from('customers').delete().eq('id', c.id)
+    setCustomers(prev => prev.filter(x => x.id !== c.id))
+    if (selectedCustomer?.id === c.id) setSelectedCustomer(null)
+  }
+
   if (loading) return (
     <div className="h-screen flex flex-col" style={{ background: 'var(--bg-gradient)' }}>
       <div className="flex-shrink-0 px-6 pt-5 pb-3">
@@ -1502,13 +1596,32 @@ export default function ProspectsKanbanPage() {
             <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่พบ Prospect ใน {stage.label}</p>
             <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองเลือกกลุ่มอื่น หรือเพิ่ม Prospect ใหม่</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pt-2">
-            {list.map(c => (
-              <CustomerCard key={c.id} c={c} stage={stage} onClick={() => setSelectedCustomer(c)} />
-            ))}
-          </div>
-        )}
+        ) : (() => {
+          const grouped = list.reduce<Record<string, { name: string; items: Customer[] }>>((acc, c) => {
+            const key = c.project_id || '__none__'
+            const name = (c as any).projects?.name || c.project_id || 'ไม่ระบุโครงการ'
+            if (!acc[key]) acc[key] = { name, items: [] }
+            acc[key].items.push(c)
+            return acc
+          }, {})
+          const groups = Object.entries(grouped).sort(([, a], [, b]) => a.name.localeCompare(b.name, 'th'))
+          return (
+            <div className="space-y-5 pt-2">
+              {groups.map(([key, { name, items }]) => (
+                <div key={key}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
+                    {name} <span className="font-normal">({items.length})</span>
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    {items.map(c => (
+                      <CustomerCard key={c.id} c={c} stage={stage} onClick={() => setSelectedCustomer(c)} onDelete={() => deleteCustomer(c)} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Detail Drawer */}

@@ -1,5 +1,6 @@
 'use client'
 
+import FileAttach from '@/components/ui/FileAttach'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -527,6 +528,8 @@ function EventAddSheet({ open, onClose, events }: {
   )
 }
 
+const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
+
 // ─── Quick Pay Sheet ───────────────────────────────────────
 function QuickPaySheet({ open, onClose, jobs }: {
   open: boolean; onClose: () => void; jobs: JobOption[]
@@ -539,8 +542,10 @@ function QuickPaySheet({ open, onClose, jobs }: {
   const [selectedInst, setSelectedInst] = useState<any | null>(null)
   const [paidDate, setPaidDate] = useState('')
   const [paidAmount, setPaidAmount] = useState(0)
+  const [channel, setChannel] = useState(CHANNEL_OPTS[0])
+  const [slipPosted, setSlipPosted] = useState(false)
+  const [receiptPosted, setReceiptPosted] = useState(false)
   useEffect(() => { setPaidDate(new Date().toISOString().slice(0, 10)) }, [])
-  const [fileUrls, setFileUrls] = useState<string[]>([''])
   const [saving, setSaving] = useState(false)
 
   async function selectJob(job: JobOption) {
@@ -567,14 +572,23 @@ function QuickPaySheet({ open, onClose, jobs }: {
   async function confirmPay() {
     if (!selectedInst) return
     setSaving(true)
-    const urls = fileUrls.filter(u => u.trim())
     await supabase.from('payments').update({
       status: 'paid', paid_date: paidDate, paid_amount: paidAmount,
-      file_urls: urls.length > 0 ? urls : null,
+      channel: channel || null,
+      slip_url: slipPosted ? 'posted' : null,
+      receipt_url: receiptPosted ? 'posted' : null,
     }).eq('id', selectedInst.id)
 
     if (selectedInst.is_work_trigger && selectedJob) {
-      await supabase.from('jobs').update({ work_start_date: paidDate }).eq('id', selectedJob.id)
+      await supabase.from('jobs').update({
+        work_start_date: paidDate,
+        working_status: 'รับงาน',
+      }).eq('id', selectedJob.id)
+      // Close customer in pipeline if linked
+      const { data: jobData } = await supabase.from('jobs').select('customer_id').eq('id', selectedJob.id).maybeSingle()
+      if (jobData?.customer_id) {
+        await supabase.from('customers').update({ status: 'closed' }).eq('id', jobData.customer_id)
+      }
     }
     setSaving(false)
     resetAndClose()
@@ -582,7 +596,9 @@ function QuickPaySheet({ open, onClose, jobs }: {
 
   function resetAndClose() {
     setStep('job'); setSearch(''); setSelectedJob(null)
-    setInstallments([]); setSelectedInst(null); setFileUrls(['']); onClose()
+    setInstallments([]); setSelectedInst(null)
+    setSlipPosted(false); setReceiptPosted(false); setChannel(CHANNEL_OPTS[0])
+    onClose()
   }
 
   const filteredJobs = jobs.filter(j =>
@@ -692,25 +708,24 @@ function QuickPaySheet({ open, onClose, jobs }: {
             </div>
           </div>
           <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-xs" style={t3}>Google Drive URL (สลิป/เอกสาร)</label>
-              {fileUrls.length < 5 && (
-                <button onClick={() => setFileUrls([...fileUrls, ''])} className="text-xs flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
-                  <Plus size={11} />เพิ่ม
-                </button>
-              )}
-            </div>
-            {fileUrls.map((url, i) => (
-              <div key={i} className="flex gap-2 mb-2">
-                <input value={url} onChange={e => { const n = [...fileUrls]; n[i] = e.target.value; setFileUrls(n) }}
-                  placeholder="https://drive.google.com/..."
-                  className="flex-1 rounded-[8px] px-3 py-2.5 text-xs focus:outline-none"
-                  style={sheetInputStyle} />
-                {fileUrls.length > 1 && (
-                  <button onClick={() => setFileUrls(fileUrls.filter((_, idx) => idx !== i))} className="p-2" style={t3}><X size={13} /></button>
-                )}
-              </div>
-            ))}
+            <label className="text-xs mb-2 block" style={t3}>ช่องทางชำระเงิน</label>
+            <select value={channel} onChange={e => setChannel(e.target.value)}
+              className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none appearance-none"
+              style={sheetInputStyle}>
+              {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="rounded-[11px] p-3 space-y-2.5" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-blue)' }} />
+              <span className="text-xs font-semibold" style={{ color: slipPosted ? 'var(--accent-blue)' : 'var(--text-2)' }}>สลิปโอนเงิน / บัตรเครดิต โพสต์ใน Line แล้ว</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" checked={receiptPosted} onChange={e => setReceiptPosted(e.target.checked)}
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-green)' }} />
+              <span className="text-xs font-semibold" style={{ color: receiptPosted ? 'var(--accent-green)' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
+            </label>
           </div>
           <button onClick={confirmPay} disabled={saving}
             className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
@@ -1307,37 +1322,48 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
 }
 
 // ─── Documents Sheet ──────────────────────────────────────
+type DocTarget = { kind: 'job'; id: string; name: string; room: string; projectName: string } | { kind: 'customer'; id: string; name: string; room: string; projectName: string }
+
 function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const supabase = createClient()
   const [search, setSearch] = useState('')
-  const [jobs, setJobs] = useState<any[]>([])
-  const [selectedJob, setSelectedJob] = useState<any | null>(null)
+  const [results, setResults] = useState<DocTarget[]>([])
+  const [selected, setSelected] = useState<DocTarget | null>(null)
   const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  // Doc fields: [key, label, column_in_jobs]
-  const DOC_FIELDS = [
-    { key: 'quotation1_url', label: 'ใบเสนอราคา 1' },
-    { key: 'quotation2_url', label: 'ใบเสนอราคา 2' },
-    { key: 'id_card_url',    label: 'บัตรประชาชนลูกค้า' },
-    { key: 'sale_slip_url',  label: 'สลิปโอนเงิน' },
-    { key: 'sale_receipt_url', label: 'ใบเสร็จรับเงิน' },
-    { key: 'delivery_doc_url', label: 'ใบส่งมอบงาน' },
-    { key: 'satisfaction_url', label: 'แบบประเมินความพึงพอใจ' },
-  ]
-
-  const [urls, setUrls] = useState<Record<string, string>>({})
-
   async function doSearch(q: string) {
-    if (!q.trim()) { setJobs([]); return }
+    if (!q.trim()) { setResults([]); return }
     setLoading(true)
-    const { data } = await supabase.from('jobs')
-      .select('id, customer_name, room_no, projects:project_id(name), quotation1_url, quotation2_url, id_card_url, sale_slip_url, sale_receipt_url, delivery_doc_url, satisfaction_url')
-      .or(buildRoomOr(q, `customer_name.ilike.%${q}%,room_no.ilike.%${q}%`))
-      .not('working_status', 'eq', 'ยกเลิก')
-      .order('customer_name').limit(10)
-    setJobs(data || [])
+    const or = buildRoomOr(q, `customer_name.ilike.%${q}%,room_no.ilike.%${q}%`)
+    const [{ data: jobsData }, { data: custsData }] = await Promise.all([
+      supabase.from('jobs')
+        .select('id, customer_name, room_no, projects:project_id(name)')
+        .or(or.replace(/room_no/g, 'room_no'))
+        .not('working_status', 'eq', 'ยกเลิก')
+        .order('customer_name').limit(8),
+      supabase.from('customers')
+        .select('id, customer_name, interested_room, projects:project_id(name)')
+        .or(`customer_name.ilike.%${q}%,interested_room.ilike.%${q}%`)
+        .not('status', 'eq', 'closed')
+        .order('customer_name').limit(8),
+    ])
+    const jobs: DocTarget[] = (jobsData || []).map((j: any) => ({
+      kind: 'job', id: j.id, name: j.customer_name || '—', room: j.room_no || '—',
+      projectName: (j.projects as any)?.name || '—',
+    }))
+    const custs: DocTarget[] = (custsData || []).map((c: any) => ({
+      kind: 'customer', id: c.id, name: c.customer_name || '—', room: c.interested_room || '—',
+      projectName: (c.projects as any)?.name || '—',
+    }))
+    // Deduplicate by name+room across both lists
+    const seen = new Set<string>()
+    const merged: DocTarget[] = []
+    for (const item of [...jobs, ...custs]) {
+      const key = `${item.name}|${item.room}`
+      if (!seen.has(key)) { seen.add(key); merged.push(item) }
+    }
+    setResults(merged)
     setLoading(false)
   }
 
@@ -1347,34 +1373,11 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     timerRef.current = setTimeout(() => doSearch(v), 300)
   }
 
-  function selectJob(job: any) {
-    setSelectedJob(job)
-    const u: Record<string, string> = {}
-    DOC_FIELDS.forEach(f => { u[f.key] = job[f.key] || '' })
-    setUrls(u)
-  }
-
-  async function saveUrls() {
-    if (!selectedJob) return
-    setSaving(true)
-    const update: Record<string, string | null> = {}
-    DOC_FIELDS.forEach(f => { update[f.key] = urls[f.key]?.trim() || null })
-    await supabase.from('jobs').update(update).eq('id', selectedJob.id)
-    setSaving(false)
-    setSelectedJob(null)
-    setSearch('')
-    setJobs([])
-    onClose()
-    alert('บันทึกเอกสารเรียบร้อย ✅')
-  }
-
-  function resetAndClose() {
-    setSelectedJob(null); setSearch(''); setJobs([]); setUrls({}); onClose()
-  }
+  function resetAndClose() { setSelected(null); setSearch(''); setResults([]); onClose() }
 
   return (
-    <Sheet open={open} onClose={resetAndClose} title="📋 เอกสารลูกค้า">
-      {!selectedJob ? (
+    <Sheet open={open} onClose={resetAndClose} title="📎 ไฟล์แนบลูกค้า">
+      {!selected ? (
         <div className="p-4">
           <div className="relative mb-4">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
@@ -1384,57 +1387,40 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
           </div>
           {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
           <div className="space-y-2">
-            {jobs.map((j: any) => {
-              const filled = DOC_FIELDS.filter(f => j[f.key]).length
-              return (
-                <button key={j.id} onClick={() => selectJob(j)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
-                  <div>
-                    <p className="font-semibold text-sm" style={t1}>{j.customer_name}</p>
-                    <p className="text-xs mt-0.5" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold" style={{ color: filled === DOC_FIELDS.length ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
-                      {filled}/{DOC_FIELDS.length}
-                    </span>
-                    <ChevronRight size={16} style={t3} />
-                  </div>
-                </button>
-              )
-            })}
-            {!loading && search && jobs.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
-            {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
+            {results.map(r => (
+              <button key={`${r.kind}-${r.id}`} onClick={() => setSelected(r)}
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
+                <div>
+                  <p className="font-semibold text-sm" style={t1}>{r.name}</p>
+                  <p className="text-xs mt-0.5" style={t2}>{r.room} · {r.projectName}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                    style={{ background: r.kind === 'job' ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: r.kind === 'job' ? 'var(--accent)' : 'var(--accent-orange)' }}>
+                    {r.kind === 'job' ? 'งาน' : 'Prospect'}
+                  </span>
+                  <ChevronRight size={16} style={t3} />
+                </div>
+              </button>
+            ))}
+            {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+            {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อหรือเลขห้องเพื่อค้นหา</p>}
           </div>
         </div>
       ) : (
         <div className="p-4">
-          <button onClick={() => setSelectedJob(null)} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
-            <ArrowLeft size={14} /> {selectedJob.customer_name} · {selectedJob.room_no}
+          <button onClick={() => setSelected(null)} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
+            <ArrowLeft size={14} /> {selected.name} · {selected.room}
           </button>
-          <p className="text-xs mb-4" style={t2}>แนบ Google Drive URL สำหรับแต่ละเอกสาร</p>
-          <div className="space-y-3 mb-6">
-            {DOC_FIELDS.map(f => (
-              <div key={f.key}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ background: urls[f.key] ? 'var(--accent-green)' : 'var(--divider)' }} />
-                  <label className="text-xs" style={t2}>{f.label}</label>
-                </div>
-                <input
-                  value={urls[f.key] || ''}
-                  onChange={e => setUrls(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  placeholder="https://drive.google.com/..."
-                  className="w-full rounded-[8px] px-3 py-2.5 text-sm focus:outline-none"
-                  style={{ ...sheetInputStyle, fontSize: 14 }}
-                />
-              </div>
-            ))}
+          <div className="rounded-[14px] p-4 mb-4" style={sheetCard}>
+            <p className="font-semibold text-sm mb-0.5" style={t1}>{selected.name}</p>
+            <p className="text-xs" style={t2}>{selected.room} · {selected.projectName}</p>
           </div>
-          <button onClick={saveUrls} disabled={saving}
-            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors"
-            style={{ background: 'var(--accent-purple)' }}>
-            {saving ? 'กำลังบันทึก...' : '💾 บันทึกเอกสาร'}
-          </button>
+          <FileAttach
+            {...(selected.kind === 'job' ? { jobId: selected.id } : { customerId: selected.id })}
+            projectName={selected.projectName}
+            roomNo={selected.room}
+          />
         </div>
       )}
     </Sheet>

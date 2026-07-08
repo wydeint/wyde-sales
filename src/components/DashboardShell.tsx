@@ -70,7 +70,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
           {children}
         </main>
       </div>

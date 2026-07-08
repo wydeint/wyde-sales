@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Users, TrendingUp, PhoneCall, Target, Award, Package, X, ChevronRight } from 'lucide-react'
+import { Users, TrendingUp, Target, Award, Package, X, ChevronRight, Sprout } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
   const [allCustomers, setAllCustomers] = useState<Customer[]>([])
   const [allJobs, setAllJobs] = useState<Job[]>([])
-  const [reports, setReports] = useState<any[]>([])
+  const [condoLeads, setCondoLeads] = useState<{ customer_id: string | null; created_at: string }[]>([])
   const [orgTarget, setOrgTarget] = useState<OrgTarget | null>(null)
   const [todayPayments, setTodayPayments] = useState<{ paid_amount: number }[]>([])
 
@@ -53,20 +53,20 @@ export default function DashboardPage() {
         { data: { user } },
         { data: customers, error: custErr },
         { data: jobs, error: jobErr },
-        { data: reps, error: repErr },
+        { data: leads },
         { data: ot },
         { data: todayPmts },
       ] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('customers').select('status, budget, customer_type'),
         supabase.from('jobs').select('id,order_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
-        supabase.from('daily_reports').select('*, users(name)').gte('date', ms).order('date', { ascending: false }),
+        supabase.from('condo_leads').select('customer_id, created_at'),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value').eq('year', now.getFullYear()).eq('month', now.getMonth() + 1).maybeSingle(),
         supabase.from('payments').select('paid_amount').eq('status', 'paid').eq('paid_date', todayStr),
       ])
 
-      if (custErr || jobErr || repErr) {
-        setFetchError((custErr ?? jobErr ?? repErr)!.message)
+      if (custErr || jobErr) {
+        setFetchError((custErr ?? jobErr)!.message)
         setLoading(false)
         return
       }
@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
       setAllCustomers((customers || []) as Customer[])
       setAllJobs((jobs || []) as unknown as Job[])
-      setReports(reps || [])
+      setCondoLeads((leads || []) as { customer_id: string | null; created_at: string }[])
       setOrgTarget(ot as OrgTarget | null)
       setTodayPayments((todayPmts || []) as { paid_amount: number }[])
       setLoading(false)
@@ -120,8 +120,8 @@ export default function DashboardPage() {
     [jobs, monthStart, monthEnd]
   )
 
-  const callsThisMonth = reports.reduce((s, x) => s + (x.calls || 0), 0)
-  const visitsThisMonth = reports.reduce((s, x) => s + (x.visits || 0), 0)
+  const newLeadsThisMonth = condoLeads.filter(l => l.created_at >= monthStart).length
+  const newLeadsInPipeline = condoLeads.filter(l => l.created_at >= monthStart && l.customer_id).length
 
   const pipelineOrder = ['new', 'interested', 'quoted', 'booked', 'close_pending', 'closed']
   const pipeline = useMemo(() =>
@@ -133,19 +133,17 @@ export default function DashboardPage() {
     [customers]
   )
 
-  const leaderboard = useMemo(() => {
-    const byPerson: Record<string, { calls: number; visits: number; value: number }> = {}
-    for (const rep of reports) {
-      const name = (rep.users as any)?.name || '—'
-      if (!byPerson[name]) byPerson[name] = { calls: 0, visits: 0, value: 0 }
-      byPerson[name].calls += rep.calls || 0
-      byPerson[name].visits += rep.visits || 0
-      byPerson[name].value += rep.booking_value || 0
+  const salesLeaderboard = useMemo(() => {
+    const map = new Map<string, { name: string; units: number; revenue: number }>()
+    for (const j of salesThisMonth) {
+      const name = (j.sales as any)?.name || 'ไม่ระบุ'
+      const key = j.sales_id || name
+      const cur = map.get(key) || { name, units: 0, revenue: 0 }
+      map.set(key, { ...cur, units: cur.units + 1, revenue: cur.revenue + (j.revenue_inc_vat || 0) })
     }
-    return Object.entries(byPerson).map(([name, d]) => ({ name, ...d })).sort((a, b) => b.value - a.value || b.calls - a.calls)
-  }, [reports])
+    return [...map.values()].sort((a, b) => b.revenue - a.revenue)
+  }, [salesThisMonth])
 
-  const recentReports = reports.slice(0, 6)
   const pipelineMax = Math.max(...pipeline.map(p => p.count), 1)
 
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -235,7 +233,7 @@ export default function DashboardPage() {
           { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${customers.filter(c => c.status === 'booked').length} · ปิด ${customers.filter(c => c.status === 'closed').length}`, color: '#60a5fa', onClick: undefined },
           { icon: TrendingUp, label: 'ยอดขายเดือนนี้', value: fn(salesThisMonth.length) + ' รายการ', sub: f(salesThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#f97316', onClick: undefined },
           { icon: Package, label: 'ยอดส่งมอบเดือนนี้', value: fn(deliveredThisMonth.length) + ' รายการ', sub: f(deliveredThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#4ade80', onClick: () => setDeliverDrillOpen(true) },
-          { icon: PhoneCall, label: 'โทร เดือนนี้', value: fn(callsThisMonth), sub: `เยี่ยม ${visitsThisMonth} ครั้ง`, color: '#fbbf24', onClick: undefined },
+          { icon: Sprout, label: 'Leads ใหม่เดือนนี้', value: fn(newLeadsThisMonth) + ' ราย', sub: `เข้า Pipeline แล้ว ${newLeadsInPipeline} ราย`, color: '#34d399', onClick: undefined },
         ].map(({ icon: Icon, label, value, sub, color, onClick }) => (
           <div key={label} onClick={onClick}
             className="ds-card p-4"
@@ -389,19 +387,19 @@ export default function DashboardPage() {
             <Award size={15} style={{ color: '#fbbf24' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales เดือนนี้</h2>
           </div>
-          {leaderboard.length === 0 ? (
+          {salesLeaderboard.length === 0 ? (
             <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
           ) : (
             <div className="space-y-3">
-              {leaderboard.map((p, i) => (
+              {salesLeaderboard.map((p, i) => (
                 <div key={p.name} className="flex items-center gap-3">
                   <span className="text-base w-6 flex-shrink-0">{rankIcon(i)}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{p.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>โทร {p.calls} · เยี่ยม {p.visits}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{p.units} งาน</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    {p.value > 0 && <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f(p.value)}</p>}
+                    {p.revenue > 0 && <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f(p.revenue)}</p>}
                   </div>
                 </div>
               ))}

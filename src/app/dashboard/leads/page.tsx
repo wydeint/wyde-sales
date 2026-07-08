@@ -313,9 +313,9 @@ export default function LeadsPage() {
   })
 
   const stats = {
-    total: leads.length,
-    inPipeline: leads.filter(l => l.customer_id).length,
-    new: leads.filter(l => !l.customer_id).length,
+    total: filtered.length,
+    inPipeline: filtered.filter(l => l.customer_id).length,
+    new: filtered.filter(l => !l.customer_id).length,
   }
 
   return (

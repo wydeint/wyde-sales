@@ -140,10 +140,10 @@ export default function CommissionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, tiers])
 
-  // Summary totals from ALL jobs (not filtered), using computed values
-  const totalPending  = jobs.filter(j => getStatus(j) === 'pending' ).reduce((s, j) => s + getCommission(j).amount, 0)
-  const totalApproved = jobs.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
-  const totalPaid     = jobs.filter(j => getStatus(j) === 'paid'    ).reduce((s, j) => s + getCommission(j).amount, 0)
+  // Summary totals from filtered jobs (ตาม filterStatus/filterSales ที่เลือก)
+  const totalPending  = filtered.filter(j => getStatus(j) === 'pending' ).reduce((s, j) => s + getCommission(j).amount, 0)
+  const totalApproved = filtered.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
+  const totalPaid     = filtered.filter(j => getStatus(j) === 'paid'    ).reduce((s, j) => s + getCommission(j).amount, 0)
 
   function toggleMonth(key: string) {
     setExpanded(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n })
@@ -165,7 +165,7 @@ export default function CommissionPage() {
         {([['pending', totalPending], ['approved', totalApproved], ['paid', totalPaid]] as const).map(([s, v]) => {
           const cfg = STATUS_CFG[s]
           const Icon = cfg.icon
-          const count = jobs.filter(j => getStatus(j) === s).length
+          const count = filtered.filter(j => getStatus(j) === s).length
           return (
             <div key={s} className="rounded-[18px] p-4"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>

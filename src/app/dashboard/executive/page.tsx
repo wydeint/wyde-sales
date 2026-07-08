@@ -19,8 +19,6 @@ type Job = {
   projects?: { name: string }
 }
 
-type Report = { id: string; date: string; calls: number; visits: number; users?: { name: string } }
-
 type Period = 'week' | 'month' | 'quarter' | 'year'
 
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
@@ -73,7 +71,6 @@ export default function ExecutivePage() {
   const supabase = createClient()
   const [allCustomers, setAllCustomers] = useState<Customer[]>([])
   const [allJobs, setAllJobs] = useState<Job[]>([])
-  const [reports, setReports] = useState<Report[]>([])
   const [orgTarget, setOrgTarget] = useState<{ sales: number; delivery: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
@@ -94,18 +91,15 @@ export default function ExecutivePage() {
       const [
         { data: cust, error: e1 },
         { data: jobs, error: e2 },
-        { data: reps, error: e3 },
         { data: ot },
       ] = await Promise.all([
         supabase.from('customers').select('id,status,budget,customer_type,source,assigned_to,created_at,users!customers_assigned_to_fkey(name)'),
         supabase.from('jobs').select('id,order_date,actual_deliver_date,revenue_ex_vat,work_type,customer_type,working_status,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)'),
-        supabase.from('daily_reports').select('id,date,calls,visits,users(name)').order('date', { ascending: false }),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value,year,month').eq('year', new Date().getFullYear()).limit(12),
       ])
-      if (e1 || e2 || e3) { setFetchError((e1 ?? e2 ?? e3)!.message); setLoading(false); return }
+      if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllCustomers((cust || []) as unknown as Customer[])
       setAllJobs((jobs || []) as unknown as Job[])
-      setReports((reps || []) as unknown as Report[])
 
       if (ot && ot.length > 0) {
         const now = new Date(); const m = now.getMonth() + 1; const q = Math.floor((m - 1) / 3)
@@ -148,19 +142,26 @@ export default function ExecutivePage() {
     [allJobs, start, end, filterCustType]
   )
 
-  const periodReports = useMemo(() =>
-    reports.filter(r => r.date >= start && r.date <= end),
-    [reports, start, end]
-  )
-
   // KPIs
   const salesRevenue = periodJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const deliveryRevenue = deliveredJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+  const avgRevenue = periodJobs.length > 0 ? Math.round(salesRevenue / periodJobs.length) : 0
+
+  // Win Rate: customers ที่เข้า pipeline ในช่วงเวลานี้
+  const periodCustomers = useMemo(() =>
+    allCustomers.filter(c =>
+      (!filterCustType || c.customer_type === filterCustType) &&
+      c.created_at >= start && c.created_at <= end
+    ),
+    [allCustomers, filterCustType, start, end]
+  )
+  const periodClosed = periodCustomers.filter(c => c.status === 'closed').length
+  const periodLost = periodCustomers.filter(c => c.status === 'lost').length
+  const winRate = pct(periodClosed, periodClosed + periodLost)
+
+  // All-time closed/lost for pipeline funnel label
   const closedCount = customers.filter(c => c.status === 'closed').length
   const lostCount = customers.filter(c => c.status === 'lost').length
-  const winRate = pct(closedCount, closedCount + lostCount)
-  const totalCalls = periodReports.reduce((s, r) => s + (r.calls || 0), 0)
-  const totalVisits = periodReports.reduce((s, r) => s + (r.visits || 0), 0)
 
   // Pipeline funnel
   const pipelineOrder = ['new', 'interested', 'quoted', 'booked', 'close_pending', 'closed']
@@ -181,20 +182,15 @@ export default function ExecutivePage() {
 
   // Sales ranking from jobs
   const salesRanking = useMemo(() => {
-    const map = new Map<string, { name: string; units: number; revenue: number; calls: number; visits: number }>()
+    const map = new Map<string, { name: string; units: number; revenue: number }>()
     periodJobs.forEach(j => {
       const name = (j.sales as any)?.name || 'ไม่ระบุ'
       const key = j.sales_id || name
-      const cur = map.get(key) || { name, units: 0, revenue: 0, calls: 0, visits: 0 }
+      const cur = map.get(key) || { name, units: 0, revenue: 0 }
       map.set(key, { ...cur, units: cur.units + 1, revenue: cur.revenue + (j.revenue_ex_vat || 0) })
     })
-    periodReports.forEach(r => {
-      const name = (r.users as any)?.name || '—'
-      const cur = map.get(name) || { name, units: 0, revenue: 0, calls: 0, visits: 0 }
-      map.set(name, { ...cur, calls: cur.calls + (r.calls || 0), visits: cur.visits + (r.visits || 0) })
-    })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue || b.units - a.units)
-  }, [periodJobs, periodReports])
+  }, [periodJobs])
 
   const salesMax = Math.max(...salesRanking.map(s => s.revenue), 1)
 
@@ -327,8 +323,8 @@ export default function ExecutivePage() {
         {[
           { icon: TrendingUp, label: 'ยอดขาย (Order Date)', value: fk(salesRevenue), sub: `${periodJobs.length} งาน`, color: '#4ade80' },
           { icon: Package, label: 'ยอดส่งมอบ', value: fk(deliveryRevenue), sub: `${deliveredJobs.length} งาน`, color: '#60a5fa' },
-          { icon: Users, label: 'Win Rate', value: winRate + '%', sub: `ปิด ${closedCount} · หลุด ${lostCount}`, color: winRate >= 50 ? '#4ade80' : '#f97316' },
-          { icon: DollarSign, label: 'โทร/เยี่ยม', value: totalCalls.toLocaleString(), sub: `เยี่ยม ${totalVisits} ครั้ง`, color: '#fbbf24' },
+          { icon: Users, label: 'Win Rate (ช่วงนี้)', value: winRate + '%', sub: `ปิด ${periodClosed} · หลุด ${periodLost} (เข้า pipeline ${start.slice(0,7)})`, color: winRate >= 50 ? '#4ade80' : '#f97316' },
+          { icon: DollarSign, label: 'Revenue เฉลี่ย/งาน', value: fk(avgRevenue), sub: `จาก ${periodJobs.length} งาน`, color: '#fbbf24' },
         ].map(({ icon: Icon, label: lbl, value, sub, color }) => (
           <div key={lbl} className="ds-card-sm">
             <div className="flex items-center gap-2 mb-2">
@@ -461,7 +457,7 @@ export default function ExecutivePage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{s.name}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      {s.units} งาน · โทร {s.calls} · เยี่ยม {s.visits}
+                      {s.units} งาน
                     </p>
                   </div>
                   <p className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--accent-green)' }}>{fk(s.revenue)}</p>

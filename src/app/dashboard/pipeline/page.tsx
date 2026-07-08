@@ -33,6 +33,8 @@ interface DetailJob {
   order_date: string | null; revenue_inc_vat: number; working_status: string
   installments: { id: string; installment_no: number; installment_name: string; amount: number; status: string; due_date: string | null; paid_date: string | null; is_final: boolean }[]
   handover: { delivery_date: string | null; work_status: string } | null
+  quotation1_url: string | null; quotation2_url: string | null; id_card_url: string | null
+  delivery_doc_url: string | null; satisfaction_url: string | null
 }
 interface DetailWarranty {
   id: string; warranty_start: string; warranty_end: string; warranty_months: number
@@ -211,7 +213,7 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
       const expectedCustomerId = customer.project_id && customer.interested_room
         ? `${customer.project_id}-${customer.interested_room}` : null
       const jobQuery = supabase.from('jobs')
-        .select('id, po_no, so_no, work_type, package_type, order_date, revenue_inc_vat, working_status')
+        .select('id, po_no, so_no, work_type, package_type, order_date, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url')
         .order('order_date', { ascending: false })
       const [{ data: jobsRaw }, { data: wRaw }] = await Promise.all([
         expectedCustomerId
@@ -409,10 +411,7 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
             </div>
           )}
 
-          {/* Booking details panel */}
-          {customer.status === 'booked' && <BookingPanel customer={customer} onTriggerStart={() => onStartJob(customer)} />}
-
-          {/* Jobs */}
+          {/* Jobs — right below customer info */}
           {!loadingDetail && jobs.length > 0 && (
             <div>
               <p className="text-[10px] mb-2 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งาน / Jobs</p>
@@ -454,6 +453,52 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
             </div>
           )}
 
+          {/* Warranties */}
+          {!loadingDetail && warranties.length > 0 && (
+            <div>
+              <p className="text-[10px] mb-2 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</p>
+              <div className="space-y-2">
+                {warranties.map(w => (
+                  <div key={w.id} className="rounded-[10px] p-3 text-xs flex items-center justify-between"
+                    style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+                    <span style={{ color: 'var(--text-2)' }}>ห้อง {w.room} · {w.warranty_months} เดือน</span>
+                    <span style={{ color: w.status === 'active' ? '#4ade80' : 'var(--text-3)' }}>{fdate(w.warranty_end)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Booking details panel (งวดชำระเงิน) */}
+          {customer.status === 'booked' && <BookingPanel customer={customer} onTriggerStart={() => onStartJob(customer)} />}
+
+          {/* เอกสาร — linked to first job's doc fields */}
+          {!loadingDetail && jobs.length > 0 && (() => {
+            const j = jobs[0]
+            const docCount = [j.quotation1_url, j.quotation2_url, j.id_card_url, j.delivery_doc_url, j.satisfaction_url].filter(Boolean).length
+            return (
+              <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+                <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                    เอกสาร {docCount}/5
+                  </span>
+                </div>
+                <div className="px-3 pb-2">
+                  <DocProspectField jobId={j.id} field="quotation1_url" label="ใบเสนอราคา 1" value={j.quotation1_url}
+                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, quotation1_url: v } : jj))} />
+                  <DocProspectField jobId={j.id} field="quotation2_url" label="ใบเสนอราคา 2" value={j.quotation2_url}
+                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, quotation2_url: v } : jj))} />
+                  <DocProspectField jobId={j.id} field="id_card_url" label="บัตรประชาชนลูกค้า" value={j.id_card_url}
+                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, id_card_url: v } : jj))} />
+                  <DocProspectField jobId={j.id} field="delivery_doc_url" label="ใบส่งมอบ" value={j.delivery_doc_url}
+                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, delivery_doc_url: v } : jj))} />
+                  <DocProspectField jobId={j.id} field="satisfaction_url" label="แบบประเมินความพึงพอใจ" value={j.satisfaction_url}
+                    onUpdate={v => setJobs(prev => prev.map(jj => jj.id === j.id ? { ...jj, satisfaction_url: v } : jj))} />
+                </div>
+              </div>
+            )
+          })()}
+
           {/* File Attachments */}
           <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
             <FileAttach
@@ -488,22 +533,6 @@ function CustomerDrawer({ customer, projects, users, onClose, onUpdate, onStartJ
                   </button>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Warranties */}
-          {!loadingDetail && warranties.length > 0 && (
-            <div>
-              <p className="text-[10px] mb-2 font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</p>
-              <div className="space-y-2">
-                {warranties.map(w => (
-                  <div key={w.id} className="rounded-[10px] p-3 text-xs flex items-center justify-between"
-                    style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                    <span style={{ color: 'var(--text-2)' }}>ห้อง {w.room} · {w.warranty_months} เดือน</span>
-                    <span style={{ color: w.status === 'active' ? '#4ade80' : 'var(--text-3)' }}>{fdate(w.warranty_end)}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </div>
@@ -827,6 +856,37 @@ function BookingCopyBtn({ lineMsg }: { lineMsg: string }) {
         color: copied ? '#4ade80' : '#00b96b',
       }}>
       {copied ? <Check size={10} /> : '💬'} {copied ? 'คัดลอก!' : 'LINE'}
+    </button>
+  )
+}
+
+function DocProspectField({ jobId, field, label, value, onUpdate }: {
+  jobId: string; field: string; label: string; value: string | null
+  onUpdate: (val: string | null) => void
+}) {
+  const supabase = createClient()
+  const [checked, setChecked] = useState(!!value)
+  const [saving, setSaving] = useState(false)
+  async function toggle() {
+    setSaving(true)
+    const newVal = checked ? null : 'posted'
+    await supabase.from('jobs').update({ [field]: newVal }).eq('id', jobId)
+    setChecked(!checked)
+    onUpdate(newVal)
+    setSaving(false)
+  }
+  return (
+    <button onClick={toggle} disabled={saving}
+      className="flex items-center gap-2 w-full text-left py-1.5"
+      style={{ opacity: saving ? 0.5 : 1 }}>
+      <div className="w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0"
+        style={{
+          background: checked ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--hover-bg)',
+          border: `1px solid ${checked ? 'var(--accent)' : 'var(--divider)'}`,
+        }}>
+        {checked && <Check size={10} style={{ color: 'var(--accent)' }} />}
+      </div>
+      <span className="text-xs" style={{ color: 'var(--text-2)' }}>{label}</span>
     </button>
   )
 }

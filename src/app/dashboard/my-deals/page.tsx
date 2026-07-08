@@ -752,7 +752,7 @@ function generateLineMsg(job: LineJobCtx, inst: Installment): string {
 // ─── Deal Drawer (right panel) ─────────────────────────────
 // ─── Doc field component ───────────────────────────────────
 // ─── InstRow — inline paid_date edit ───────────────────────
-function InstRow({ inst, job, lineChannel, onDateSaved, onDeleted, onUpdated }: { inst: Installment; job: LineJobCtx; lineChannel: string; onDateSaved: (d: string | null) => void; onDeleted?: () => void; onUpdated?: (patch: Partial<Installment>) => void }) {
+function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated }: { inst: Installment; job: LineJobCtx; onDateSaved: (d: string | null) => void; onDeleted?: () => void; onUpdated?: (patch: Partial<Installment>) => void }) {
   const supabase = createClient()
   const [editingDate, setEditingDate] = useState(false)
   const [dateVal, setDateVal] = useState(inst.paid_date || todayStr())
@@ -763,6 +763,7 @@ function InstRow({ inst, job, lineChannel, onDateSaved, onDeleted, onUpdated }: 
   const [savingReceipt, setSavingReceipt] = useState(false)
   const [copied, setCopied] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [channel, setChannel] = useState(inst.channel || CHANNEL_OPTS[0])
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(inst.installment_name)
   const [editAmount, setEditAmount] = useState(String(inst.amount || ''))
@@ -776,8 +777,13 @@ function InstRow({ inst, job, lineChannel, onDateSaved, onDeleted, onUpdated }: 
     onDeleted?.()
   }
 
+  async function saveChannel(val: string) {
+    setChannel(val)
+    await supabase.from('payments').update({ channel: val }).eq('id', inst.id)
+  }
+
   function copyLine() {
-    const msg = generateLineMsg(job, { ...inst, paid_date: dateVal, channel: lineChannel || inst.channel })
+    const msg = generateLineMsg(job, { ...inst, paid_date: dateVal, channel })
     navigator.clipboard.writeText(msg).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -896,7 +902,12 @@ function InstRow({ inst, job, lineChannel, onDateSaved, onDeleted, onUpdated }: 
         </div>
       </div>
       {inst.status === 'paid' && (
-        <div className="flex gap-2 mt-2 ml-7">
+        <div className="flex gap-1.5 mt-2 ml-7 flex-wrap">
+          <select value={channel} onChange={e => saveChannel(e.target.value)}
+            className="text-[10px] px-2 py-1 rounded-[6px] focus:outline-none appearance-none"
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+            {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
           <button onClick={toggleSlip} disabled={savingSlip}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
             style={{
@@ -1097,12 +1108,10 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
   const supabase = createClient()
   const [job, setJob] = useState(initialJob)
   const [actionModal, setActionModal] = useState<'setup' | 'pay' | 'handover' | null>(null)
-  const [instExpanded, setInstExpanded] = useState(false)
   const [docsExpanded, setDocsExpanded] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
   const [showCancelSection, setShowCancelSection] = useState(false)
   const [cancelConfirmed, setCancelConfirmed] = useState(false)
-  const [lineChannel, setLineChannel] = useState(CHANNEL_OPTS[0])
   useEffect(() => { setJob(initialJob) }, [initialJob])
   const { hasPlan, finalPaid, delivered, paidCount, totalCount, pendingInstallments, activeStage } = getFullStageInfo(job)
   const overdueCount = job.installments.filter(i => i.status === 'overdue').length
@@ -1203,49 +1212,33 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           {hasPlan && (
             <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
               <div className="flex items-center" style={{ background: 'var(--hover-bg)' }}>
-                <button className="flex-1 flex items-center justify-between px-4 py-2.5"
-                  style={{ color: 'var(--text-3)' }}
-                  onClick={() => setInstExpanded(e => !e)}>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest">งวดชำระเงิน</span>
-                  {instExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                </button>
+                <span className="flex-1 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งวดชำระเงิน</span>
                 <button onClick={() => setActionModal('setup')}
                   className="px-3 py-2.5 text-xs font-semibold"
                   style={{ color: 'var(--accent)', borderLeft: '1px solid var(--divider)' }}>
                   แก้ไข
                 </button>
               </div>
-              {/* LINE channel selector — same as Pipeline BookingPanel */}
-              <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--divider)', background: 'color-mix(in srgb, var(--accent-green) 5%, transparent)' }}>
-                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>LINE Report</span>
-                <select value={lineChannel} onChange={e => setLineChannel(e.target.value)}
-                  className="text-[11px] px-2 py-1 rounded-[8px] focus:outline-none appearance-none"
-                  style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                  {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+              <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
+                {job.installments.sort((a, b) => a.installment_no - b.installment_no).map(inst => (
+                  <InstRow key={inst.id} inst={inst} job={job}
+                    onDateSaved={newDate => setJob(prev => ({
+                      ...prev,
+                      installments: prev.installments.map(i => i.id === inst.id ? { ...i, paid_date: newDate } : i)
+                    }))}
+                    onUpdated={patch => setJob(prev => ({
+                      ...prev,
+                      installments: prev.installments.map(i => i.id === inst.id ? { ...i, ...patch } : i)
+                    }))}
+                    onDeleted={() => setJob(prev => ({
+                      ...prev,
+                      installments: prev.installments.filter(i => i.id !== inst.id)
+                    }))} />
+                ))}
+                <AddInstallmentRow jobId={job.id} customerId={job.customer_id ?? ''} projectId={job.project_id} roomNo={job.room_no}
+                  nextNo={job.installments.length + 1}
+                  onAdded={newInst => setJob(prev => ({ ...prev, installments: [...prev.installments, newInst] }))} />
               </div>
-              {instExpanded && (
-                <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
-                  {job.installments.sort((a, b) => a.installment_no - b.installment_no).map(inst => (
-                    <InstRow key={inst.id} inst={inst} job={job} lineChannel={lineChannel}
-                      onDateSaved={newDate => setJob(prev => ({
-                        ...prev,
-                        installments: prev.installments.map(i => i.id === inst.id ? { ...i, paid_date: newDate } : i)
-                      }))}
-                      onUpdated={patch => setJob(prev => ({
-                        ...prev,
-                        installments: prev.installments.map(i => i.id === inst.id ? { ...i, ...patch } : i)
-                      }))}
-                      onDeleted={() => setJob(prev => ({
-                        ...prev,
-                        installments: prev.installments.filter(i => i.id !== inst.id)
-                      }))} />
-                  ))}
-                  <AddInstallmentRow jobId={job.id} customerId={job.customer_id ?? ''} projectId={job.project_id} roomNo={job.room_no}
-                    nextNo={job.installments.length + 1}
-                    onAdded={newInst => setJob(prev => ({ ...prev, installments: [...prev.installments, newInst] }))} />
-                </div>
-              )}
             </div>
           )}
 

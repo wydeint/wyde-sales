@@ -780,7 +780,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
 }
 
 // ─── BookingPanel ───────────────────────────────────────────
-type InstRow = { name: string; amount_inc: number; due_date: string; done: boolean; slip: boolean; receipt: boolean }
+type InstRow = { name: string; amount_inc: number; due_date: string; done: boolean; slip: boolean; receipt: boolean; channel: string }
 
 const B2C_PLANS = {
   A: { label: 'แบบ A — 100% ครั้งเดียว',     slots: ['ชำระเต็มจำนวน'] },
@@ -838,7 +838,6 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
   const [saving, setSaving]     = useState(false)
   const [saveOk, setSaveOk]     = useState(false)
   const [err, setErr]           = useState('')
-  const [lineChannel, setLineChannel] = useState('โอนเข้าบัญชีบริษัท')
   const [revenueInc, setRevenueInc] = useState(0)
   const [depositInc, setDepositInc] = useState(0)
   const [depositDate, setDepositDate] = useState(todayStr())
@@ -855,7 +854,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
   useEffect(() => {
     async function load() {
       const { data } = await supabase.from('customers')
-        .select('booking_value,deposit_cash,deposit_date,customer_type,work_type,job_type,pay1_amount,pay1_date,pay1_done,pay1_slip,pay1_receipt,pay2_amount,pay2_date,pay2_done,pay2_slip,pay2_receipt,pay3_amount,pay3_date,pay3_done,pay3_slip,pay3_receipt,pay4_amount,pay4_date,pay4_done,pay4_slip,pay4_receipt,pay5_amount,pay5_date,pay5_done,pay5_slip,pay5_receipt,pay6_amount,pay6_date,pay6_done,pay6_slip,pay6_receipt')
+        .select('booking_value,deposit_cash,deposit_date,customer_type,work_type,job_type,pay1_amount,pay1_date,pay1_done,pay1_slip,pay1_receipt,pay1_channel,pay2_amount,pay2_date,pay2_done,pay2_slip,pay2_receipt,pay2_channel,pay3_amount,pay3_date,pay3_done,pay3_slip,pay3_receipt,pay3_channel,pay4_amount,pay4_date,pay4_done,pay4_slip,pay4_receipt,pay4_channel,pay5_amount,pay5_date,pay5_done,pay5_slip,pay5_receipt,pay5_channel,pay6_amount,pay6_date,pay6_done,pay6_slip,pay6_receipt,pay6_channel')
         .eq('id', customerId).single()
       if (data) {
         const d = data as any
@@ -875,6 +874,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
             done: !!d[`pay${i}_done`],
             slip: !!d[`pay${i}_slip`],
             receipt: !!d[`pay${i}_receipt`],
+            channel: d[`pay${i}_channel`] || '',
           })
         }
 
@@ -901,7 +901,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
                 depAmt = pmts[0].amount || 0
                 depDt  = pmts[0].paid_date || pmts[0].due_date || todayStr()
                 if (!loaded.length) {
-                  loaded.push({ name: 'มัดจำ', amount_inc: depAmt, due_date: depDt, done: pmts[0].status === 'paid', slip: !!pmts[0].slip_url, receipt: !!pmts[0].receipt_url })
+                  loaded.push({ name: 'มัดจำ', amount_inc: depAmt, due_date: depDt, done: pmts[0].status === 'paid', slip: !!pmts[0].slip_url, receipt: !!pmts[0].receipt_url, channel: '' })
                 }
               }
             }
@@ -926,6 +926,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
       done: i === 0 && depositInc > 0,
       slip: false,
       receipt: false,
+      channel: '',
     })))
   }
 
@@ -956,6 +957,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
       payload[`pay${i}_done`]    = r?.done || false
       payload[`pay${i}_slip`]    = r?.slip || false
       payload[`pay${i}_receipt`] = r?.receipt || false
+      payload[`pay${i}_channel`] = r?.channel || null
     }
     const { error: e } = await supabase.from('customers').update(payload).eq('id', customerId)
     if (e) { setErr(e.message); setSaving(false); return }
@@ -1040,16 +1042,8 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
 
       {/* ── Section 2: งวดชำระเงิน ── */}
       <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-        <div className="flex items-center" style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
-          <span className="flex-1 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งวดชำระเงิน</span>
-          <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderLeft: '1px solid var(--divider)' }}>
-            <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ช่องทาง:</span>
-            <select value={lineChannel} onChange={e => setLineChannel(e.target.value)}
-              className="text-[11px] px-2 py-1 rounded-[6px] focus:outline-none appearance-none"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-              {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+        <div className="flex items-center px-4 py-2.5" style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
+          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งวดชำระเงิน</span>
         </div>
 
         {/* Plan selector (B2C only) */}
@@ -1064,7 +1058,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
                 {B2C_PLANS[p].label}
               </button>
             ))}
-            <button onClick={() => { setPlan('custom'); if (!rows.length) setRows([{ name: 'งวดที่ 1', amount_inc: 0, due_date: todayStr(), done: false, slip: false, receipt: false }]) }}
+            <button onClick={() => { setPlan('custom'); if (!rows.length) setRows([{ name: 'งวดที่ 1', amount_inc: 0, due_date: todayStr(), done: false, slip: false, receipt: false, channel: '' }]) }}
               className="px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-all"
               style={plan === 'custom'
                 ? { background: 'var(--accent)', color: '#fff' }
@@ -1088,7 +1082,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
               `Package : ${revenueInc.toLocaleString('th-TH')} บาท`,
               ...(i > 0 && rows[0].amount_inc > 0 ? [`หัก${rows[0].name} : ${rows[0].amount_inc.toLocaleString('th-TH')} บาท`] : []),
               `${r.name} : ${r.amount_inc.toLocaleString('th-TH')} บาท`,
-              `ชำระผ่านทาง : ${lineChannel}`,
+              ...(r.channel ? [`ชำระผ่านทาง : ${r.channel}`] : []),
             ].join('\n')
 
             if (r.done) {
@@ -1111,7 +1105,13 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
                       </button>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-2 ml-7">
+                  <div className="flex gap-1.5 mt-2 ml-7 flex-wrap">
+                    <select value={r.channel} onChange={e => updRow(i, { channel: e.target.value })}
+                      className="text-[10px] px-2 py-1 rounded-[6px] focus:outline-none appearance-none"
+                      style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                      <option value="">— ช่องทาง —</option>
+                      {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                     <BookingAttachBtn
                       label="Slip" active={r.slip} saving={savingAttach === `${i}-slip`}
                       onClick={() => toggleAttachment(i, 'slip')}
@@ -1153,7 +1153,7 @@ function BookingPanel({ customer, onTriggerStart }: { customer: Customer; onTrig
           })}
           {rows.length < 6 && (
             <div className="px-4 py-2">
-              <button onClick={() => setRows([...rows, { name: `งวดที่ ${rows.length + 1}`, amount_inc: 0, due_date: todayStr(), done: false, slip: false, receipt: false }])}
+              <button onClick={() => setRows([...rows, { name: `งวดที่ ${rows.length + 1}`, amount_inc: 0, due_date: todayStr(), done: false, slip: false, receipt: false, channel: '' }])}
                 className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-3)' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>

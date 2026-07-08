@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 function getDriveClient() {
   const oAuth2Client = new google.auth.OAuth2(
@@ -14,15 +15,25 @@ function getDriveClient() {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { job_file_id, drive_file_id } = await req.json()
-    if (!job_file_id) return NextResponse.json({ error: 'missing job_file_id' }, { status: 400 })
-
-    const authHeader = req.headers.get('Authorization')
-    const supabase = createClient(
+    // ── Auth: verify session from server cookies ──
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      authHeader ? { global: { headers: { Authorization: authHeader } } } : {},
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: () => {},
+        },
+      },
     )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { job_file_id, drive_file_id } = await req.json()
+    if (!job_file_id) return NextResponse.json({ error: 'missing job_file_id' }, { status: 400 })
 
     // Delete from Drive (best-effort — file may already be gone)
     if (drive_file_id) {
@@ -39,7 +50,8 @@ export async function DELETE(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Delete failed' }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Delete failed'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

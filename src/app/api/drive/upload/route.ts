@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { Readable } from 'stream'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'application/pdf']
 const MAX_SIZE = 5 * 1024 * 1024
@@ -40,12 +41,28 @@ async function findOrCreateFolder(
 
 export async function POST(req: NextRequest) {
   try {
+    // ── Auth: verify session from server cookies ──
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: () => {},
+        },
+      },
+    )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const formData = await req.formData()
     const jobId = formData.get('job_id') as string | null
     const customerId = formData.get('customer_id') as string | null
     const projectName = (formData.get('project_name') as string) || 'Unknown Project'
     const roomNo = (formData.get('room_no') as string) || 'Unknown Room'
-    const userId = formData.get('user_id') as string | null
     const files = formData.getAll('files') as File[]
 
     if (!files.length) return NextResponse.json({ error: 'ไม่พบไฟล์' }, { status: 400 })
@@ -62,13 +79,6 @@ export async function POST(req: NextRequest) {
     const rootId = (process.env.GOOGLE_DRIVE_ROOT_FOLDER || '').replace(/^﻿/, '').trim()
     const projectFolderId = await findOrCreateFolder(drive, projectName, rootId)
     const roomFolderId = await findOrCreateFolder(drive, roomNo, projectFolderId)
-
-    const authHeader = req.headers.get('Authorization')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      authHeader ? { global: { headers: { Authorization: authHeader } } } : {},
-    )
 
     const uploaded: { name: string; url: string; id: string }[] = []
 
@@ -97,15 +107,16 @@ export async function POST(req: NextRequest) {
         file_url: fileUrl,
         drive_file_id: fileId,
         drive_folder_id: roomFolderId,
-        uploaded_by: userId || null,
+        uploaded_by: user.id,
       })
 
       uploaded.push({ name: file.name, url: fileUrl, id: fileId })
     }
 
     return NextResponse.json({ success: true, files: uploaded })
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Upload ล้มเหลว'
     console.error('Drive upload error:', err)
-    return NextResponse.json({ error: err.message || 'Upload ล้มเหลว' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -530,7 +530,7 @@ export default function FinancePage() {
                     <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{bookedCustomers.length} ราย</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: '#4ade80' }}>แปลงเป็น Backlog แล้ว</span>
+                    <span className="text-xs" style={{ color: '#4ade80' }}>แปลงเป็น Reserved/Backlog แล้ว</span>
                     <span className="text-sm font-bold" style={{ color: '#4ade80' }}>{bookedWithJob.length} ราย</span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -553,7 +553,7 @@ export default function FinancePage() {
 
               {/* 2. Active Job Backlog */}
               <div className="rounded-[11px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
-                <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งานที่กำลังทำ (Backlog)</p>
+                <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งานที่กำลังทำ (Reserved / Backlog)</p>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: 'var(--text-2)' }}>จำนวนงาน</span>
@@ -1216,7 +1216,7 @@ export default function FinancePage() {
             onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
-                {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Backlog)' : drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง' : '⚠️ งวดเกินกำหนด'}
+                {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Reserved / Backlog)' :drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง' : '⚠️ งวดเกินกำหนด'}
               </h3>
               <button onClick={() => setDrilldown(null)} style={{ color: 'var(--text-3)' }}>✕</button>
             </div>

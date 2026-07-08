@@ -63,6 +63,7 @@ export default function CommissionPage() {
   const [filterSales, setFilterSales] = useState<string>('all')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState<string | null>(null)
+  const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([])
 
   const load = useCallback(async () => {
     setLoading(true); setFetchError('')
@@ -70,7 +71,7 @@ export default function CommissionPage() {
     const { data: me } = await supabase.from('users').select('role').eq('email', user?.email ?? '').single()
     setMyRole(me?.role || '')
 
-    const [{ data, error }, { data: tierData }] = await Promise.all([
+    const [{ data, error }, { data: tierData }, { data: usersData }] = await Promise.all([
       supabase
         .from('jobs')
         .select('id,customer_name,room_no,revenue_ex_vat,commission_rate,commission_amount,commission_status,commission_month,actual_deliver_date,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)')
@@ -78,10 +79,12 @@ export default function CommissionPage() {
         .not('actual_deliver_date', 'is', null)
         .order('actual_deliver_date', { ascending: false }),
       supabase.from('commission_settings').select('revenue_min,revenue_max,rate').eq('active', true),
+      supabase.from('users').select('id, name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
     ])
     if (error) { setFetchError(error.message); setLoading(false); return }
     setJobs((data || []) as unknown as Job[])
     setTiers((tierData || []) as unknown as Tier[])
+    setSalesUsers((usersData || []) as { id: string; name: string }[])
     setLoading(false)
   }, [])
 
@@ -94,13 +97,19 @@ export default function CommissionPage() {
     }
     return calcTier(j.revenue_ex_vat || 0, tiers)
   }
+  function normalizeYM(ym: string) {
+    if (!ym) return ''
+    const [y, m] = ym.split('-')
+    if (!y || !m) return ym
+    return `${y}-${m.padStart(2, '0')}`
+  }
   function getStatus(j: Job) {
     if (j.commission_status) return j.commission_status
     const currentMonth = new Date().toISOString().slice(0, 7)
-    const jobMonth = j.commission_month || j.actual_deliver_date?.slice(0, 7) || ''
+    const jobMonth = normalizeYM(j.commission_month || j.actual_deliver_date?.slice(0, 7) || '')
     return jobMonth < currentMonth ? 'paid' : 'pending'
   }
-  function getMonth(j: Job)  { return j.commission_month || j.actual_deliver_date?.slice(0, 7) || '' }
+  function getMonth(j: Job) { return normalizeYM(j.commission_month || j.actual_deliver_date?.slice(0, 7) || '') }
 
   async function updateStatus(jobId: string, newStatus: string) {
     setSaving(jobId)
@@ -111,11 +120,6 @@ export default function CommissionPage() {
 
   const canApprove = ['admin', 'admin_sales'].includes(myRole)
 
-  const salesList = useMemo(() => {
-    const map = new Map<string, string>()
-    jobs.forEach(j => { if (j.sales_id) map.set(j.sales_id, (j.sales as any)?.name || j.sales_id) })
-    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]))
-  }, [jobs])
 
   const filtered = useMemo(() => jobs.filter(j => {
     const matchStatus = filterStatus === 'all' || getStatus(j) === filterStatus
@@ -201,7 +205,7 @@ export default function CommissionPage() {
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
           <option value="all">— Sales ทั้งหมด —</option>
-          {salesList.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+          {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
 
         <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>

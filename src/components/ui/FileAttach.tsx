@@ -122,8 +122,8 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
           style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
           {uploading
-            ? <Loader2 size={12} className="animate-spin" />
-            : <Paperclip size={12} />}
+            ? <Loader2 size={12} className="animate-spin" style={{ color: 'var(--text-3)' }} />
+            : <Paperclip size={12} style={{ color: 'var(--text-3)' }} />}
           {uploading ? 'กำลังอัปโหลด...' : 'แนบไฟล์'}
         </button>
         <input
@@ -148,7 +148,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
           {pendingNames.map((name, i) => (
             <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
               style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-              <Loader2 size={11} className="animate-spin" style={{ color: 'var(--accent)' }} />
+              <Loader2 size={11} className="animate-spin" style={{ color: 'var(--text-3)' }} />
               <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-2)' }}>{name}</span>
             </div>
           ))}
@@ -161,8 +161,8 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
             <div key={f.id} className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
               style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               {isJpg(f.file_name)
-                ? <ImageIcon size={12} style={{ color: '#4ade80' }} />
-                : <FileText size={12} style={{ color: '#f87171' }} />}
+                ? <ImageIcon size={12} style={{ color: 'var(--text-3)' }} />
+                : <FileText size={12} style={{ color: 'var(--text-3)' }} />}
               <a href={f.file_url} target="_blank" rel="noopener noreferrer"
                 className="flex-1 flex items-center gap-1 min-w-0">
                 <span className="text-xs truncate" style={{ color: 'var(--text-1)' }}>{f.file_name}</span>

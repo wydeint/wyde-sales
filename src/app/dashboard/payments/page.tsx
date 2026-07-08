@@ -254,7 +254,7 @@ export default function PaymentsPage() {
         'id, room_no, project_id, customer_name, sales_id, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name), customers:customer_id(status)'
       ).neq('working_status', 'ยกเลิก').order('room_no'),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
-      supabase.from('users').select('id, name').eq('active', true).order('name'),
+      supabase.from('users').select('id, name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
     ])
 
     const jobIds = (jobsRaw || []).map((j: any) => j.id)

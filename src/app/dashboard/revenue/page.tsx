@@ -26,11 +26,33 @@ type DeliveredJob = {
   commission_amount: number
   notes: string
   customer_name?: string
+  po_no?: string | null
+  so_no?: string | null
+  voucher?: string | null
   projects?: { name: string }
   sales?: { name: string }
 }
 
 type Period = 'today' | 'week' | 'month' | 'quarter' | 'year'
+
+type Tier = { revenue_min: number; revenue_max: number | null; rate: number }
+
+function calcTier(revenue: number, tiers: Tier[]): { rate: number; amount: number } {
+  const sorted = [...tiers].sort((a, b) => a.revenue_min - b.revenue_min)
+  for (const t of sorted) {
+    if (revenue >= t.revenue_min && (t.revenue_max === null || revenue <= t.revenue_max)) {
+      return { rate: t.rate, amount: Math.round(revenue * t.rate) }
+    }
+  }
+  return { rate: 0, amount: 0 }
+}
+
+function getJobCommission(j: DeliveredJob, tiers: Tier[]) {
+  if (j.commission_amount !== null && j.commission_amount !== undefined && j.commission_amount > 0) {
+    return j.commission_amount
+  }
+  return calcTier(j.revenue_ex_vat || 0, tiers).amount
+}
 
 const jobRev = (j: { revenue_inc_vat: number | null; revenue_ex_vat: number }) => j.revenue_inc_vat ?? j.revenue_ex_vat ?? 0
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
@@ -91,7 +113,7 @@ const PERIOD_LABELS: Record<Period, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  'Backlog': '#60a5fa', 'FC': '#34d399', 'Backlog พต': '#a78bfa',
+  'Reserved': '#f59e0b', 'Backlog': '#60a5fa', 'FC': '#34d399', 'Backlog พต': '#a78bfa',
   'New Sale 2025': '#fbbf24', 'New Sale 2026': '#f97316',
 }
 
@@ -101,6 +123,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function RevenuePage() {
   const supabase = createClient()
   const [allJobs, setAllJobs] = useState<DeliveredJob[]>([])
+  const [tiers, setTiers] = useState<Tier[]>([])
   const [targets, setTargets] = useState<{ user_id: string; year: number; month: number; target_revenue: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
@@ -114,33 +137,27 @@ export default function RevenuePage() {
   const [filterWorkType, setFilterWorkType] = useState('')
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [expandedSales, setExpandedSales] = useState<Set<string>>(new Set())
-
-  // Unique users
-  const users = useMemo(() => {
-    const map = new Map<string, string>()
-    allJobs.forEach(j => {
-      const salesData = j.sales as any
-      const name = salesData?.name
-      if (j.sales_id && name) map.set(j.sales_id, name)
-    })
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
-  }, [allJobs])
+  const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
     async function load() {
       setLoading(true)
       setFetchError('')
-      const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }] = await Promise.all([
+      const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }, { data: tierData }, { data: usersData }] = await Promise.all([
         supabase.from('jobs')
-          .select('id,project_id,room_no,customer_name,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,projects(name),sales:users!jobs_sales_id_fkey(name)')
+          .select('id,project_id,room_no,customer_name,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,po_no,so_no,voucher,projects(name),sales:users!jobs_sales_id_fkey(name)')
           .eq('working_status', 'ส่งมอบแล้ว')
           .not('actual_deliver_date', 'is', null)
           .order('actual_deliver_date', { ascending: false }),
         supabase.from('sales_targets').select('user_id,year,month,target_revenue'),
+        supabase.from('commission_settings').select('revenue_min,revenue_max,rate').eq('active', true),
+        supabase.from('users').select('id, name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
       ])
       if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllJobs((jobsData as unknown as DeliveredJob[]) || [])
       setTargets(targetsData || [])
+      setTiers((tierData || []) as Tier[])
+      setSalesUsers((usersData || []) as { id: string; name: string }[])
       setLoading(false)
     }
     load()
@@ -173,7 +190,7 @@ export default function RevenuePage() {
   const totalRevenueEx = periodJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const totalCost = periodJobs.reduce((s, j) => s + (j.cost || 0), 0)
   const totalProfit = totalRevenueEx - totalCost
-  const totalCommission = periodJobs.reduce((s, j) => s + (j.commission_amount || 0), 0)
+  const totalCommission = periodJobs.reduce((s, j) => s + getJobCommission(j, tiers), 0)
   const prevRevenue = prevJobs.reduce((s, j) => s + (jobRev(j)), 0)
   const growthPct = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue * 100).toFixed(1) : null
   const unitCount = periodJobs.length
@@ -186,7 +203,7 @@ export default function RevenuePage() {
       const name = salesData?.name || 'ไม่ระบุ'
       const key = j.sales_id || name
       const cur = map.get(key) || { name, revenue: 0, revenueEx: 0, units: 0, commission: 0 }
-      map.set(key, { name, revenue: cur.revenue + (jobRev(j)), revenueEx: cur.revenueEx + (j.revenue_ex_vat || 0), units: cur.units + 1, commission: cur.commission + (j.commission_amount || 0) })
+      map.set(key, { name, revenue: cur.revenue + (jobRev(j)), revenueEx: cur.revenueEx + (j.revenue_ex_vat || 0), units: cur.units + 1, commission: cur.commission + getJobCommission(j, tiers) })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
   }, [periodJobs])
@@ -207,7 +224,7 @@ export default function RevenuePage() {
   const byStatus = useMemo(() => {
     const map = new Map<string, number>()
     periodJobs.forEach(j => {
-      const s = j.accounting_status || 'Backlog'
+      const s = j.accounting_status || 'Reserved'
       map.set(s, (map.get(s) || 0) + (jobRev(j)))
     })
     return [...map.entries()].map(([status, revenue]) => ({ status, revenue })).sort((a, b) => b.revenue - a.revenue)
@@ -237,6 +254,7 @@ export default function RevenuePage() {
       'วันส่งมอบ (จริง)',
       'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'Cost', 'GP%',
       'Commission', 'สถานะงาน', 'Sales',
+      'PO No.', 'SO No.', 'Voucher',
     ]
     const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH') : ''
     const rows = periodJobs.map(j => {
@@ -248,7 +266,8 @@ export default function RevenuePage() {
         j.work_type || '', j.package_type || '',
         fmt(j.actual_deliver_date),
         j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.cost || 0, gp,
-        j.commission_amount || 0, j.working_status || '', sales,
+        getJobCommission(j, tiers), j.working_status || '', sales,
+        j.po_no || '', j.so_no || '', j.voucher || '',
       ]
     })
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
@@ -306,7 +325,7 @@ export default function RevenuePage() {
           <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุก Sales</option>
-            {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
           <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             {(['today', 'week', 'month', 'quarter', 'year'] as Period[]).map(p => (

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  Search, X, ChevronRight, ChevronDown, Zap, Pencil, Trash2, Loader2,
+  Search, X, ChevronRight, ChevronDown, Zap, Pencil, Trash2, Loader2, Plus,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
@@ -25,6 +25,7 @@ interface RoomJob {
   all_paid: boolean
   paid_count: number
   total_count: number
+  total_amount: number
 }
 
 interface Installment {
@@ -72,6 +73,8 @@ interface FullJob {
   sale_slip_url: string | null
   sale_receipt_url: string | null
 }
+
+const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
 
 // ─── Stage helpers ─────────────────────────────────────────
 type ChipStage = 'wait' | 'collect' | 'ready' | 'overdue' | 'done'
@@ -164,6 +167,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(todayStr())
+  const [channel, setChannel] = useState(CHANNEL_OPTS[0])
   const [slipUrl, setSlipUrl] = useState('')
   const [slipPosted, setSlipPosted] = useState(false)
   const [receiptUrl, setReceiptUrl] = useState('')
@@ -210,6 +214,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       status: i === 0 ? 'paid' : 'pending',
       paid_date: i === 0 ? paidDate : null,
       paid_amount: i === 0 ? (firstPaidAmount || p.amount) : null,
+      channel: i === 0 ? (channel || null) : null,
       is_work_trigger: p.trigger,
       is_final: p.final,
       slip_url: i === 0 ? (slipUrl.trim() || (slipPosted ? 'posted' : null)) : null,
@@ -356,6 +361,14 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                 </div>
               </div>
+              <div>
+                <label className="text-xs" style={{ color: 'var(--text-2)' }}>ช่องทางชำระเงิน</label>
+                <select value={channel} onChange={e => setChannel(e.target.value)}
+                  className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none appearance-none"
+                  style={inputStyle}>
+                  {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
               <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
@@ -392,6 +405,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
   const [selected, setSelected] = useState<Installment | null>(firstPending)
   const [paidDate, setPaidDate] = useState(firstPending?.paid_date || todayStr())
   const [paidAmount, setPaidAmount] = useState(firstPending?.paid_amount ?? firstPending?.amount ?? 0)
+  const [channel, setChannel] = useState(firstPending?.channel || CHANNEL_OPTS[0])
   const [slipUrl, setSlipUrl] = useState('')
   const [slipPosted, setSlipPosted] = useState(false)
   const [receiptUrl, setReceiptUrl] = useState('')
@@ -402,6 +416,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     setSelected(inst)
     setPaidAmount(inst.paid_amount ?? inst.amount ?? 0)
     setPaidDate(inst.paid_date || todayStr())
+    setChannel(inst.channel || CHANNEL_OPTS[0])
     setSlipPosted(inst.slip_url === 'posted'); setSlipUrl(inst.slip_url && inst.slip_url !== 'posted' ? inst.slip_url : '')
     setReceiptPosted(inst.receipt_url === 'posted'); setReceiptUrl(inst.receipt_url && inst.receipt_url !== 'posted' ? inst.receipt_url : '')
   }
@@ -416,6 +431,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
       status: 'paid',
       paid_date: paidDate,
       paid_amount: paidAmount,
+      channel: channel || null,
       slip_url: slipUrl.trim() || (slipPosted ? 'posted' : null),
       receipt_url: receiptUrl.trim() || (receiptPosted ? 'posted' : null),
     }).eq('id', selected.id)
@@ -469,6 +485,15 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
               <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
             </div>
+          </div>
+          {/* Channel */}
+          <div>
+            <label className="text-xs" style={{ color: 'var(--text-2)' }}>ช่องทางชำระเงิน</label>
+            <select value={channel} onChange={e => setChannel(e.target.value)}
+              className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none appearance-none"
+              style={inputStyle}>
+              {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
           {/* Slip + Receipt checkboxes */}
           <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
@@ -727,7 +752,7 @@ function generateLineMsg(job: LineJobCtx, inst: Installment): string {
 // ─── Deal Drawer (right panel) ─────────────────────────────
 // ─── Doc field component ───────────────────────────────────
 // ─── InstRow — inline paid_date edit ───────────────────────
-function InstRow({ inst, job, onDateSaved, onDeleted }: { inst: Installment; job: LineJobCtx; onDateSaved: (d: string | null) => void; onDeleted?: () => void }) {
+function InstRow({ inst, job, lineChannel, onDateSaved, onDeleted, onUpdated }: { inst: Installment; job: LineJobCtx; lineChannel: string; onDateSaved: (d: string | null) => void; onDeleted?: () => void; onUpdated?: (patch: Partial<Installment>) => void }) {
   const supabase = createClient()
   const [editingDate, setEditingDate] = useState(false)
   const [dateVal, setDateVal] = useState(inst.paid_date || todayStr())
@@ -738,6 +763,10 @@ function InstRow({ inst, job, onDateSaved, onDeleted }: { inst: Installment; job
   const [savingReceipt, setSavingReceipt] = useState(false)
   const [copied, setCopied] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState(inst.installment_name)
+  const [editAmount, setEditAmount] = useState(String(inst.amount || ''))
+  const [editDueDate, setEditDueDate] = useState(inst.due_date || todayStr())
 
   async function deleteInst() {
     if (!confirm(`ลบงวด "${inst.installment_name}" (${fmtBaht(inst.amount)}) ออกจากระบบ?`)) return
@@ -748,7 +777,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted }: { inst: Installment; job
   }
 
   function copyLine() {
-    const msg = generateLineMsg(job, { ...inst, paid_date: dateVal })
+    const msg = generateLineMsg(job, { ...inst, paid_date: dateVal, channel: lineChannel || inst.channel })
     navigator.clipboard.writeText(msg).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -779,6 +808,43 @@ function InstRow({ inst, job, onDateSaved, onDeleted }: { inst: Installment; job
     setSavingReceipt(false)
   }
 
+  async function saveEdit() {
+    setSaving(true)
+    const patch = {
+      installment_name: editName,
+      amount: Number(editAmount) || inst.amount,
+      due_date: editDueDate || null,
+    }
+    await supabase.from('payments').update(patch).eq('id', inst.id)
+    onUpdated?.(patch)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (editing && inst.status !== 'paid') {
+    return (
+      <div className="px-4 py-3 space-y-2">
+        <input value={editName} onChange={e => setEditName(e.target.value)}
+          className="w-full px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
+          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+        <div className="flex gap-2">
+          <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="ยอด"
+            className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          <input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
+            className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setEditing(false)} className="flex-1 py-1.5 rounded-[8px] text-xs"
+            style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
+          <button onClick={saveEdit} disabled={saving} className="flex-1 py-1.5 rounded-[8px] text-xs font-semibold text-white"
+            style={{ background: 'var(--accent)' }}>{saving ? '...' : 'บันทึก'}</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="px-4 py-2.5">
       <div className="flex items-center gap-3">
@@ -790,8 +856,19 @@ function InstRow({ inst, job, onDateSaved, onDeleted }: { inst: Installment; job
         <div className="flex-1 min-w-0">
           <span className="text-xs" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
           {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
+          {inst.due_date && inst.status !== 'paid' && (
+            <span className="ml-1.5 text-[9px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>
+          )}
         </div>
-        <div className="text-right">
+        <div className="text-right flex items-center gap-2">
+          {inst.status !== 'paid' && (
+            <button onClick={() => { setEditName(inst.installment_name); setEditAmount(String(inst.amount || '')); setEditDueDate(inst.due_date || todayStr()); setEditing(true) }}
+              className="p-1 rounded" style={{ color: 'var(--text-3)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
+              <Pencil size={11} />
+            </button>
+          )}
           <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-1)' }}>
             {fmtBaht(inst.amount)}
           </span>
@@ -888,11 +965,144 @@ function DocField({ jobId, field, label, value, onUpdate }: {
   )
 }
 
+function CancelModal({ onClose, onConfirm }: {
+  onClose: () => void
+  onConfirm: (type: 'forfeit' | 'refund', amount: number, date: string, notes: string) => Promise<void>
+}) {
+  const [cancelType, setCancelType] = useState<'forfeit' | 'refund'>('forfeit')
+  const [amount, setAmount] = useState('')
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function confirm() {
+    setSaving(true)
+    await onConfirm(cancelType, Number(amount) || 0, date, notes)
+    setSaving(false)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
+        onClick={e => e.stopPropagation()}>
+        <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ยกเลิกสัญญา</p>
+        <div className="flex gap-2">
+          {([['forfeit', 'ยึดเงินจอง'], ['refund', 'คืนเงิน']] as const).map(([val, label]) => (
+            <button key={val} onClick={() => setCancelType(val)}
+              className="flex-1 py-2 rounded-[8px] text-sm font-semibold transition-all"
+              style={cancelType === val
+                ? { background: val === 'forfeit' ? '#f87171' : '#60a5fa', color: '#fff' }
+                : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>
+              {cancelType === 'forfeit' ? 'ยอดที่ยึด (บาท)' : 'ยอดคืน (บาท)'}
+            </label>
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>
+              {cancelType === 'forfeit' ? 'วันที่ยึดเงิน' : 'วันที่คืนเงิน'}
+            </label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+          </div>
+        </div>
+        <div>
+          <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>หมายเหตุ</p>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="เหตุผลยกเลิก..."
+            className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none resize-none"
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
+          <button onClick={confirm} disabled={saving}
+            className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white disabled:opacity-50"
+            style={{ background: cancelType === 'forfeit' ? '#f87171' : '#60a5fa' }}>
+            {saving ? 'กำลังบันทึก...' : 'ยืนยันยกเลิก'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo, onAdded }: {
+  jobId: string; customerId: string; projectId: string; roomNo: string; nextNo: number
+  onAdded: (inst: Installment) => void
+}) {
+  const supabase = createClient()
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState(`งวดที่ ${nextNo}`)
+  const [amount, setAmount] = useState('')
+  const [dueDate, setDueDate] = useState(todayStr())
+  const [saving, setSaving] = useState(false)
+
+  async function add() {
+    setSaving(true)
+    const id = `PAY-${jobId}-${nextNo}-${Date.now()}`
+    const row = {
+      id, job_id: jobId, customer_id: customerId, project_id: projectId, room: roomNo,
+      installment_no: nextNo, installment_name: name,
+      amount: Number(amount) || 0, due_date: dueDate || null,
+      status: 'pending', is_final: false, is_work_trigger: false,
+    }
+    await supabase.from('payments').insert(row)
+    onAdded({ ...row, paid_amount: null, paid_date: null, percentage: null, slip_url: null, receipt_url: null, channel: null } as any)
+    setOpen(false); setName(`งวดที่ ${nextNo + 1}`); setAmount(''); setSaving(false)
+  }
+
+  if (!open) return (
+    <div className="px-4 py-2">
+      <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-3)' }}
+        onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent)')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
+        <Plus size={11} /> เพิ่มงวด
+      </button>
+    </div>
+  )
+
+  return (
+    <div className="px-4 py-3 space-y-2">
+      <input value={name} onChange={e => setName(e.target.value)}
+        className="w-full px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
+        style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+      <div className="flex gap-2">
+        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="ยอด (บาท)"
+          className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
+          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+          className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
+          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+      </div>
+      <div className="flex gap-2">
+        <button onClick={() => setOpen(false)} className="flex-1 py-1.5 rounded-[8px] text-xs"
+          style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
+        <button onClick={add} disabled={saving || !amount} className="flex-1 py-1.5 rounded-[8px] text-xs font-semibold text-white disabled:opacity-50"
+          style={{ background: 'var(--accent)' }}>{saving ? '...' : '+ เพิ่ม'}</button>
+      </div>
+    </div>
+  )
+}
+
 function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onClose: () => void; onRefresh: () => void }) {
+  const supabase = createClient()
   const [job, setJob] = useState(initialJob)
   const [actionModal, setActionModal] = useState<'setup' | 'pay' | 'handover' | null>(null)
   const [instExpanded, setInstExpanded] = useState(false)
   const [docsExpanded, setDocsExpanded] = useState(false)
+  const [showCancel, setShowCancel] = useState(false)
+  const [showCancelSection, setShowCancelSection] = useState(false)
+  const [cancelConfirmed, setCancelConfirmed] = useState(false)
+  const [lineChannel, setLineChannel] = useState(CHANNEL_OPTS[0])
   useEffect(() => { setJob(initialJob) }, [initialJob])
   const { hasPlan, finalPaid, delivered, paidCount, totalCount, pendingInstallments, activeStage } = getFullStageInfo(job)
   const overdueCount = job.installments.filter(i => i.status === 'overdue').length
@@ -922,7 +1132,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-[7px] font-bold text-xs text-white"
+              <span className="px-2.5 py-1 rounded-[8px] font-bold text-xs text-white"
                 style={{ background: delivered ? 'var(--accent-green)' : activeStage === 3 ? 'var(--accent-orange)' : activeStage === 4 ? 'var(--accent-blue)' : 'var(--accent)' }}>
                 {job.room_no}
               </span>
@@ -996,7 +1206,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                 <button className="flex-1 flex items-center justify-between px-4 py-2.5"
                   style={{ color: 'var(--text-3)' }}
                   onClick={() => setInstExpanded(e => !e)}>
-                  <span className="text-xs">งวดชำระเงิน</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest">งวดชำระเงิน</span>
                   {instExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                 </button>
                 <button onClick={() => setActionModal('setup')}
@@ -1005,19 +1215,35 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   แก้ไข
                 </button>
               </div>
+              {/* LINE channel selector — same as Pipeline BookingPanel */}
+              <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--divider)', background: 'color-mix(in srgb, var(--accent-green) 5%, transparent)' }}>
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>LINE Report</span>
+                <select value={lineChannel} onChange={e => setLineChannel(e.target.value)}
+                  className="text-[11px] px-2 py-1 rounded-[8px] focus:outline-none appearance-none"
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                  {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
               {instExpanded && (
                 <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
                   {job.installments.sort((a, b) => a.installment_no - b.installment_no).map(inst => (
-                    <InstRow key={inst.id} inst={inst} job={job}
+                    <InstRow key={inst.id} inst={inst} job={job} lineChannel={lineChannel}
                       onDateSaved={newDate => setJob(prev => ({
                         ...prev,
                         installments: prev.installments.map(i => i.id === inst.id ? { ...i, paid_date: newDate } : i)
+                      }))}
+                      onUpdated={patch => setJob(prev => ({
+                        ...prev,
+                        installments: prev.installments.map(i => i.id === inst.id ? { ...i, ...patch } : i)
                       }))}
                       onDeleted={() => setJob(prev => ({
                         ...prev,
                         installments: prev.installments.filter(i => i.id !== inst.id)
                       }))} />
                   ))}
+                  <AddInstallmentRow jobId={job.id} customerId={job.customer_id ?? ''} projectId={job.project_id} roomNo={job.room_no}
+                    nextNo={job.installments.length + 1}
+                    onAdded={newInst => setJob(prev => ({ ...prev, installments: [...prev.installments, newInst] }))} />
                 </div>
               )}
             </div>
@@ -1031,7 +1257,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               <span className="text-xs">เอกสาร</span>
               <div className="flex items-center gap-2">
                 <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>
-                  {[job.quotation1_url, job.quotation2_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url, job.sale_slip_url, job.sale_receipt_url].filter(Boolean).length}/7
+                  {[job.quotation1_url, job.quotation2_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length}/5
                 </span>
                 {docsExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
               </div>
@@ -1048,19 +1274,43 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   value={job.delivery_doc_url} onUpdate={v => updateDocField('delivery_doc_url', v)} />
                 <DocField jobId={job.id} field="satisfaction_url" label="แบบประเมินความพึงพอใจ"
                   value={job.satisfaction_url} onUpdate={v => updateDocField('satisfaction_url', v)} />
-                <DocField jobId={job.id} field="sale_slip_url" label="สลิปการขาย"
-                  value={job.sale_slip_url} onUpdate={v => updateDocField('sale_slip_url', v)} />
-                <DocField jobId={job.id} field="sale_receipt_url" label="ใบเสร็จรับเงิน (ช่วงขาย)"
-                  value={job.sale_receipt_url} onUpdate={v => updateDocField('sale_receipt_url', v)} />
               </div>
             )}
           </div>
-        </div>
 
           {/* File Attachments */}
           <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
             <FileAttach jobId={job.id} projectName={job.project_name} roomNo={job.room_no} />
           </div>
+
+          {/* Cancel — hidden behind toggle */}
+          {!delivered && (
+            <div>
+              <button
+                onClick={() => { setShowCancelSection(s => !s); setCancelConfirmed(false) }}
+                className="flex items-center gap-1 text-[11px] transition-colors"
+                style={{ color: 'var(--text-3)' }}>
+                <ChevronRight size={12} style={{ transform: showCancelSection ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+                สถานะพิเศษ / ลูกค้ายกเลิก
+              </button>
+              {showCancelSection && (
+                <div className="mt-2 rounded-[10px] p-3 space-y-3"
+                  style={{ background: 'color-mix(in srgb, #f87171 6%, transparent)', border: '1px solid color-mix(in srgb, #f87171 20%, transparent)' }}>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" checked={cancelConfirmed} onChange={e => setCancelConfirmed(e.target.checked)}
+                      className="w-4 h-4 rounded" style={{ accentColor: '#f87171' }} />
+                    <span className="text-xs" style={{ color: 'var(--text-2)' }}>ยืนยันว่าต้องการยกเลิกสัญญา</span>
+                  </label>
+                  <button onClick={() => setShowCancel(true)} disabled={!cancelConfirmed}
+                    className="w-full py-2 rounded-[8px] text-xs font-semibold transition-all disabled:opacity-30"
+                    style={{ background: 'color-mix(in srgb, #f87171 15%, transparent)', border: '1px solid color-mix(in srgb, #f87171 40%, transparent)', color: '#f87171' }}>
+                    ยกเลิกสัญญา
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="p-4" style={{ borderTop: '1px solid var(--divider)' }}>
@@ -1121,45 +1371,84 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
       {actionModal === 'setup' && <SetupAndPayModal job={job} onClose={() => setActionModal(null)} onSaved={handleSaved} />}
       {actionModal === 'pay' && <PayModal job={job} onClose={() => setActionModal(null)} onSaved={handleSaved} />}
       {actionModal === 'handover' && <HandoverModal job={job} onClose={() => setActionModal(null)} onSaved={handleSaved} />}
+      {showCancel && (
+        <CancelModal
+          onClose={() => setShowCancel(false)}
+          onConfirm={async (type, amount, date, notes) => {
+            const { data: { session } } = await supabase.auth.getSession()
+            await supabase.from('jobs').update({
+              working_status: 'ยกเลิก',
+              cancel_type: type,
+              cancel_date: date || null,
+              cancel_amount: amount || null,
+              cancel_notes: notes || null,
+            }).eq('id', job.id)
+            if (amount > 0) {
+              await supabase.from('finance_entries').insert({
+                type: type === 'forfeit' ? 'income' : 'expense',
+                category: type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงินยกเลิก',
+                amount,
+                entry_date: date,
+                description: `${type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงิน'}: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
+                ref_id: job.id,
+                created_by: session?.user?.id || null,
+              })
+            }
+            setShowCancel(false)
+            onClose()
+            onRefresh()
+          }}
+        />
+      )}
     </>
   )
 }
 
 // ─── Room Card ─────────────────────────────────────────────
+// ─── Skeleton card ──────────────────────────────────────────
+function CardSkeleton() {
+  return (
+    <div className="ds-card p-3 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: 'var(--hover-bg)' }} />
+        <div className="flex-1 min-w-0">
+          <div className="h-3 rounded-md mb-2" style={{ background: 'var(--hover-bg)', width: '55%' }} />
+          <div className="h-2.5 rounded-md" style={{ background: 'var(--hover-bg)', width: '38%' }} />
+        </div>
+        <div className="w-4 h-4 rounded flex-shrink-0" style={{ background: 'var(--hover-bg)' }} />
+      </div>
+    </div>
+  )
+}
+
 function RoomCard({ job, onClick }: { job: RoomJob; onClick: () => void }) {
   const stage = getChipStage(job)
   const meta = STAGE_META[stage]
   const isDone = stage === 'done'
 
-  const tooltip = [job.customer_name, job.sales_name].filter(Boolean).join(' · ')
-
   return (
     <button onClick={onClick}
-      title={tooltip}
-      className="text-left rounded-[10px] p-3 transition-all hover:scale-[1.02]"
-      style={{
-        background: isDone ? 'var(--hover-bg)' : 'var(--card-bg)',
-        border: `1px solid ${isDone ? 'var(--divider)' : 'var(--card-border)'}`,
-        width: 130,
-        opacity: isDone ? 0.7 : 1,
-      }}>
-      {/* Room number */}
-      <p className="font-bold text-sm mb-1.5" style={{ color: isDone ? 'var(--text-3)' : 'var(--text-1)' }}>
-        {job.room_no}
-      </p>
-      {/* Status tag */}
-      <div className="mb-2">
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px]"
+      title={[job.customer_name, job.sales_name].filter(Boolean).join(' · ')}
+      className="ds-card w-full text-left p-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+      style={{ opacity: isDone ? 0.65 : 1 }}>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <p className="font-semibold text-sm leading-snug truncate" style={{ color: isDone ? 'var(--text-3)' : 'var(--text-1)' }}>
+          {job.room_no}
+          {job.customer_name && <span className="font-normal text-xs ml-1.5" style={{ color: 'var(--text-3)' }}>{job.customer_name}</span>}
+        </p>
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
           style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
           {meta.label}
         </span>
       </div>
-      {/* Sales + progress */}
-      <div className="flex items-center justify-between">
+      {job.total_amount > 0 && (
+        <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'var(--text-2)' }}>{fmtBaht(job.total_amount)}</p>
+      )}
+      <div className="flex items-center justify-between mt-1">
         <p className="text-[10px] truncate flex-1" style={{ color: 'var(--text-3)' }}>{job.sales_name || ''}</p>
         {job.has_plan && job.total_count > 0 && (
-          <p className="text-[10px] font-semibold ml-1 flex-shrink-0" style={{ color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
-            {job.paid_count}/{job.total_count}
+          <p className="text-[10px] font-semibold ml-2 flex-shrink-0" style={{ color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+            {job.paid_count}/{job.total_count} งวด
           </p>
         )}
       </div>
@@ -1174,10 +1463,13 @@ export default function MyDealsPage() {
   const [jobs, setJobs] = useState<RoomJob[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [filterProject, setFilterProject] = useState('')
+  const [filterSales, setFilterSales] = useState('')
   const [doneExpanded, setDoneExpanded] = useState<Record<string, boolean>>({})
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [drawerJob, setDrawerJob] = useState<FullJob | null>(null)
   const [drawerLoading, setDrawerLoading] = useState(false)
+  const [salesUsers, setSalesUsers] = useState<string[]>([])
   const [jumpOpen, setJumpOpen] = useState(false)
   const jumpRef = useRef<HTMLDivElement>(null)
   const projectRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -1193,10 +1485,13 @@ export default function MyDealsPage() {
       .neq('working_status', 'ยกเลิก')
       .order('room_no')
 
+    const { data: usersData } = await supabase.from('users').select('name').eq('active', true).eq('dept', 'Sales Executive').order('name')
+    setSalesUsers((usersData || []).map((u: any) => u.name))
+
     if (!data) { setLoading(false); return }
 
     setJobs((data as any[]).map(r => {
-      const insts: { status: string; is_final: boolean }[] = r.installments || []
+      const insts: { status: string; is_final: boolean; amount: number }[] = r.installments || []
       return {
         id: r.id,
         room_no: r.room_no || '',
@@ -1210,6 +1505,7 @@ export default function MyDealsPage() {
         all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         paid_count: insts.filter(i => i.status === 'paid').length,
         total_count: insts.length,
+        total_amount: insts.reduce((s, i) => s + (i.amount || 0), 0),
       }
     }))
     setLoading(false)
@@ -1310,15 +1606,25 @@ export default function MyDealsPage() {
     setJumpOpen(false)
   }
 
+  const projectOptions = useMemo(() => {
+    const seen = new Map<string, string>()
+    jobs.forEach(j => { if (j.project_id && !seen.has(j.project_id)) seen.set(j.project_id, j.project_name) })
+    return Array.from(seen.entries()).sort((a, b) => a[1].localeCompare(b[1]))
+  }, [jobs])
+
+
   const grouped = useMemo(() => {
     const q = search.toLowerCase().replace(/[-\s]/g, '')
-    const visible = q
-      ? jobs.filter(j => {
-          const room = j.room_no.toLowerCase().replace(/[-\s]/g, '')
-          return room.includes(q) || j.customer_name.toLowerCase().includes(search.toLowerCase())
-            || j.project_name.toLowerCase().includes(search.toLowerCase())
-        })
-      : jobs
+    const visible = jobs.filter(j => {
+      if (filterProject && j.project_id !== filterProject) return false
+      if (filterSales && j.sales_name !== filterSales) return false
+      if (q) {
+        const room = j.room_no.toLowerCase().replace(/[-\s]/g, '')
+        return room.includes(q) || j.customer_name.toLowerCase().includes(search.toLowerCase())
+          || j.project_name.toLowerCase().includes(search.toLowerCase())
+      }
+      return true
+    })
 
     const map = new Map<string, { name: string; active: RoomJob[]; done: RoomJob[] }>()
     for (const j of visible) {
@@ -1330,7 +1636,7 @@ export default function MyDealsPage() {
     return Array.from(map.entries())
       .map(([pid, g]) => ({ pid, ...g }))
       .sort((a, b) => b.active.length - a.active.length)
-  }, [jobs, search])
+  }, [jobs, search, filterProject, filterSales])
 
   const totalActive = useMemo(() => jobs.filter(j => !j.actual_deliver_date).length, [jobs])
 
@@ -1377,11 +1683,14 @@ export default function MyDealsPage() {
           )}
         </div>
 
-        {/* Search */}
+        </div>
+
+      {/* Filter bar — separate row, same position as Pipeline */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
         <div className="relative">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder='ค้นหา "303", "A333"...'
+            placeholder='ค้นหาห้อง, ลูกค้า...'
             className="pl-8 pr-7 py-2 rounded-[10px] text-sm focus:outline-none w-44"
             style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           {search && (
@@ -1390,6 +1699,28 @@ export default function MyDealsPage() {
             </button>
           )}
         </div>
+        <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
+          className="py-2 pl-3 pr-7 rounded-[10px] text-sm focus:outline-none appearance-none"
+          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)' }}>
+          <option value="">โครงการ</option>
+          {projectOptions.map(([pid, name]) => <option key={pid} value={pid}>{name}</option>)}
+        </select>
+        <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+          className="py-2 pl-3 pr-7 rounded-[10px] text-sm focus:outline-none appearance-none"
+          style={{ background: 'var(--input-bg)', border: `1px solid ${filterSales ? 'var(--accent)' : 'var(--divider)'}`, color: filterSales ? 'var(--text-1)' : 'var(--text-3)' }}>
+          <option value="">Sales</option>
+          {salesUsers.map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+        {(search || filterProject || filterSales) && (
+          <button onClick={() => { setSearch(''); setFilterProject(''); setFilterSales('') }}
+            className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
+            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            ล้าง
+          </button>
+        )}
+        <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>
+          {grouped.reduce((s, g) => s + g.active.length + g.done.length, 0)} ราย
+        </span>
       </div>
 
       {/* Legend */}
@@ -1402,14 +1733,44 @@ export default function MyDealsPage() {
         ))}
       </div>
 
+      {/* Summary strip */}
+      {!loading && jobs.length > 0 && (() => {
+        const totalRevenue = jobs.reduce((s, j) => s + j.total_amount, 0)
+        const overdueCount = jobs.filter(j => j.has_overdue).length
+        const allPaidCount = jobs.filter(j => j.all_paid).length
+        return (
+          <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
+            <div className="ds-card-sm text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>งานทั้งหมด</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{jobs.length}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ห้อง</p>
+            </div>
+            <div className="ds-card-sm text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalRevenue > 0 ? '฿' + (totalRevenue / 1000000).toFixed(1) + 'M' : '—'}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>บาท</p>
+            </div>
+            <div className="ds-card-sm text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างชำระ</p>
+              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>{overdueCount}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{allPaidCount} ชำระครบ</p>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Groups */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map(i => <CardSkeleton key={i} />)}
         </div>
       ) : grouped.length === 0 ? (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบงาน</p>
+        <div className="flex flex-col items-center justify-center gap-3 py-20">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
+            <Search size={20} style={{ color: 'var(--text-3)' }} />
+          </div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่พบงาน</p>
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองปรับ filter หรือตรวจสอบข้อมูล</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -1429,7 +1790,7 @@ export default function MyDealsPage() {
 
               {/* Active room cards */}
               {active.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {active.map(j => (
                     <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} />
                   ))}
@@ -1443,11 +1804,11 @@ export default function MyDealsPage() {
                     className="flex items-center gap-1.5 text-xs py-1"
                     style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}
                     onClick={() => setDoneExpanded(prev => ({ ...prev, [pid]: !prev[pid] }))}>
-                    {doneExpanded[pid] ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    {doneExpanded[pid] ? <ChevronDown size={12} style={{ color: 'var(--text-3)' }} /> : <ChevronRight size={12} style={{ color: 'var(--text-3)' }} />}
                     ส่งมอบแล้ว {done.length} ห้อง
                   </button>
                   {doneExpanded[pid] && (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-2">
                       {done.map(j => (
                         <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} />
                       ))}

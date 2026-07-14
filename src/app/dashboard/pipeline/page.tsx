@@ -435,7 +435,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
       {/* Panel */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Header — like DealDrawer */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>

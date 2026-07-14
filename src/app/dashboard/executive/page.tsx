@@ -71,7 +71,7 @@ export default function ExecutivePage() {
   const supabase = createClient()
   const [allCustomers, setAllCustomers] = useState<Customer[]>([])
   const [allJobs, setAllJobs] = useState<Job[]>([])
-  const [orgTarget, setOrgTarget] = useState<{ sales: number; delivery: number } | null>(null)
+  const [rawOrgTargets, setRawOrgTargets] = useState<{ year: number; month: number; target_sales_value: number; target_delivery_value: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
 
@@ -95,21 +95,13 @@ export default function ExecutivePage() {
       ] = await Promise.all([
         supabase.from('customers').select('id,status,budget,customer_type,source,assigned_to,created_at,users!customers_assigned_to_fkey(name)'),
         supabase.from('jobs').select('id,order_date,actual_deliver_date,revenue_ex_vat,work_type,customer_type,working_status,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)'),
-        supabase.from('org_targets').select('target_sales_value,target_delivery_value,year,month').eq('year', new Date().getFullYear()).limit(12),
+        supabase.from('org_targets').select('target_sales_value,target_delivery_value,year,month').order('year').order('month'),
       ])
       if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllCustomers((cust || []) as unknown as Customer[])
       setAllJobs((jobs || []) as unknown as Job[])
 
-      if (ot && ot.length > 0) {
-        const now = new Date(); const m = now.getMonth() + 1; const q = Math.floor((m - 1) / 3)
-        let rows = ot
-        if (period === 'month') rows = ot.filter(x => x.month === m)
-        else if (period === 'quarter') rows = ot.filter(x => x.month >= q * 3 + 1 && x.month <= q * 3 + 3)
-        const sales = rows.reduce((s, x) => s + (x.target_sales_value || 0), 0)
-        const delivery = rows.reduce((s, x) => s + (x.target_delivery_value || 0), 0)
-        setOrgTarget(sales > 0 || delivery > 0 ? { sales, delivery } : null)
-      }
+      setRawOrgTargets(ot || [])
 
       // Load team data
       const [{ data: uData }, { data: stData }] = await Promise.all([
@@ -141,6 +133,23 @@ export default function ExecutivePage() {
       (!filterCustType || j.customer_type === filterCustType)),
     [allJobs, start, end, filterCustType]
   )
+
+  // Org target — reactive to period + offset
+  const orgTarget = useMemo(() => {
+    if (!rawOrgTargets.length) return null
+    const startDate = new Date(start); const endDate = new Date(end)
+    const startYear = startDate.getFullYear(); const startMonth = startDate.getMonth() + 1
+    const endYear = endDate.getFullYear(); const endMonth = endDate.getMonth() + 1
+    const rows = rawOrgTargets.filter(x => {
+      if (x.year < startYear || x.year > endYear) return false
+      if (x.year === startYear && x.month < startMonth) return false
+      if (x.year === endYear && x.month > endMonth) return false
+      return true
+    })
+    const sales = rows.reduce((s, x) => s + (x.target_sales_value || 0), 0)
+    const delivery = rows.reduce((s, x) => s + (x.target_delivery_value || 0), 0)
+    return sales > 0 || delivery > 0 ? { sales, delivery } : null
+  }, [rawOrgTargets, start, end])
 
   // KPIs
   const salesRevenue = periodJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
@@ -503,7 +512,7 @@ export default function ExecutivePage() {
           </div>
         )
         if (managerIds.length === 0) return (
-          <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+          <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีข้อมูลทีม (ตั้งค่า manager_id ที่หน้า Users)</p>
           </div>

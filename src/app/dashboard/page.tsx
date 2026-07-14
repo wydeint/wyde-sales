@@ -195,7 +195,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Hero KPI Banner */}
-      <div className="rounded-[18px] p-5 relative overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', borderLeft: '4px solid #f97316' }}>
+      <div className="rounded-[18px] p-5 relative overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <p className="text-card-title mb-4" style={{ color: 'var(--text-3)' }}>ผลงาน{currentMonthThai}</p>
         <div className="grid grid-cols-2 gap-6">
           {/* ยอดขาย */}

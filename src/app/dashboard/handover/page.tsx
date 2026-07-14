@@ -126,21 +126,15 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
   }
 
   return (
-    <div className="fixed inset-0 z-50" onClick={onClose}
-      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', padding: '1rem', paddingTop: '3.5rem' }}>
 
-      {/* Desktop: right panel — Mobile: bottom sheet */}
+      {/* Panel */}
       <div onClick={e => e.stopPropagation()}
-        className="absolute flex flex-col shadow-2xl
-          bottom-0 left-0 right-0 rounded-t-[20px] max-h-[90dvh]
-          md:bottom-auto md:top-0 md:left-auto md:right-0 md:w-96 md:h-full md:rounded-none md:rounded-l-[20px]"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        className="relative flex flex-col shadow-2xl w-full max-w-lg max-h-full overflow-y-auto rounded-[20px]"
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Drag handle (mobile only) */}
-        <div className="flex justify-center pt-3 pb-1 md:hidden">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--divider)' }} />
-        </div>
-
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1 min-w-0">

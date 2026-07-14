@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Save, X, Edit2, Layers, AlertTriangle } from 'lucide-react'
+import { Search, Save, X, Edit2, Layers, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react'
 
 // ─── Table definitions ─────────────────────────────────────
 type ColType = 'text' | 'number' | 'date' | 'select' | 'boolean' | 'readonly'
@@ -23,7 +23,7 @@ interface TableDef {
   group: string
 }
 
-const GROUPS = ['Core', 'Operations', 'Sales', 'Finance', 'Admin']
+const GROUPS = ['Core', 'Operations', 'Sales', 'Finance', 'Admin', 'Reconcile']
 
 const TABLES: TableDef[] = [
   {
@@ -396,10 +396,10 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
   const selectedCol = editableCols.find(c => c.key === col)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[16px] shadow-2xl"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -435,6 +435,209 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Reconcile Check ───────────────────────────────────────
+const fmtN = (n: number) => n.toLocaleString('th-TH')
+const fmtB = (n: number) => '฿' + Math.round(n).toLocaleString('th-TH')
+
+interface CheckItem {
+  label: string
+  desc: string
+  lhs: { label: string; value: number }
+  rhs: { label: string; value: number }
+  pass: boolean
+  detail?: string
+  issues?: { id: string; name: string; diff: number }[]
+}
+
+function ReconcileCheck() {
+  const supabase = createClient()
+  const [loading, setLoading] = useState(false)
+  const [checks, setChecks] = useState<CheckItem[]>([])
+  const [ran, setRan] = useState(false)
+
+  async function run() {
+    setLoading(true)
+    const [
+      { data: customers },
+      { data: jobs },
+      { data: payments },
+    ] = await Promise.all([
+      supabase.from('customers').select('id, status'),
+      supabase.from('jobs').select('id, customer_id, working_status, revenue_inc_vat'),
+      supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger'),
+    ])
+
+    const c = (customers || []) as { id: string; status: string }[]
+    const j = (jobs || []) as { id: string; customer_id: string; working_status: string; revenue_inc_vat: number }[]
+    const p = (payments || []) as { id: string; job_id: string; amount: number; paid_amount: number | null; status: string; is_work_trigger: boolean }[]
+
+    // Check 1: customers total = all statuses
+    const cTotal = c.length
+    const cLost = c.filter(x => x.status === 'lost').length
+    const cCancelled = c.filter(x => x.status === 'cancelled').length
+    const cActive = c.filter(x => !['lost', 'cancelled'].includes(x.status)).length
+    const check1: CheckItem = {
+      label: 'จำนวนลูกค้า',
+      desc: 'Active + Lost + Cancelled = ทั้งหมด',
+      lhs: { label: 'Active + Lost + Cancelled', value: cActive + cLost + cCancelled },
+      rhs: { label: 'Customers ทั้งหมด', value: cTotal },
+      pass: cActive + cLost + cCancelled === cTotal,
+    }
+
+    // Check 2: jobs working_status breakdown = total
+    const jTotal = j.length
+    const jWorking = j.filter(x => x.working_status === 'รับงาน').length
+    const jBooked = j.filter(x => x.working_status === 'จอง').length
+    const jDelivered = j.filter(x => x.working_status === 'ส่งมอบแล้ว').length
+    const jCancelled = j.filter(x => x.working_status === 'ยกเลิก').length
+    const jOther = j.filter(x => !['รับงาน', 'จอง', 'ส่งมอบแล้ว', 'ยกเลิก'].includes(x.working_status)).length
+    const jSum = jWorking + jBooked + jDelivered + jCancelled + jOther
+    const check2: CheckItem = {
+      label: 'จำนวนงาน',
+      desc: 'รับงาน + จอง + ส่งมอบแล้ว + ยกเลิก + อื่นๆ = ทั้งหมด',
+      lhs: { label: `รับงาน(${jWorking}) + จอง(${jBooked}) + ส่งมอบ(${jDelivered}) + ยกเลิก(${jCancelled}) + อื่น(${jOther})`, value: jSum },
+      rhs: { label: 'Jobs ทั้งหมด', value: jTotal },
+      pass: jSum === jTotal,
+    }
+
+    // Check 3: jobs with working_status='closed'/'รับงาน' have customers.status='closed'
+    const jobsActive = j.filter(x => x.working_status === 'รับงาน')
+    const customerStatusMap = Object.fromEntries(c.map(x => [x.id, x.status]))
+    const mismatchedJobs = jobsActive.filter(x => x.customer_id && customerStatusMap[x.customer_id] !== 'closed')
+    const check3: CheckItem = {
+      label: 'Sync jobs ↔ customers',
+      desc: 'jobs.working_status=รับงาน ต้องมี customers.status=closed',
+      lhs: { label: 'Jobs ที่ sync แล้ว', value: jobsActive.length - mismatchedJobs.length },
+      rhs: { label: 'Jobs รับงานทั้งหมด', value: jobsActive.length },
+      pass: mismatchedJobs.length === 0,
+      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ working_status=รับงาน แต่ customer ยังไม่ closed` : undefined,
+    }
+
+    // Check 4: มูลค่างาน vs ยอดงวดรวม (เฉพาะ jobs ที่ส่งมอบแล้ว หรือ รับงาน)
+    const activeJobs = j.filter(x => x.working_status === 'ส่งมอบแล้ว' || x.working_status === 'รับงาน')
+    const activeJobIds = new Set(activeJobs.map(x => x.id))
+    const totalJobRevenue = activeJobs.reduce((s, x) => s + (x.revenue_inc_vat || 0), 0)
+    const paymentsByJob = p.filter(x => activeJobIds.has(x.job_id))
+    const totalPaymentAmount = paymentsByJob.reduce((s, x) => s + (x.amount || 0), 0)
+    // find jobs where sum(payments.amount) != revenue_inc_vat
+    const paymentSumByJob: Record<string, number> = {}
+    for (const pay of paymentsByJob) {
+      paymentSumByJob[pay.job_id] = (paymentSumByJob[pay.job_id] || 0) + (pay.amount || 0)
+    }
+    const jobsWithMismatch = activeJobs.filter(x => {
+      const pSum = paymentSumByJob[x.id] || 0
+      return pSum > 0 && Math.abs(pSum - (x.revenue_inc_vat || 0)) > 1
+    })
+    const check4: CheckItem = {
+      label: 'มูลค่างาน vs ยอดงวดรวม',
+      desc: 'SUM(jobs.revenue_inc_vat) ≈ SUM(payments.amount) เฉพาะ jobs ที่รับงาน/ส่งมอบแล้ว',
+      lhs: { label: 'SUM(jobs.revenue_inc_vat)', value: totalJobRevenue },
+      rhs: { label: 'SUM(payments.amount)', value: totalPaymentAmount },
+      pass: Math.abs(totalJobRevenue - totalPaymentAmount) < 10,
+      detail: jobsWithMismatch.length > 0 ? `พบ ${jobsWithMismatch.length} jobs ที่ยอดงวดไม่ตรงกับมูลค่างาน` : undefined,
+    }
+
+    // Check 5: jobs รับงาน ต้องมี trigger payment ที่ paid
+    const triggerPaidJobIds = new Set(p.filter(x => x.is_work_trigger && x.status === 'paid').map(x => x.job_id))
+    const jobsNoTrigger = jobsActive.filter(x => !triggerPaidJobIds.has(x.id))
+    const check5: CheckItem = {
+      label: 'Trigger payment',
+      desc: 'ทุก job รับงาน ต้องมีงวด trigger ที่จ่ายแล้ว',
+      lhs: { label: 'Jobs ที่มี trigger paid', value: jobsActive.length - jobsNoTrigger.length },
+      rhs: { label: 'Jobs รับงานทั้งหมด', value: jobsActive.length },
+      pass: jobsNoTrigger.length === 0,
+      detail: jobsNoTrigger.length > 0 ? `พบ ${jobsNoTrigger.length} jobs ที่ไม่มีงวด trigger ที่จ่ายแล้ว` : undefined,
+    }
+
+    setChecks([check1, check2, check3, check4, check5])
+    setRan(true)
+    setLoading(false)
+  }
+
+  const passCount = checks.filter(c => c.pass).length
+
+  return (
+    <div className="flex-1 overflow-auto mx-5 mb-5">
+      <div className="max-w-2xl mx-auto pt-6 pb-10 space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Reconcile Check</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments</p>
+          </div>
+          <button onClick={run} disabled={loading}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-semibold text-white"
+            style={{ background: loading ? '#666' : 'var(--accent)' }}>
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            {loading ? 'กำลังตรวจ...' : ran ? 'ตรวจอีกครั้ง' : 'เริ่มตรวจ'}
+          </button>
+        </div>
+
+        {/* Summary badge */}
+        {ran && !loading && (
+          <div className="px-4 py-3 rounded-[12px] flex items-center gap-3"
+            style={{ background: passCount === checks.length ? 'rgba(74,222,128,0.08)' : 'rgba(251,146,60,0.08)', border: `1px solid ${passCount === checks.length ? 'rgba(74,222,128,0.3)' : 'rgba(251,146,60,0.3)'}` }}>
+            {passCount === checks.length
+              ? <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
+              : <AlertTriangle size={16} className="text-orange-400 flex-shrink-0" />}
+            <span className="text-sm font-semibold" style={{ color: passCount === checks.length ? '#4ade80' : '#fb923c' }}>
+              {passCount === checks.length ? 'ข้อมูลสอดคล้องทั้งหมด ✓' : `ผ่าน ${passCount}/${checks.length} — พบความไม่สอดคล้อง ${checks.length - passCount} รายการ`}
+            </span>
+          </div>
+        )}
+
+        {/* Check items */}
+        {ran && !loading && checks.map((item, i) => (
+          <div key={i} className="rounded-[12px] p-4 space-y-3"
+            style={{ background: 'var(--card-bg)', border: `1px solid ${item.pass ? 'var(--card-border)' : 'rgba(251,146,60,0.4)'}` }}>
+            <div className="flex items-start gap-2.5">
+              {item.pass
+                ? <CheckCircle2 size={15} className="text-green-400 mt-0.5 flex-shrink-0" />
+                : <XCircle size={15} className="text-orange-400 mt-0.5 flex-shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{item.label}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+                    style={{ background: item.pass ? 'rgba(74,222,128,0.12)' : 'rgba(251,146,60,0.12)', color: item.pass ? '#4ade80' : '#fb923c' }}>
+                    {item.pass ? 'PASS' : 'FAIL'}
+                  </span>
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{item.desc}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 ml-6">
+              <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.lhs.label}</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
+                  {item.lhs.value > 9999 ? fmtB(item.lhs.value) : fmtN(item.lhs.value)}
+                </p>
+              </div>
+              <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.rhs.label}</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
+                  {item.rhs.value > 9999 ? fmtB(item.rhs.value) : fmtN(item.rhs.value)}
+                </p>
+              </div>
+            </div>
+            {item.detail && (
+              <p className="ml-6 text-xs px-3 py-2 rounded-[8px]" style={{ background: 'rgba(251,146,60,0.08)', color: '#fb923c' }}>
+                ⚠ {item.detail}
+              </p>
+            )}
+          </div>
+        ))}
+
+        {!ran && !loading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: 'var(--text-3)' }}>
+            <CheckCircle2 size={32} className="opacity-30" />
+            <p className="text-sm">กดปุ่ม "เริ่มตรวจ" เพื่อ verify ข้อมูล</p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -582,27 +785,31 @@ export default function AdminDataPage() {
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
 
+  const isReconcile = activeGroup === 'Reconcile'
+
   return (
     <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
       {/* Header */}
       <div className="flex-shrink-0 px-5 pt-5 pb-3">
         <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-lg font-bold flex-1" style={{ color: 'var(--text-1)' }}>Data Entry</h1>
-          <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหา..."
-              className="field-input pl-8 pr-7 w-44" />
-            {search && (
-              <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
-                <X size={12} style={{ color: 'var(--text-3)' }} />
-              </button>
-            )}
-          </div>
-          <button onClick={load} className="btn-util text-xs">รีเฟรช</button>
+          <h1 className="text-lg font-bold flex-1" style={{ color: 'var(--text-1)' }}>{isReconcile ? 'Reconcile Check' : 'Data Entry'}</h1>
+          {!isReconcile && (<>
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหา..."
+                className="field-input pl-8 pr-7 w-44" />
+              {search && (
+                <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
+                  <X size={12} style={{ color: 'var(--text-3)' }} />
+                </button>
+              )}
+            </div>
+            <button onClick={load} className="btn-util text-xs">รีเฟรช</button>
+          </>)}
         </div>
 
         {/* Project filter (only for tables with project_id) */}
-        {hasProjectFilter && (
+        {!isReconcile && hasProjectFilter && (
           <div className="flex items-center gap-2 mb-3">
             <label className="field-label">โครงการ</label>
             <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
@@ -647,8 +854,11 @@ export default function AdminDataPage() {
         </div>
       </div>
 
+      {/* Reconcile view */}
+      {isReconcile && <ReconcileCheck />}
+
       {/* Bulk action bar */}
-      {selectedIds.size > 0 && (
+      {!isReconcile && selectedIds.size > 0 && (
         <div className="flex-shrink-0 mx-5 mb-2 px-4 py-2.5 rounded-[10px] flex items-center gap-3"
           style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)' }}>
           <Layers size={14} className="text-indigo-400" />
@@ -668,7 +878,7 @@ export default function AdminDataPage() {
       )}
 
       {/* Table */}
-      <div className="flex-1 overflow-auto mx-5 mb-5 rounded-[12px]"
+      {!isReconcile && <div className="flex-1 overflow-auto mx-5 mb-5 rounded-[12px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         {loading ? (
           <div className="flex items-center justify-center h-48">
@@ -756,17 +966,17 @@ export default function AdminDataPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </div>}
 
       {/* Footer */}
-      <div className="flex-shrink-0 px-5 pb-3 flex items-center gap-3">
+      {!isReconcile && <div className="flex-shrink-0 px-5 pb-3 flex items-center gap-3">
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>
           {filtered.length} แถว {rows.length !== filtered.length ? `(กรองจาก ${rows.length})` : ''} · แสดงสูงสุด 500 แถว
         </p>
         {selectedIds.size > 0 && (
           <p className="text-xs text-indigo-400 font-semibold">{selectedIds.size} แถวที่เลือก</p>
         )}
-      </div>
+      </div>}
 
       {bulkModal && (
         <BulkEditModal

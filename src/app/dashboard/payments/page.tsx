@@ -116,9 +116,9 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1">
             <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>

@@ -377,7 +377,7 @@ export default function TargetsPage() {
 
               {/* Sales team vs Org gap */}
               {orgTotalSales > 0 && salesTeamSalesTarget > 0 && (
-                <div className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                <div className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                   <p className="text-card-title mb-3" style={{ color: 'var(--text-2)' }}>เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -413,7 +413,7 @@ export default function TargetsPage() {
               )}
 
               {/* Monthly breakdown table */}
-              <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+              <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                 <div className="px-5 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--divider)' }}>
                   <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
                 </div>
@@ -676,7 +676,7 @@ export default function TargetsPage() {
           {tab === 'sales' && (
             <div className="space-y-4">
               {grouped.length === 0 ? (
-                <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                   <Target size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
                   <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีเป้าหมายสำหรับช่วงนี้</p>
                 </div>
@@ -692,7 +692,7 @@ export default function TargetsPage() {
                     const trend = sparkSales[2] > sparkSales[0] ? '↑' : sparkSales[2] < sparkSales[0] ? '↓' : '→'
                     const trendColor = trend === '↑' ? '#4ade80' : trend === '↓' ? '#f87171' : 'var(--text-3)'
                     return (
-                      <div key={t.user_id} className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                      <div key={t.user_id} className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>

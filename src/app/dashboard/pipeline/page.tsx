@@ -163,16 +163,14 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
         <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
       {/* Delete button */}
-      {!isClosed && (
-        <button
-          onClick={e => { e.stopPropagation(); onDelete() }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
-          style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
-          title="ลบ"
-        >
-          <Trash2 size={11} />
-        </button>
-      )}
+      <button
+        onClick={e => { e.stopPropagation(); onDelete() }}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+        title="ลบ"
+      >
+        <Trash2 size={11} />
+      </button>
     </div>
   )
 }

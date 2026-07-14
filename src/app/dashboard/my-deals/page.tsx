@@ -1432,7 +1432,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       {/* Centered Panel */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
@@ -2189,7 +2189,7 @@ export default function MyDealsPage() {
       {/* Drawer loading indicator */}
       {drawerLoading && (
         <>
-          <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={closeDrawer} />
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={closeDrawer} />
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
             <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[20px] p-12 pointer-events-auto"
               style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>

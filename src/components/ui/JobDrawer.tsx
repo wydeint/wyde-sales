@@ -27,6 +27,8 @@ export interface Installment {
   channel: string | null
   slip_url: string | null
   receipt_url: string | null
+  voucher_code: string | null
+  voucher_amount: number | null
 }
 
 export interface FullJob {
@@ -171,6 +173,9 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
   const [channel, setChannel] = useState(CHANNEL_OPTS[0])
   const [slipPosted, setSlipPosted] = useState(false)
   const [receiptPosted, setReceiptPosted] = useState(false)
+  const [useVoucher, setUseVoucher] = useState(false)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherAmount, setVoucherAmount] = useState(0)
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState<'plan' | 'pay'>('plan')
 
@@ -202,6 +207,9 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
       working_status: isSingleB2B || firstInst?.trigger ? 'รับงาน' : job.working_status,
     }).eq('id', job.id)
+    if ((isSingleB2B || firstInst?.trigger) && job.customer_id) {
+      await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
+    }
     await supabase.from('payments').delete().eq('job_id', job.id)
     await supabase.from('payments').insert(preview.map((p, i) => ({
       id: `PAY-${job.id}-${i + 1}`,
@@ -221,6 +229,8 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       is_final: p.final,
       slip_url: isSingleB2B ? null : (i === 0 ? (slipPosted ? 'posted' : null) : null),
       receipt_url: isSingleB2B ? null : (i === 0 ? (receiptPosted ? 'posted' : null) : null),
+      voucher_code: i === 0 && useVoucher && voucherCode ? voucherCode : null,
+      voucher_amount: i === 0 && useVoucher && voucherAmount > 0 ? voucherAmount : null,
     })))
     setSaving(false); onSaved(); onClose()
   }
@@ -230,10 +240,10 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
   const btnIdle = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[88vh] overflow-y-auto"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -399,6 +409,32 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                   {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+              {firstInst?.final && (
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs"
+                    style={{ color: useVoucher ? 'var(--accent)' : 'var(--text-2)' }}>
+                    <input type="checkbox" checked={useVoucher} onChange={e => setUseVoucher(e.target.checked)}
+                      className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent)' }} />
+                    ใช้ Voucher / ส่วนลด
+                  </label>
+                  {useVoucher && (
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>รหัส Voucher</label>
+                        <input type="text" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
+                          placeholder="เช่น VOU-2024-001"
+                          className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                      </div>
+                      <div className="w-32">
+                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
+                        <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(Number(e.target.value))}
+                          placeholder="0"
+                          className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
@@ -438,6 +474,9 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
   const [channel, setChannel] = useState(firstPending?.channel || CHANNEL_OPTS[0])
   const [slipPosted, setSlipPosted] = useState(false)
   const [receiptPosted, setReceiptPosted] = useState(false)
+  const [useVoucher, setUseVoucher] = useState(!!(firstPending?.voucher_amount))
+  const [voucherCode, setVoucherCode] = useState(firstPending?.voucher_code || '')
+  const [voucherAmount, setVoucherAmount] = useState(firstPending?.voucher_amount || 0)
   const [saving, setSaving] = useState(false)
 
   function selectInst(inst: Installment) {
@@ -447,6 +486,9 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
     setChannel(inst.channel || CHANNEL_OPTS[0])
     setSlipPosted(inst.slip_url === 'posted')
     setReceiptPosted(inst.receipt_url === 'posted')
+    setUseVoucher(!!(inst.voucher_amount))
+    setVoucherCode(inst.voucher_code || '')
+    setVoucherAmount(inst.voucher_amount || 0)
   }
 
   async function save() {
@@ -463,6 +505,8 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
       channel: channel || null,
       slip_url: slipPosted ? 'posted' : null,
       receipt_url: receiptPosted ? 'posted' : null,
+      voucher_code: useVoucher && voucherCode ? voucherCode : null,
+      voucher_amount: useVoucher && voucherAmount > 0 ? voucherAmount : null,
     }).eq('id', selected.id)
     setSaving(false); onSaved(); onClose()
   }
@@ -470,10 +514,10 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
   const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -522,6 +566,30 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
               {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs"
+              style={{ color: useVoucher ? 'var(--accent)' : 'var(--text-2)' }}>
+              <input type="checkbox" checked={useVoucher} onChange={e => setUseVoucher(e.target.checked)}
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent)' }} />
+              ใช้ Voucher / ส่วนลด
+            </label>
+            {useVoucher && (
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>รหัส Voucher</label>
+                  <input type="text" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
+                    placeholder="เช่น VOU-2024-001"
+                    className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                </div>
+                <div className="w-32">
+                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
+                  <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(Number(e.target.value))}
+                    placeholder="0"
+                    className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                </div>
+              </div>
+            )}
+          </div>
           <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
@@ -534,6 +602,19 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
               <span className="text-xs font-semibold" style={{ color: receiptPosted ? 'var(--accent-green)' : 'var(--text-2)' }}>ใบเสร็จรับเงิน โพสต์ใน Line แล้ว</span>
             </label>
           </div>
+          {useVoucher && voucherAmount > 0 && (
+            <div className="rounded-[10px] px-3 py-2.5 space-y-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <div className="flex justify-between text-xs" style={{ color: 'var(--text-2)' }}>
+                <span>มูลค่างวด</span><span>{fmtBaht(paidAmount)}</span>
+              </div>
+              <div className="flex justify-between text-xs" style={{ color: 'var(--accent-orange)' }}>
+                <span>หัก Voucher{voucherCode ? ` (${voucherCode})` : ''}</span><span>-{fmtBaht(voucherAmount)}</span>
+              </div>
+              <div className="flex justify-between text-xs font-bold border-t pt-1" style={{ color: 'var(--accent-green)', borderColor: 'var(--divider)' }}>
+                <span>ยอดรับจริง</span><span>{fmtBaht(Math.max(0, paidAmount - voucherAmount))}</span>
+              </div>
+            </div>
+          )}
           <button onClick={save} disabled={saving || !selected}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
@@ -583,10 +664,10 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -836,6 +917,13 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated }: {
           )}
         </div>
       </div>
+      {inst.status === 'paid' && inst.voucher_amount && inst.voucher_amount > 0 && (
+        <div className="ml-7 mt-1.5 flex gap-3 text-[10px]" style={{ color: 'var(--text-3)' }}>
+          <span>มูลค่า {fmtBaht(inst.amount)}</span>
+          <span style={{ color: 'var(--accent-orange)' }}>หัก Voucher{inst.voucher_code ? ` ${inst.voucher_code}` : ''} -{fmtBaht(inst.voucher_amount)}</span>
+          <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>รับจริง {fmtBaht(Math.max(0, inst.amount - inst.voucher_amount))}</span>
+        </div>
+      )}
       {inst.status === 'paid' && (
         <div className="flex gap-1.5 mt-2 ml-7 flex-wrap">
           <select value={channel} onChange={e => saveChannel(e.target.value)}
@@ -893,7 +981,7 @@ export function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo
       status: 'pending', is_final: false, is_work_trigger: false,
     }
     await supabase.from('payments').insert(row)
-    onAdded({ ...row, paid_amount: null, paid_date: null, percentage: 0, slip_url: null, receipt_url: null, channel: null } as Installment)
+    onAdded({ ...row, paid_amount: null, paid_date: null, percentage: 0, slip_url: null, receipt_url: null, channel: null, voucher_code: null, voucher_amount: null } as Installment)
     setOpen(false); setName(`งวดที่ ${nextNo + 1}`); setAmount(''); setSaving(false)
   }
 
@@ -968,10 +1056,10 @@ function JobCancelModal({ onClose, onConfirm }: {
   async function confirm() { setSaving(true); await onConfirm(cancelType, Number(amount) || 0, date, notes); setSaving(false) }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ยกเลิกสัญญา</p>
         <div className="flex gap-2">
@@ -1049,13 +1137,11 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
-        onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       {/* Panel */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
         <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-          style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -1304,7 +1390,7 @@ export async function loadFullJob(jobId: string): Promise<FullJob | null> {
   const supabase = createClient()
   const { data: raw } = await supabase
     .from('jobs')
-    .select('*, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url)')
+    .select('*, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount)')
     .eq('id', jobId)
     .single()
   if (!raw) return null
@@ -1351,6 +1437,8 @@ export async function loadFullJob(jobId: string): Promise<FullJob | null> {
       channel: p.channel || null,
       slip_url: p.slip_url || null,
       receipt_url: p.receipt_url || null,
+      voucher_code: p.voucher_code || null,
+      voucher_amount: p.voucher_amount ?? null,
     })),
   }
 }

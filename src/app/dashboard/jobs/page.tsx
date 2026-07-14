@@ -174,7 +174,7 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
             {seqNo && seqNo > 0 && (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
                 style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
-                ครั้งที่ {seqNo}
+                งานที่ {seqNo}
               </span>
             )}
           </div>

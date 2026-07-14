@@ -25,6 +25,8 @@ interface Installment {
   is_work_trigger: boolean
   is_final: boolean
   file_urls: string[]
+  voucher_code: string | null
+  voucher_amount: number
 }
 
 interface Job {
@@ -121,6 +123,9 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(today())
+  const [useVoucher, setUseVoucher] = useState(false)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherAmount, setVoucherAmount] = useState(0)
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState<'plan' | 'pay'>('plan')
 
@@ -165,16 +170,18 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
       paid_date: i === 0 ? paidDate : null,
       is_work_trigger: p.trigger,
       is_final: p.final,
+      voucher_code: i === 0 && useVoucher && voucherCode ? voucherCode : null,
+      voucher_amount: i === 0 && useVoucher && voucherAmount > 0 ? voucherAmount : null,
     }))
     await supabase.from('payments').insert(rows)
     setSaving(false); onSaved(); onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -314,6 +321,37 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                   className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                   style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
               </div>
+              {firstInstallment?.final && (
+                <div className="space-y-2">
+                  <button onClick={() => setUseVoucher(v => !v)}
+                    className="flex items-center gap-2 text-xs"
+                    style={{ color: useVoucher ? 'var(--accent)' : 'var(--text-2)' }}>
+                    <div className="w-4 h-4 rounded border flex items-center justify-center"
+                      style={{ background: useVoucher ? 'var(--accent)' : 'transparent', borderColor: useVoucher ? 'var(--accent)' : 'var(--divider)' }}>
+                      {useVoucher && <span className="text-white text-[10px] font-bold">✓</span>}
+                    </div>
+                    ใช้ Voucher
+                  </button>
+                  {useVoucher && (
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>รหัส Voucher</label>
+                        <input type="text" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
+                          placeholder="เช่น VOU-2024-001"
+                          className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
+                          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+                      </div>
+                      <div className="w-32">
+                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
+                        <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(Number(e.target.value))}
+                          placeholder="0"
+                          className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
+                          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2">
                 <button onClick={() => setStep('plan')}
                   className="flex-1 py-2.5 rounded-[11px] text-sm border"
@@ -342,34 +380,47 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
   const [selected, setSelected] = useState<Installment | null>(firstPending)
   const [paidDate, setPaidDate] = useState(firstPending?.paid_date || today())
   const [paidAmount, setPaidAmount] = useState(firstPending?.paid_amount ?? firstPending?.amount ?? 0)
+  const [useVoucher, setUseVoucher] = useState(!!(firstPending?.voucher_amount))
+  const [voucherCode, setVoucherCode] = useState(firstPending?.voucher_code || '')
+  const [voucherAmount, setVoucherAmount] = useState(firstPending?.voucher_amount || 0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const netAmount = paidAmount - (useVoucher ? voucherAmount : 0)
 
   function selectInst(inst: Installment) {
     setSelected(inst)
     setPaidAmount(inst.paid_amount ?? inst.amount ?? 0)
     setPaidDate(inst.paid_date || today())
+    setUseVoucher(!!(inst.voucher_amount))
+    setVoucherCode(inst.voucher_code || '')
+    setVoucherAmount(inst.voucher_amount || 0)
   }
 
   async function save() {
     if (!selected) return
     if (!paidAmount) { setError('กรุณาระบุยอดเงิน'); return }
+    if (useVoucher && voucherAmount >= paidAmount) { setError('ยอด Voucher ต้องน้อยกว่ายอดงวด'); return }
     setSaving(true); setError('')
     if (selected.is_work_trigger && !job.work_start_date) {
       await supabase.from('jobs').update({ work_start_date: paidDate }).eq('id', job.id)
     }
     const { error: e } = await supabase.from('payments').update({
-      status: 'paid', paid_date: paidDate, paid_amount: paidAmount,
+      status: 'paid',
+      paid_date: paidDate,
+      paid_amount: useVoucher ? netAmount : paidAmount,
+      voucher_code: useVoucher && voucherCode ? voucherCode : null,
+      voucher_amount: useVoucher ? voucherAmount : 0,
     }).eq('id', selected.id)
     if (e) { const msg = e.message; setError(msg); onError?.(msg); setSaving(false); return }
     setSaving(false); onSaved(); onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -396,6 +447,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     {inst.status === 'paid' && <span className="text-[10px] text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                     {inst.is_work_trigger && <span className="text-[10px] text-indigo-400">เริ่มงาน</span>}
                     {inst.is_final && <span className="text-[10px] text-amber-400">งวดสุดท้าย</span>}
+                    {inst.voucher_amount > 0 && <span className="text-[10px] text-pink-400">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
                     {inst.status !== 'paid' && inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                   </div>
                 </button>
@@ -404,7 +456,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับ (฿)</label>
+              <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดงวด (฿)</label>
               <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold"
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}
@@ -417,11 +469,54 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
             </div>
           </div>
+
+          {/* Voucher section */}
+          <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            <label className="flex items-center gap-3 px-4 py-3 cursor-pointer" style={{ background: 'var(--hover-bg)' }}>
+              <input type="checkbox" checked={useVoucher} onChange={e => { setUseVoucher(e.target.checked); if (!e.target.checked) { setVoucherAmount(0); setVoucherCode('') } }}
+                className="w-4 h-4 rounded accent-pink-500" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>ใช้ Voucher / ส่วนลด</span>
+            </label>
+            {useVoucher && (
+              <div className="px-4 pb-4 pt-3 space-y-3" style={{ borderTop: '1px solid var(--divider)' }}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs" style={{ color: 'var(--text-2)' }}>รหัส Voucher</label>
+                    <input type="text" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
+                      placeholder="เช่น VOU-2024-001"
+                      className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
+                      style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+                  </div>
+                  <div>
+                    <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดส่วนลด (฿)</label>
+                    <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
+                      placeholder="0"
+                      className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold text-pink-400"
+                      style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)' }} />
+                  </div>
+                </div>
+                {voucherAmount > 0 && (
+                  <div className="rounded-[8px] p-3 space-y-1" style={{ background: 'var(--card-bg)' }}>
+                    <div className="flex justify-between text-xs" style={{ color: 'var(--text-2)' }}>
+                      <span>ยอดงวด</span><span>{fmtBaht(paidAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-pink-400">
+                      <span>ส่วนลด Voucher</span><span>-{fmtBaht(voucherAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-bold pt-1" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+                      <span>รับจริง (Net)</span><span className="text-green-400">{fmtBaht(netAmount)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={save} disabled={saving || !selected}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
-            {saving ? 'กำลังบันทึก...' : `บันทึกรับเงิน ${selected ? fmtBaht(paidAmount) : ''}`}
+            {saving ? 'กำลังบันทึก...' : `บันทึกรับเงิน ${selected ? fmtBaht(useVoucher && voucherAmount > 0 ? netAmount : paidAmount) : ''}`}
           </button>
         </div>
       </div>
@@ -437,7 +532,8 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const finalInst = job.installments.find(i => i.is_final && i.status !== 'paid') || null
-  const [markFinalPaid, setMarkFinalPaid] = useState(!!finalInst)
+  // po_bill = ส่งมอบก่อน รับเงินภายหลัง → default ไม่ tick
+  const [markFinalPaid, setMarkFinalPaid] = useState(!!finalInst && job.customer_type !== 'B2B')
 
   async function save() {
     setSaving(true); setError('')
@@ -489,10 +585,10 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -527,7 +623,9 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={markFinalPaid} onChange={e => setMarkFinalPaid(e.target.checked)} className="w-4 h-4 rounded" />
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>รับเงินงวดสุดท้าย</p>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
+                    {job.customer_type === 'B2B' ? 'วางบิลและรับเงินพร้อมส่งมอบ' : 'รับเงินงวดสุดท้าย'}
+                  </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{finalInst.installment_name} — {fmtBaht(finalInst.amount)}</p>
                 </div>
               </label>
@@ -567,10 +665,19 @@ function InstallmentRows({ installments }: { installments: Installment[] }) {
             {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
           </div>
           <div className="text-right flex-shrink-0">
-            <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
-              {fmtBaht(inst.status === 'paid' && inst.paid_amount != null ? inst.paid_amount : inst.amount)}
-            </span>
+            {inst.voucher_amount > 0 && inst.status === 'paid' ? (
+              <>
+                <span className="text-[10px] line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
+                <p className="text-[10px] text-pink-400">-{fmtBaht(inst.voucher_amount)}</p>
+                <span className="text-xs font-semibold text-green-400">{fmtBaht(inst.paid_amount ?? 0)}</span>
+              </>
+            ) : (
+              <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
+                {fmtBaht(inst.status === 'paid' && inst.paid_amount != null ? inst.paid_amount : inst.amount)}
+              </span>
+            )}
             {inst.paid_date && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{fmtDate(inst.paid_date)}</p>}
+            {inst.voucher_code && <p className="text-[10px] text-pink-400">{inst.voucher_code}</p>}
           </div>
         </div>
       ))}
@@ -648,6 +755,8 @@ export default function JobDetailPage() {
         is_work_trigger: !!p.is_work_trigger,
         is_final: !!p.is_final,
         file_urls: p.file_urls || [],
+        voucher_code: p.voucher_code || null,
+        voucher_amount: p.voucher_amount || 0,
       })),
     })
     setLoading(false)
@@ -795,7 +904,7 @@ export default function JobDetailPage() {
                   style={{ background: 'var(--accent)' }}>
                   + บันทึกรับเงิน
                 </button>
-                {finalPaid && (
+                {(finalPaid || job.customer_type === 'B2B') && (
                   <button onClick={() => setModal('handover')}
                     className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
                     style={{ background: '#059669' }}>

@@ -84,6 +84,93 @@ All new UI **must** follow `.claude/design/design.md`. The tokens are live in `g
 - Modals → always `.modal-backdrop` + `.modal-panel`. No bespoke `fixed inset-0 z-50` per page.
 - Page root div → always `className="page-content"`.
 
+## Layout — Drawer & Modal positioning rules
+
+### Standard pattern (ใช้ทุกหน้า)
+
+Bottom-sheet บน iPhone, centered บน desktop — **ห้ามเบี่ยง**
+
+```tsx
+{/* Container */}
+<div
+  className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4"
+  onClick={onClose}
+>
+  {/* Backdrop */}
+  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+  {/* Panel */}
+  <div
+    className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[20px] shadow-2xl"
+    style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+    onClick={e => e.stopPropagation()}
+  >
+    …
+  </div>
+</div>
+```
+
+### Variant: backdrop แยกไฟล์ (pointer-events-none)
+
+ใช้เมื่อ backdrop และ panel ต้องอยู่คนละ z-index layer:
+
+```tsx
+{/* Backdrop layer */}
+<div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+{/* Panel layer */}
+<div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4 pointer-events-none">
+  <div className="… pointer-events-auto">…</div>
+</div>
+```
+
+### Padding อธิบาย
+
+| Class | เหตุผล |
+|---|---|
+| `pt-14` | เคลียร์ mobile top nav bar (`h-14` = 56px) บน iPhone |
+| `lg:pt-4` | Desktop ไม่มี top bar — ใช้ spacing ปกติ |
+| `px-4 pb-4` | ระยะห่างซ้าย/ขวา/ล่าง |
+
+### กฎ
+
+| กฎ | รายละเอียด |
+|---|---|
+| **`items-end sm:items-center`** | ทุก main drawer ใช้ pattern นี้เสมอ — bottom-sheet บน iPhone, centered บน desktop |
+| **ห้าม `items-center` บน mobile drawer** | ทำให้ panel ลอยกลางหน้าจอ ไม่ consistent กับ UX มาตรฐาน |
+| **ห้าม `env(safe-area-inset-*)` โดยไม่มี `viewport-fit=cover`** | ค่าจะเป็น 0px เสมอ ไม่มีผล และ `viewport-fit=cover` ทำให้ app ขยับทับขอบ notch |
+| **ห้าม `viewport-fit=cover`** | ทำให้ content ทั้งหมดขยายไปทับ notch เพราะ app shell ไม่มี safe-area padding รองรับ |
+| **Backdrop แยกจาก panel** | `absolute inset-0` backdrop ใน container เดียวกัน หรือใช้ `z-40/z-50` layer pattern |
+| **`max-h-[90vh] overflow-y-auto`** | Panel ต้องเลื่อนภายใน container ไม่ให้ล้น viewport |
+
+### อย่าทำ ❌
+
+```tsx
+{/* ❌ items-center เฉยๆ บน mobile — panel ลอยกลาง ไม่ consistent */}
+<div className="fixed inset-0 flex items-center justify-center p-4">
+
+{/* ❌ backdrop opacity ต่ำกว่า 60% — page content โชว์ผ่าน overlay */}
+<div style={{ background: 'rgba(0,0,0,0.30)' }} />   // ❌
+<div style={{ background: 'rgba(0,0,0,0.45)' }} />   // ❌
+
+{/* ❌ panel ใช้ card-bg แทน panel-bg — ใสในบาง theme */}
+<div style={{ background: 'var(--card-bg)' }}>  {/* drawer panel ❌ */}
+
+{/* ❌ env(safe-area-inset-top) โดยไม่มี viewport-fit=cover — ค่าเป็น 0 */}
+<div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+
+{/* ❌ viewport-fit=cover — ทำให้ทั้งแอปขยับทับ notch */}
+export const viewport: Viewport = { viewportFit: 'cover' }
+```
+
+### Backdrop & Panel — กฎเด็ดขาด
+
+| สิ่งที่ใช้ | ถูก | ผิด |
+|---|---|---|
+| Backdrop Tailwind class | `bg-black/60 backdrop-blur-sm` | `style={{ background: 'rgba(0,0,0,0.X)' }}` |
+| Backdrop opacity | **60%** (`/60`) เสมอ | ≤45% ทำให้หน้าโชว์ผ่าน |
+| Drawer/modal panel background | `var(--panel-bg)` | `var(--card-bg)` (ใสในบาง theme) |
+
+---
+
 ## Coding conventions (observed)
 
 - **Pages are client components** (`'use client'`) that fetch directly from Supabase in `useEffect` via `createClient()` from `@/lib/supabase/client`. Data fetching is **not** done in server components.

@@ -72,7 +72,7 @@ function Sheet({ open, onClose, title, children }: {
       style={{ position: 'fixed', inset: 0, zIndex: 200 }}
     >
       {/* backdrop */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* floating card — 5mm below the top banner, measured live */}
       <div

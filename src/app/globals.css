@@ -67,6 +67,7 @@
   --text-3: #576074;   /* ≥4.5:1 on white glass — WCAG AA */
   --card-bg: rgba(255,255,255,0.55);
   --card-border: rgba(199,210,254,0.45);
+  --panel-bg: rgba(255,255,255,0.96);
   --accent: #6366f1;
   --accent-green: #059669;
   --accent-purple: #7c3aed;
@@ -97,6 +98,7 @@
   --text-3: #7d8fa8;   /* ≥4.5:1 on dark glass — WCAG AA */
   --card-bg: #1a1530;
   --card-border: rgba(255,255,255,0.10);
+  --panel-bg: #1e1838;
   --accent: #818cf8;
   --accent-green: #34d399;
   --accent-purple: #a78bfa;
@@ -381,16 +383,24 @@ input[type="date"], input[type="number"] { color-scheme: light; }
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(0, 0, 0, 0.50);
+  background: rgba(0, 0, 0, 0.60);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   padding: var(--space-md);
+  /* Mobile: clear the h-14 (56px) top nav bar */
+  padding-top: 3.5rem;
+}
+@media (min-width: 640px) {
+  .modal-backdrop { align-items: center; }
+}
+@media (min-width: 1024px) {
+  .modal-backdrop { padding-top: var(--space-md); }
 }
 .modal-panel {
-  background: var(--card-bg);
+  background: var(--panel-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
@@ -399,6 +409,7 @@ input[type="date"], input[type="number"] { color-scheme: light; }
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+  position: relative;
 }
 .modal-panel-wide { max-width: 720px; }
 .modal-header {

@@ -416,8 +416,8 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
     )
     if (loadingBookedJob) return (
       <>
-        <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)' }} onClick={onClose} />
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
+        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
           <div className="text-xs" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</div>
         </div>
       </>
@@ -431,9 +431,9 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       {/* Panel */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
         style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 

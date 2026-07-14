@@ -44,13 +44,13 @@ interface DetailWarranty {
 
 // ─── Stage config ───────────────────────────────────────────
 const STAGES = [
-  { value: 'new',           label: 'ใหม่',         bg: 'rgba(59,130,246,0.08)',  border: '#3b82f680', text: '#60a5fa',  dot: '#60a5fa',  badge: 'rgba(59,130,246,0.15)',  chip: 'rgba(59,130,246,0.45)' },
-  { value: 'interested',    label: 'สนใจ',          bg: 'rgba(6,182,212,0.08)',   border: '#06b6d480', text: '#22d3ee',  dot: '#22d3ee',  badge: 'rgba(6,182,212,0.15)',   chip: 'rgba(6,182,212,0.45)'  },
-  { value: 'quoted',        label: 'เสนอราคาแล้ว',  bg: 'rgba(234,179,8,0.08)',   border: '#eab30880', text: '#fbbf24',  dot: '#fbbf24',  badge: 'rgba(234,179,8,0.15)',   chip: 'rgba(234,179,8,0.45)'  },
-  { value: 'booked',        label: 'จอง',           bg: 'rgba(249,115,22,0.08)',  border: '#f9731680', text: '#fb923c',  dot: '#fb923c',  badge: 'rgba(249,115,22,0.15)',  chip: 'rgba(249,115,22,0.45)' },
-  { value: 'close_pending', label: 'รอปิด',         bg: 'rgba(168,85,247,0.08)',  border: '#a855f780', text: '#c084fc',  dot: '#c084fc',  badge: 'rgba(168,85,247,0.15)',  chip: 'rgba(168,85,247,0.45)' },
-  { value: 'closed',        label: 'ปิดแล้ว',       bg: 'rgba(34,197,94,0.08)',   border: '#22c55e80', text: '#4ade80',  dot: '#4ade80',  badge: 'rgba(34,197,94,0.15)',   chip: 'rgba(34,197,94,0.45)'  },
-  { value: 'lost',          label: 'หลุด',          bg: 'rgba(239,68,68,0.08)',   border: '#ef444480', text: '#f87171',  dot: '#f87171',  badge: 'rgba(239,68,68,0.15)',   chip: 'rgba(239,68,68,0.45)'  },
+  { value: 'new',           label: 'ใหม่',              bg: 'rgba(59,130,246,0.08)',  border: '#3b82f680', text: '#60a5fa',  dot: '#60a5fa',  badge: 'rgba(59,130,246,0.15)',  chip: 'rgba(59,130,246,0.45)' },
+  { value: 'interested',    label: 'สนใจ',               bg: 'rgba(6,182,212,0.08)',   border: '#06b6d480', text: '#22d3ee',  dot: '#22d3ee',  badge: 'rgba(6,182,212,0.15)',   chip: 'rgba(6,182,212,0.45)'  },
+  { value: 'quoted',        label: 'เสนอราคาแล้ว',       bg: 'rgba(234,179,8,0.08)',   border: '#eab30880', text: '#fbbf24',  dot: '#fbbf24',  badge: 'rgba(234,179,8,0.15)',   chip: 'rgba(234,179,8,0.45)'  },
+  { value: 'booked',        label: 'จอง',                bg: 'rgba(249,115,22,0.08)',  border: '#f9731680', text: '#fb923c',  dot: '#fb923c',  badge: 'rgba(249,115,22,0.15)',  chip: 'rgba(249,115,22,0.45)' },
+  { value: 'close_pending', label: 'รอปิด',              bg: 'rgba(168,85,247,0.08)',  border: '#a855f780', text: '#c084fc',  dot: '#c084fc',  badge: 'rgba(168,85,247,0.15)',  chip: 'rgba(168,85,247,0.45)' },
+  { value: 'lost',          label: 'หลุด',               bg: 'rgba(239,68,68,0.08)',   border: '#ef444480', text: '#f87171',  dot: '#f87171',  badge: 'rgba(239,68,68,0.15)',   chip: 'rgba(239,68,68,0.45)'  },
+  { value: 'closed',        label: 'ปิดแล้ว เริ่มงาน',  bg: 'rgba(34,197,94,0.08)',   border: '#22c55e80', text: '#4ade80',  dot: '#4ade80',  badge: 'rgba(34,197,94,0.15)',   chip: 'rgba(34,197,94,0.45)'  },
 ]
 const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
 
@@ -96,13 +96,21 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
   const custType = (c as any).customer_type || 'B2C'
   const workType = (c as any).work_type || ''
   const displayValue = jobRev ?? (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0)
+  const isClosed = c.status === 'closed'
   return (
     <div className="relative group w-full rounded-[14px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
-      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
+      style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? '#22c55e40' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = isClosed ? '#22c55e80' : 'var(--accent)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = isClosed ? '#22c55e40' : 'var(--card-border)')}
       onClick={onClick}
     >
+      {isClosed && (
+        <a href="/dashboard/my-deals" onClick={e => e.stopPropagation()}
+          className="flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-[10px] font-semibold"
+          style={{ background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)' }}>
+          <span>✓</span> อยู่ใน My Deals แล้ว →
+        </a>
+      )}
       {/* Row 1: room number + badges */}
       <div className="flex items-start justify-between gap-1 min-w-0">
         <div className="flex items-center gap-1 min-w-0 flex-1">
@@ -155,14 +163,16 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
         <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
       {/* Delete button */}
-      <button
-        onClick={e => { e.stopPropagation(); onDelete() }}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
-        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
-        title="ลบ"
-      >
-        <Trash2 size={11} />
-      </button>
+      {!isClosed && (
+        <button
+          onClick={e => { e.stopPropagation(); onDelete() }}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+          style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+          title="ลบ"
+        >
+          <Trash2 size={11} />
+        </button>
+      )}
     </div>
   )
 }
@@ -1112,7 +1122,6 @@ export default function ProspectsKanbanPage() {
     const [{ data: cData }, { data: pData }, { data: uData }] = await Promise.all([
       supabase.from('customers')
         .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat)')
-        .neq('status', 'closed')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
@@ -1245,7 +1254,7 @@ export default function ProspectsKanbanPage() {
 
   const stage = STAGES.find(s => s.value === activeStage) || STAGES[0]
   const list = customers.filter(c => {
-    if (c.status !== activeStage) return false
+    if (!search && c.status !== activeStage) return false
     if (filterProject && c.project_id !== filterProject) return false
     if (filterSales && c.assigned_to !== filterSales) return false
     if (search) {
@@ -1275,7 +1284,7 @@ export default function ProspectsKanbanPage() {
 
         {/* Stage chips — single select */}
         <div className="flex gap-1.5 flex-wrap">
-          {STAGES.filter(s => s.value !== 'closed').map(s => {
+          {STAGES.map(s => {
             const count = customers.filter(c => c.status === s.value).length
             const active = activeStage === s.value && !search
             return (

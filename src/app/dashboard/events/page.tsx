@@ -47,6 +47,7 @@ const EVENT_TYPES = [
 
 const CUST_STATUS = [
   { value: 'booked',          label: 'Booked',                    color: 'badge badge-green' },
+  { value: 'converted',       label: 'เข้าระบบแล้ว',              color: 'badge badge-blue' },
   { value: 'interested',      label: 'สนใจ ติดตามต่อ',            color: 'badge badge-orange' },
   { value: 'not_interested',  label: 'ไม่สนใจ',                   color: 'badge badge-red' },
   { value: 'not_met',         label: 'ไม่ได้พบ ติดตามภายหลัง',   color: 'badge badge-gray' },
@@ -93,10 +94,18 @@ export default function EventsPage() {
   const [saving, setSaving] = useState(false)
   const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set())
   const [promotingAll, setPromotingAll] = useState(false)
+  const [systemStatus, setSystemStatus] = useState<Map<string, string>>(new Map()) // event_customer.id → "Wyde Clients"|"Prospects"
   const [fetchError, setFetchError] = useState('')
   const [editingCustomer, setEditingCustomer] = useState<EventCustomer | null>(null)
   const [editCustForm, setEditCustForm] = useState(emptyCust)
   const [editSaving, setEditSaving] = useState(false)
+  // Dup check state for Add Customer modal
+  const [dupCheck, setDupCheck] = useState<{
+    checking: boolean
+    inEvent: string | null          // ชื่อลูกค้าที่ซ้ำในงานนี้ → block
+    inSystem: { src: string; name: string } | null  // มีในระบบ → warn
+  }>({ checking: false, inEvent: null, inSystem: null })
+  const [dupConfirmed, setDupConfirmed] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -118,7 +127,41 @@ export default function EventsPage() {
       .select('*, users:sales_id(name)')
       .eq('event_id', eventId)
       .order('created_at')
-    setCustomers((data as any) || [])
+    const rows: EventCustomer[] = (data as any) || []
+    setCustomers(rows)
+
+    // Batch-check which event_customers already exist in jobs / customers
+    const phones = rows.map(c => c.phone).filter(Boolean) as string[]
+    const leadIds = rows.map(c => c.lead_id).filter(Boolean) as number[]
+    const eventCustIds = rows.map(c => c.id)
+
+    const [{ data: jobRows }, { data: custRows }, { data: byEventCustId }] = await Promise.all([
+      phones.length
+        ? supabase.from('jobs').select('phone, customer_name').in('phone', phones)
+        : Promise.resolve({ data: [] }),
+      phones.length
+        ? supabase.from('customers').select('phone, customer_name, status').in('phone', phones)
+        : Promise.resolve({ data: [] }),
+      supabase.from('customers').select('event_customer_id').in('event_customer_id', eventCustIds),
+    ])
+
+    const jobPhones = new Set((jobRows || []).map((j: any) => j.phone))
+    const custPhones = new Set((custRows || []).map((c: any) => c.phone))
+    const ecIdLinked = new Set((byEventCustId || []).map((c: any) => c.event_customer_id).filter(Boolean))
+
+    const statusMap = new Map<string, string>()
+    const alreadyPromoted = new Set<string>()
+    for (const c of rows) {
+      const inJob = c.phone && jobPhones.has(c.phone)
+      const inCust = c.phone && custPhones.has(c.phone)
+      const linked = ecIdLinked.has(c.id)
+      const isConverted = normStatus(c.status) === 'converted'
+      if (inJob) { statusMap.set(c.id, 'Wyde Clients'); alreadyPromoted.add(c.id) }
+      else if (inCust || linked) { statusMap.set(c.id, 'Prospects'); alreadyPromoted.add(c.id) }
+      else if (isConverted) { alreadyPromoted.add(c.id) }
+    }
+    setSystemStatus(statusMap)
+    setPromotedIds(prev => new Set([...prev, ...alreadyPromoted]))
   }
 
   async function loadLeads(projectId: string) {
@@ -172,6 +215,8 @@ export default function EventsPage() {
 
   async function saveCustomer() {
     if (!custForm.customer_name || !selectedEvent) return
+    if (dupCheck.inEvent) return  // blocked — ซ้ำในงานนี้
+    if (dupCheck.inSystem && !dupConfirmed) return  // ต้องกด confirm ก่อน
     setSaving(true)
     const selectedLead = eventLeads.find(l => String(l.id) === custForm.lead_id)
     const payload: any = {
@@ -193,10 +238,50 @@ export default function EventsPage() {
     await supabase.from('event_customers').insert(payload)
     setSaving(false); setOpenCustomer(false)
     setCustForm(emptyCust); setEventLeads([])
+    setDupCheck({ checking: false, inEvent: null, inSystem: null }); setDupConfirmed(false)
     loadCustomers(selectedEvent.id)
   }
 
-  // Dedup helper: find existing customer by lead_id → phone
+  // ── Dup check for Add Customer modal ────────────────────
+  function normPhone(p: string) {
+    return (p || '').replace(/[\s\-().+]/g, '').replace(/^66/, '0').trim()
+  }
+
+  async function checkDup(phone: string, name: string) {
+    if (!phone && !name) return
+    setDupCheck({ checking: true, inEvent: null, inSystem: null })
+    const ph = normPhone(phone)
+    let inEvent: string | null = null
+    let inSystem: { src: string; name: string } | null = null
+
+    // 1. Check same event
+    if (selectedEvent) {
+      const q = supabase.from('event_customers').select('customer_name, phone').eq('event_id', selectedEvent.id)
+      const { data: ec } = await q
+      for (const c of (ec || []) as any[]) {
+        const samePh = ph && normPhone(c.phone) === ph
+        const sameName = name && c.customer_name?.toLowerCase() === name.toLowerCase()
+        if (samePh || sameName) { inEvent = c.customer_name; break }
+      }
+    }
+
+    // 2. Check system (customers, jobs, condo_leads) — only if phone provided
+    if (!inEvent && ph) {
+      const [{ data: cust }, { data: jobs }, { data: leads }] = await Promise.all([
+        supabase.from('customers').select('customer_name').eq('phone', phone).limit(1),
+        supabase.from('jobs').select('customer_name').eq('phone', phone).limit(1),
+        supabase.from('condo_leads').select('customer_name').eq('phone', phone).limit(1),
+      ])
+      if (cust?.[0]) inSystem = { src: 'Prospects/Pipeline', name: (cust[0] as any).customer_name }
+      else if (jobs?.[0]) inSystem = { src: 'Wyde Clients', name: (jobs[0] as any).customer_name }
+      else if (leads?.[0]) inSystem = { src: 'Origin Pool', name: (leads[0] as any).customer_name }
+    }
+
+    setDupCheck({ checking: false, inEvent, inSystem })
+    if (inEvent || inSystem) setDupConfirmed(false)
+  }
+
+  // ── Dedup helper: find existing customer by lead_id → phone
   async function findExistingCustomer(c: EventCustomer): Promise<string | null> {
     if (c.lead_id) {
       const { data } = await supabase.from('customers').select('id').eq('lead_id', c.lead_id).maybeSingle()
@@ -228,12 +313,13 @@ export default function EventsPage() {
         .eq('id', customerId)
     } else {
       customerId = await genCustomerId()
+      const projectId = c.project_id || selectedEvent?.project_id || null
       await supabase.from('customers').insert({
         id: customerId,
         customer_name: c.customer_name,
         phone: c.phone || null,
         email: c.email || null,
-        project_id: c.project_id || null,
+        project_id: projectId,
         interested_room: c.room_no || null,
         lead_id: c.lead_id || null,
         event_customer_id: c.id,
@@ -248,16 +334,20 @@ export default function EventsPage() {
     const alreadyHasJob = await jobExists(customerId, c.room_no || null)
     if (!alreadyHasJob) {
       const jobId = await genJobId()
+      const projId = c.project_id || selectedEvent?.project_id || null
+      const exVat = c.booked_value || 0
+      const incVat = exVat ? Math.round(exVat * 1.07) : 0
       await supabase.from('jobs').insert({
         id: jobId,
         customer_id: customerId,
-        project_id: c.project_id || null,
+        project_id: projId,
         room_no: c.room_no || null,
         lead_id: c.lead_id || null,
         customer_name: c.customer_name,
         sales_id: c.sales_id || null,
         customer_type: 'B2C',
-        revenue_ex_vat: c.booked_value || 0,
+        revenue_ex_vat: exVat,
+        revenue_inc_vat: incVat,
         order_date: c.booked_date || null,
         working_status: 'ดำเนินการ',
       })
@@ -281,7 +371,7 @@ export default function EventsPage() {
       customer_name: c.customer_name,
       phone: c.phone || null,
       email: c.email || null,
-      project_id: c.project_id || null,
+      project_id: c.project_id || selectedEvent?.project_id || null,
       interested_room: c.room_no || null,
       lead_id: c.lead_id || null,
       event_customer_id: c.id,
@@ -294,14 +384,15 @@ export default function EventsPage() {
   }
 
   async function promoteCustomer(c: EventCustomer) {
-    if (c.status === 'booked') return promoteBooked(c)
-    if (c.status === 'interested' || c.status === 'not_met') return promoteToProspect(c)
+    const s = normStatus(c.status)
+    if (s === 'booked') await promoteBooked(c)
+    else if (s === 'interested' || s === 'not_met') await promoteToProspect(c)
   }
 
   async function promoteAll() {
     setPromotingAll(true)
     const eligible = customers.filter(c =>
-      c.status !== 'not_interested' && !promotedIds.has(c.id)
+      normStatus(c.status) !== 'not_interested' && !promotedIds.has(c.id)
     )
     for (const c of eligible) {
       await promoteCustomer(c)
@@ -345,12 +436,20 @@ export default function EventsPage() {
     } else {
       setExpandedId(ev.id)
       setSelectedEvent(ev)
+      setPromotedIds(new Set())
+      setSystemStatus(new Map())
       loadCustomers(ev.id)
     }
   }
 
-  const stColor = (s: string) => CUST_STATUS.find(x => x.value === s)?.color || 'badge badge-gray'
-  const stLabel = (s: string) => CUST_STATUS.find(x => x.value === s)?.label || s
+  const normStatus = (s: string | null | undefined): string => {
+    if (!s || s.trim() === '') return 'booked'
+    const lower = s.toLowerCase().trim()
+    const map: Record<string, string> = { booked: 'booked', interested: 'interested', not_interested: 'not_interested', not_met: 'not_met' }
+    return map[lower] ?? lower
+  }
+  const stColor = (s: string | null | undefined) => CUST_STATUS.find(x => x.value === normStatus(s))?.color || 'badge badge-gray'
+  const stLabel = (s: string | null | undefined) => CUST_STATUS.find(x => x.value === normStatus(s))?.label || s || ''
   const typeLabel = (t: string) => EVENT_TYPES.find(e => e.value === t)?.label || t
 
   const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
@@ -361,22 +460,24 @@ export default function EventsPage() {
   ]
 
   function calcPerf() {
-    const booked       = customers.filter(x => x.status === 'booked').length
+    const isBooked = (x: EventCustomer) => normStatus(x.status) === 'booked' || normStatus(x.status) === 'converted'
+    const booked       = customers.filter(isBooked).length
     const interested   = customers.filter(x => x.status === 'interested').length
     const notInterested = customers.filter(x => x.status === 'not_interested').length
     const notMet       = customers.filter(x => x.status === 'not_met').length
     const lineAdds     = customers.filter(x => x.line_added).length
     const attendees    = selectedEvent?.total_attendees || 0
     const conv = attendees > 0 ? Math.round((booked / attendees) * 100) : 0
-    const revenue      = customers.filter(x => x.status === 'booked').reduce((s, x) => s + (x.booked_value || 0), 0)
-    const totalDeposit = customers.filter(x => x.status === 'booked').reduce((s, x) => s + (x.deposit_amount || 0), 0)
+    const revenue      = customers.filter(isBooked).reduce((s, x) => s + (Number(x.booked_value) || 0), 0)
+    const totalDeposit = customers.filter(isBooked).reduce((s, x) => s + (Number(x.deposit_amount) || 0), 0)
     return { booked, interested, notInterested, notMet, lineAdds, conv, revenue, totalDeposit }
   }
 
   function getPromoteLabel(c: EventCustomer): string | null {
-    if (c.status === 'booked')      return '→ Wyde Clients'
-    if (c.status === 'interested')  return '→ Prospects'
-    if (c.status === 'not_met')     return '→ Prospects'
+    const s = normStatus(c.status)
+    if (s === 'booked')      return '→ Wyde Clients'
+    if (s === 'interested')  return '→ Prospects'
+    if (s === 'not_met')     return '→ Prospects'
     return null
   }
 
@@ -421,7 +522,7 @@ export default function EventsPage() {
                   </div>
                   {/* Meta — wraps on mobile */}
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs" style={{ color: 'var(--text-2)' }}>
-                    {ev.event_date && <span>📅 {new Date(ev.event_date).toLocaleDateString('th-TH')}</span>}
+                    {ev.event_date && <span>📅 {new Date(ev.event_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}</span>}
                     {ev.location && <span className="truncate max-w-[140px]">📍 {ev.location}</span>}
                     <span>👥 {ev.total_attendees}</span>
                     <span>📲 LINE {ev.line_adds}</span>
@@ -505,7 +606,7 @@ export default function EventsPage() {
                   {/* Customer List header */}
                   <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
                     <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รายชื่อลูกค้าในงาน ({customers.length} คน)</p>
-                    {customers.some(c => c.status !== 'not_interested' && !promotedIds.has(c.id)) && (
+                    {customers.some(c => normStatus(c.status) !== 'not_interested' && !promotedIds.has(c.id)) && (
                       <button
                         onClick={promoteAll}
                         disabled={promotingAll}
@@ -554,7 +655,7 @@ export default function EventsPage() {
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{(c.users as any)?.name || '—'}</td>
                                 <td className="px-3 py-2">
                                   <select
-                                    value={c.status}
+                                    value={normStatus(c.status)}
                                     onChange={e => updateCustomerStatus(c.id, e.target.value)}
                                     className={`text-xs px-2 py-0.5 rounded border-0 cursor-pointer ${stColor(c.status)} bg-transparent`}
                                   >
@@ -602,11 +703,12 @@ export default function EventsPage() {
                                   </button>
                                 </td>
                                 <td className="px-3 py-2">
-                                  {c.status === 'not_interested' ? (
+                                  {normStatus(c.status) === 'not_interested' ? (
                                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>ไม่โปรโมท</span>
                                   ) : promoted ? (
                                     <span className="flex items-center gap-1 text-xs text-emerald-400">
-                                      <CheckCircle2 size={12} /> เพิ่มแล้ว
+                                      <CheckCircle2 size={12} />
+                                      {systemStatus.get(c.id) ? `อยู่ใน ${systemStatus.get(c.id)}` : 'เพิ่มแล้ว'}
                                     </span>
                                   ) : promoteLabel ? (
                                     <button
@@ -696,7 +798,11 @@ export default function EventsPage() {
       </Modal>
 
       {/* Add Customer Modal */}
-      <Modal open={openCustomer} onClose={() => setOpenCustomer(false)} title={`+ เพิ่มรายชื่อลูกค้า — ${selectedEvent?.event_name || ''}`} size="lg">
+      <Modal open={openCustomer} onClose={() => {
+        setOpenCustomer(false)
+        setDupCheck({ checking: false, inEvent: null, inSystem: null })
+        setDupConfirmed(false)
+      }} title={`+ เพิ่มรายชื่อลูกค้า — ${selectedEvent?.event_name || ''}`} size="lg">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>โครงการ</p>
@@ -725,7 +831,8 @@ export default function EventsPage() {
           </div>
 
           <Input label="เบอร์โทร" value={custForm.phone}
-            onChange={e => setCustForm({ ...custForm, phone: e.target.value })} />
+            onChange={e => { setCustForm({ ...custForm, phone: e.target.value }); setDupCheck({ checking: false, inEvent: null, inSystem: null }); setDupConfirmed(false) }}
+            onBlur={e => checkDup(e.target.value, custForm.customer_name)} />
           <Input label="เลขห้อง" value={custForm.room_no}
             onChange={e => setCustForm({ ...custForm, room_no: e.target.value })}
             placeholder="เช่น Z-501" />
@@ -743,7 +850,7 @@ export default function EventsPage() {
               <div>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>วัน BOOKED (วันจัดงาน)</p>
                 <div className="rounded-lg px-3 py-2 text-sm" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                  {custForm.booked_date ? new Date(custForm.booked_date).toLocaleDateString('th-TH') : '—'}
+                  {custForm.booked_date ? new Date(custForm.booked_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                 </div>
               </div>
               <Select label="ประเภท" value={custForm.booking_type}
@@ -763,9 +870,54 @@ export default function EventsPage() {
               onChange={e => setCustForm({ ...custForm, notes: e.target.value })} />
           </div>
         </div>
+        {/* Dup warning */}
+        {dupCheck.checking && (
+          <div className="mt-3 flex items-center gap-2 text-xs py-2 px-3 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+            <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
+            กำลังตรวจสอบข้อมูลซ้ำ...
+          </div>
+        )}
+        {dupCheck.inEvent && (
+          <div className="mt-3 flex items-start gap-2 text-xs py-2.5 px-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
+            <span className="text-base leading-none flex-shrink-0">🚫</span>
+            <div>
+              <p className="font-semibold">ซ้ำในงานนี้ — ไม่สามารถเพิ่มได้</p>
+              <p className="opacity-80 mt-0.5">"{dupCheck.inEvent}" มีอยู่ใน Event นี้แล้ว (เบอร์หรือชื่อตรงกัน)</p>
+            </div>
+          </div>
+        )}
+        {!dupCheck.inEvent && dupCheck.inSystem && (
+          <div className="mt-3 rounded-[8px] overflow-hidden" style={{ border: '1px solid color-mix(in srgb, var(--accent-orange) 40%, transparent)' }}>
+            <div className="flex items-start gap-2 text-xs py-2.5 px-3" style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)', color: 'var(--accent-orange)' }}>
+              <span className="text-base leading-none flex-shrink-0">⚠️</span>
+              <div className="flex-1">
+                <p className="font-semibold">พบในระบบแล้ว ({dupCheck.inSystem.src})</p>
+                <p className="opacity-80 mt-0.5">"{dupCheck.inSystem.name}" มีอยู่ใน {dupCheck.inSystem.src} แล้ว</p>
+              </div>
+            </div>
+            {!dupConfirmed && (
+              <div className="px-3 py-2 flex items-center justify-between" style={{ borderTop: '1px solid color-mix(in srgb, var(--accent-orange) 20%, transparent)', background: 'var(--hover-bg)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังต้องการเพิ่มในงานนี้หรือไม่?</p>
+                <button onClick={() => setDupConfirmed(true)}
+                  className="text-xs px-3 py-1 rounded-[6px] font-semibold"
+                  style={{ background: 'color-mix(in srgb, var(--accent-orange) 20%, transparent)', color: 'var(--accent-orange)' }}>
+                  ยืนยัน — เพิ่มต่อ
+                </button>
+              </div>
+            )}
+            {dupConfirmed && (
+              <div className="px-3 py-2 text-xs" style={{ borderTop: '1px solid color-mix(in srgb, var(--accent-orange) 20%, transparent)', background: 'var(--hover-bg)', color: 'var(--accent-green)' }}>
+                ✓ ยืนยันแล้ว — จะบันทึกรายการนี้ลง Event
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex justify-end gap-3 mt-5">
-          <button onClick={() => setOpenCustomer(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={saveCustomer} disabled={saving || !custForm.customer_name}
+          <button onClick={() => { setOpenCustomer(false); setDupCheck({ checking: false, inEvent: null, inSystem: null }); setDupConfirmed(false) }}
+            className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
+          <button onClick={saveCustomer}
+            disabled={saving || !custForm.customer_name || !!dupCheck.inEvent || (!dupConfirmed && !!dupCheck.inSystem)}
             className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>

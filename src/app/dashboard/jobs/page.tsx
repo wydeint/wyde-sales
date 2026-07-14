@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Search, X, Calculator, Briefcase, Receipt, ChevronRight, Phone, FileDown } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import Money from '@/components/ui/Money'
 import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 
@@ -211,7 +212,7 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
       <div className="flex items-center justify-between gap-2">
         <div>
           {job.revenue_inc_vat ? (
-            <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{f(job.revenue_inc_vat)}</p>
+            <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>฿<Money value={job.revenue_inc_vat} /></p>
           ) : (
             <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายได้</p>
           )}
@@ -533,7 +534,7 @@ export default function JobsPage() {
       const sales = (j.sales as any)?.name || ''
       const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
       const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(1) : ''
-      const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH') : ''
+      const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : ''
       const commStatusLabel: Record<string, string> = { pending: 'รอ', approved: 'อนุมัติ', paid: 'จ่ายแล้ว' }
       return [
         name, phone, j.customer_type || '', project, j.room_no || '', j.id,

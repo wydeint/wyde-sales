@@ -138,12 +138,13 @@ export default function RevenuePage() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [expandedSales, setExpandedSales] = useState<Set<string>>(new Set())
   const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([])
+  const [referrals, setReferrals] = useState<{ job_id: string; referrer_name: string; referral_amount: number }[]>([])
 
   useEffect(() => {
     async function load() {
       setLoading(true)
       setFetchError('')
-      const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }, { data: tierData }, { data: usersData }] = await Promise.all([
+      const [{ data: jobsData, error: e1 }, { data: targetsData, error: e2 }, { data: tierData }, { data: usersData }, { data: refData }] = await Promise.all([
         supabase.from('jobs')
           .select('id,project_id,room_no,customer_name,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,po_no,so_no,voucher,projects(name),sales:users!jobs_sales_id_fkey(name)')
           .eq('working_status', 'ส่งมอบแล้ว')
@@ -152,12 +153,14 @@ export default function RevenuePage() {
         supabase.from('sales_targets').select('user_id,year,month,target_revenue'),
         supabase.from('commission_settings').select('revenue_min,revenue_max,rate').eq('active', true),
         supabase.from('users').select('id, name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
+        supabase.from('commission_referrals').select('job_id,referrer_name,referral_amount').order('created_at'),
       ])
       if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllJobs((jobsData as unknown as DeliveredJob[]) || [])
       setTargets(targetsData || [])
       setTiers((tierData || []) as Tier[])
       setSalesUsers((usersData || []) as { id: string; name: string }[])
+      setReferrals((refData || []) as { job_id: string; referrer_name: string; referral_amount: number }[])
       setLoading(false)
     }
     load()
@@ -255,12 +258,16 @@ export default function RevenuePage() {
       'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'Cost', 'GP%',
       'Commission', 'สถานะงาน', 'Sales',
       'PO No.', 'SO No.', 'Voucher',
+      'ผู้แนะนำ (Referral)', 'ค่าแนะนำรวม',
     ]
-    const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH') : ''
+    const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : ''
     const rows = periodJobs.map(j => {
       const project = (j.projects as any)?.name || ''
       const sales = (j.sales as any)?.name || ''
       const gp = (j.revenue_ex_vat || 0) > 0 ? ((((j.revenue_ex_vat || 0) - (j.cost || 0)) / j.revenue_ex_vat) * 100).toFixed(1) : ''
+      const jobRefs = referrals.filter(r => r.job_id === j.id)
+      const refNames = jobRefs.map(r => `${r.referrer_name} (${Math.round(r.referral_amount).toLocaleString()})`).join(', ')
+      const refTotal = jobRefs.reduce((s, r) => s + r.referral_amount, 0)
       return [
         j.customer_name || '', j.customer_type || '', project, j.room_no || '', j.id,
         j.work_type || '', j.package_type || '',
@@ -268,6 +275,7 @@ export default function RevenuePage() {
         j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.cost || 0, gp,
         getJobCommission(j, tiers), j.working_status || '', sales,
         j.po_no || '', j.so_no || '', j.voucher || '',
+        refNames, refTotal || '',
       ]
     })
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
@@ -375,10 +383,10 @@ export default function RevenuePage() {
             color: totalProfit >= 0 ? '#4ade80' : '#f87171',
           },
           {
-            label: 'Commission รวม',
-            value: fk(totalCommission),
-            sub: totalRevenue > 0 ? (totalCommission / totalRevenue * 100).toFixed(2) + '% ของ Revenue' : '—',
-            color: '#fbbf24',
+            label: 'Cost รวม',
+            value: fk(totalCost),
+            sub: totalRevenueEx > 0 ? 'Cost ' + (totalCost / totalRevenueEx * 100).toFixed(1) + '% ของ Revenue' : '—',
+            color: '#f87171',
           },
         ].map(k => (
           <div key={k.label} className="ds-card p-4">
@@ -474,7 +482,7 @@ export default function RevenuePage() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                {['Sales', 'จำนวนงาน', 'Revenue (Inc.VAT)', 'Cost', 'Profit (Ex-Cost)', 'GP%', 'Commission'].map(h => (
+                {['Sales', 'จำนวนงาน', 'Revenue (Inc.VAT)', 'Cost', 'Profit (Ex-Cost)', 'GP%'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
@@ -514,11 +522,10 @@ export default function RevenuePage() {
                     <td className="px-4 py-3" style={{ color: '#f87171' }}>{cost ? f(cost) : '—'}</td>
                     <td className="px-4 py-3" style={{ color: profit >= 0 ? '#4ade80' : '#f87171' }}>{cost ? f(profit) : '—'}</td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
-                    <td className="px-4 py-3" style={{ color: '#fbbf24' }}>{s.commission ? f(s.commission) : '—'}</td>
                   </tr>
                   {expanded && (
                     <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                      <td colSpan={7} className="px-4 pb-3 pt-0">
+                      <td colSpan={6} className="px-4 pb-3 pt-0">
                         <div className="rounded-[10px] overflow-hidden" style={{ background: 'var(--active-bg)', border: '1px solid var(--divider)' }}>
                           <table className="w-full text-xs">
                             <thead>
@@ -558,7 +565,6 @@ export default function RevenuePage() {
                 <td className="px-4 py-3 font-bold" style={{ color: 'var(--text-2)' }}>
                   {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—'}
                 </td>
-                <td className="px-4 py-3 font-bold" style={{ color: '#fbbf24' }}>{f(totalCommission)}</td>
               </tr>
             </tbody>
           </table>

@@ -8,6 +8,7 @@ import {
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
+import Money from '@/components/ui/Money'
 
 // ─── Types ────────────────────────────────────────────────
 type ClientType = 'B2C' | 'B2B'
@@ -1820,7 +1821,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
           {job.revenue_inc_vat > 0
-            ? <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{fmtBaht(job.revenue_inc_vat)}</p>
+            ? <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>฿<Money value={job.revenue_inc_vat} /></p>
             : <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยังไม่มีมูลค่า</p>}
           {job.sales_name && <p className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>{job.sales_name}</p>}
         </div>

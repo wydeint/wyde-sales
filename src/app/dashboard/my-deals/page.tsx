@@ -46,7 +46,9 @@ interface RoomJob {
   total_count: number
   total_amount: number
   total_paid: number
+  total_settled: number
   revenue_inc_vat: number
+  working_status: string
 }
 
 interface Installment {
@@ -1862,7 +1864,7 @@ export default function MyDealsPage() {
     setLoading(true)
     const { data } = await supabase
       .from('jobs')
-      .select('id, room_no, project_id, customer_name, customer_type, actual_deliver_date, work_start_date, order_date, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount)')
+      .select('id, room_no, project_id, customer_name, customer_type, working_status, actual_deliver_date, work_start_date, order_date, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount)')
       .neq('working_status', 'ยกเลิก')
       .neq('working_status', 'จอง')
       .order('room_no')
@@ -1892,6 +1894,8 @@ export default function MyDealsPage() {
         total_count: insts.length,
         total_amount: insts.reduce((s, i) => s + (i.amount || 0), 0),
         total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0) - (i.voucher_amount ?? 0), 0),
+        total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0), 0),
+        working_status: r.working_status || '',
       }
     }))
     setLoading(false)
@@ -2001,10 +2005,10 @@ export default function MyDealsPage() {
     const visible = jobs.filter(j => {
       if (filterProject && j.project_id !== filterProject) return false
       if (filterSales && j.sales_name !== filterSales) return false
-      // Only show jobs with ≥50% paid — unless B2B (invoiced after delivery) or already delivered
+      // Only show jobs with ≥50% settled (cash + voucher) — unless B2B or already delivered
       if (j.customer_type !== 'B2B' && !j.actual_deliver_date) {
         const jobValue = j.revenue_inc_vat || 0
-        if (jobValue > 0 && j.total_paid / jobValue < 0.5) return false
+        if (jobValue > 0 && j.total_settled / jobValue < 0.5) return false
       }
       if (q) {
         const room = j.room_no.toLowerCase().replace(/[-\s]/g, '')

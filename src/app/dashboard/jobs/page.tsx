@@ -10,6 +10,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 // ─────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────
+const PAGE_SIZE = 50
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PACKAGE_TYPES = [
   'Starter set (S)', 'Combo (S)', 'Investor Pro (M)', 'Medium (M)',
@@ -121,10 +122,26 @@ function normalizeRoomNo(input: string, projectName: string): string {
 // ─────────────────────────────────────────
 // JobCard
 // ─────────────────────────────────────────
-function JobCard({ job, paymentMap, onClick }: {
+function buildSequenceMap(jobs: Job[]): Record<string, number> {
+  const groups: Record<string, Job[]> = {}
+  for (const j of jobs) {
+    const key = `${j.project_id}|${j.room_no}`
+    if (!groups[key]) groups[key] = []
+    groups[key].push(j)
+  }
+  const map: Record<string, number> = {}
+  for (const group of Object.values(groups)) {
+    group.sort((a, b) => (a.order_date || a.id) < (b.order_date || b.id) ? -1 : 1)
+    group.forEach((j, i) => { map[j.id] = i + 1 })
+  }
+  return map
+}
+
+function JobCard({ job, paymentMap, onClick, seqNo }: {
   job: Job
   paymentMap: Record<string, PaymentSummary | null>
   onClick: () => void
+  seqNo?: number
 }) {
   const displayName = (job.condo_leads as any)?.customer_name || job.customer_name || ''
   const projectName = (job.projects as any)?.name || '—'
@@ -150,9 +167,17 @@ function JobCard({ job, paymentMap, onClick }: {
       {/* room + status */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-sm truncate" style={{ color: 'var(--text-1)' }}>
-            {job.room_no || '—'}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-bold text-sm truncate" style={{ color: 'var(--text-1)' }}>
+              {job.room_no || '—'}
+            </p>
+            {seqNo && seqNo > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+                style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
+                ครั้งที่ {seqNo}
+              </span>
+            )}
+          </div>
           <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
             {displayName || '—'} · {projectName}
           </p>
@@ -272,6 +297,7 @@ export default function JobsPage() {
   const [saving, setSaving] = useState(false)
   const [nextId, setNextId] = useState('JOB-001')
   const [fetchError, setFetchError] = useState('')
+  const [page, setPage] = useState(1)
   const [roomNormalized, setRoomNormalized] = useState('')
   const [roomDupWarning, setRoomDupWarning] = useState<string | null>(null)
 
@@ -302,7 +328,7 @@ export default function JobsPage() {
       { data: tierData },
       { data: paymentsData },
     ] = await Promise.all([
-      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('room_no'),
+      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('room_no').range(0, 999),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).eq('dept', 'Sales Executive').order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
@@ -391,14 +417,23 @@ export default function JobsPage() {
   }
 
   // ─── Open Edit ───
-  function openEdit(j: Job) {
+  async function openEdit(j: Job) {
     const editData = { ...j }
     // B2B: fill company_name from customer_name if missing
     if (editData.customer_type === 'B2B' && !editData.company_name && editData.customer_name) {
       editData.company_name = editData.customer_name
     }
     setEditing(editData)
-    if (j.project_id) loadLeads(j.project_id)
+    if (j.project_id) {
+      // load leads then auto-match lead_id from room_no if not already set
+      const { data } = await supabase.from('condo_leads').select('id, room_no, customer_name, phone').eq('project_id', j.project_id).order('room_no')
+      const loadedLeads = (data as Lead[]) || []
+      setLeads(loadedLeads)
+      if (!editData.lead_id && editData.room_no) {
+        const matched = loadedLeads.find(l => l.room_no === editData.room_no)
+        if (matched) setEditing(e => ({ ...e, lead_id: matched.id }))
+      }
+    }
     setRoomNormalized('')
     setRoomDupWarning(null)
     setOpen(true)
@@ -431,6 +466,26 @@ export default function JobsPage() {
     payload.plan_transfer_month = payload.plan_transfer_month || null
     const isNew = !jobs.find(j => j.id === editing.id)
     if (isNew) {
+      // Auto-create customer record so job appears in Prospect/customers page
+      if (payload.project_id && payload.room_no) {
+        const baseId = payload.customer_id || `${payload.project_id}-${payload.room_no}`
+        const isB2B = (payload.customer_type || 'B2C') === 'B2B'
+        // Check if a B2C customer already exists for this room
+        const { data: existing } = await supabase.from('customers').select('id, customer_type').eq('id', baseId).maybeSingle()
+        let customerId = baseId
+        if (isB2B && existing && existing.customer_type !== 'B2B') {
+          // Room already has a B2C record — create separate B2B customer
+          customerId = `${baseId}-B2B`
+        }
+        await supabase.from('customers').upsert({
+          id: customerId,
+          project_id: payload.project_id,
+          customer_name: payload.customer_name || '',
+          customer_type: payload.customer_type || 'B2C',
+          status: 'closed',
+        }, { onConflict: 'id', ignoreDuplicates: true })
+        payload.customer_id = customerId
+      }
       await supabase.from('jobs').insert([payload])
     } else {
       await supabase.from('jobs').update(payload).eq('id', editing.id!)
@@ -457,6 +512,10 @@ export default function JobsPage() {
   })
 
   const noSOCount = jobs.filter(j => !j.so_no?.trim() && j.working_status !== 'ยกเลิก').length
+  const pagedJobs = filtered.slice(0, page * PAGE_SIZE)
+  const hasMore = pagedJobs.length < filtered.length
+
+  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO])
 
   function exportCSV() {
     const headers = [
@@ -628,13 +687,24 @@ export default function JobsPage() {
       {filtered.length === 0 ? (
         <div className="ds-card p-12 text-center text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-          {filtered.map(j => (
-            <JobCard key={j.id} job={j} paymentMap={paymentMap} onClick={() => openEdit(j)} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+            {(() => { const seqMap = buildSequenceMap(filtered); return pagedJobs.map(j => (
+              <JobCard key={j.id} job={j} paymentMap={paymentMap} onClick={() => openEdit(j)} seqNo={seqMap[j.id]} />
+            ))})()}
+          </div>
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <button onClick={() => setPage(p => p + 1)}
+                className="px-6 py-2 rounded-[10px] text-sm font-medium"
+                style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                โหลดเพิ่ม ({filtered.length - pagedJobs.length} งานที่เหลือ)
+              </button>
+            </div>
+          )}
+        </>
       )}
-      <p className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} งาน</p>
+      <p className="text-xs" style={{ color: 'var(--text-3)' }}>แสดง {pagedJobs.length} / {filtered.length} งาน</p>
 
       {/* ─── Detail Drawer ─── */}
       {open && (
@@ -642,9 +712,9 @@ export default function JobsPage() {
           <div className="fixed inset-0 z-40"
             style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
             onClick={() => setOpen(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[20px] p-6 space-y-5 pointer-events-auto"
-            style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid var(--glass-border)' }}>
+            style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
             {/* Modal header */}
             <div className="flex items-center justify-between">
@@ -681,18 +751,28 @@ export default function JobsPage() {
                     {/* Step 1: โครงการ */}
                     <div>
                       <label className="field-label">โครงการ</label>
-                      <select value={editing.project_id || ''}
-                        onChange={e => handleProjectSelect(e.target.value)}
-                        className="field-input w-full mt-1">
-                        <option value="">— เลือกโครงการ —</option>
-                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
+                      {editing.id ? (
+                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
+                          {projects.find(p => p.id === editing.project_id)?.name || editing.project_id || '—'}
+                        </div>
+                      ) : (
+                        <select value={editing.project_id || ''}
+                          onChange={e => handleProjectSelect(e.target.value)}
+                          className="field-input w-full mt-1">
+                          <option value="">— เลือกโครงการ —</option>
+                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                      )}
                     </div>
 
                     {/* Step 2: เลขห้อง (from condo_leads or direct) */}
                     <div>
                       <label className="field-label">เลขห้อง</label>
-                      {leads.length > 0 ? (
+                      {editing.id ? (
+                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
+                          {editing.room_no || '—'}
+                        </div>
+                      ) : leads.length > 0 && (editing.lead_id || !editing.room_no) ? (
                         <select value={editing.lead_id ? String(editing.lead_id) : ''}
                           onChange={e => handleLeadSelect(e.target.value)}
                           className="field-input w-full mt-1"
@@ -742,18 +822,30 @@ export default function JobsPage() {
                     </div>
                     <div>
                       <label className="field-label">โครงการ</label>
-                      <select value={editing.project_id || ''}
-                        onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
-                        className="field-input w-full mt-1">
-                        <option value="">— เลือกโครงการ —</option>
-                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
+                      {editing.id ? (
+                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
+                          {projects.find(p => p.id === editing.project_id)?.name || editing.project_id || '—'}
+                        </div>
+                      ) : (
+                        <select value={editing.project_id || ''}
+                          onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
+                          className="field-input w-full mt-1">
+                          <option value="">— เลือกโครงการ —</option>
+                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                      )}
                     </div>
                     <div>
                       <label className="field-label">เลขห้อง / สถานที่</label>
-                      <input value={editing.room_no || ''}
-                        onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
-                        className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
+                      {editing.id ? (
+                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
+                          {editing.room_no || '—'}
+                        </div>
+                      ) : (
+                        <input value={editing.room_no || ''}
+                          onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
+                          className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
+                      )}
                       {roomNormalized && !roomDupWarning && (
                         <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
                       )}
@@ -798,13 +890,15 @@ export default function JobsPage() {
                 </div>
                 <div>
                   <label className="field-label">วันที่รับ PO / วันที่รับยอด</label>
-                  <input type="date" value={editing.order_date || ''} onChange={e => setEditing(e2 => ({ ...e2, order_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
+                  <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: editing.order_date ? 'var(--text-1)' : 'var(--text-3)' }}>
+                    {editing.order_date ? new Date(editing.order_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '— auto จากงวดแรกที่รับ'}
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">วันเซ็นสัญญา</label>
-                  <input type="date" value={editing.contract_date || ''} onChange={e => setEditing(e2 => ({ ...e2, contract_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
+                  <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: editing.contract_date ? 'var(--text-1)' : 'var(--text-3)' }}>
+                    {editing.contract_date ? new Date(editing.contract_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '— auto จากยอดถึง 50%'}
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">Sales</label>

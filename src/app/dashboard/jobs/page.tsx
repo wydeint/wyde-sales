@@ -713,7 +713,7 @@ export default function JobsPage() {
           <div className="fixed inset-0 z-40"
             style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
             onClick={() => setOpen(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[20px] p-6 space-y-5 pointer-events-auto"
             style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 

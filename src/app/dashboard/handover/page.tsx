@@ -126,12 +126,12 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}
-      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', padding: '1rem', paddingTop: '3.5rem' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Panel */}
       <div onClick={e => e.stopPropagation()}
-        className="relative flex flex-col shadow-2xl w-full max-w-lg max-h-full overflow-y-auto rounded-[20px]"
+        className="relative flex flex-col shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[20px]"
         style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Drag handle (mobile only) */}

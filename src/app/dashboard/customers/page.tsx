@@ -71,6 +71,8 @@ interface DetailWarranty {
   notes: string
 }
 
+const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
+
 const STATUS_LIST = [
   { value: 'new', label: 'ใหม่', icon: '●', color: 'badge badge-blue' },
   { value: 'interested', label: 'สนใจ', icon: '◉', color: 'badge badge-blue' },
@@ -94,7 +96,8 @@ const SOURCE_OPTIONS = [
 const emptyForm = {
   customer_name: '', phone: '', email: '', line_id: '', source: '',
   project_id: '', interested_room: '', budget: 0,
-  status: 'new', assigned_to: '', notes: ''
+  status: 'new', assigned_to: '', notes: '',
+  customer_type: 'B2C', work_type: '',
 }
 
 function statusInfo(s: string) {
@@ -175,14 +178,14 @@ function CustomerDetail({
   const projectName = projects.find(p => p.id === customer.project_id)?.name
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-      {/* Backdrop */}
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)' }} />
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4"
+      onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Panel */}
       <div
-        className="relative flex flex-col h-full overflow-y-auto w-full max-w-xl"
-        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(32px) saturate(180%)', borderLeft: '1px solid var(--glass-border)' }}
+        className="relative flex flex-col max-h-[90vh] overflow-y-auto w-full max-w-xl rounded-[20px] shadow-2xl"
+        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -240,7 +243,13 @@ function CustomerDetail({
               </div>
               <div className="flex items-center gap-2">
                 <Banknote size={13} style={{ color: 'var(--text-3)' }} />
-                <span className="text-sm" style={{ color: 'var(--text-2)' }}>งบ {customer.budget ? fmt(customer.budget) + ' บ.' : '—'}</span>
+                {(() => {
+                  const jobRev = ((customer as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || 0
+                  const val = jobRev || customer.budget || 0
+                  return <span className="text-sm font-semibold" style={{ color: val > 0 ? 'var(--accent-green)' : 'var(--text-2)' }}>
+                    {val > 0 ? fmt(val) + ' บ.' : '—'}
+                  </span>
+                })()}
               </div>
               <div className="flex items-center gap-2">
                 <Users size={13} style={{ color: 'var(--text-3)' }} />
@@ -523,7 +532,7 @@ export default function CustomersPage() {
       { data: p, error: pErr },
       { data: u, error: uErr },
     ] = await Promise.all([
-      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, projects(name), users!assigned_to(name)').order('customer_name'),
+      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!assigned_to(name), jobs(revenue_inc_vat)').order('customer_name'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
@@ -550,6 +559,7 @@ export default function CustomersPage() {
 
   async function save() {
     if (!form.customer_name) return
+    if (!form.project_id) { setSaveError('กรุณาเลือกโครงการ'); return }
     setSaving(true)
     setSaveError('')
     const payload = {
@@ -740,7 +750,7 @@ export default function CustomersPage() {
                     <div className="flex items-center gap-2">
                       <button onClick={() => {
                         setEditing(c)
-                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: c.notes })
+                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: c.notes, customer_type: (c as any).customer_type || 'B2C', work_type: (c as any).work_type || '' })
                         setOpen(true)
                       }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                         <Pencil size={14} />
@@ -807,7 +817,7 @@ export default function CustomersPage() {
           <div className="col-span-2">
             <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
           </div>
-          <Select label="โครงการที่สนใจ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
+          <Select label="โครงการที่สนใจ *" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
           <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm({ ...form, interested_room: e.target.value })} placeholder="เช่น Z-905" />
           {!editing && form.project_id && form.interested_room.trim() && (
             <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-[18px] text-xs" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
@@ -815,6 +825,26 @@ export default function CustomersPage() {
               <span className="font-mono font-bold" style={{ color: 'var(--accent)' }}>{form.project_id}-{form.interested_room.trim().toUpperCase()}</span>
             </div>
           )}
+          <div>
+            <label className="field-label">ประเภทลูกค้า</label>
+            <div className="flex gap-2 mt-1">
+              {(['B2C', 'B2B'] as const).map(t => (
+                <button key={t} type="button"
+                  onClick={() => setForm({ ...form, customer_type: t })}
+                  className="flex-1 py-2 rounded-[8px] text-sm font-semibold transition-colors"
+                  style={{ background: form.customer_type === t ? 'var(--accent)' : 'var(--hover-bg)', color: form.customer_type === t ? '#fff' : 'var(--text-2)' }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="field-label">ประเภทงาน</label>
+            <select value={form.work_type} onChange={e => setForm({ ...form, work_type: e.target.value })} className="field-input w-full mt-1">
+              <option value="">— เลือก —</option>
+              {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
           <Select label="ช่องทาง" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} options={SOURCE_OPTIONS} />
           <Input label="งบประมาณ (บาท)" type="number" min={0} step={1000} value={form.budget} onChange={e => setForm({ ...form, budget: Number(e.target.value) })} />
           <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
@@ -854,6 +884,8 @@ export default function CustomersPage() {
               status: detailCustomer.status,
               assigned_to: detailCustomer.assigned_to,
               notes: detailCustomer.notes,
+              customer_type: (detailCustomer as any).customer_type || 'B2C',
+              work_type: (detailCustomer as any).work_type || '',
             })
             setOpen(true)
           }}

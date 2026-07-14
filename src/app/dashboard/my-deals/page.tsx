@@ -2190,9 +2190,9 @@ export default function MyDealsPage() {
       {drawerLoading && (
         <>
           <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.30)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={closeDrawer} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 pb-4 pt-14 lg:pt-4">
-            <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[20px] p-12"
-              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
+            <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[20px] p-12 pointer-events-auto"
+              style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
             </div>
           </div>

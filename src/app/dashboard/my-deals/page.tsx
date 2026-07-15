@@ -1385,7 +1385,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         const threshold = revenue * 0.5
         let cum = 0
         for (const p of paidSorted) {
-          cum += (p.paid_amount ?? p.amount) || 0
+          cum += ((p.paid_amount ?? p.amount) || 0) + ((p.voucher_amount ?? 0))
           if (cum >= threshold) { contractDate = p.paid_date; break }
         }
       }

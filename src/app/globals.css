@@ -23,7 +23,7 @@
   --space-lg:  24px;
   --space-xl:  32px;
 
-  /* Typography — size */
+  /* Typography — size (desktop / macOS baseline) */
   --fs-page-title: 20px;
   --fs-section:    15px;
   --fs-card-title: 13px;
@@ -32,6 +32,19 @@
   --fs-label:      11px;
   --fs-kpi:        28px;
   --fs-micro:      10px;
+
+  /* Typography — line-height */
+  --lh-page-title: 1.25;
+  --lh-section:    1.30;
+  --lh-body:       1.38;
+  --lh-caption:    1.33;
+  --lh-kpi:        1.10;
+
+  /* Typography — letter-spacing */
+  --ls-page-title: -0.01em;
+  --ls-section:    -0.005em;
+  --ls-body:       -0.008em;
+  --ls-label:       0.04em;
 
   /* Typography — weight */
   --fw-regular:  400;
@@ -333,14 +346,14 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 }
 
 /* ══════════════════════════════════════════
-   Typography scale (design.md — weight ladder 400/600/700, never 500)
+   Typography scale — uses design tokens so responsive overrides apply automatically
 ══════════════════════════════════════════ */
-.text-page-title    { font-size: 1.25rem;   font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
-.text-section-title { font-size: 0.9375rem; font-weight: 600; line-height: 1.3;  letter-spacing: -0.005em; }
-.text-card-title    { font-size: 0.8125rem; font-weight: 600; line-height: 1.3; }
-.text-body-strong   { font-size: 0.8125rem; font-weight: 600; line-height: 1.4; }
-.text-kpi-number    { font-size: 1.75rem;   font-weight: 700; line-height: 1.1;  letter-spacing: -0.01em; }
-.text-label-upper   { font-size: 0.6875rem; font-weight: 600; line-height: 1.3;  letter-spacing: 0.04em; text-transform: uppercase; }
+.text-page-title    { font-size: var(--fs-page-title); font-weight: 700; line-height: var(--lh-page-title); letter-spacing: var(--ls-page-title); }
+.text-section-title { font-size: var(--fs-section);    font-weight: 600; line-height: var(--lh-section);    letter-spacing: var(--ls-section); }
+.text-card-title    { font-size: var(--fs-card-title); font-weight: 600; line-height: 1.3; }
+.text-body-strong   { font-size: var(--fs-card-title); font-weight: 600; line-height: 1.4; }
+.text-kpi-number    { font-size: var(--fs-kpi);        font-weight: 700; line-height: var(--lh-kpi);        letter-spacing: -0.01em; }
+.text-label-upper   { font-size: var(--fs-label);      font-weight: 600; line-height: 1.3;                  letter-spacing: var(--ls-label); text-transform: uppercase; }
 
 /* ══════════════════════════════════════════
    Page layout
@@ -494,4 +507,32 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 @media (max-width: 640px) {
   .mobile-stack { grid-template-columns: 1fr !important; }
   .mobile-p { padding: 1rem !important; }
+}
+
+/* ══════════════════════════════════════════
+   Responsive Typography — Apple HIG
+   iPhone/iPad  : iOS scale  (body 17px, headline 17px semibold)
+   Desktop      : macOS scale (body 13px — tokens stay at :root default)
+══════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  :root {
+    /* Size — iOS / iPadOS defaults (Large content size) */
+    --fs-page-title: 22px;   /* Title 2  */
+    --fs-section:    17px;   /* Headline */
+    --fs-card-title: 15px;   /* Subhead  */
+    --fs-body:       17px;   /* Body     */
+    --fs-caption:    12px;   /* Caption 1 — unchanged */
+    --fs-label:      11px;   /* Caption 2 — unchanged */
+    --fs-kpi:        28px;   /* Title 1  — unchanged  */
+
+    /* Line-height — proportional to iOS leading values */
+    --lh-page-title: 1.27;   /* 28pt leading / 22pt size */
+    --lh-section:    1.29;   /* 22pt leading / 17pt size */
+    --lh-body:       1.29;   /* 22pt leading / 17pt size */
+
+    /* Letter-spacing — Apple HIG tracking at each size */
+    --ls-page-title: -0.012em;  /* 22pt = -0.26pt ≈ -0.012em */
+    --ls-section:    -0.025em;  /* 17pt = -0.43pt ≈ -0.025em */
+    --ls-body:       -0.025em;  /* 17pt = -0.43pt ≈ -0.025em */
+  }
 }

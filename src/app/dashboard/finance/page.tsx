@@ -295,8 +295,12 @@ export default function FinancePage() {
   const bookedWithJobValue = bookedWithJob.reduce((s, c) => s + (c.budget || 0), 0)
   const bookedNoJobValue = bookedNoJob.reduce((s, c) => s + (c.budget || 0), 0)
 
-  // งานกำลังทำ: active jobs (ไม่ส่งมอบ ไม่ยกเลิก)
-  const activeJobValue = activeJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+  // งานกำลังทำ: แยก Reserve (จอง) กับ Backlog (ดำเนินการ)
+  const reserveJobs = activeJobs.filter(j => j.working_status === 'จอง')
+  const backlogJobs = activeJobs.filter(j => j.working_status !== 'จอง')
+  const reserveValue = reserveJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+  const backlogValue = backlogJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+  const activeJobValue = reserveValue + backlogValue
 
   // payment pipeline จาก active jobs
   const activeJobIds = new Set(activeJobs.map(j => j.id))
@@ -312,18 +316,15 @@ export default function FinancePage() {
 
   const periodDeliveredRevenue = periodDelivered.reduce((s, j) => s + (j.revenue_inc_vat || j.revenue_ex_vat || 0), 0)
   const periodPaidAmount = periodPaid.reduce((s, p) => s + (p.paid_amount || 0), 0)
-  const periodTotalIncome = periodDeliveredRevenue + periodPaidAmount
   const periodExpenseTotal = periodExpenses.reduce((s, e) => s + (e.amount || 0), 0)
+  const periodBalance = periodPaidAmount - periodExpenseTotal
 
   // Previous period for comparison
   const { start: prevStart, end: prevEnd } = getPeriodBounds(period, offset - 1)
-  const prevIncome = [
-    ...deliveredJobs.filter(j => j.actual_deliver_date >= prevStart && j.actual_deliver_date <= prevEnd)
-      .map(j => j.revenue_inc_vat || j.revenue_ex_vat || 0),
-    ...paidPayments.filter(p => p.paid_date >= prevStart && p.paid_date <= prevEnd)
-      .map(p => p.paid_amount || 0),
-  ].reduce((s, v) => s + v, 0)
-  const growthPct = prevIncome > 0 ? ((periodTotalIncome - prevIncome) / prevIncome * 100).toFixed(1) : null
+  const prevIncome = paidPayments
+    .filter(p => p.paid_date >= prevStart && p.paid_date <= prevEnd)
+    .reduce((s, p) => s + (p.paid_amount || 0), 0)
+  const growthPct = prevIncome > 0 ? ((periodPaidAmount - prevIncome) / prevIncome * 100).toFixed(1) : null
 
   // Monthly chart (12 months ending this month)
   const monthlyChart = useMemo(() => {
@@ -331,20 +332,17 @@ export default function FinancePage() {
     return Array.from({ length: 12 }, (_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
       const key = d.toISOString().slice(0, 7)
-      const delivered = deliveredJobs
-        .filter(j => j.actual_deliver_date?.startsWith(key))
-        .reduce((s, j) => s + (j.revenue_inc_vat || j.revenue_ex_vat || 0), 0)
       const received = paidPayments
         .filter(p => p.paid_date?.startsWith(key))
         .reduce((s, p) => s + (p.paid_amount || 0), 0)
       const expense = entries
         .filter(e => e.entry_date?.startsWith(key))
         .reduce((s, e) => s + (e.amount || 0), 0)
-      return { label: `${MONTHS_TH[d.getMonth()]} ${d.getFullYear().toString().slice(2)}`, key, delivered, received, expense, total: delivered + received }
+      return { label: `${MONTHS_TH[d.getMonth()]} ${d.getFullYear().toString().slice(2)}`, key, received, expense }
     })
-  }, [deliveredJobs, paidPayments, entries])
+  }, [paidPayments, entries])
 
-  const chartMax = Math.max(...monthlyChart.map(m => Math.max(m.total, m.expense)), 1)
+  const chartMax = Math.max(...monthlyChart.map(m => Math.max(m.received, m.expense)), 1)
 
   const filteredEntries = entries.filter(e => !expenseMonth || e.entry_date?.startsWith(expenseMonth))
   const payBase = payTab === 'outstanding' ? outstanding : payTab === 'paid' ? paidPayments : payments
@@ -358,7 +356,7 @@ export default function FinancePage() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Finance</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>รายรับ = ยอดส่งมอบ (inc.VAT) + งวดรับชำระ · รายจ่าย = บันทึกเอง</p>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>รายรับ = งวดชำระที่รับจริง · รายจ่าย = บันทึกเอง</p>
         </div>
         {tab === 'expense' && (
           <button onClick={() => { setEditingEntry(null); setEntryForm(emptyEntry); setSaveError(''); setEntryOpen(true) }}
@@ -421,11 +419,11 @@ export default function FinancePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Package size={13} style={{ color: '#4ade80' }} />
-                <span className="text-card-title" style={{ color: 'var(--text-3)' }}>ยอดส่งมอบ (inc.VAT)</span>
+                <TrendingUp size={13} style={{ color: periodBalance >= 0 ? '#4ade80' : '#f87171' }} />
+                <span className="text-card-title" style={{ color: 'var(--text-3)' }}>Balance</span>
               </div>
-              <p className="text-kpi-number" style={{ color: '#4ade80' }}>{fk(periodDeliveredRevenue)}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodDelivered.length} งาน</p>
+              <p className="text-kpi-number" style={{ color: periodBalance >= 0 ? '#4ade80' : '#f87171' }}>{fk(periodBalance)}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>รับงวด − รายจ่าย</p>
             </div>
             <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -445,14 +443,14 @@ export default function FinancePage() {
             </div>
             <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp size={13} style={{ color: periodTotalIncome - periodExpenseTotal >= 0 ? '#4ade80' : '#f87171' }} />
-                <span className="text-card-title" style={{ color: 'var(--text-3)' }}>Net Cash</span>
+                <DollarSign size={13} style={{ color: 'var(--text-3)' }} />
+                <span className="text-card-title" style={{ color: 'var(--text-3)' }}>รับงวด vs ช่วงก่อน</span>
               </div>
-              <p className="text-kpi-number" style={{ color: periodTotalIncome - periodExpenseTotal >= 0 ? '#4ade80' : '#f87171' }}>
-                {fk(periodTotalIncome - periodExpenseTotal)}
+              <p className="text-kpi-number" style={{ color: growthPct ? (Number(growthPct) >= 0 ? '#4ade80' : '#f87171') : 'var(--text-3)' }}>
+                {growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}%` : '—'}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
-                {growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `รายรับรวม ${fk(periodTotalIncome)}`}
+                {growthPct ? `vs ${PERIOD_LABELS[period]}ก่อน (${fk(prevIncome)})` : `ไม่มีข้อมูล${PERIOD_LABELS[period]}ก่อน`}
               </p>
             </div>
           </div>
@@ -462,9 +460,6 @@ export default function FinancePage() {
             <div className="flex items-center gap-4 mb-4 flex-wrap">
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายรับ vs รายจ่าย 12 เดือนล่าสุด</h2>
               <div className="flex gap-4 text-xs">
-                <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                  <span className="w-3 h-2 rounded-sm inline-block" style={{ background: '#4ade80' }} />ส่งมอบ
-                </span>
                 <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
                   <span className="w-3 h-2 rounded-sm inline-block" style={{ background: '#60a5fa' }} />รับงวด
                 </span>
@@ -479,18 +474,12 @@ export default function FinancePage() {
                 return (
                   <div key={m.key} className="flex-shrink-0 flex flex-col items-center gap-1 group" style={{ minWidth: '44px' }}>
                     <div className="w-full flex gap-0.5 items-end relative" style={{ height: '100px' }}>
-                      {/* Income stacked bar */}
-                      {m.total > 0 && (
-                        <div className="flex-1 flex flex-col justify-end rounded-t-sm overflow-hidden"
-                          style={{ height: `${(m.total / chartMax) * 100}%` }}>
-                          {m.received > 0 && (
-                            <div style={{ height: `${(m.received / m.total) * 100}%`, background: '#60a5fa' }} />
-                          )}
-                          {m.delivered > 0 && (
-                            <div style={{ height: `${(m.delivered / m.total) * 100}%`, background: '#4ade80' }} />
-                          )}
-                        </div>
-                      )}
+                      {/* Received bar */}
+                      <div className="flex-1 flex flex-col justify-end">
+                        {m.received > 0 && (
+                          <div className="rounded-t-sm" style={{ height: `${(m.received / chartMax) * 100}%`, background: '#60a5fa' }} />
+                        )}
+                      </div>
                       {/* Expense bar */}
                       <div className="flex-1 flex flex-col justify-end">
                         {m.expense > 0 && (
@@ -498,10 +487,10 @@ export default function FinancePage() {
                         )}
                       </div>
                       {/* Tooltip */}
-                      {(m.total > 0 || m.expense > 0) && (
+                      {(m.received > 0 || m.expense > 0) && (
                         <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-[10px] whitespace-nowrap px-2 py-1 rounded-lg pointer-events-none"
                           style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
-                          {m.total > 0 && <div style={{ color: '#4ade80' }}>รับ {fk(m.total)}</div>}
+                          {m.received > 0 && <div style={{ color: '#60a5fa' }}>รับ {fk(m.received)}</div>}
                           {m.expense > 0 && <div style={{ color: '#f87171' }}>จ่าย {fk(m.expense)}</div>}
                         </div>
                       )}
@@ -551,31 +540,51 @@ export default function FinancePage() {
                 </div>
               </div>
 
-              {/* 2. Active Job Backlog */}
+              {/* 2. Active Job Backlog — แยก Reserve / Backlog */}
               <div className="rounded-[11px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
-                <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งานที่กำลังทำ (Reserved / Backlog)</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: 'var(--text-2)' }}>จำนวนงาน</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{activeJobs.length} งาน</span>
-                  </div>
-                  <button className="flex justify-between items-center w-full text-left hover:underline" onClick={() => setDrilldown('backlog')}>
-                    <span className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่ารวม ↗</span>
-                    <span className="text-sm font-bold" style={{ color: '#60a5fa' }}>{fk(activeJobValue)}</span>
-                  </button>
-                  <div className="flex justify-between items-center pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
-                    <span className="text-xs" style={{ color: '#4ade80' }}>รับชำระแล้ว</span>
-                    <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>{fk(collectedFromActive)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: '#f59e0b' }}>ค้างรับทั้งหมด</span>
-                    <span className="text-xs font-semibold" style={{ color: '#f59e0b' }}>{fk(pendingAll)}</span>
-                  </div>
-                  {activeJobValue > 0 && (
-                    <div className="h-1.5 rounded-full mt-1" style={{ background: 'var(--divider)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${Math.min((collectedFromActive / activeJobValue) * 100, 100)}%`, background: '#4ade80' }} />
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งานที่กำลังทำ</p>
+                  <button onClick={() => setDrilldown('backlog')} className="text-[10px] hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
+                </div>
+                <div className="space-y-2.5">
+                  {/* Reserve */}
+                  <div className="rounded-[8px] px-3 py-2 space-y-1" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#f59e0b' }}>Reserve (จอง)</span>
+                      <span className="text-xs font-bold" style={{ color: '#f59e0b' }}>{reserveJobs.length} งาน</span>
                     </div>
-                  )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{fk(reserveValue)}</span>
+                    </div>
+                  </div>
+                  {/* Backlog */}
+                  <div className="rounded-[8px] px-3 py-2 space-y-1" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#60a5fa' }}>Backlog (ดำเนินการ)</span>
+                      <span className="text-xs font-bold" style={{ color: '#60a5fa' }}>{backlogJobs.length} งาน</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{fk(backlogValue)}</span>
+                    </div>
+                  </div>
+                  {/* Collection status */}
+                  <div className="pt-1 space-y-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px]" style={{ color: '#4ade80' }}>รับชำระแล้ว</span>
+                      <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>{fk(collectedFromActive)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px]" style={{ color: '#f59e0b' }}>ค้างรับทั้งหมด</span>
+                      <span className="text-xs font-semibold" style={{ color: '#f59e0b' }}>{fk(pendingAll)}</span>
+                    </div>
+                    {activeJobValue > 0 && (
+                      <div className="h-1.5 rounded-full mt-1" style={{ background: 'var(--divider)' }}>
+                        <div className="h-full rounded-full" style={{ width: `${Math.min((collectedFromActive / activeJobValue) * 100, 100)}%`, background: '#4ade80' }} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -603,62 +612,6 @@ export default function FinancePage() {
             </div>
           </div>
 
-          {/* Period detail: delivered jobs grouped by project */}
-          {periodDelivered.length > 0 && (() => {
-            const byProject: Record<string, { name: string; jobs: DeliveredJob[] }> = {}
-            periodDelivered.forEach(j => {
-              const pname = (j.projects as any)?.name || 'ไม่ระบุโครงการ'
-              if (!byProject[pname]) byProject[pname] = { name: pname, jobs: [] }
-              byProject[pname].jobs.push(j)
-            })
-            const projectGroups = Object.values(byProject).sort((a, b) => a.name.localeCompare(b.name, 'th'))
-            return (
-              <div className="ds-card p-5">
-                <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>
-                  งานส่งมอบใน{label} ({periodDelivered.length} งาน · {projectGroups.length} โครงการ)
-                </h2>
-                <div className="space-y-4">
-                  {projectGroups.map(pg => {
-                    const pgTotal = pg.jobs.reduce((s, j) => s + (j.revenue_inc_vat || j.revenue_ex_vat || 0), 0)
-                    return (
-                      <div key={pg.name} className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
-                        {/* Project header */}
-                        <div className="flex items-center justify-between px-4 py-2.5"
-                          style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
-                          <span className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--accent)' }}>{pg.name}</span>
-                          <div className="text-right">
-                            <span className="text-sm font-bold" style={{ color: '#4ade80' }}>{f(pgTotal)}</span>
-                            <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>{pg.jobs.length} งาน</span>
-                          </div>
-                        </div>
-                        {/* Room list */}
-                        {pg.jobs.map((j, i) => (
-                          <div key={j.id} className="flex items-center justify-between px-4 py-2.5"
-                            style={{ borderBottom: i < pg.jobs.length - 1 ? '1px solid var(--divider)' : 'none' }}>
-                            <div>
-                              <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{j.customer_name}</p>
-                              <p className="text-xs" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no} · {dateStr(j.actual_deliver_date)}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm font-semibold" style={{ color: '#4ade80' }}>{f(j.revenue_inc_vat || j.revenue_ex_vat || 0)}</p>
-                              {j.revenue_inc_vat && j.revenue_ex_vat && j.revenue_inc_vat !== j.revenue_ex_vat && (
-                                <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ex.VAT {f(j.revenue_ex_vat)}</p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  })}
-                  <div className="flex justify-between pt-1 font-bold">
-                    <span className="text-sm" style={{ color: 'var(--text-2)' }}>รวมทั้งหมด</span>
-                    <span style={{ color: '#4ade80' }}>{f(periodDeliveredRevenue)}</span>
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
-
           {/* Period detail: paid installments */}
           {periodPaid.length > 0 && (
             <div className="ds-card p-5">
@@ -681,9 +634,9 @@ export default function FinancePage() {
             </div>
           )}
 
-          {periodDelivered.length === 0 && periodPaid.length === 0 && (
+          {periodPaid.length === 0 && (
             <div className="ds-card p-10 text-center text-sm" style={{ color: 'var(--text-3)' }}>
-              ไม่มีรายรับใน{label}
+              ไม่มีงวดรับชำระใน{label}
             </div>
           )}
         </div>

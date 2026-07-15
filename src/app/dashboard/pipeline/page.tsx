@@ -831,7 +831,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
       customer_name: customer.customer_name, customer_type: custType,
       work_type: workType, package_type: pkgType || null, order_date: orderDate,
       revenue_inc_vat: revenue, revenue_ex_vat: revenueEx,
-      transfer_amount: revenue, working_status: 'รับงาน',
+      transfer_amount: revenue, working_status: 'ดำเนินการ',
       accounting_status: 'Reserved', sales_id: salesId || null,
     })
 

@@ -18,7 +18,7 @@ const PACKAGE_TYPES = [
   'Premium (L)', 'Fully design (L)', 'Design & Turnkey',
   'Built-in', 'Curtain', 'Wallcovering', 'Loose furniture', 'อื่นๆ',
 ]
-const WORKING_STATUSES = ['รับงาน', 'กำลังดำเนินการ', 'รอเอกสาร', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก']
+const WORKING_STATUSES = ['ดำเนินการ', 'รอเอกสาร', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก']
 const COMMISSION_STATUSES = ['pending', 'approved', 'paid']
 const COMMISSION_STATUS_LABEL: Record<string, string> = { pending: 'รอ', approved: 'อนุมัติ', paid: 'จ่ายแล้ว' }
 
@@ -84,7 +84,6 @@ type Job = {
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string; border: string }> = {
   'ดำเนินการ':       { label: 'ดำเนินการ',     color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
   'กำลังดำเนินการ': { label: 'กำลังดำเนินการ', color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
-  'รับงาน':          { label: 'รับงาน',          color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
   'รอเอกสาร':       { label: 'รอเอกสาร',        color: 'var(--accent-blue)',    bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)',  dot: 'var(--accent-blue)',    border: 'color-mix(in srgb, var(--accent-blue)   35%, transparent)' },
   'รอส่งมอบ':       { label: 'รอส่งมอบ',         color: 'var(--accent-purple)',  bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)',  dot: 'var(--accent-purple)',  border: 'color-mix(in srgb, var(--accent-purple) 35%, transparent)' },
   'ส่งมอบแล้ว':     { label: 'ส่งมอบแล้ว',       color: 'var(--accent-green)',   bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)',  dot: 'var(--accent-green)',   border: 'color-mix(in srgb, var(--accent-green)  35%, transparent)' },
@@ -240,7 +239,7 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
 
 const emptyJob = (): Partial<Job> => ({
   customer_type: 'B2C',
-  working_status: 'รับงาน',
+  working_status: 'ดำเนินการ',
   commission_status: 'pending',
   revenue_ex_vat: 0,
   revenue_inc_vat: 0,

@@ -205,7 +205,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       payment_plan_type: clientType === 'B2C' ? plan : isSingleB2B ? 'po_bill' : String(b2bCount),
       work_days: workDays,
       work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
-      working_status: isSingleB2B || firstInst?.trigger ? 'รับงาน' : job.working_status,
+      working_status: isSingleB2B || firstInst?.trigger ? 'ดำเนินการ' : job.working_status,
     }).eq('id', job.id)
     if ((isSingleB2B || firstInst?.trigger) && job.customer_id) {
       await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
@@ -495,7 +495,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
     if (!selected) return
     setSaving(true)
     if (selected.is_work_trigger && !job.work_start_date) {
-      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'รับงาน' }).eq('id', job.id)
+      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ' }).eq('id', job.id)
       if (job.customer_id) {
         await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
       }

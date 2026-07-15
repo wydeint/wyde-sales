@@ -509,7 +509,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     if (!selected) return
     setSaving(true)
     if (selected.is_work_trigger && !job.work_start_date) {
-      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'รับงาน' }).eq('id', job.id)
+      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ' }).eq('id', job.id)
       await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
     }
     await supabase.from('payments').update({

@@ -582,7 +582,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
     if (selectedInst.is_work_trigger && selectedJob) {
       await supabase.from('jobs').update({
         work_start_date: paidDate,
-        working_status: 'รับงาน',
+        working_status: 'ดำเนินการ',
       }).eq('id', selectedJob.id)
       // Close customer in pipeline if linked
       const { data: jobData } = await supabase.from('jobs').select('customer_id').eq('id', selectedJob.id).maybeSingle()

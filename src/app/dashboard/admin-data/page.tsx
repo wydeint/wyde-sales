@@ -491,35 +491,35 @@ function ReconcileCheck() {
 
     // Check 2: jobs working_status breakdown = total
     const jTotal = j.length
-    const jWorking = j.filter(x => x.working_status === 'รับงาน').length
+    const jWorking = j.filter(x => x.working_status === 'ดำเนินการ').length
     const jBooked = j.filter(x => x.working_status === 'จอง').length
     const jDelivered = j.filter(x => x.working_status === 'ส่งมอบแล้ว').length
     const jCancelled = j.filter(x => x.working_status === 'ยกเลิก').length
-    const jOther = j.filter(x => !['รับงาน', 'จอง', 'ส่งมอบแล้ว', 'ยกเลิก'].includes(x.working_status)).length
+    const jOther = j.filter(x => !['ดำเนินการ', 'จอง', 'ส่งมอบแล้ว', 'ยกเลิก'].includes(x.working_status)).length
     const jSum = jWorking + jBooked + jDelivered + jCancelled + jOther
     const check2: CheckItem = {
       label: 'จำนวนงาน',
-      desc: 'รับงาน + จอง + ส่งมอบแล้ว + ยกเลิก + อื่นๆ = ทั้งหมด',
-      lhs: { label: `รับงาน(${jWorking}) + จอง(${jBooked}) + ส่งมอบ(${jDelivered}) + ยกเลิก(${jCancelled}) + อื่น(${jOther})`, value: jSum },
+      desc: 'ดำเนินการ + จอง + ส่งมอบแล้ว + ยกเลิก + อื่นๆ = ทั้งหมด',
+      lhs: { label: `ดำเนินการ(${jWorking}) + จอง(${jBooked}) + ส่งมอบ(${jDelivered}) + ยกเลิก(${jCancelled}) + อื่น(${jOther})`, value: jSum },
       rhs: { label: 'Jobs ทั้งหมด', value: jTotal },
       pass: jSum === jTotal,
     }
 
-    // Check 3: jobs with working_status='closed'/'รับงาน' have customers.status='closed'
-    const jobsActive = j.filter(x => x.working_status === 'รับงาน')
+    // Check 3: jobs ที่ดำเนินการอยู่ต้องมี customers.status='closed'
+    const jobsActive = j.filter(x => x.working_status === 'ดำเนินการ')
     const customerStatusMap = Object.fromEntries(c.map(x => [x.id, x.status]))
     const mismatchedJobs = jobsActive.filter(x => x.customer_id && customerStatusMap[x.customer_id] !== 'closed')
     const check3: CheckItem = {
       label: 'Sync jobs ↔ customers',
-      desc: 'jobs.working_status=รับงาน ต้องมี customers.status=closed',
+      desc: 'jobs.working_status=ดำเนินการ ต้องมี customers.status=closed',
       lhs: { label: 'Jobs ที่ sync แล้ว', value: jobsActive.length - mismatchedJobs.length },
-      rhs: { label: 'Jobs รับงานทั้งหมด', value: jobsActive.length },
+      rhs: { label: 'Jobs ดำเนินการทั้งหมด', value: jobsActive.length },
       pass: mismatchedJobs.length === 0,
-      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ working_status=รับงาน แต่ customer ยังไม่ closed` : undefined,
+      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ working_status=ดำเนินการ แต่ customer ยังไม่ closed` : undefined,
     }
 
-    // Check 4: มูลค่างาน vs ยอดงวดรวม (เฉพาะ jobs ที่ส่งมอบแล้ว หรือ รับงาน)
-    const activeJobs = j.filter(x => x.working_status === 'ส่งมอบแล้ว' || x.working_status === 'รับงาน')
+    // Check 4: มูลค่างาน vs ยอดงวดรวม (เฉพาะ jobs ที่ส่งมอบแล้ว หรือ ดำเนินการ)
+    const activeJobs = j.filter(x => x.working_status === 'ส่งมอบแล้ว' || x.working_status === 'ดำเนินการ')
     const activeJobIds = new Set(activeJobs.map(x => x.id))
     const totalJobRevenue = activeJobs.reduce((s, x) => s + (x.revenue_inc_vat || 0), 0)
     const paymentsByJob = p.filter(x => activeJobIds.has(x.job_id))
@@ -535,21 +535,21 @@ function ReconcileCheck() {
     })
     const check4: CheckItem = {
       label: 'มูลค่างาน vs ยอดงวดรวม',
-      desc: 'SUM(jobs.revenue_inc_vat) ≈ SUM(payments.amount) เฉพาะ jobs ที่รับงาน/ส่งมอบแล้ว',
+      desc: 'SUM(jobs.revenue_inc_vat) ≈ SUM(payments.amount) เฉพาะ jobs ที่ดำเนินการ/ส่งมอบแล้ว',
       lhs: { label: 'SUM(jobs.revenue_inc_vat)', value: totalJobRevenue },
       rhs: { label: 'SUM(payments.amount)', value: totalPaymentAmount },
       pass: Math.abs(totalJobRevenue - totalPaymentAmount) < 10,
       detail: jobsWithMismatch.length > 0 ? `พบ ${jobsWithMismatch.length} jobs ที่ยอดงวดไม่ตรงกับมูลค่างาน` : undefined,
     }
 
-    // Check 5: jobs รับงาน ต้องมี trigger payment ที่ paid
+    // Check 5: jobs ดำเนินการ ต้องมี trigger payment ที่ paid
     const triggerPaidJobIds = new Set(p.filter(x => x.is_work_trigger && x.status === 'paid').map(x => x.job_id))
     const jobsNoTrigger = jobsActive.filter(x => !triggerPaidJobIds.has(x.id))
     const check5: CheckItem = {
       label: 'Trigger payment',
-      desc: 'ทุก job รับงาน ต้องมีงวด trigger ที่จ่ายแล้ว',
+      desc: 'ทุก job ดำเนินการ ต้องมีงวด trigger ที่จ่ายแล้ว',
       lhs: { label: 'Jobs ที่มี trigger paid', value: jobsActive.length - jobsNoTrigger.length },
-      rhs: { label: 'Jobs รับงานทั้งหมด', value: jobsActive.length },
+      rhs: { label: 'Jobs ดำเนินการทั้งหมด', value: jobsActive.length },
       pass: jobsNoTrigger.length === 0,
       detail: jobsNoTrigger.length > 0 ? `พบ ${jobsNoTrigger.length} jobs ที่ไม่มีงวด trigger ที่จ่ายแล้ว` : undefined,
     }

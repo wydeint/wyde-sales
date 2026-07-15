@@ -475,13 +475,13 @@ export default function FinancePage() {
                   <div key={m.key} className="flex-shrink-0 flex flex-col items-center gap-1 group" style={{ minWidth: '44px' }}>
                     <div className="w-full flex gap-0.5 items-end relative" style={{ height: '100px' }}>
                       {/* Received bar */}
-                      <div className="flex-1 flex flex-col justify-end">
+                      <div className="flex-1 flex flex-col justify-end" style={{ height: '100%' }}>
                         {m.received > 0 && (
                           <div className="rounded-t-sm" style={{ height: `${(m.received / chartMax) * 100}%`, background: '#60a5fa' }} />
                         )}
                       </div>
                       {/* Expense bar */}
-                      <div className="flex-1 flex flex-col justify-end">
+                      <div className="flex-1 flex flex-col justify-end" style={{ height: '100%' }}>
                         {m.expense > 0 && (
                           <div className="rounded-t-sm" style={{ height: `${(m.expense / chartMax) * 100}%`, background: '#f87171', opacity: 0.75 }} />
                         )}

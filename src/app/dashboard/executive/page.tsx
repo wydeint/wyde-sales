@@ -12,12 +12,13 @@ type Customer = {
 }
 
 type Job = {
-  id: string; order_date: string; actual_deliver_date: string
-  revenue_ex_vat: number; work_type: string; customer_type: string
+  id: string; order_date: string; work_start_date: string; actual_deliver_date: string
+  revenue_ex_vat: number; revenue_inc_vat: number; work_type: string; customer_type: string
   working_status: string; sales_id: string
   sales?: { name: string }
   projects?: { name: string }
 }
+type PaidPayment = { paid_amount: number; paid_date: string; job_id: string; jobs: { sales_id: string } | null }
 
 type Period = 'week' | 'month' | 'quarter' | 'year'
 
@@ -78,6 +79,7 @@ export default function ExecutivePage() {
   const [period, setPeriod] = useState<Period>('month')
   const [offset, setOffset] = useState(0)
   const [filterCustType, setFilterCustType] = useState('')
+  const [allPayments, setAllPayments] = useState<PaidPayment[]>([])
   const [mainTab, setMainTab] = useState<'performance' | 'team'>('performance')
   const [teamUsers, setTeamUsers] = useState<{ id: string; name: string; manager_id: string | null }[]>([])
   const [salesTargets, setSalesTargets] = useState<{ user_id: string; month: number; year: number; target_sales_value: number; target_delivery_value: number }[]>([])
@@ -92,14 +94,17 @@ export default function ExecutivePage() {
         { data: cust, error: e1 },
         { data: jobs, error: e2 },
         { data: ot },
+        { data: pmts },
       ] = await Promise.all([
         supabase.from('customers').select('id,status,budget,customer_type,source,assigned_to,created_at,users!customers_assigned_to_fkey(name)'),
-        supabase.from('jobs').select('id,order_date,actual_deliver_date,revenue_ex_vat,work_type,customer_type,working_status,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)'),
+        supabase.from('jobs').select('id,order_date,work_start_date,actual_deliver_date,revenue_ex_vat,revenue_inc_vat,work_type,customer_type,working_status,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)'),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value,year,month').order('year').order('month'),
+        supabase.from('payments').select('paid_amount,paid_date,job_id,jobs(sales_id)').eq('status', 'paid').not('paid_date', 'is', null),
       ])
       if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllCustomers((cust || []) as unknown as Customer[])
       setAllJobs((jobs || []) as unknown as Job[])
+      setAllPayments(((pmts as any) || []) as PaidPayment[])
 
       setRawOrgTargets(ot || [])
 
@@ -122,8 +127,10 @@ export default function ExecutivePage() {
   )
 
   const periodJobs = useMemo(() =>
-    allJobs.filter(j => j.order_date >= start && j.order_date <= end &&
-      (!filterCustType || j.customer_type === filterCustType)),
+    allJobs.filter(j => {
+      const d = j.order_date || j.work_start_date
+      return !!d && d >= start && d <= end && (!filterCustType || j.customer_type === filterCustType)
+    }),
     [allJobs, start, end, filterCustType]
   )
 
@@ -189,14 +196,14 @@ export default function ExecutivePage() {
   const b2bRevenue = periodJobs.filter(j => j.customer_type === 'B2B').reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const rptRevenue = periodJobs.filter(j => j.work_type === 'RPT').reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
 
-  // Sales ranking from jobs
+  // Sales ranking from jobs (inc_vat, consistent with dashboard)
   const salesRanking = useMemo(() => {
     const map = new Map<string, { name: string; units: number; revenue: number }>()
     periodJobs.forEach(j => {
       const name = (j.sales as any)?.name || 'ไม่ระบุ'
       const key = j.sales_id || name
       const cur = map.get(key) || { name, units: 0, revenue: 0 }
-      map.set(key, { ...cur, units: cur.units + 1, revenue: cur.revenue + (j.revenue_ex_vat || 0) })
+      map.set(key, { ...cur, units: cur.units + 1, revenue: cur.revenue + (j.revenue_inc_vat || j.revenue_ex_vat || 0) })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue || b.units - a.units)
   }, [periodJobs])
@@ -494,17 +501,21 @@ export default function ExecutivePage() {
           const memberIds = new Set(members.map(m => m.id))
           const getActual = (uid: string, type: 'sales' | 'deliv') => {
             const monthJobs = allJobs.filter(j => {
-              const d = type === 'sales' ? j.order_date : j.actual_deliver_date
+              const d = type === 'sales' ? (j.order_date || j.work_start_date) : j.actual_deliver_date
               return d && d >= start && d <= end && j.sales_id === uid
             })
-            return monthJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+            return monthJobs.reduce((s, j) => s + (j.revenue_inc_vat || j.revenue_ex_vat || 0), 0)
           }
+          const getReceived = (uid: string) =>
+            allPayments.filter(p => p.jobs?.sales_id === uid && p.paid_date >= start && p.paid_date <= end)
+              .reduce((s, p) => s + (p.paid_amount || 0), 0)
           const teamActualSales = members.reduce((s, u) => s + getActual(u.id, 'sales'), 0)
           const teamActualDeliv = members.reduce((s, u) => s + getActual(u.id, 'deliv'), 0)
+          const teamActualReceived = members.reduce((s, u) => s + getReceived(u.id), 0)
           const teamTargetSales = salesTargets.filter(t => memberIds.has(t.user_id) && t.month === thisMonth).reduce((s, t) => s + (t.target_sales_value || 0), 0)
           const teamTargetDeliv = salesTargets.filter(t => memberIds.has(t.user_id) && t.month === thisMonth).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
           const color = TEAM_COLORS[idx % TEAM_COLORS.length]
-          return { manager, members, teamActualSales, teamActualDeliv, teamTargetSales, teamTargetDeliv, color, getActual }
+          return { manager, members, teamActualSales, teamActualDeliv, teamActualReceived, teamTargetSales, teamTargetDeliv, color, getActual, getReceived }
         })
         const ProgressBar = ({ value, max, color }: { value: number; max: number; color: string }) => (
           <div className="h-1 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--divider)' }}>
@@ -532,8 +543,9 @@ export default function ExecutivePage() {
                       <p className="text-xs" style={{ color: 'var(--text-3)' }}>{team.members.length} คน · {label}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {[{ label: 'ยอดขายทีม', val: team.teamActualSales, tgt: team.teamTargetSales, color: '#4ade80' },
+                      { label: 'รายรับทีม', val: team.teamActualReceived, tgt: 0, color: '#34d399' },
                       { label: 'ส่งมอบทีม', val: team.teamActualDeliv, tgt: team.teamTargetDeliv, color: '#60a5fa' }].map(item => (
                       <div key={item.label} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
                         <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.label}</p>
@@ -549,7 +561,9 @@ export default function ExecutivePage() {
                   <div className="space-y-2">
                     <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
                     {team.members.map(u => {
-                      const actS = team.getActual(u.id, 'sales'); const actD = team.getActual(u.id, 'deliv')
+                      const actS = team.getActual(u.id, 'sales')
+                      const actD = team.getActual(u.id, 'deliv')
+                      const actR = team.getReceived(u.id)
                       const tgtS = salesTargets.filter(t => t.user_id === u.id && t.month === thisMonth).reduce((s, t) => s + (t.target_sales_value || 0), 0)
                       const tgtD = salesTargets.filter(t => t.user_id === u.id && t.month === thisMonth).reduce((s, t) => s + (t.target_delivery_value || 0), 0)
                       return (
@@ -562,9 +576,21 @@ export default function ExecutivePage() {
                             </div>
                             {tgtS > 0 && <span className="text-[10px] font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? '#4ade80' : 'var(--text-3)' }}>{pct(actS, tgtS)}%</span>}
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-[10px]">
-                            <div><span style={{ color: 'var(--text-3)' }}>ขาย </span><span style={{ color: '#4ade80' }}>{f(actS)}</span>{tgtS > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span><ProgressBar value={actS} max={tgtS} color="#4ade80" /></>}</div>
-                            <div><span style={{ color: 'var(--text-3)' }}>ส่งมอบ </span><span style={{ color: '#60a5fa' }}>{f(actD)}</span>{tgtD > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span><ProgressBar value={actD} max={tgtD} color="#60a5fa" /></>}</div>
+                          <div className="grid grid-cols-3 gap-2 text-[10px]">
+                            <div>
+                              <span style={{ color: 'var(--text-3)' }}>ขาย </span>
+                              <span style={{ color: '#4ade80' }}>{f(actS)}</span>
+                              {tgtS > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span><ProgressBar value={actS} max={tgtS} color="#4ade80" /></>}
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-3)' }}>รายรับ </span>
+                              <span style={{ color: '#34d399' }}>{f(actR)}</span>
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-3)' }}>ส่งมอบ </span>
+                              <span style={{ color: '#60a5fa' }}>{f(actD)}</span>
+                              {tgtD > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span><ProgressBar value={actD} max={tgtD} color="#60a5fa" /></>}
+                            </div>
                           </div>
                         </div>
                       )

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Users, TrendingUp, Target, Award, Package, X, ChevronRight, Sprout } from 'lucide-react'
+import { Users, TrendingUp, Target, Award, Package, X, ChevronRight, Wallet } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [condoLeads, setCondoLeads] = useState<{ customer_id: string | null; created_at: string }[]>([])
   const [orgTarget, setOrgTarget] = useState<OrgTarget | null>(null)
   const [todayPayments, setTodayPayments] = useState<{ paid_amount: number }[]>([])
+  const [monthPayments, setMonthPayments] = useState<{ paid_amount: number }[]>([])
 
   const [filterCustType, setFilterCustType] = useState('')
   const [filterWorkType, setFilterWorkType] = useState('')
@@ -56,6 +57,7 @@ export default function DashboardPage() {
         { data: leads },
         { data: ot },
         { data: todayPmts },
+        { data: monthPmts },
       ] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('customers').select('status, budget, customer_type'),
@@ -63,6 +65,7 @@ export default function DashboardPage() {
         supabase.from('condo_leads').select('customer_id, created_at'),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value').eq('year', now.getFullYear()).eq('month', now.getMonth() + 1).maybeSingle(),
         supabase.from('payments').select('paid_amount').eq('status', 'paid').eq('paid_date', todayStr),
+        supabase.from('payments').select('paid_amount').eq('status', 'paid').gte('paid_date', ms),
       ])
 
       if (custErr || jobErr) {
@@ -81,6 +84,7 @@ export default function DashboardPage() {
       setCondoLeads((leads || []) as { customer_id: string | null; created_at: string }[])
       setOrgTarget(ot as OrgTarget | null)
       setTodayPayments((todayPmts || []) as { paid_amount: number }[])
+      setMonthPayments((monthPmts || []) as { paid_amount: number }[])
       setLoading(false)
     }
     load()
@@ -235,7 +239,7 @@ export default function DashboardPage() {
           { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${customers.filter(c => c.status === 'booked').length} · ปิด ${customers.filter(c => c.status === 'closed').length}`, color: '#60a5fa', onClick: undefined },
           { icon: TrendingUp, label: 'ยอดขายเดือนนี้', value: fn(salesThisMonth.length) + ' รายการ', sub: f(salesThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#f97316', onClick: undefined },
           { icon: Package, label: 'ยอดส่งมอบเดือนนี้', value: fn(deliveredThisMonth.length) + ' รายการ', sub: f(deliveredThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: '#4ade80', onClick: () => setDeliverDrillOpen(true) },
-          { icon: Sprout, label: 'Leads ใหม่เดือนนี้', value: fn(newLeadsThisMonth) + ' ราย', sub: `เข้า Pipeline แล้ว ${newLeadsInPipeline} ราย`, color: '#34d399', onClick: undefined },
+          { icon: Wallet, label: 'รายรับเดือนนี้', value: f(monthPayments.reduce((s, p) => s + (p.paid_amount || 0), 0)), sub: `${monthPayments.length} งวด`, color: '#34d399', onClick: undefined },
         ].map(({ icon: Icon, label, value, sub, color, onClick }) => (
           <div key={label} onClick={onClick}
             className="ds-card p-4"

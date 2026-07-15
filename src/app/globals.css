@@ -23,28 +23,28 @@
   --space-lg:  24px;
   --space-xl:  32px;
 
-  /* Typography — size (desktop / macOS baseline) */
-  --fs-page-title: 20px;
-  --fs-section:    15px;
-  --fs-card-title: 13px;
-  --fs-body:       13px;
-  --fs-caption:    12px;
-  --fs-label:      11px;
-  --fs-kpi:        28px;
-  --fs-micro:      10px;
+  /* Typography — size (13–14" MacBook baseline: 1024–1439px) */
+  --fs-page-title: 18px;
+  --fs-section:    13px;
+  --fs-card-title: 12px;
+  --fs-body:       12px;
+  --fs-caption:    11px;
+  --fs-label:      10px;
+  --fs-kpi:        26px;
+  --fs-micro:       9px;
 
   /* Typography — line-height */
-  --lh-page-title: 1.25;
-  --lh-section:    1.30;
-  --lh-body:       1.38;
-  --lh-caption:    1.33;
-  --lh-kpi:        1.10;
+  --lh-page-title: 1.22;
+  --lh-section:    1.28;
+  --lh-body:       1.45;
+  --lh-caption:    1.40;
+  --lh-kpi:        1.08;
 
   /* Typography — letter-spacing */
-  --ls-page-title: -0.01em;
-  --ls-section:    -0.005em;
-  --ls-body:       -0.008em;
-  --ls-label:       0.04em;
+  --ls-page-title: -0.022em;
+  --ls-section:    -0.012em;
+  --ls-body:       -0.006em;
+  --ls-label:        0.05em;
 
   /* Typography — weight */
   --fw-regular:  400;
@@ -536,6 +536,34 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
     --ls-body:        0em;     /* neutral — 14px small text needs no compression */
     --ls-label:       0.012em; /* 11px needs slight openness to stay readable */
   }
+
+/* ══════════════════════════════════════════
+   Large screen — external monitor / 15"+ MacBook
+   Restores full-size tokens above the 1440px threshold
+══════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  :root {
+    --fs-page-title: 20px;
+    --fs-section:    14px;
+    --fs-card-title: 13px;
+    --fs-body:       13px;
+    --fs-caption:    12px;
+    --fs-label:      11px;
+    --fs-kpi:        28px;
+    --fs-micro:      10px;
+
+    --lh-page-title: 1.25;
+    --lh-section:    1.30;
+    --lh-body:       1.38;
+    --lh-caption:    1.33;
+    --lh-kpi:        1.10;
+
+    --ls-page-title: -0.018em;
+    --ls-section:    -0.008em;
+    --ls-body:       -0.008em;
+    --ls-label:       0.04em;
+  }
+}
 
   /* ── Form elements (CRITICAL: prevents iOS Safari auto-zoom on focus) ──
      iOS zooms in when focused input font-size < 16px. Force all inputs

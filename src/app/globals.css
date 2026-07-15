@@ -516,24 +516,25 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 ══════════════════════════════════════════ */
 @media (max-width: 1023px) {
   :root {
-    /* Size — iOS / iPadOS defaults (Large content size) */
-    --fs-page-title: 22px;   /* Title 2  */
-    --fs-section:    17px;   /* Headline */
-    --fs-card-title: 15px;   /* Subhead  */
-    --fs-body:       17px;   /* Body     */
-    --fs-caption:    12px;   /* Caption 1 — unchanged */
-    --fs-label:      11px;   /* Caption 2 — unchanged */
-    --fs-kpi:        28px;   /* Title 1  — unchanged  */
+    /* Size — calibrated for data-dense CRM on iPhone (not reading app) */
+    --fs-page-title: 20px;   /* same as desktop — doesn't appear inside dense layouts */
+    --fs-section:    15px;   /* same as desktop — section headers already correct */
+    --fs-card-title: 14px;   /* +1px — touch context warrants it, still dense */
+    --fs-body:       14px;   /* matches native iOS data apps: Stocks, Health, Notes list */
+    --fs-caption:    12px;   /* unchanged */
+    --fs-label:      11px;   /* unchanged — Apple HIG floor */
+    --fs-kpi:        26px;   /* -2px — saves vertical space in KPI cards */
 
-    /* Line-height — proportional to iOS leading values */
-    --lh-page-title: 1.27;   /* 28pt leading / 22pt size */
-    --lh-section:    1.29;   /* 22pt leading / 17pt size */
-    --lh-body:       1.29;   /* 22pt leading / 17pt size */
+    /* Line-height */
+    --lh-page-title: 1.25;   /* single-line titles, no need for loose leading */
+    --lh-section:    1.27;
+    --lh-body:       1.25;   /* critical for table row height: 14×1.25 = 17.5px */
 
-    /* Letter-spacing — Apple HIG tracking at each size */
-    --ls-page-title: -0.012em;  /* 22pt = -0.26pt ≈ -0.012em */
-    --ls-section:    -0.025em;  /* 17pt = -0.43pt ≈ -0.025em */
-    --ls-body:       -0.025em;  /* 17pt = -0.43pt ≈ -0.025em */
+    /* Letter-spacing */
+    --ls-page-title: -0.018em;
+    --ls-section:    -0.015em;
+    --ls-body:        0em;     /* neutral — 14px small text needs no compression */
+    --ls-label:       0.012em; /* 11px needs slight openness to stay readable */
   }
 
   /* ── Form elements (CRITICAL: prevents iOS Safari auto-zoom on focus) ──

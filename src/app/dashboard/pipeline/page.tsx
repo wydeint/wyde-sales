@@ -456,10 +456,12 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
             </p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            <button onClick={() => setEditing(e => !e)}
-              className="p-2 rounded-[8px]" style={{ background: editing ? 'var(--accent)' : 'var(--hover-bg)', color: editing ? '#fff' : 'var(--text-2)' }}>
-              <Pencil size={14} />
-            </button>
+            {customer.status !== 'closed' && (
+              <button onClick={() => setEditing(e => !e)}
+                className="p-2 rounded-[8px]" style={{ background: editing ? 'var(--accent)' : 'var(--hover-bg)', color: editing ? '#fff' : 'var(--text-2)' }}>
+                <Pencil size={14} />
+              </button>
+            )}
             <button onClick={onClose} className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
               <X size={14} />
             </button>
@@ -519,8 +521,8 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
             </div>
           ))})()}
 
-          {/* ย้ายสถานะ — always at top like stage bar in DealDrawer */}
-          <div className="space-y-2">
+          {/* ย้ายสถานะ — hidden for closed prospects (already in My Deals) */}
+          {customer.status !== 'closed' && <div className="space-y-2">
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
             <div className="flex flex-wrap gap-1.5">
               {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
@@ -546,7 +548,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                 </button>
               )}
             </div>
-          </div>
+          </div>}
 
           {/* Edit form */}
           {editing && (

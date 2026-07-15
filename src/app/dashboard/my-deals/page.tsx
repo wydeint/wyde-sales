@@ -1894,8 +1894,8 @@ export default function MyDealsPage() {
         paid_count: insts.filter(i => i.status === 'paid').length,
         total_count: insts.length,
         total_amount: insts.reduce((s, i) => s + (i.amount || 0), 0),
-        total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0) - (i.voucher_amount ?? 0), 0),
-        total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0), 0),
+        total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0), 0),
+        total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0) + (i.voucher_amount ?? 0), 0),
         working_status: r.working_status || '',
       }
     }))

@@ -18,7 +18,7 @@ const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 const fn = (v: number) => (v || 0).toLocaleString()
 
 type Customer = { status: string; budget: number; customer_type: string }
-type Job = { id: string; order_date: string; work_type: string; customer_type: string; customer_name: string; room_no: string; revenue_ex_vat: number; revenue_inc_vat: number; actual_deliver_date: string; working_status: string; sales_id: string; projects?: { name: string }; sales?: { name: string } }
+type Job = { id: string; order_date: string; work_start_date: string; work_type: string; customer_type: string; customer_name: string; room_no: string; revenue_ex_vat: number; revenue_inc_vat: number; actual_deliver_date: string; working_status: string; sales_id: string; projects?: { name: string }; sales?: { name: string } }
 type OrgTarget = { target_sales_value: number; target_delivery_value: number }
 
 export default function DashboardPage() {
@@ -59,7 +59,7 @@ export default function DashboardPage() {
       ] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('customers').select('status, budget, customer_type'),
-        supabase.from('jobs').select('id,order_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
+        supabase.from('jobs').select('id,order_date,work_start_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
         supabase.from('condo_leads').select('customer_id, created_at'),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value').eq('year', now.getFullYear()).eq('month', now.getMonth() + 1).maybeSingle(),
         supabase.from('payments').select('paid_amount').eq('status', 'paid').eq('paid_date', todayStr),
@@ -110,10 +110,12 @@ export default function DashboardPage() {
     return `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`
   }, [])
 
-  const salesThisMonth = useMemo(() =>
-    jobs.filter(j => j.order_date >= monthStart && j.order_date <= monthEnd),
-    [jobs, monthStart, monthEnd]
-  )
+  const salesThisMonth = useMemo(() => {
+    return jobs.filter(j => {
+      const d = j.order_date || j.work_start_date
+      return !!d && d >= monthStart && d <= monthEnd
+    })
+  }, [jobs, monthStart, monthEnd])
 
   const deliveredThisMonth = useMemo(() =>
     jobs.filter(j => j.actual_deliver_date >= monthStart && j.actual_deliver_date <= monthEnd && j.working_status === 'ส่งมอบแล้ว'),

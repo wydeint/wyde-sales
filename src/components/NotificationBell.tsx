@@ -131,7 +131,7 @@ export default function NotificationBell() {
         <Bell size={14} />
         {total > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center text-white"
-            style={{ background: urgentCount > 0 ? 'var(--accent-red)' : 'var(--accent)' }}>
+            style={{ background: 'var(--accent)' }}>
             {total > 9 ? '9+' : total}
           </span>
         )}

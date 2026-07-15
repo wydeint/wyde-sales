@@ -185,7 +185,7 @@ function CustomerDetail({
       {/* Panel */}
       <div
         className="relative flex flex-col max-h-[90vh] overflow-y-auto w-full max-w-xl rounded-[20px] shadow-2xl"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

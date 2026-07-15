@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Search, Upload, CheckCircle, XCircle, AlertCircle,
-  UserPlus, Users, RefreshCw, ChevronDown, ChevronUp, Filter
+  UserPlus, Users, RefreshCw, PhoneCall, Briefcase, ChevronDown
 } from 'lucide-react'
 import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import SearchableSelect from '@/components/ui/SearchableSelect'
@@ -24,8 +24,17 @@ interface Lead {
   consent: string
   origin_sales: string
   customer_id: string | null
+  status: string | null
   projects?: { name: string }
 }
+
+const LEAD_STATUSES = [
+  { value: 'new',          label: 'ยังไม่ได้ติดต่อ', color: 'var(--accent-orange)' },
+  { value: 'contacted',    label: 'ติดต่อแล้ว',       color: 'var(--accent-blue)'   },
+  { value: 'interested',   label: 'สนใจ',             color: '#a78bfa'               },
+  { value: 'not_interest', label: 'ไม่สนใจ',          color: 'var(--text-3)'         },
+  { value: 'follow_up',    label: 'ติดตามต่อ',        color: '#fbbf24'               },
+] as const
 
 interface Project { id: string; name: string }
 interface User { id: string; name: string }
@@ -49,9 +58,19 @@ interface ImportRow {
   _valid: boolean
   _error: string
   _dup: boolean
-  _dupId?: number        // id ของ record ที่ซ้ำในระบบ
-  _dupUpdate: boolean    // true = มีข้อมูลที่เปลี่ยนแปลง → ควร update
-  _changes: string[]     // รายการ field ที่เปลี่ยน
+  _dupId?: number
+  _dupUpdate: boolean
+  _changes: string[]
+  _dupSystem: boolean      // ซ้ำในระบบ (customers/jobs) ไม่ใช่แค่ใน pool
+  _dupSystemSrc: string    // "Customers" | "Jobs"
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function normPhone(p: string) {
+  return (p || '').replace(/[\s\-().+]/g, '').replace(/^66/, '0').trim()
+}
+function roomKey(projectId: string, roomNo: string) {
+  return `${projectId || ''}|${(roomNo || '').trim().toUpperCase()}`
 }
 
 // Column mapping for Origin CRM xlsx export
@@ -106,6 +125,36 @@ function fmtDate(v: string) {
   return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0]
 }
 
+function LeadStatusDropdown({ leadId, value, onChange }: { leadId: number; value: string; onChange: (val: string) => void }) {
+  const supabase = createClient()
+  const [saving, setSaving] = useState(false)
+  const cfg = LEAD_STATUSES.find(s => s.value === value) || LEAD_STATUSES[0]
+
+  async function handleChange(val: string) {
+    setSaving(true)
+    onChange(val)
+    await supabase.from('condo_leads').update({ status: val }).eq('id', leadId)
+    setSaving(false)
+  }
+
+  return (
+    <div className="relative inline-flex items-center">
+      <select
+        value={value}
+        onChange={e => handleChange(e.target.value)}
+        disabled={saving}
+        className="appearance-none text-xs font-semibold pl-2.5 pr-6 py-1 rounded-[8px] cursor-pointer focus:outline-none disabled:opacity-60"
+        style={{ background: `color-mix(in srgb, ${cfg.color} 14%, transparent)`, color: cfg.color, border: `1px solid color-mix(in srgb, ${cfg.color} 35%, transparent)` }}>
+        {LEAD_STATUSES.map(s => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </select>
+      <ChevronDown size={10} className="absolute right-1.5 pointer-events-none" style={{ color: cfg.color }} />
+    </div>
+  )
+}
+
+
 function fmtBaht(n: number) {
   if (!n) return '—'
   return n.toLocaleString('th-TH', { minimumFractionDigits: 0 })
@@ -119,7 +168,7 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterProject, setFilterProject] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'new' | 'in_pipeline'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'new' | 'contacted' | 'in_pipeline'>('all')
   const [showImport, setShowImport] = useState(false)
   const [importRows, setImportRows] = useState<ImportRow[]>([])
   const [importing, setImporting] = useState(false)
@@ -127,23 +176,69 @@ export default function LeadsPage() {
   const [addingId, setAddingId] = useState<number | null>(null)
   const [addError, setAddError] = useState<string>('')
   const [fetchError, setFetchError] = useState('')
+  // System contact lookups (customers + jobs)
+  const [sysPhones, setSysPhones] = useState<Set<string>>(new Set())
+  const [sysRooms, setSysRooms] = useState<Set<string>>(new Set())
+  const [sysRoomSrc, setSysRoomSrc] = useState<Map<string, string>>(new Map()) // key → "Customers"|"Jobs"
 
   const load = useCallback(async () => {
     setLoading(true)
     setFetchError('')
-    const [{ data: l, error: e1 }, { data: p }, { data: u }] = await Promise.all([
+    const [
+      { data: l, error: e1 },
+      { data: p },
+      { data: u },
+      { data: custData },
+      { data: jobData },
+    ] = await Promise.all([
       supabase.from('condo_leads').select('*, projects(name)').order('tower').order('room_no'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
+      supabase.from('customers').select('phone, project_id, interested_room'),
+      supabase.from('jobs').select('phone, project_id, room_no'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setLeads((l as any) || [])
     setProjects(p || [])
     setUsers(u || [])
+
+    // Build system contact lookup sets
+    const phones = new Set<string>()
+    const rooms = new Map<string, string>()
+    for (const c of (custData || []) as any[]) {
+      if (c.phone) phones.add(normPhone(c.phone))
+      if (c.project_id && c.interested_room) {
+        const k = roomKey(c.project_id, c.interested_room)
+        rooms.set(k, 'Customers')
+      }
+    }
+    for (const j of (jobData || []) as any[]) {
+      if (j.phone) phones.add(normPhone(j.phone))
+      if (j.project_id && j.room_no) {
+        const k = roomKey(j.project_id, j.room_no)
+        if (!rooms.has(k)) rooms.set(k, 'Jobs')
+      }
+    }
+    setSysPhones(phones)
+    setSysRooms(new Set(rooms.keys()))
+    setSysRoomSrc(rooms)
     setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // ── Helpers ───────────────────────────────────────────────
+  function contactedInfo(lead: Lead): { contacted: boolean; src: string } {
+    if (lead.customer_id) return { contacted: true, src: 'pipeline' }
+    const phone = normPhone(lead.phone)
+    if (phone && sysPhones.has(phone)) {
+      const src = sysRoomSrc.get(roomKey(lead.project_id, lead.room_no)) || 'ระบบ'
+      return { contacted: true, src }
+    }
+    const rk = roomKey(lead.project_id, lead.room_no)
+    if (sysRooms.has(rk)) return { contacted: true, src: sysRoomSrc.get(rk) || 'ระบบ' }
+    return { contacted: false, src: '' }
+  }
 
   // ── Import logic ─────────────────────────────────────────
   async function handleFile(file: File) {
@@ -153,7 +248,7 @@ export default function LeadsPage() {
     const existingMap = new Map(leads.map(l => [`${l.project_id}|${(l.room_no || '').trim().toUpperCase()}`, l]))
 
     const parsed: ImportRow[] = rawRows.map(row => {
-      const m: any = { _valid: true, _error: '', _dup: false, _dupUpdate: false, _changes: [] }
+      const m: any = { _valid: true, _error: '', _dup: false, _dupUpdate: false, _changes: [], _dupSystem: false, _dupSystemSrc: '' }
       for (const [h, val] of Object.entries(row)) {
         const dbField = LEAD_MAP[h] || LEAD_MAP[h.trim()]
         if (dbField) m[dbField] = val
@@ -178,8 +273,11 @@ export default function LeadsPage() {
       m.booking_date = fmtDate(m.booking_date)
       m.consent = m.consent || ''
       if (!m.customer_name) { m._valid = false; m._error = 'ไม่มีชื่อ'; delete m._project_name; return m as ImportRow }
-      // Normalize room_no
-      const roomNorm = (m.room_no || '').trim().toUpperCase()
+      // Normalize tower + room_no — room_no always starts with tower letter (B201, Z802)
+      m.tower = (m.tower || '').trim().toUpperCase()
+      const rawRoom = (m.room_no || '').trim().toUpperCase()
+      // Add tower prefix only for named towers (A/B/C...), not Z (single-tower placeholder)
+      const roomNorm = (m.tower && m.tower !== 'Z' && /^\d/.test(rawRoom)) ? m.tower + rawRoom : rawRoom
       m.room_no = roomNorm
       // Check duplicate
       const key = `${m.project_id}|${roomNorm}`
@@ -188,7 +286,6 @@ export default function LeadsPage() {
         m._dup = true
         m._valid = false
         m._dupId = existing.id
-        // Detect what changed (fields worth updating)
         const changes: string[] = []
         if (m.customer_name && m.customer_name !== existing.customer_name) changes.push('ชื่อ')
         if (m.transfer_date && m.transfer_date !== existing.transfer_date) changes.push('วันโอน')
@@ -200,6 +297,20 @@ export default function LeadsPage() {
         m._dupUpdate = changes.length > 0
         m._error = changes.length > 0 ? `ซ้ำ — มีการเปลี่ยนแปลง: ${changes.join(', ')}` : 'ซ้ำ — ข้อมูลเหมือนเดิม'
       }
+      // Check against customers + jobs in system (cross-system dedup)
+      if (!m._dup) {
+        const rk = roomKey(m.project_id, m.room_no)
+        const ph = normPhone(m.phone)
+        const sysRoomMatch = sysRooms.has(rk)
+        const sysPhoneMatch = ph && sysPhones.has(ph)
+        if (sysRoomMatch || sysPhoneMatch) {
+          const src = sysRoomMatch ? (sysRoomSrc.get(rk) || 'ระบบ') : 'ระบบ (เบอร์ตรงกัน)'
+          m._dupSystem = true
+          m._dupSystemSrc = src
+          m._valid = false
+          m._error = `มีในระบบแล้ว (${src}) — ข้ามการนำเข้า`
+        }
+      }
       delete m._project_name
       return m as ImportRow
     }).filter(r => r.customer_name || r._error)
@@ -208,9 +319,8 @@ export default function LeadsPage() {
   }
 
   async function doImport() {
-    const toInsert = importRows.filter(r => r._valid)
+    const toInsert = importRows.filter(r => r._valid && !r._dupSystem)
     const toUpdate = importRows.filter(r => r._dup && r._dupUpdate)
-    if (!toInsert.length && !toUpdate.length) return
     setImporting(true)
 
     let insertedCount = 0
@@ -219,7 +329,7 @@ export default function LeadsPage() {
 
     // INSERT new records
     if (toInsert.length) {
-      const payloads = toInsert.map(({ _valid, _error, _dup, _dupId, _dupUpdate, _changes, ...data }) => ({
+      const payloads = toInsert.map(({ _valid, _error, _dup, _dupId, _dupUpdate, _changes, _dupSystem, _dupSystemSrc, ...data }) => ({
         ...data,
         project_id: data.project_id || null,
         transfer_date: data.transfer_date || null,
@@ -256,7 +366,7 @@ export default function LeadsPage() {
       if (!error) updatedCount++
     }
 
-    const skipped = importRows.filter(r => r._dup && !r._dupUpdate).length
+    const skipped = importRows.filter(r => (r._dup && !r._dupUpdate) || r._dupSystem).length
     setImporting(false)
     setImportResult({ inserted: insertedCount, updated: updatedCount, skipped, error: errorMsg })
     setImportRows([])
@@ -267,19 +377,30 @@ export default function LeadsPage() {
   async function addToPipeline(lead: Lead) {
     setAddingId(lead.id)
     setAddError('')
-    // Generate customer id: ProjectCode-Tower-RoomNo (e.g. OPL06-Z-905)
     const projId = lead.project_id || null
-    const room = lead.tower && lead.room_no ? `${lead.tower}-${lead.room_no}` : lead.room_no || ''
-    let newId: string
+    const room = lead.room_no || ''
+    let customerId: string
+
     if (projId && room) {
-      newId = `${projId}-${room.toUpperCase()}`
+      const candidateId = `${projId}-${room.toUpperCase()}`
+      // Check if customer already exists (e.g. same room already in pipeline)
+      const { data: existing } = await supabase.from('customers').select('id').eq('id', candidateId).maybeSingle()
+      if (existing) {
+        // Link lead to existing customer instead of creating duplicate
+        await supabase.from('condo_leads').update({ customer_id: existing.id }).eq('id', lead.id)
+        setAddingId(null)
+        load()
+        return
+      }
+      customerId = candidateId
     } else {
-      const { data: existing } = await supabase.from('customers').select('id').order('id', { ascending: false }).limit(1)
-      const lastNum = existing?.[0]?.id ? parseInt(existing[0].id.replace('CST-', '')) : 0
-      newId = 'CST-' + String(lastNum + 1).padStart(4, '0')
+      const { data: last } = await supabase.from('customers').select('id').order('id', { ascending: false }).limit(1)
+      const lastNum = last?.[0]?.id ? parseInt(last[0].id.replace('CST-', '')) : 0
+      customerId = 'CST-' + String(lastNum + 1).padStart(4, '0')
     }
+
     const { error: ce } = await supabase.from('customers').insert({
-      id: newId,
+      id: customerId,
       customer_name: lead.customer_name,
       phone: lead.phone || '',
       email: lead.email || '',
@@ -290,8 +411,7 @@ export default function LeadsPage() {
       notes: lead.model_name ? `Model: ${lead.model_name}` : '',
     })
     if (ce) { setAddError(ce.message); setAddingId(null); return }
-    // Link lead → customer
-    await supabase.from('condo_leads').update({ customer_id: newId }).eq('id', lead.id)
+    await supabase.from('condo_leads').update({ customer_id: customerId }).eq('id', lead.id)
     setAddingId(null)
     load()
   }
@@ -300,22 +420,25 @@ export default function LeadsPage() {
   const filtered = leads.filter(l => {
     const q = search.toLowerCase()
     const qNorm = q.replace(/-/g, '')
-    const combined = `${l.tower || ''}${l.room_no || ''}`.toLowerCase()  // "D803"
-    const combinedDash = `${l.tower || ''}-${l.room_no || ''}`.toLowerCase()  // "D-803"
+    const combined = `${l.tower || ''}${l.room_no || ''}`.toLowerCase()
+    const combinedDash = `${l.tower || ''}-${l.room_no || ''}`.toLowerCase()
     const matchSearch = !q || l.customer_name?.toLowerCase().includes(q) ||
       l.phone?.includes(q) || l.room_no?.includes(q) || l.tower?.includes(q) ||
       combined.includes(qNorm) || combinedDash.includes(q)
     const matchProject = !filterProject || l.project_id === filterProject
+    const info = contactedInfo(l)
     const matchStatus = filterStatus === 'all' ? true
       : filterStatus === 'in_pipeline' ? !!l.customer_id
-      : !l.customer_id
+      : filterStatus === 'contacted' ? (!l.customer_id && info.contacted)
+      : (!info.contacted && !l.customer_id)
     return matchSearch && matchProject && matchStatus
   })
 
   const stats = {
-    total: filtered.length,
-    inPipeline: filtered.filter(l => l.customer_id).length,
-    new: filtered.filter(l => !l.customer_id).length,
+    total: leads.length,
+    inPipeline: leads.filter(l => !!l.customer_id).length,
+    contacted: leads.filter(l => !l.customer_id && contactedInfo(l).contacted).length,
+    newLead: leads.filter(l => !l.customer_id && !contactedInfo(l).contacted).length,
   }
 
   return (
@@ -341,15 +464,16 @@ export default function LeadsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Lead ทั้งหมด', value: stats.total },
-          { label: 'ยังไม่เข้า Pipeline', value: stats.new },
-          { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline },
+          { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
+          { label: 'ยังไม่ได้ติดต่อ', value: stats.newLead, color: 'var(--accent-orange)' },
+          { label: 'ติดต่อแล้ว (ในระบบ)', value: stats.contacted, color: 'var(--accent-blue)' },
+          { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline, color: 'var(--accent-green)' },
         ].map(s => (
           <div key={s.label} className="ds-card-sm p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{s.value.toLocaleString()}</p>
+            <p className="text-kpi-number" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
           </div>
         ))}
       </div>
@@ -403,8 +527,9 @@ export default function LeadsPage() {
                   พบ {importRows.length} แถว &nbsp;·&nbsp;
                   <span className="text-green-400">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
                   <span style={{ color: 'var(--accent-orange)' }}>🔄 {importRows.filter(r => r._dup && r._dupUpdate).length} อัปเดต</span> &nbsp;·&nbsp;
-                  <span className="text-amber-400">⏭ {importRows.filter(r => r._dup && !r._dupUpdate).length} ซ้ำ/เหมือนเดิม</span> &nbsp;·&nbsp;
-                  <span className="text-red-400">❌ {importRows.filter(r => !r._valid && !r._dup).length} error</span>
+                  <span className="text-amber-400">⏭ {importRows.filter(r => r._dup && !r._dupUpdate).length} ซ้ำใน Pool</span> &nbsp;·&nbsp;
+                  <span style={{ color: 'var(--accent-blue)' }}>🔵 {importRows.filter(r => r._dupSystem).length} มีในระบบแล้ว</span> &nbsp;·&nbsp;
+                  <span className="text-red-400">❌ {importRows.filter(r => !r._valid && !r._dup && !r._dupSystem).length} error</span>
                 </p>
                 <button onClick={() => setImportRows([])} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
                   เลือกใหม่
@@ -429,9 +554,11 @@ export default function LeadsPage() {
                               ? <span title={r._error} className="text-xs font-bold" style={{ color: 'var(--accent-orange)' }}>🔄</span>
                               : r._dup
                                 ? <span title={r._error} className="text-xs" style={{ color: 'var(--text-3)' }}>⏭</span>
-                                : <span title={r._error}><XCircle size={11} className="text-red-400" /></span>}
+                                : r._dupSystem
+                                  ? <span title={r._error} className="text-xs font-bold" style={{ color: 'var(--accent-blue)' }}>🔵</span>
+                                  : <span title={r._error}><XCircle size={11} className="text-red-400" /></span>}
                         </td>
-                        <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.tower}-{r.room_no}</td>
+                        <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.room_no}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.phone}</td>
                         <td className="px-3 py-1.5 text-right" style={{ color: 'var(--text-2)' }}>{fmtBaht(r.contract_price)}</td>
@@ -445,15 +572,18 @@ export default function LeadsPage() {
               <div className="flex justify-end gap-3 mt-3">
                 <button onClick={() => setImportRows([])} className="px-4 py-2 text-sm" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
                 <button onClick={doImport}
-                  disabled={importing || (importRows.filter(r => r._valid).length === 0 && importRows.filter(r => r._dup && r._dupUpdate).length === 0)}
+                  disabled={importing || importRows.length === 0}
                   className="px-5 py-2 text-sm rounded-[8px] text-white disabled:opacity-50 flex items-center gap-2"
                   style={{ background: 'var(--accent)' }}>
                   {importing ? 'กำลังนำเข้า...' : (() => {
-                    const ins = importRows.filter(r => r._valid).length
+                    const ins = importRows.filter(r => r._valid && !r._dupSystem).length
                     const upd = importRows.filter(r => r._dup && r._dupUpdate).length
-                    if (ins && upd) return `เพิ่ม ${ins} + อัปเดต ${upd} ราย`
-                    if (upd) return `อัปเดต ${upd} ราย`
-                    return `นำเข้า ${ins} ราย`
+                    const skip = importRows.filter(r => !r._valid || r._dupSystem).length - upd
+                    const parts = []
+                    if (ins) parts.push(`เพิ่ม ${ins}`)
+                    if (upd) parts.push(`อัปเดต ${upd}`)
+                    if (skip > 0 && !ins && !upd) return `ข้ามทั้งหมด ${skip} ราย (ซ้ำ)`
+                    return (parts.length ? parts.join(' + ') + ' ราย' : 'นำเข้า') + (skip > 0 ? ` (ข้าม ${skip} ซ้ำ)` : '')
                   })()}
                 </button>
               </div>
@@ -478,14 +608,19 @@ export default function LeadsPage() {
           placeholder="ทุกโครงการ"
         />
         <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
-          {(['all', 'new', 'in_pipeline'] as const).map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)}
+          {([
+            { val: 'all', label: 'ทั้งหมด' },
+            { val: 'new', label: 'ยังไม่ติดต่อ' },
+            { val: 'contacted', label: 'ติดต่อแล้ว' },
+            { val: 'in_pipeline', label: 'เข้า Pipeline' },
+          ] as const).map(s => (
+            <button key={s.val} onClick={() => setFilterStatus(s.val)}
               className="px-3 py-2 text-xs font-semibold transition-colors"
               style={{
-                background: filterStatus === s ? 'var(--accent)' : 'var(--glass-bg)',
-                color: filterStatus === s ? '#fff' : 'var(--text-2)',
+                background: filterStatus === s.val ? 'var(--accent)' : 'var(--glass-bg)',
+                color: filterStatus === s.val ? '#fff' : 'var(--text-2)',
               }}>
-              {s === 'all' ? 'ทั้งหมด' : s === 'new' ? 'ยังไม่เข้า Pipeline' : 'เข้าแล้ว'}
+              {s.label}
             </button>
           ))}
         </div>
@@ -525,7 +660,7 @@ export default function LeadsPage() {
                     {l.projects?.name || l.project_id || '—'}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-sm font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{l.tower}-{l.room_no}</p>
+                    <p className="text-sm font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{l.room_no}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{l.model_name || '—'}</p>
                   </td>
                   <td className="px-4 py-3">
@@ -539,14 +674,15 @@ export default function LeadsPage() {
                   </td>
                   <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>
                   <td className="px-4 py-3">
-                    {l.customer_id
-                      ? <span className="badge badge-green whitespace-nowrap">
-                          <CheckCircle size={10} />เข้า Pipeline แล้ว
-                        </span>
-                      : <span className="badge badge-orange whitespace-nowrap">
-                          ยังไม่ได้ติดต่อ
-                        </span>
-                    }
+                    {l.customer_id ? (
+                      <span className="badge badge-green whitespace-nowrap"><CheckCircle size={10} />เข้า Pipeline แล้ว</span>
+                    ) : (
+                      <LeadStatusDropdown
+                        leadId={l.id}
+                        value={l.status || 'new'}
+                        onChange={val => setLeads(prev => prev.map(x => x.id === l.id ? { ...x, status: val } : x))}
+                      />
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {!l.customer_id && (

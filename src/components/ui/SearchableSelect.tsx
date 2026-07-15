@@ -77,9 +77,8 @@ export default function SearchableSelect({
         <div
           className="absolute z-50 mt-1 rounded-[11px] overflow-hidden shadow-lg"
           style={{
-            background: 'var(--glass-bg)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            border: '1px solid var(--glass-border)',
+            background: 'var(--panel-bg)',
+            border: '1px solid var(--card-border)',
             minWidth: '100%',
             width: 'max-content',
             maxWidth: 280,

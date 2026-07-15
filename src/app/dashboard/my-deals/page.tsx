@@ -276,7 +276,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[88vh] overflow-y-auto"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -531,7 +531,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -690,7 +690,7 @@ function QuickDeliverModal({ job, onClose, onSaved }: { job: FullJob; onClose: (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -775,7 +775,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -1245,7 +1245,7 @@ function CancelModal({ onClose, onConfirm }: {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ยกเลิกสัญญา</p>
         <div className="flex gap-2">
@@ -1437,7 +1437,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
       {/* Centered Panel */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -2193,7 +2193,7 @@ export default function MyDealsPage() {
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={closeDrawer} />
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
             <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[20px] p-12 pointer-events-auto"
-              style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+              data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
             </div>
           </div>

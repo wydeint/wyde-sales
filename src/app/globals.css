@@ -535,4 +535,37 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
     --ls-section:    -0.025em;  /* 17pt = -0.43pt ≈ -0.025em */
     --ls-body:       -0.025em;  /* 17pt = -0.43pt ≈ -0.025em */
   }
+
+  /* ── Form elements (CRITICAL: prevents iOS Safari auto-zoom on focus) ──
+     iOS zooms in when focused input font-size < 16px. Force all inputs
+     to use the iOS body token (17px) which exceeds the 16px threshold.   */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: var(--fs-body) !important;
+    line-height: var(--lh-body) !important;
+  }
+
+  /* ── Scoped text-sm override → iOS body size ──────────────────────────
+     Selector specificity (0,2,0) beats Tailwind's (0,1,0) so no
+     !important needed. Scoped to content containers only so sidebar /
+     shell / badge elements are not affected.                              */
+  .page-content .text-sm,
+  .modal-panel  .text-sm,
+  .ds-card      .text-sm,
+  .ds-card-sm   .text-sm,
+  .glass-card   .text-sm,
+  [data-panel]  .text-sm {
+    font-size:   var(--fs-body);
+    line-height: var(--lh-body);
+  }
+
+  /* text-xs stays at 12px (Caption 1) — badges, timestamps, micro labels */
+
+  /* ── tab-btn touch target ─────────────────────────────────────────────
+     Increase tap area on mobile without changing desktop look.            */
+  .tab-btn {
+    padding: 8px 16px;
+    font-size: var(--fs-caption);
+  }
 }

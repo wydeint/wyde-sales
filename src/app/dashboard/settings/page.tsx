@@ -2,8 +2,40 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Settings2, Save, RefreshCw } from 'lucide-react'
+import { Settings2, Save, RefreshCw, AlertTriangle } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
+
+function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+  const [pw, setPw] = useState('')
+  const [err, setErr] = useState(false)
+  function attempt() {
+    if (pw === 'Wyde2026') { onUnlock() }
+    else { setErr(true); setPw('') }
+  }
+  return (
+    <div className="h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
+      <div className="w-80 rounded-[16px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="flex items-center gap-2 mb-6">
+          <AlertTriangle size={18} className="text-amber-400" />
+          <h2 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>
+        </div>
+        <p className="text-xs mb-5" style={{ color: 'var(--text-2)' }}>หน้านี้ต้องใช้รหัสผ่านเพื่อเข้าถึง</p>
+        <input
+          type="password" value={pw} onChange={e => { setPw(e.target.value); setErr(false) }}
+          onKeyDown={e => e.key === 'Enter' && attempt()}
+          placeholder="รหัสผ่าน"
+          autoFocus
+          className="w-full px-4 py-2.5 rounded-[10px] text-sm mb-3 outline-none"
+          style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
+        />
+        {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง</p>}
+        <button onClick={attempt} className="w-full py-2.5 rounded-[10px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+          เข้าสู่ระบบ
+        </button>
+      </div>
+    </div>
+  )
+}
 
 type Tier = {
   id: number
@@ -19,6 +51,7 @@ const f = (v: number) => '฿' + Math.round(v).toLocaleString()
 
 export default function SettingsPage() {
   const supabase = createClient()
+  const [unlocked, setUnlocked] = useState(false)
   const [tiers, setTiers] = useState<Tier[]>([])
   const [myRole, setMyRole] = useState('')
   const [loading, setLoading] = useState(true)
@@ -65,6 +98,7 @@ export default function SettingsPage() {
 
   const isAdmin = myRole === 'admin'
 
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
   if (loading) return <PageSpinner />
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
 

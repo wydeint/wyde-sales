@@ -212,7 +212,7 @@ function CancelModal({ onClose, onConfirm }: {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ยกเลิกสัญญา</p>
 
@@ -435,7 +435,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
       {/* Panel */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
       <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Header — like DealDrawer */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -848,7 +848,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>

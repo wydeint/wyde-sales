@@ -9,13 +9,12 @@ const MAX_SIZE = 5 * 1024 * 1024
 const MAX_FILES = 10
 
 function getDriveClient() {
-  const oAuth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_OAUTH_CLIENT_ID,
-    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground',
+  const auth = new google.auth.OAuth2(
+    process.env.GOOGLE_OAUTH_CLIENT_ID!,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
   )
-  oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN })
-  return google.drive({ version: 'v3', auth: oAuth2Client })
+  auth.setCredentials({ refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN! })
+  return google.drive({ version: 'v3', auth })
 }
 
 async function findOrCreateFolder(

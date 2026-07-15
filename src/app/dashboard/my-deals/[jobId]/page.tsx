@@ -181,7 +181,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -421,7 +421,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -589,7 +589,7 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>

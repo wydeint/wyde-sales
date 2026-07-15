@@ -132,7 +132,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
       {/* Panel */}
       <div onClick={e => e.stopPropagation()}
         className="relative flex flex-col shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[20px]"
-        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Drag handle (mobile only) */}
         {/* Header */}

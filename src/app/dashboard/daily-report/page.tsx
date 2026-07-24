@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ClipboardList, Plus, CheckCircle } from 'lucide-react'
-import { TableSpinner, TableError } from '@/components/ui/StateUI'
+import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import { Input, TextArea } from '@/components/ui/Input'
 
 interface DailyReport {
@@ -151,10 +151,7 @@ export default function DailyReportPage() {
             {loading && <TableSpinner colSpan={9} />}
             {!loading && fetchError && <TableError colSpan={9} message={fetchError} onRetry={load} />}
             {!loading && reports.length === 0 && (
-              <tr><td colSpan={9} className="text-center py-12">
-                <ClipboardList size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-                <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีรายงาน</p>
-              </td></tr>
+              <TableEmpty colSpan={9} icon={ClipboardList} message="ยังไม่มีรายงาน" />
             )}
             {reports.map((r, i) => (
               <tr key={r.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>

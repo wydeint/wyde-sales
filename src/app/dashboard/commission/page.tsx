@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DollarSign, ChevronDown, ChevronRight, CheckCircle, Clock, Banknote, Plus, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react'
-import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -160,10 +160,7 @@ function IndividualTab({
 
       {/* Monthly groups */}
       {byMonth.length === 0 && (
-        <div className="rounded-[18px] p-12 text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <DollarSign size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบข้อมูล Commission</p>
-        </div>
+        <div className="ds-card"><EmptyState icon={DollarSign} message="ไม่พบข้อมูล Commission" /></div>
       )}
 
       <div className="space-y-3">
@@ -640,10 +637,7 @@ function StatusTab({
       {/* Job list */}
       <div className="ds-card tbl-scroll" style={{ padding: 0 }}>
         {filtered.length === 0 ? (
-          <div className="p-10 text-center">
-            <AlertCircle size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-            <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบรายการ</p>
-          </div>
+          <EmptyState icon={AlertCircle} message="ไม่พบรายการ" />
         ) : (
           <table className="w-full text-sm">
             <thead>

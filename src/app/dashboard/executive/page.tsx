@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, ChevronLeft, ChevronRight } from 'lucide-react'
-import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 
 type Customer = {
   id: string; status: string; budget: number; customer_type: string
@@ -410,7 +410,7 @@ export default function ExecutivePage() {
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Lead Source</h2>
           </div>
           {sourceBreakdown.length === 0 ? (
-            <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
+            <EmptyState message="ยังไม่มีข้อมูล" />
           ) : (
             <div className="space-y-3">
               {sourceBreakdown.map((s, i) => (
@@ -525,10 +525,7 @@ export default function ExecutivePage() {
           </div>
         )
         if (managerIds.length === 0) return (
-          <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-            <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีข้อมูลทีม (ตั้งค่า manager_id ที่หน้า Users)</p>
-          </div>
+          <div className="ds-card"><EmptyState icon={Users} message="ยังไม่มีข้อมูลทีม" sub="ตั้งค่า manager_id ที่หน้า Users" /></div>
         )
         return (
           <div className="space-y-6">

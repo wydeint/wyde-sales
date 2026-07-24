@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp, UserPlus, CheckCircle2, Smartphone, Save } from 'lucide-react'
-import { PageError } from '@/components/ui/StateUI'
+import { PageError, EmptyState } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -498,10 +498,7 @@ export default function EventsPage() {
         {loading && <div className="flex justify-center py-12"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
         {!loading && fetchError && <PageError message={fetchError} onRetry={load} />}
         {!loading && events.length === 0 && (
-          <div className="ds-card text-center py-16">
-            <CalendarDays size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-            <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มี Event</p>
-          </div>
+          <div className="ds-card"><EmptyState icon={CalendarDays} message="ยังไม่มี Event" /></div>
         )}
 
         {events.map(ev => {

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, X, Calculator, Briefcase, Receipt, ChevronRight, Phone, FileDown } from 'lucide-react'
-import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import Money from '@/components/ui/Money'
 import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
@@ -864,7 +864,7 @@ export default function JobsPage() {
 
       {/* ─── Card Grid (grouped by project) ─── */}
       {filtered.length === 0 ? (
-        <div className="ds-card p-12 text-center text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</div>
+        <div className="ds-card"><EmptyState icon={Briefcase} message="ยังไม่มีข้อมูล" sub="ยังไม่มีงานที่ตรงกับตัวกรอง" /></div>
       ) : (() => {
         const seqMap = buildSequenceMap(filtered)
         return (

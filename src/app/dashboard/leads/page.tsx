@@ -6,7 +6,7 @@ import {
   Search, Upload, CheckCircle, XCircle, AlertCircle,
   UserPlus, Users, RefreshCw, PhoneCall, Briefcase, ChevronDown
 } from 'lucide-react'
-import { TableSpinner, TableError } from '@/components/ui/StateUI'
+import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 
 interface Lead {
@@ -647,12 +647,7 @@ export default function LeadsPage() {
               {loading && <TableSpinner colSpan={9} />}
               {!loading && fetchError && <TableError colSpan={9} message={fetchError} onRetry={load} />}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={9} className="text-center py-12">
-                  <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-                  <p className="text-sm" style={{ color: 'var(--text-3)' }}>
-                    {leads.length === 0 ? 'ยังไม่มีข้อมูล — กด "นำเข้า xlsx" เพื่อเริ่มต้น' : 'ไม่พบ lead ที่ตรงกับการค้นหา'}
-                  </p>
-                </td></tr>
+                <TableEmpty colSpan={9} icon={Users} message={leads.length === 0 ? 'ยังไม่มีข้อมูล' : 'ไม่พบ lead ที่ตรงกับการค้นหา'} sub={leads.length === 0 ? 'กด "นำเข้า xlsx" เพื่อเริ่มต้น' : undefined} />
               )}
               {filtered.map((l, i) => (
                 <tr key={l.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>

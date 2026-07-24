@@ -7,7 +7,7 @@ import {
   Phone, Mail, MessageCircle, Building2, Home, Banknote,
   Briefcase, FileText, CheckCircle, Clock, Shield, ChevronRight,
 } from 'lucide-react'
-import { TableSpinner, TableError } from '@/components/ui/StateUI'
+import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
@@ -696,10 +696,7 @@ export default function CustomersPage() {
             {loading && <TableSpinner colSpan={8} />}
             {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
             {!loading && !fetchError && paginated.length === 0 && (
-              <tr><td colSpan={8} className="text-center py-12">
-                <Users size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-                <p className="text-sm" style={{ color: 'var(--text-2)' }}>ไม่พบลูกค้า</p>
-              </td></tr>
+              <TableEmpty colSpan={8} icon={Users} message="ไม่พบลูกค้า" sub={search ? 'ลองเปลี่ยนคำค้นหา' : undefined} />
             )}
             {paginated.map((c, i) => {
               const st = statusInfo(c.status)

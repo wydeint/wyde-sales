@@ -1,5 +1,6 @@
 'use client'
 
+import type React from 'react'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
 /** Accessible CSS spinner — replaces emoji ⏳ across all pages */
@@ -59,6 +60,50 @@ export function TableSpinner({ colSpan }: { colSpan: number }) {
             aria-label="กำลังโหลด"
           />
           <span className="text-sm">กำลังโหลด...</span>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+/** Empty state — card context */
+export function EmptyState({
+  icon: Icon,
+  message,
+  sub,
+}: {
+  icon?: React.ElementType<{ size?: number; style?: React.CSSProperties }>
+  message: string
+  sub?: string
+}) {
+  return (
+    <div className="empty-state">
+      {Icon && <Icon size={28} style={{ color: 'var(--text-3)', opacity: 0.5 }} />}
+      <p className="font-semibold" style={{ color: 'var(--text-2)' }}>{message}</p>
+      {sub && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{sub}</p>}
+    </div>
+  )
+}
+
+/** Empty state — table row context (use inside <tbody>) */
+export function TableEmpty({
+  colSpan,
+  icon: Icon,
+  message,
+  sub,
+}: {
+  colSpan: number
+  icon?: React.ElementType<{ size?: number; style?: React.CSSProperties }>
+  message: string
+  sub?: string
+}) {
+  return (
+    <tr>
+      <td colSpan={colSpan}>
+        <div className="empty-state">
+          {Icon && <Icon size={24} style={{ color: 'var(--text-3)', opacity: 0.5 }} />}
+          <p className="font-semibold" style={{ color: 'var(--text-2)' }}>{message}</p>
+          {sub && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{sub}</p>}
         </div>
       </td>
     </tr>

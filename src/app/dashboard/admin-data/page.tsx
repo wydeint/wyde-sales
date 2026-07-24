@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, Save, X, Edit2, Layers, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react'
+import { TableEmpty } from '@/components/ui/StateUI'
 
 // ─── Table definitions ─────────────────────────────────────
 type ColType = 'text' | 'number' | 'date' | 'select' | 'boolean' | 'readonly'
@@ -925,11 +926,7 @@ export default function AdminDataPage() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={tableDef.cols.length + 2} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-3)' }}>
-                    ไม่พบข้อมูล
-                  </td>
-                </tr>
+                <TableEmpty colSpan={tableDef.cols.length + 2} icon={Search} message="ไม่พบข้อมูล" />
               ) : filtered.map((row, ri) => {
                 const id = String(row.id)
                 const isEditing = editingRow === id

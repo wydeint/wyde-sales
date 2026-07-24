@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Wallet, Pencil, AlertCircle, TrendingUp, TrendingDown, DollarSign, Trash2, ChevronLeft, ChevronRight, Package, Save, RotateCcw } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { Input, Select } from '@/components/ui/Input'
-import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 
 // ── Types ──────────────────────────────────────────────────
 interface Payment {
@@ -691,9 +691,7 @@ export default function FinancePage() {
               </div>
             )
           })() : (
-            <div className="ds-card p-10 text-center text-sm" style={{ color: 'var(--text-3)' }}>
-              ไม่มีงวดรับชำระใน{label}
-            </div>
+            <div className="ds-card"><EmptyState icon={Wallet} message={`ไม่มีงวดรับชำระใน${label}`} /></div>
           )}
         </div>
       )}
@@ -910,7 +908,7 @@ export default function FinancePage() {
             </div>
 
             {seg.length === 0 && (
-              <p className="text-center py-8 text-sm" style={{ color: 'var(--text-3)' }}>ไม่พบข้อมูลในช่วง{label}</p>
+              <EmptyState icon={TrendingUp} message={`ไม่พบข้อมูลในช่วง${label}`} />
             )}
           </div>
         )
@@ -941,10 +939,7 @@ export default function FinancePage() {
               </thead>
               <tbody>
                 {filteredEntries.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-12">
-                    <TrendingDown size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
-                    <p className="text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายจ่าย — กด "เพิ่มรายจ่าย" เพื่อเริ่มต้น</p>
-                  </td></tr>
+                  <TableEmpty colSpan={6} icon={TrendingDown} message="ยังไม่มีรายจ่าย" sub='กด "เพิ่มรายจ่าย" เพื่อเริ่มต้น' />
                 ) : filteredEntries.map((e, i) => (
                   <tr key={e.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
                     <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{dateStr(e.entry_date)}</td>
@@ -1016,7 +1011,7 @@ export default function FinancePage() {
               </thead>
               <tbody>
                 {payBase.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-10 text-sm" style={{ color: 'var(--text-3)' }}>ไม่มีรายการ</td></tr>
+                  <TableEmpty colSpan={6} icon={Wallet} message="ไม่มีรายการ" />
                 ) : payBase.map((p, i) => {
                   const st = PAY_STATUS.find(s => s.value === p.status) || PAY_STATUS[0]
                   const isOD = p.status !== 'paid' && p.due_date && p.due_date < today

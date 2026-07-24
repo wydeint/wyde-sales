@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
 import Money from '@/components/ui/Money'
+import { EmptyState } from '@/components/ui/StateUI'
 
 // ─── Types ────────────────────────────────────────────────
 type ClientType = 'B2C' | 'B2B'
@@ -2213,13 +2214,7 @@ export default function MyDealsPage() {
           {[1, 2, 3, 4, 5].map(i => <CardSkeleton key={i} />)}
         </div>
       ) : grouped.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-20">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
-            <Search size={20} style={{ color: 'var(--text-3)' }} />
-          </div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่พบงาน</p>
-          <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองปรับ filter หรือตรวจสอบข้อมูล</p>
-        </div>
+        <div className="ds-card"><EmptyState icon={Search} message="ไม่พบงาน" sub="ลองปรับ filter หรือตรวจสอบข้อมูล" /></div>
       ) : (
         <div className="space-y-8">
           {(() => {

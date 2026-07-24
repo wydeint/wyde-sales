@@ -268,8 +268,8 @@ export default function ProjectSummaryPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-x-auto" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-        <table className="w-full text-sm border-collapse">
+      <div className="flex-1 overflow-auto" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <table className="w-full text-sm border-collapse" style={{ minWidth: 900 }}>
           <thead className="sticky top-0 z-10" style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--divider)' }}>
             <tr>
               <Th label="โครงการ" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} right={false} />

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -362,13 +362,13 @@ export default function PaymentsPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-x-auto mx-6 mb-6 rounded-[11px]"
-        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-        <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
+      <div className="flex-1 overflow-auto mx-6 mb-6 rounded-[11px]"
+        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'var(--hover-bg)', position: 'sticky', top: 0, zIndex: 10 }}>
               {['ห้อง / โครงการ', 'ลูกค้า / Sales', 'งวดชำระ', 'รับแล้ว', 'คงเหลือ', 'เอกสาร'].map(h => (
-                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', borderBottom: '1px solid var(--divider)', color: 'var(--text-3)', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                <th key={h} className="text-xs font-semibold" style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid var(--divider)', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -384,17 +384,17 @@ export default function PaymentsPage() {
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
                   onMouseLeave={e => (e.currentTarget.style.background = ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)')}>
 
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-bold" style={{ color: 'var(--text-1)' }}>{job.room_no}</p>
                     <p className="text-[10px] mt-0.5 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
                   </td>
 
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p style={{ color: 'var(--text-1)' }}>{job.customer_name}</p>
                     <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{job.sales_name}</p>
                   </td>
 
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <div className="flex items-end gap-1 flex-wrap">
                       {job.installments.length === 0
                         ? <span style={{ color: 'var(--text-3)' }}>ยังไม่มีแผน</span>
@@ -407,17 +407,17 @@ export default function PaymentsPage() {
                     )}
                   </td>
 
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
                   </td>
 
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-semibold" style={{ color: job.unpaid_total > 0 ? 'var(--accent-red)' : 'var(--text-3)' }}>
                       {job.unpaid_total > 0 ? f(job.unpaid_total) : '—'}
                     </p>
                   </td>
 
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <div className="flex gap-1.5">
                       <DocIcon url={job.quotation1_url} label="ใบเสนอราคา 1" short="Q1" auto={autoCheckedSale(job)} />
                       <DocIcon url={job.quotation2_url} label="ใบเสนอราคา 2" short="Q2" auto={autoCheckedSale(job)} />

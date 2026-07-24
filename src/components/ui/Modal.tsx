@@ -1,1 +1,127 @@
-{"data":"J3VzZSBjbGllbnQnDQoNCmltcG9ydCB7IHVzZUVmZmVjdCwgdXNlSWQsIHVzZVJlZiB9IGZyb20gJ3JlYWN0Jw0KaW1wb3J0IHsgWCB9IGZyb20gJ2x1Y2lkZS1yZWFjdCcNCg0KaW50ZXJmYWNlIE1vZGFsUHJvcHMgew0KICBvcGVuOiBib29sZWFuDQogIG9uQ2xvc2U6ICgpID0+IHZvaWQNCiAgdGl0bGU6IHN0cmluZw0KICBjaGlsZHJlbjogUmVhY3QuUmVhY3ROb2RlDQogIHNpemU/OiAnc20nIHwgJ21kJyB8ICdsZycNCn0NCg0KY29uc3QgRk9DVVNBQkxFID0gWw0KICAnYVtocmVmXScsDQogICdidXR0b246bm90KFtkaXNhYmxlZF0pJywNCiAgJ2lucHV0Om5vdChbZGlzYWJsZWRdKScsDQogICdzZWxlY3Q6bm90KFtkaXNhYmxlZF0pJywNCiAgJ3RleHRhcmVhOm5vdChbZGlzYWJsZWRdKScsDQogICdbdGFiaW5kZXhdOm5vdChbdGFiaW5kZXg9Ii0xIl0pJywNCl0uam9pbignLCAnKQ0KDQpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBNb2RhbCh7IG9wZW4sIG9uQ2xvc2UsIHRpdGxlLCBjaGlsZHJlbiwgc2l6ZSA9ICdtZCcgfTogTW9kYWxQcm9wcykgew0KICBjb25zdCB0aXRsZUlkID0gdXNlSWQoKQ0KICBjb25zdCBkaWFsb2dSZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpDQogIGNvbnN0IHByZXZpb3VzRm9jdXMgPSB1c2VSZWY8SFRNTEVsZW1lbnQgfCBudWxsPihudWxsKQ0KDQogIC8vIEtlZXAgbGF0ZXN0IG9uQ2xvc2UgaW4gYSByZWYgc28gdGhlIGZvY3VzIGVmZmVjdCBiZWxvdyBkZXBlbmRzIG9ubHkgb24NCiAgLy8gYG9wZW5gLiBDYWxsZXJzIHBhc3MgYW4gaW5saW5lIG9uQ2xvc2UgKG5ldyBpZGVudGl0eSBldmVyeSByZW5kZXIpOyBpZiBpdA0KICAvLyB3ZXJlIGFuIGVmZmVjdCBkZXBlbmRlbmN5LCBldmVyeSBrZXlzdHJva2UtdHJpZ2dlcmVkIHJlLXJlbmRlciB3b3VsZCByZS1ydW4NCiAgLy8gdGhlIGVmZmVjdCdzIGNsZWFudXAgYW5kIHN0ZWFsIGZvY3VzIG91dCBvZiB0aGUgZmllbGQgKG9uZSBjaGFyIGF0IGEgdGltZSkuDQogIGNvbnN0IG9uQ2xvc2VSZWYgPSB1c2VSZWYob25DbG9zZSkNCiAgdXNlRWZmZWN0KCgpID0+IHsgb25DbG9zZVJlZi5jdXJyZW50ID0gb25DbG9zZSB9LCBbb25DbG9zZV0pDQoNCiAgY29uc3Qgd2lkdGhzID0geyBzbTogJ21heC13LW1kJywgbWQ6ICdtYXgtdy14bCcsIGxnOiAnbWF4LXctM3hsJyB9DQoNCiAgdXNlRWZmZWN0KCgpID0+IHsNCiAgICBpZiAoIW9wZW4pIHJldHVybg0KDQogICAgLy8gU3RvcmUgZWxlbWVudCB0aGF0IGhhZCBmb2N1cyBiZWZvcmUgbW9kYWwgb3BlbmVkDQogICAgcHJldmlvdXNGb2N1cy5jdXJyZW50ID0gZG9jdW1lbnQuYWN0aXZlRWxlbWVudCBhcyBIVE1MRWxlbWVudA0KDQogICAgLy8gTW92ZSBmb2N1cyBpbnRvIGRpYWxvZyBvbiBuZXh0IHRpY2sgKGFmdGVyIHJlbmRlcikNCiAgICBjb25zdCByYWYgPSByZXF1ZXN0QW5pbWF0aW9uRnJhbWUoKCkgPT4gew0KICAgICAgY29uc3QgZmlyc3QgPSBkaWFsb2dSZWYuY3VycmVudD8ucXVlcnlTZWxlY3RvckFsbDxIVE1MRWxlbWVudD4oRk9DVVNBQkxFKVswXQ0KICAgICAgZmlyc3QgPyBmaXJzdC5mb2N1cygpIDogZGlhbG9nUmVmLmN1cnJlbnQ/LmZvY3VzKCkNCiAgICB9KQ0KDQogICAgZnVuY3Rpb24gaGFuZGxlS2V5KGU6IEtleWJvYXJkRXZlbnQpIHsNCiAgICAgIGlmIChlLmtleSA9PT0gJ0VzY2FwZScpIHsgb25DbG9zZVJlZi5jdXJyZW50KCk7IHJldHVybiB9DQogICAgICBpZiAoZS5rZXkgIT09ICdUYWInKSByZXR1cm4NCg0KICAgICAgY29uc3QgZm9jdXNhYmxlID0gQXJyYXkuZnJvbSgNCiAgICAgICAgZGlhbG9nUmVmLmN1cnJlbnQ/LnF1ZXJ5U2VsZWN0b3JBbGw8SFRNTEVsZW1lbnQ+KEZPQ1VTQUJMRSkgPz8gW10NCiAgICAgICkNCiAgICAgIGlmICghZm9jdXNhYmxlLmxlbmd0aCkgcmV0dXJuDQoNCiAgICAgIGNvbnN0IGZpcnN0ID0gZm9jdXNhYmxlWzBdDQogICAgICBjb25zdCBsYXN0ID0gZm9jdXNhYmxlW2ZvY3VzYWJsZS5sZW5ndGggLSAxXQ0KDQogICAgICBpZiAoZS5zaGlmdEtleSkgew0KICAgICAgICBpZiAoZG9jdW1lbnQuYWN0aXZlRWxlbWVudCA9PT0gZmlyc3QpIHsgZS5wcmV2ZW50RGVmYXVsdCgpOyBsYXN0LmZvY3VzKCkgfQ0KICAgICAgfSBlbHNlIHsNCiAgICAgICAgaWYgKGRvY3VtZW50LmFjdGl2ZUVsZW1lbnQgPT09IGxhc3QpIHsgZS5wcmV2ZW50RGVmYXVsdCgpOyBmaXJzdC5mb2N1cygpIH0NCiAgICAgIH0NCiAgICB9DQoNCiAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCdrZXlkb3duJywgaGFuZGxlS2V5KQ0KICAgIHJldHVybiAoKSA9PiB7DQogICAgICBjYW5jZWxBbmltYXRpb25GcmFtZShyYWYpDQogICAgICBkb2N1bWVudC5yZW1vdmVFdmVudExpc3RlbmVyKCdrZXlkb3duJywgaGFuZGxlS2V5KQ0KICAgICAgLy8gUmVzdG9yZSBmb2N1cyB0byB0cmlnZ2VyaW5nIGVsZW1lbnQgd2hlbiBtb2RhbCBjbG9zZXMNCiAgICAgIHByZXZpb3VzRm9jdXMuY3VycmVudD8uZm9jdXMoKQ0KICAgIH0NCiAgfSwgW29wZW5dKQ0KDQogIGlmICghb3BlbikgcmV0dXJuIG51bGwNCg0KICByZXR1cm4gKA0KICAgIDxkaXYgY2xhc3NOYW1lPSJmaXhlZCBpbnNldC0wIHotNTAgZmxleCBpdGVtcy1lbmQgc206aXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHB4LTQgcGItNCBwdC0xNCBsZzpwdC00Ij4NCiAgICAgIHsvKiBCYWNrZHJvcCAqL30NCiAgICAgIDxkaXYNCiAgICAgICAgY2xhc3NOYW1lPSJhYnNvbHV0ZSBpbnNldC0wIGJnLWJsYWNrLzYwIGJhY2tkcm9wLWJsdXItc20iDQogICAgICAgIG9uQ2xpY2s9e29uQ2xvc2V9DQogICAgICAgIGFyaWEtaGlkZGVuPSJ0cnVlIg0KICAgICAgLz4NCg0KICAgICAgey8qIERpYWxvZyAqL30NCiAgICAgIDxkaXYNCiAgICAgICAgcmVmPXtkaWFsb2dSZWZ9DQogICAgICAgIHJvbGU9ImRpYWxvZyINCiAgICAgICAgYXJpYS1tb2RhbD0idHJ1ZSINCiAgICAgICAgYXJpYS1sYWJlbGxlZGJ5PXt0aXRsZUlkfQ0KICAgICAgICB0YWJJbmRleD17LTF9DQogICAgICAgIGNsYXNzTmFtZT17YHJlbGF0aXZlIHctZnVsbCAke3dpZHRoc1tzaXplXX0gbWF4LWgtWzkwdmhdIG92ZXJmbG93LXktYXV0byByb3VuZGVkLVsxOHB4XSBmb2N1czpvdXRsaW5lLW5vbmUgbW9kYWwtcGFuZWxgfQ0KICAgICAgICBzdHlsZT17ew0KICAgICAgICAgIGJhY2tncm91bmQ6ICd2YXIoLS1wYW5lbC1iZyknLA0KICAgICAgICAgIGJvcmRlcjogJzFweCBzb2xpZCB2YXIoLS1jYXJkLWJvcmRlciknLA0KICAgICAgICAgIGJveFNoYWRvdzogJzAgMjRweCA2NHB4IHJnYmEoMCwwLDAsMC4yNSknLA0KICAgICAgICB9fQ0KICAgICAgPg0KICAgICAgICB7LyogSGVhZGVyICovfQ0KICAgICAgICA8ZGl2DQogICAgICAgICAgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gcC01Ig0KICAgICAgICAgIHN0eWxlPXt7IGJvcmRlckJvdHRvbTogJzFweCBzb2xpZCB2YXIoLS1kaXZpZGVyKScgfX0NCiAgICAgICAgPg0KICAgICAgICAgIDxoMiBpZD17dGl0bGVJZH0gY2xhc3NOYW1lPSJmb250LXNlbWlib2xkIHRleHQtYmFzZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT4NCiAgICAgICAgICAgIHt0aXRsZX0NCiAgICAgICAgICA8L2gyPg0KICAgICAgICAgIDxidXR0b24NCiAgICAgICAgICAgIG9uQ2xpY2s9e29uQ2xvc2V9DQogICAgICAgICAgICBhcmlhLWxhYmVsPSLguJvguLTguJQiDQogICAgICAgICAgICBjbGFzc05hbWU9InctOCBoLTggZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcm91bmRlZC1sZyB0cmFuc2l0aW9uLWNvbG9ycyINCiAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0NCiAgICAgICAgICAgIG9uTW91c2VFbnRlcj17ZSA9PiAoZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmJhY2tncm91bmQgPSAndmFyKC0taG92ZXItYmcpJyl9DQogICAgICAgICAgICBvbk1vdXNlTGVhdmU9e2UgPT4gKGUuY3VycmVudFRhcmdldC5zdHlsZS5iYWNrZ3JvdW5kID0gJ3RyYW5zcGFyZW50Jyl9DQogICAgICAgICAgPg0KICAgICAgICAgICAgPFggc2l6ZT17MTZ9IC8+DQogICAgICAgICAgPC9idXR0b24+DQogICAgICAgIDwvZGl2Pg0KDQogICAgICAgIHsvKiBCb2R5ICovfQ0KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0icC01Ij57Y2hpbGRyZW59PC9kaXY+DQogICAgICA8L2Rpdj4NCiAgICA8L2Rpdj4NCiAgKQ0KfQ0K"}
+'use client'
+
+import { useEffect, useId, useRef } from 'react'
+import { X } from 'lucide-react'
+
+interface ModalProps {
+  open: boolean
+  onClose: () => void
+  title: string
+  children: React.ReactNode
+  size?: 'sm' | 'md' | 'lg'
+}
+
+const FOCUSABLE = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
+export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+  const titleId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocus = useRef<HTMLElement | null>(null)
+
+  // Keep latest onClose in a ref so the focus effect below depends only on
+  // `open`. Callers pass an inline onClose (new identity every render); if it
+  // were an effect dependency, every keystroke-triggered re-render would re-run
+  // the effect's cleanup and steal focus out of the field (one char at a time).
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
+  const widths = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl' }
+
+  useEffect(() => {
+    if (!open) return
+
+    // Store element that had focus before modal opened
+    previousFocus.current = document.activeElement as HTMLElement
+
+    // Move focus into dialog on next tick (after render)
+    const raf = requestAnimationFrame(() => {
+      const first = dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)[0]
+      first ? first.focus() : dialogRef.current?.focus()
+    })
+
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onCloseRef.current(); return }
+      if (e.key !== 'Tab') return
+
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []
+      )
+      if (!focusable.length) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      cancelAnimationFrame(raf)
+      document.removeEventListener('keydown', handleKey)
+      // Restore focus to triggering element when modal closes
+      previousFocus.current?.focus()
+    }
+  }, [open])
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Dialog */}
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={`relative w-full ${widths[size]} max-h-[90vh] overflow-y-auto rounded-[18px] focus:outline-none modal-panel`}
+        style={{
+          background: 'var(--panel-bg)',
+          border: '1px solid var(--card-border)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between p-5"
+          style={{ borderBottom: '1px solid var(--divider)' }}
+        >
+          <h2 id={titleId} className="font-semibold text-base" style={{ color: 'var(--text-1)' }}>
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="ปิด"
+            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-3)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  )
+}

@@ -1,1 +1,5 @@
-{"data":"aW1wb3J0IERhc2hib2FyZFNoZWxsIGZyb20gJ0AvY29tcG9uZW50cy9EYXNoYm9hcmRTaGVsbCcKCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIERhc2hib2FyZExheW91dCh7IGNoaWxkcmVuIH06IHsgY2hpbGRyZW46IFJlYWN0LlJlYWN0Tm9kZSB9KSB7CiAgcmV0dXJuIDxEYXNoYm9hcmRTaGVsbD57Y2hpbGRyZW59PC9EYXNoYm9hcmRTaGVsbD4KfQo="}
+import DashboardShell from '@/components/DashboardShell'
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return <DashboardShell>{children}</DashboardShell>
+}

@@ -1,1 +1,11 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAnbmV4dC9zZXJ2ZXInCgovLyBCVUlMRF9USU1FIGlzIGJha2VkIGluIGF0IGJ1aWxkIHRpbWUg4oCUIGNoYW5nZXMgZXZlcnkgVmVyY2VsIGRlcGxveW1lbnQKY29uc3QgQlVJTERfVElNRSA9IHByb2Nlc3MuZW52LlZFUkNFTF9ERVBMT1lNRU5UX0lEIHx8IHByb2Nlc3MuZW52Lk5FWFRfUFVCTElDX0JVSUxEX1RJTUUgfHwgJ2RldicKCmV4cG9ydCBjb25zdCBkeW5hbWljID0gJ2ZvcmNlLWR5bmFtaWMnCmV4cG9ydCBjb25zdCByZXZhbGlkYXRlID0gMAoKZXhwb3J0IGZ1bmN0aW9uIEdFVCgpIHsKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyB2ZXJzaW9uOiBCVUlMRF9USU1FIH0pCn0K"}
+import { NextResponse } from 'next/server'
+
+// BUILD_TIME is baked in at build time — changes every Vercel deployment
+const BUILD_TIME = process.env.VERCEL_DEPLOYMENT_ID || process.env.NEXT_PUBLIC_BUILD_TIME || 'dev'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export function GET() {
+  return NextResponse.json({ version: BUILD_TIME })
+}

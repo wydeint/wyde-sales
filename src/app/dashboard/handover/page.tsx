@@ -1,1 +1,441 @@
-{"data":"77u/J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VFZmZlY3QsIHVzZVN0YXRlLCB1c2VDYWxsYmFjaywgdXNlTWVtbyB9IGZyb20gJ3JlYWN0JwppbXBvcnQgeyBjcmVhdGVDbGllbnQgfSBmcm9tICdAL2xpYi9zdXBhYmFzZS9jbGllbnQnCmltcG9ydCB7IENoZXZyb25MZWZ0LCBDaGV2cm9uUmlnaHQsIENoZWNrQ2lyY2xlMiwgWCwgU2F2ZSB9IGZyb20gJ2x1Y2lkZS1yZWFjdCcKaW1wb3J0IHsgUGFnZVNwaW5uZXIgfSBmcm9tICdAL2NvbXBvbmVudHMvdWkvU3RhdGVVSScKCi8vIOKUgOKUgOKUgCBUeXBlcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKaW50ZXJmYWNlIEpvYiB7CiAgaWQ6IHN0cmluZwogIHJvb21fbm86IHN0cmluZwogIHByb2plY3RfaWQ6IHN0cmluZwogIHJldmVudWVfaW5jX3ZhdDogbnVtYmVyCiAgd29ya19zdGFydF9kYXRlOiBzdHJpbmcgfCBudWxsCiAgd29ya19kYXlzOiBudW1iZXIgfCBudWxsCiAgYWN0dWFsX2RlbGl2ZXJfZGF0ZTogc3RyaW5nIHwgbnVsbAogIHdvcmtpbmdfc3RhdHVzOiBzdHJpbmcKICBwcm9qZWN0czogeyBuYW1lOiBzdHJpbmcgfSB8IG51bGwKICBzYWxlczogeyBuYW1lOiBzdHJpbmcgfSB8IG51bGwKfQoKaW50ZXJmYWNlIFJvb21FbnRyeSB7CiAgaWQ6IHN0cmluZwogIHJvb21fbm86IHN0cmluZwogIHByb2plY3RfaWQ6IHN0cmluZwogIHByb2plY3RfbmFtZTogc3RyaW5nCiAgcmV2ZW51ZTogbnVtYmVyCiAgZXhwZWN0ZWRfZGF0ZTogc3RyaW5nICAgICAgICAgLy8gWVlZWS1NTS1ERAogIGFjdHVhbF9kYXRlOiBzdHJpbmcgfCBudWxsICAgIC8vIFlZWVktTU0tREQgaWYgZGVsaXZlcmVkCiAgZGlzcGxheV9tb250aDogc3RyaW5nICAgICAgICAgLy8gWVlZWS1NTSDigJQgbW9udGggdGhpcyByb29tIGFwcGVhcnMgdW5kZXIKICBpc19kZWxpdmVyZWQ6IGJvb2xlYW4KICBpc19vdmVyZHVlOiBib29sZWFuCiAgZGF5c19vdmVyZHVlOiBudW1iZXIgICAgICAgICAgLy8gMCBpZiBub3Qgb3ZlcmR1ZQogIG5vX3N0YXJ0X2RhdGU6IGJvb2xlYW4gICAgICAgIC8vIHRydWUgPSDguYTguKHguYjguKHguLUgd29ya19zdGFydF9kYXRlCn0KCi8vIOKUgOKUgOKUgCBIZWxwZXJzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgApjb25zdCBUT0RBWSA9IG5ldyBEYXRlKCk7IFRPREFZLnNldEhvdXJzKDAsIDAsIDAsIDApCmNvbnN0IFRISVNfTU9OVEggPSBUT0RBWS50b0lTT1N0cmluZygpLnNsaWNlKDAsIDcpCgpmdW5jdGlvbiBhZGREYXlzKGQ6IHN0cmluZywgbjogbnVtYmVyKTogc3RyaW5nIHsKICBjb25zdCBkdCA9IG5ldyBEYXRlKGQpOyBkdC5zZXREYXRlKGR0LmdldERhdGUoKSArIG4pCiAgcmV0dXJuIGR0LnRvSVNPU3RyaW5nKCkuc2xpY2UoMCwgMTApCn0KCmZ1bmN0aW9uIG1vbnRoTGFiZWwoeW06IHN0cmluZyk6IHN0cmluZyB7CiAgY29uc3QgW3ksIG1dID0geW0uc3BsaXQoJy0nKS5tYXAoTnVtYmVyKQogIGNvbnN0IHRoYWlNb250aHMgPSBbJ+C4oS7guIQuJywgJ+C4gS7guJ4uJywgJ+C4oeC4tS7guIQuJywgJ+C5gOC4oS7guKIuJywgJ+C4ni7guIQuJywgJ+C4oeC4tC7guKIuJywgJ+C4gS7guIQuJywgJ+C4qi7guIQuJywgJ+C4gS7guKIuJywgJ+C4lS7guIQuJywgJ+C4ni7guKIuJywgJ+C4mC7guIQuJ10KICByZXR1cm4gYCR7dGhhaU1vbnRoc1ttIC0gMV19ICR7eSArIDU0M31gCn0KCmZ1bmN0aW9uIHByZXZNb250aCh5bTogc3RyaW5nKTogc3RyaW5nIHsKICBjb25zdCBbeSwgbV0gPSB5bS5zcGxpdCgnLScpLm1hcChOdW1iZXIpCiAgcmV0dXJuIG0gPT09IDEgPyBgJHt5IC0gMX0tMTJgIDogYCR7eX0tJHtTdHJpbmcobSAtIDEpLnBhZFN0YXJ0KDIsICcwJyl9YAp9CgpmdW5jdGlvbiBuZXh0TW9udGgoeW06IHN0cmluZyk6IHN0cmluZyB7CiAgY29uc3QgW3ksIG1dID0geW0uc3BsaXQoJy0nKS5tYXAoTnVtYmVyKQogIHJldHVybiBtID09PSAxMiA/IGAke3kgKyAxfS0wMWAgOiBgJHt5fS0ke1N0cmluZyhtICsgMSkucGFkU3RhcnQoMiwgJzAnKX1gCn0KCmZ1bmN0aW9uIGRheXNEaWZmKGRhdGVTdHI6IHN0cmluZyk6IG51bWJlciB7CiAgY29uc3QgZCA9IG5ldyBEYXRlKGRhdGVTdHIpOyBkLnNldEhvdXJzKDAsIDAsIDAsIDApCiAgcmV0dXJuIE1hdGguZmxvb3IoKFRPREFZLmdldFRpbWUoKSAtIGQuZ2V0VGltZSgpKSAvIDg2NDAwMDAwKQp9CgovLyDilIDilIDilIAgUm9vbUNoaXAg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmZ1bmN0aW9uIFJvb21DaGlwKHsgZW50cnksIG9uQ2xpY2sgfTogeyBlbnRyeTogUm9vbUVudHJ5OyBvbkNsaWNrOiAoKSA9PiB2b2lkIH0pIHsKICBjb25zdCBiYXNlID0gImN1cnNvci1wb2ludGVyIHRyYW5zaXRpb24tb3BhY2l0eSBob3ZlcjpvcGFjaXR5LTcwIGFjdGl2ZTpvcGFjaXR5LTUwIgogIGlmIChlbnRyeS5ub19zdGFydF9kYXRlKSB7CiAgICByZXR1cm4gKAogICAgICA8YnV0dG9uIG9uQ2xpY2s9e29uQ2xpY2t9IGNsYXNzTmFtZT17YCR7YmFzZX0gcHgtMi41IHB5LTEgcm91bmRlZC1bNnB4XSB0ZXh0LXhzIGZvbnQtc2VtaWJvbGRgfQogICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICdjb2xvci1taXgoaW4gc3JnYiwgI2Y1OWUwYiA4JSwgdHJhbnNwYXJlbnQpJywgYm9yZGVyOiAnMXB4IHNvbGlkIGNvbG9yLW1peChpbiBzcmdiLCAjZjU5ZTBiIDMwJSwgdHJhbnNwYXJlbnQpJywgY29sb3I6ICcjZjU5ZTBiJyB9fQogICAgICAgIHRpdGxlPSLguKLguLHguIfguYTguKHguYjguKHguLXguKfguLHguJnguYDguKPguLTguYjguKHguIfguLLguJkg4oCUIOC4hOC4peC4tOC4geC5gOC4nuC4t+C5iOC4reC5geC4geC5ieC5hOC4giI+CiAgICAgICAge2VudHJ5LnJvb21fbm99CiAgICAgIDwvYnV0dG9uPgogICAgKQogIH0KICBpZiAoZW50cnkuaXNfZGVsaXZlcmVkKSB7CiAgICByZXR1cm4gKAogICAgICA8YnV0dG9uIG9uQ2xpY2s9e29uQ2xpY2t9IGNsYXNzTmFtZT17YCR7YmFzZX0gZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEgcHgtMi41IHB5LTEgcm91bmRlZC1bNnB4XSB0ZXh0LXhzIGZvbnQtc2VtaWJvbGRgfQogICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICdjb2xvci1taXgoaW4gc3JnYiwgdmFyKC0tYWNjZW50LWdyZWVuKSAxMCUsIHRyYW5zcGFyZW50KScsIGJvcmRlcjogJzFweCBzb2xpZCBjb2xvci1taXgoaW4gc3JnYiwgdmFyKC0tYWNjZW50LWdyZWVuKSAyNSUsIHRyYW5zcGFyZW50KScsIGNvbG9yOiAndmFyKC0tYWNjZW50LWdyZWVuKScgfX0+CiAgICAgICAgPENoZWNrQ2lyY2xlMiBzaXplPXsxMH0gLz4KICAgICAgICB7ZW50cnkucm9vbV9ub30KICAgICAgPC9idXR0b24+CiAgICApCiAgfQogIGlmIChlbnRyeS5pc19vdmVyZHVlKSB7CiAgICByZXR1cm4gKAogICAgICA8YnV0dG9uIG9uQ2xpY2s9e29uQ2xpY2t9IGNsYXNzTmFtZT17YCR7YmFzZX0gZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSBweC0yLjUgcHktMSByb3VuZGVkLVs2cHhdIHRleHQteHMgZm9udC1zZW1pYm9sZGB9CiAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogJ2NvbG9yLW1peChpbiBzcmdiLCB2YXIoLS1hY2NlbnQtcmVkKSA4JSwgdHJhbnNwYXJlbnQpJywgYm9yZGVyOiAnMXB4IHNvbGlkIGNvbG9yLW1peChpbiBzcmdiLCB2YXIoLS1hY2NlbnQtcmVkKSAyNSUsIHRyYW5zcGFyZW50KScsIGNvbG9yOiAndmFyKC0tYWNjZW50LXJlZCknIH19PgogICAgICAgIHtlbnRyeS5yb29tX25vfQogICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC1bMTBweF0gZm9udC1ub3JtYWwgb3BhY2l0eS02MCI+K3tlbnRyeS5kYXlzX292ZXJkdWV9ZDwvc3Bhbj4KICAgICAgPC9idXR0b24+CiAgICApCiAgfQogIHJldHVybiAoCiAgICA8YnV0dG9uIG9uQ2xpY2s9e29uQ2xpY2t9IGNsYXNzTmFtZT17YCR7YmFzZX0gcHgtMi41IHB5LTEgcm91bmRlZC1bNnB4XSB0ZXh0LXhzIGZvbnQtc2VtaWJvbGRgfQogICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0taG92ZXItYmcpJywgYm9yZGVyOiAnMXB4IHNvbGlkIHZhcigtLWRpdmlkZXIpJywgY29sb3I6ICd2YXIoLS10ZXh0LTIpJyB9fT4KICAgICAge2VudHJ5LnJvb21fbm99CiAgICA8L2J1dHRvbj4KICApCn0KCi8vIOKUgOKUgOKUgCBFZGl0IERyYXdlciDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKaW50ZXJmYWNlIEVkaXRTdGF0ZSB7CiAgaWQ6IHN0cmluZzsgcm9vbV9ubzogc3RyaW5nOyBwcm9qZWN0X25hbWU6IHN0cmluZwogIHdvcmtfc3RhcnRfZGF0ZTogc3RyaW5nOyB3b3JrX2RheXM6IHN0cmluZzsgYWN0dWFsX2RlbGl2ZXJfZGF0ZTogc3RyaW5nCn0KCmZ1bmN0aW9uIEVkaXREcmF3ZXIoeyBlbnRyeSwgb25DbG9zZSwgb25TYXZlZCB9OiB7IGVudHJ5OiBFZGl0U3RhdGU7IG9uQ2xvc2U6ICgpID0+IHZvaWQ7IG9uU2F2ZWQ6ICgpID0+IHZvaWQgfSkgewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlQ2xpZW50KCkKICBjb25zdCBbZm9ybSwgc2V0Rm9ybV0gPSB1c2VTdGF0ZShlbnRyeSkKICBjb25zdCBbc2F2aW5nLCBzZXRTYXZpbmddID0gdXNlU3RhdGUoZmFsc2UpCgogIGFzeW5jIGZ1bmN0aW9uIHNhdmUoKSB7CiAgICBzZXRTYXZpbmcodHJ1ZSkKICAgIGF3YWl0IHN1cGFiYXNlLmZyb20oJ2pvYnMnKS51cGRhdGUoewogICAgICB3b3JrX3N0YXJ0X2RhdGU6IGZvcm0ud29ya19zdGFydF9kYXRlIHx8IG51bGwsCiAgICAgIHdvcmtfZGF5czogZm9ybS53b3JrX2RheXMgPyBwYXJzZUludChmb3JtLndvcmtfZGF5cykgOiBudWxsLAogICAgICBhY3R1YWxfZGVsaXZlcl9kYXRlOiBmb3JtLmFjdHVhbF9kZWxpdmVyX2RhdGUgfHwgbnVsbCwKICAgIH0pLmVxKCdpZCcsIGZvcm0uaWQpCiAgICBzZXRTYXZpbmcoZmFsc2UpCiAgICBvblNhdmVkKCkKICAgIG9uQ2xvc2UoKQogIH0KCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJmaXhlZCBpbnNldC0wIHotNTAgZmxleCBpdGVtcy1lbmQgc206aXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHB4LTQgcGItNCBwdC0xNCBsZzpwdC00IiBvbkNsaWNrPXtvbkNsb3NlfT4KICAgICAgPGRpdiBjbGFzc05hbWU9ImFic29sdXRlIGluc2V0LTAgYmctYmxhY2svNjAgYmFja2Ryb3AtYmx1ci1zbSIgLz4KCiAgICAgIHsvKiBQYW5lbCAqL30KICAgICAgPGRpdiBvbkNsaWNrPXtlID0+IGUuc3RvcFByb3BhZ2F0aW9uKCl9CiAgICAgICAgY2xhc3NOYW1lPSJyZWxhdGl2ZSBmbGV4IGZsZXgtY29sIHNoYWRvdy0yeGwgdy1mdWxsIG1heC13LWxnIG1heC1oLVs5MHZoXSBvdmVyZmxvdy15LWF1dG8gcm91bmRlZC1bMjBweF0iCiAgICAgICAgZGF0YS1wYW5lbCBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0tcGFuZWwtYmcpJywgYm9yZGVyOiAnMXB4IHNvbGlkIHZhcigtLWNhcmQtYm9yZGVyKScgfX0+CgogICAgICAgIHsvKiBEcmFnIGhhbmRsZSAobW9iaWxlIG9ubHkpICovfQogICAgICAgIHsvKiBIZWFkZXIgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHB4LTUgcHktNCIgc3R5bGU9e3sgYm9yZGVyQm90dG9tOiAnMXB4IHNvbGlkIHZhcigtLWRpdmlkZXIpJyB9fT4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4LTEgbWluLXctMCI+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0iZm9udC1ib2xkIHRleHQtYmFzZSB0cnVuY2F0ZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT57Zm9ybS5yb29tX25vfTwvcD4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXNtIHRydW5jYXRlIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19Pntmb3JtLnByb2plY3RfbmFtZX08L3A+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxidXR0b24gb25DbGljaz17b25DbG9zZX0KICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4LXNocmluay0wIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHJvdW5kZWQtZnVsbCIKICAgICAgICAgICAgc3R5bGU9e3sgd2lkdGg6IDM2LCBoZWlnaHQ6IDM2LCBiYWNrZ3JvdW5kOiAndmFyKC0taG92ZXItYmcpJywgY29sb3I6ICd2YXIoLS10ZXh0LTIpJyB9fT4KICAgICAgICAgICAgPFggc2l6ZT17MTZ9IC8+CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KCiAgICAgICAgey8qIEZpZWxkcyAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC0xIG92ZXJmbG93LXktYXV0byBweC01IHB5LTUgc3BhY2UteS01Ij4KICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9ImZpZWxkLWxhYmVsIG1iLTIgYmxvY2siPuC4p+C4seC4meC5gOC4o+C4tOC5iOC4oeC4h+C4suC4mTwvbGFiZWw+CiAgICAgICAgICAgIDxpbnB1dCB0eXBlPSJkYXRlIiBsYW5nPSJ0aC1USCIgdmFsdWU9e2Zvcm0ud29ya19zdGFydF9kYXRlfQogICAgICAgICAgICAgIG9uQ2hhbmdlPXtlID0+IHNldEZvcm0oZiA9PiAoeyAuLi5mLCB3b3JrX3N0YXJ0X2RhdGU6IGUudGFyZ2V0LnZhbHVlIH0pKX0KICAgICAgICAgICAgICBjbGFzc05hbWU9ImZpZWxkLWlucHV0IHRleHQtYmFzZSIgc3R5bGU9e3sgbWluSGVpZ2h0OiA0NCB9fSAvPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQteHMgbXQtMS41IiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19PgogICAgICAgICAgICAgIOKaoSDguK3guLHguJ7guYDguJTguJfguK3guLHguJXguYLguJnguKHguLHguJXguLTguYDguKHguLfguYjguK3guYDguIvguKXguKXguYzguJrguLHguJnguJfguLbguIHguIHguLLguKPguIrguLPguKPguLDguIfguKfguJTguYDguKPguLTguYjguKHguIfguLLguJkKICAgICAgICAgICAgPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8ZGl2PgogICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPSJmaWVsZC1sYWJlbCBtYi0yIGJsb2NrIj7guIjguLPguJnguKfguJnguKfguLHguJnguJfguLPguIfguLLguJk8L2xhYmVsPgogICAgICAgICAgICA8aW5wdXQgdHlwZT0ibnVtYmVyIiB2YWx1ZT17Zm9ybS53b3JrX2RheXN9IG1pbj17MX0gaW5wdXRNb2RlPSJudW1lcmljIgogICAgICAgICAgICAgIG9uQ2hhbmdlPXtlID0+IHNldEZvcm0oZiA9PiAoeyAuLi5mLCB3b3JrX2RheXM6IGUudGFyZ2V0LnZhbHVlIH0pKX0KICAgICAgICAgICAgICBjbGFzc05hbWU9ImZpZWxkLWlucHV0IHRleHQtYmFzZSIgc3R5bGU9e3sgbWluSGVpZ2h0OiA0NCB9fSAvPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8ZGl2PgogICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPSJmaWVsZC1sYWJlbCBtYi0yIGJsb2NrIj7guKfguLHguJnguKrguYjguIfguKHguK3guJrguIjguKPguLTguIc8L2xhYmVsPgogICAgICAgICAgICA8aW5wdXQgdHlwZT0iZGF0ZSIgbGFuZz0idGgtVEgiIHZhbHVlPXtmb3JtLmFjdHVhbF9kZWxpdmVyX2RhdGV9CiAgICAgICAgICAgICAgb25DaGFuZ2U9e2UgPT4gc2V0Rm9ybShmID0+ICh7IC4uLmYsIGFjdHVhbF9kZWxpdmVyX2RhdGU6IGUudGFyZ2V0LnZhbHVlIH0pKX0KICAgICAgICAgICAgICBjbGFzc05hbWU9ImZpZWxkLWlucHV0IHRleHQtYmFzZSIgc3R5bGU9e3sgbWluSGVpZ2h0OiA0NCB9fSAvPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CgogICAgICAgIHsvKiBTYXZlICovfQogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJweC01IHB5LTQgcGItc2FmZSIgc3R5bGU9e3sgYm9yZGVyVG9wOiAnMXB4IHNvbGlkIHZhcigtLWRpdmlkZXIpJyB9fT4KICAgICAgICAgIDxidXR0b24gb25DbGljaz17c2F2ZX0gZGlzYWJsZWQ9e3NhdmluZ30KICAgICAgICAgICAgY2xhc3NOYW1lPSJ3LWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgZ2FwLTIgcm91bmRlZC1bMTJweF0gZm9udC1zZW1pYm9sZCBkaXNhYmxlZDpvcGFjaXR5LTUwIgogICAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0tYWNjZW50KScsIGNvbG9yOiAnI2ZmZicsIG1pbkhlaWdodDogNDgsIGZvbnRTaXplOiAxNSB9fT4KICAgICAgICAgICAgPFNhdmUgc2l6ZT17MTV9IC8+CiAgICAgICAgICAgIHtzYXZpbmcgPyAn4LiB4Liz4Lil4Lix4LiH4Lia4Lix4LiZ4LiX4Li24LiBLi4uJyA6ICfguJrguLHguJnguJfguLbguIEnfQogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKQp9CgovLyDilIDilIDilIAgTWFpbiDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gSGFuZG92ZXJQYWdlKCkgewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlQ2xpZW50KCkKICBjb25zdCBbam9icywgc2V0Sm9ic10gPSB1c2VTdGF0ZTxKb2JbXT4oW10pCiAgY29uc3QgW2xvYWRpbmcsIHNldExvYWRpbmddID0gdXNlU3RhdGUodHJ1ZSkKICBjb25zdCBbc2VsZWN0ZWRNb250aCwgc2V0U2VsZWN0ZWRNb250aF0gPSB1c2VTdGF0ZShUSElTX01PTlRIKQogIGNvbnN0IFtlZGl0RW50cnksIHNldEVkaXRFbnRyeV0gPSB1c2VTdGF0ZTxFZGl0U3RhdGUgfCBudWxsPihudWxsKQoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY29uc3QgbSA9IG5ldyBVUkxTZWFyY2hQYXJhbXMod2luZG93LmxvY2F0aW9uLnNlYXJjaCkuZ2V0KCdtb250aCcpCiAgICBpZiAobSkgc2V0U2VsZWN0ZWRNb250aChtKQogIH0sIFtdKQoKICBmdW5jdGlvbiBvcGVuRWRpdChlbnRyeTogUm9vbUVudHJ5KSB7CiAgICBjb25zdCBqb2IgPSBqb2JzLmZpbmQoaiA9PiBqLmlkID09PSBlbnRyeS5pZCkKICAgIGlmICgham9iKSByZXR1cm4KICAgIHNldEVkaXRFbnRyeSh7CiAgICAgIGlkOiBqb2IuaWQsCiAgICAgIHJvb21fbm86IGpvYi5yb29tX25vLAogICAgICBwcm9qZWN0X25hbWU6IGVudHJ5LnByb2plY3RfbmFtZSwKICAgICAgd29ya19zdGFydF9kYXRlOiBqb2Iud29ya19zdGFydF9kYXRlIHx8ICcnLAogICAgICB3b3JrX2RheXM6IGpvYi53b3JrX2RheXMgIT0gbnVsbCA/IFN0cmluZyhqb2Iud29ya19kYXlzKSA6ICc0NScsCiAgICAgIGFjdHVhbF9kZWxpdmVyX2RhdGU6IGpvYi5hY3R1YWxfZGVsaXZlcl9kYXRlIHx8ICcnLAogICAgfSkKICB9CgogIGNvbnN0IGxvYWQgPSB1c2VDYWxsYmFjayhhc3luYyAoKSA9PiB7CiAgICBzZXRMb2FkaW5nKHRydWUpCiAgICBjb25zdCB7IGRhdGEgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAgIC5mcm9tKCdqb2JzJykKICAgICAgLnNlbGVjdCgnaWQsIHJvb21fbm8sIHByb2plY3RfaWQsIHJldmVudWVfaW5jX3ZhdCwgd29ya19zdGFydF9kYXRlLCB3b3JrX2RheXMsIGFjdHVhbF9kZWxpdmVyX2RhdGUsIHdvcmtpbmdfc3RhdHVzLCBwcm9qZWN0cyhuYW1lKSwgc2FsZXM6dXNlcnMhc2FsZXNfaWQobmFtZSknKQogICAgICAubmVxKCd3b3JraW5nX3N0YXR1cycsICfguKLguIHguYDguKXguLTguIEnKQogICAgICAub3IoJ3dvcmtfc3RhcnRfZGF0ZS5ub3QuaXMubnVsbCxhY3R1YWxfZGVsaXZlcl9kYXRlLm5vdC5pcy5udWxsJykKICAgICAgLm9yZGVyKCdwcm9qZWN0X2lkJykKICAgIHNldEpvYnMoKGRhdGEgYXMgYW55KSB8fCBbXSkKICAgIHNldExvYWRpbmcoZmFsc2UpCiAgfSwgW10pCgogIHVzZUVmZmVjdCgoKSA9PiB7IGxvYWQoKSB9LCBbbG9hZF0pCgogIC8vIEJ1aWxkIHJvb20gZW50cmllcyB3aXRoIGRpc3BsYXlfbW9udGggbG9naWMKICBjb25zdCBlbnRyaWVzOiBSb29tRW50cnlbXSA9IHVzZU1lbW8oKCkgPT4gewogICAgcmV0dXJuIGpvYnMubWFwKGogPT4gewogICAgICBjb25zdCBub19zdGFydF9kYXRlID0gIWoud29ya19zdGFydF9kYXRlCiAgICAgIGNvbnN0IGlzX2RlbGl2ZXJlZCA9ICEhai5hY3R1YWxfZGVsaXZlcl9kYXRlCiAgICAgIGNvbnN0IGFjdHVhbF9tb250aCA9IGouYWN0dWFsX2RlbGl2ZXJfZGF0ZT8uc2xpY2UoMCwgNykgPz8gbnVsbAoKICAgICAgLy8gSWYgbm8gd29ya19zdGFydF9kYXRlOiBjYW4ndCBjYWxjdWxhdGUgZXhwZWN0ZWQgZGF0ZQogICAgICBjb25zdCBleHBlY3RlZCA9IG5vX3N0YXJ0X2RhdGUKICAgICAgICA/IChqLmFjdHVhbF9kZWxpdmVyX2RhdGUgPz8gVE9EQVkudG9JU09TdHJpbmcoKS5zbGljZSgwLCAxMCkpCiAgICAgICAgOiBhZGREYXlzKGoud29ya19zdGFydF9kYXRlISwgai53b3JrX2RheXMgPz8gNDUpCiAgICAgIGNvbnN0IGV4cGVjdGVkX21vbnRoID0gZXhwZWN0ZWQuc2xpY2UoMCwgNykKCiAgICAgIGNvbnN0IGRheXNfb3ZlciA9ICghaXNfZGVsaXZlcmVkICYmICFub19zdGFydF9kYXRlKSA/IE1hdGgubWF4KDAsIGRheXNEaWZmKGV4cGVjdGVkKSkgOiAwCiAgICAgIGNvbnN0IGlzX292ZXJkdWUgPSAhaXNfZGVsaXZlcmVkICYmICFub19zdGFydF9kYXRlICYmIGV4cGVjdGVkIDwgVE9EQVkudG9JU09TdHJpbmcoKS5zbGljZSgwLCAxMCkKCiAgICAgIC8vIFdoaWNoIG1vbnRoIGRvZXMgdGhpcyByb29tIGFwcGVhciB1bmRlcj8KICAgICAgbGV0IGRpc3BsYXlfbW9udGg6IHN0cmluZwogICAgICBpZiAoaXNfZGVsaXZlcmVkKSB7CiAgICAgICAgZGlzcGxheV9tb250aCA9IGFjdHVhbF9tb250aCEKICAgICAgfSBlbHNlIGlmIChub19zdGFydF9kYXRlKSB7CiAgICAgICAgZGlzcGxheV9tb250aCA9IFRISVNfTU9OVEggLy8gbm8gc3RhcnQgZGF0ZSDihpIgYWx3YXlzIHNob3cgaW4gY3VycmVudCBtb250aAogICAgICB9IGVsc2UgaWYgKGlzX292ZXJkdWUpIHsKICAgICAgICBkaXNwbGF5X21vbnRoID0gVEhJU19NT05USAogICAgICB9IGVsc2UgewogICAgICAgIGRpc3BsYXlfbW9udGggPSBleHBlY3RlZF9tb250aAogICAgICB9CgogICAgICByZXR1cm4gewogICAgICAgIGlkOiBqLmlkLAogICAgICAgIHJvb21fbm86IGoucm9vbV9ubywKICAgICAgICBwcm9qZWN0X2lkOiBqLnByb2plY3RfaWQsCiAgICAgICAgcHJvamVjdF9uYW1lOiAoai5wcm9qZWN0cyBhcyBhbnkpPy5uYW1lIHx8IGoucHJvamVjdF9pZCwKICAgICAgICByZXZlbnVlOiBqLnJldmVudWVfaW5jX3ZhdCB8fCAwLAogICAgICAgIGV4cGVjdGVkX2RhdGU6IGV4cGVjdGVkLAogICAgICAgIGFjdHVhbF9kYXRlOiBqLmFjdHVhbF9kZWxpdmVyX2RhdGUsCiAgICAgICAgZGlzcGxheV9tb250aCwKICAgICAgICBpc19kZWxpdmVyZWQsCiAgICAgICAgaXNfb3ZlcmR1ZSwKICAgICAgICBkYXlzX292ZXJkdWU6IGRheXNfb3ZlciwKICAgICAgICBub19zdGFydF9kYXRlLAogICAgICB9CiAgICB9KQogIH0sIFtqb2JzXSkKCiAgLy8gR2V0IGFsbCBhdmFpbGFibGUgbW9udGhzIChzb3J0ZWQgZGVzYykgZm9yIG5hdmlnYXRpb24KICAvLyBBbGwgbW9udGhzIHdpdGggZGF0YSwgc29ydGVkIGRlc2NlbmRpbmcKICBjb25zdCBhbGxNb250aHMgPSB1c2VNZW1vKCgpID0+IHsKICAgIGNvbnN0IHNldCA9IG5ldyBTZXQoZW50cmllcy5tYXAoZSA9PiBlLmRpc3BsYXlfbW9udGgpKQogICAgc2V0LmFkZChUSElTX01PTlRIKQogICAgcmV0dXJuIEFycmF5LmZyb20oc2V0KS5zb3J0KChhLCBiKSA9PiBiLmxvY2FsZUNvbXBhcmUoYSkpCiAgfSwgW2VudHJpZXNdKQoKICAvLyBKdW1wIHRvIG5lYXJlc3QgYXZhaWxhYmxlIG1vbnRoIChza2lwcyBlbXB0eSBtb250aHMpCiAgY29uc3QgbmVhcmVzdFByZXYgPSB1c2VNZW1vKCgpID0+IGFsbE1vbnRocy5maW5kKG0gPT4gbSA8IHNlbGVjdGVkTW9udGgpID8/IG51bGwsIFthbGxNb250aHMsIHNlbGVjdGVkTW9udGhdKQogIGNvbnN0IG5lYXJlc3ROZXh0ID0gdXNlTWVtbygoKSA9PiBbLi4uYWxsTW9udGhzXS5yZXZlcnNlKCkuZmluZChtID0+IG0gPiBzZWxlY3RlZE1vbnRoKSA/PyBudWxsLCBbYWxsTW9udGhzLCBzZWxlY3RlZE1vbnRoXSkKCiAgLy8gRmlsdGVyIHRvIHNlbGVjdGVkIG1vbnRoCiAgY29uc3QgbW9udGhFbnRyaWVzID0gdXNlTWVtbygoKSA9PiBlbnRyaWVzLmZpbHRlcihlID0+IGUuZGlzcGxheV9tb250aCA9PT0gc2VsZWN0ZWRNb250aCksIFtlbnRyaWVzLCBzZWxlY3RlZE1vbnRoXSkKCiAgLy8gR3JvdXAgYnkgcHJvamVjdAogIGNvbnN0IGJ5UHJvamVjdCA9IHVzZU1lbW8oKCkgPT4gewogICAgY29uc3QgbWFwID0gbmV3IE1hcDxzdHJpbmcsIHsgbmFtZTogc3RyaW5nOyByb29tczogUm9vbUVudHJ5W10gfT4oKQogICAgZm9yIChjb25zdCBlIG9mIG1vbnRoRW50cmllcykgewogICAgICBpZiAoIW1hcC5oYXMoZS5wcm9qZWN0X2lkKSkgbWFwLnNldChlLnByb2plY3RfaWQsIHsgbmFtZTogZS5wcm9qZWN0X25hbWUsIHJvb21zOiBbXSB9KQogICAgICBtYXAuZ2V0KGUucHJvamVjdF9pZCkhLnJvb21zLnB1c2goZSkKICAgIH0KICAgIHJldHVybiBBcnJheS5mcm9tKG1hcC52YWx1ZXMoKSkuc29ydCgoYSwgYikgPT4gYS5uYW1lLmxvY2FsZUNvbXBhcmUoYi5uYW1lKSkKICB9LCBbbW9udGhFbnRyaWVzXSkKCiAgLy8gU3VtbWFyeQogIGNvbnN0IHRvdGFsUm9vbXMgPSBtb250aEVudHJpZXMubGVuZ3RoCiAgY29uc3QgZGVsaXZlcmVkUm9vbXMgPSBtb250aEVudHJpZXMuZmlsdGVyKGUgPT4gZS5pc19kZWxpdmVyZWQpLmxlbmd0aAogIGNvbnN0IG92ZXJkdWVSb29tcyA9IG1vbnRoRW50cmllcy5maWx0ZXIoZSA9PiBlLmlzX292ZXJkdWUpLmxlbmd0aAogIGNvbnN0IG5vU3RhcnRSb29tcyA9IG1vbnRoRW50cmllcy5maWx0ZXIoZSA9PiBlLm5vX3N0YXJ0X2RhdGUpLmxlbmd0aAogIGNvbnN0IHRvdGFsVmFsdWUgPSBtb250aEVudHJpZXMucmVkdWNlKChzLCBlKSA9PiBzICsgZS5yZXZlbnVlLCAwKQogIGNvbnN0IGRlbGl2ZXJlZFZhbHVlID0gbW9udGhFbnRyaWVzLmZpbHRlcihlID0+IGUuaXNfZGVsaXZlcmVkKS5yZWR1Y2UoKHMsIGUpID0+IHMgKyBlLnJldmVudWUsIDApCgogIGNvbnN0IGYgPSAobjogbnVtYmVyKSA9PiAn4Li/JyArIG4udG9Mb2NhbGVTdHJpbmcoJ3RoLVRIJykKICBjb25zdCBpc1RoaXNNb250aCA9IHNlbGVjdGVkTW9udGggPT09IFRISVNfTU9OVEgKCiAgaWYgKGxvYWRpbmcpIHJldHVybiA8UGFnZVNwaW5uZXIgLz4KCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJoLXNjcmVlbiBmbGV4IGZsZXgtY29sIiBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0tcGFnZS1iZyknIH19PgogICAgICB7ZWRpdEVudHJ5ICYmIDxFZGl0RHJhd2VyIGVudHJ5PXtlZGl0RW50cnl9IG9uQ2xvc2U9eygpID0+IHNldEVkaXRFbnRyeShudWxsKX0gb25TYXZlZD17bG9hZH0gLz59CgogICAgICB7LyogSGVhZGVyICovfQogICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC1zaHJpbmstMCBweC02IHB0LTUgcGItNCIgc3R5bGU9e3sgYm9yZGVyQm90dG9tOiAnMXB4IHNvbGlkIHZhcigtLWRpdmlkZXIpJyB9fT4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTQgbWItNCI+CiAgICAgICAgICA8aDEgY2xhc3NOYW1lPSJ0ZXh0LWxnIGZvbnQtYm9sZCBmbGV4LTEiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0xKScgfX0+SGFuZG92ZXI8L2gxPgogICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXtsb2FkfSBjbGFzc05hbWU9InRleHQteHMgcHgtMyBweS0xLjUgcm91bmRlZC1bOHB4XSIKICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogJ3ZhcigtLWhvdmVyLWJnKScsIGNvbG9yOiAndmFyKC0tdGV4dC0yKScsIGJvcmRlcjogJzFweCBzb2xpZCB2YXIoLS1kaXZpZGVyKScgfX0+CiAgICAgICAgICAgIOC4o+C4teC5gOC4n+C4o+C4igogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgPC9kaXY+CgogICAgICAgIHsvKiBNb250aCBuYXZpZ2F0b3IgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIG1iLTQiPgogICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXsoKSA9PiBuZWFyZXN0UHJldiAmJiBzZXRTZWxlY3RlZE1vbnRoKG5lYXJlc3RQcmV2KX0gZGlzYWJsZWQ9eyFuZWFyZXN0UHJldn0KICAgICAgICAgICAgY2xhc3NOYW1lPSJwLTEuNSByb3VuZGVkLVs4cHhdIGRpc2FibGVkOm9wYWNpdHktMzAiCiAgICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1ob3Zlci1iZyknLCBjb2xvcjogJ3ZhcigtLXRleHQtMiknIH19PgogICAgICAgICAgICA8Q2hldnJvbkxlZnQgc2l6ZT17MTZ9IC8+CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiI+CiAgICAgICAgICAgIDxoMiBjbGFzc05hbWU9InRleHQtYmFzZSBmb250LWJvbGQiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0xKScgfX0+e21vbnRoTGFiZWwoc2VsZWN0ZWRNb250aCl9PC9oMj4KICAgICAgICAgICAge2lzVGhpc01vbnRoICYmICgKICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtWzEwcHhdIHB4LTEuNSBweS0wLjUgcm91bmRlZC1bNHB4XSBmb250LXNlbWlib2xkIgogICAgICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogJ3JnYmEoOTksMTAyLDI0MSwwLjEyKScsIGJvcmRlcjogJzFweCBzb2xpZCByZ2JhKDk5LDEwMiwyNDEsMC4zKScsIGNvbG9yOiAndmFyKC0tYWNjZW50KScgfX0+4LmA4LiU4Li34Lit4LiZ4LiZ4Li14LmJPC9zcGFuPgogICAgICAgICAgICApfQogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8YnV0dG9uIG9uQ2xpY2s9eygpID0+IG5lYXJlc3ROZXh0ICYmIHNldFNlbGVjdGVkTW9udGgobmVhcmVzdE5leHQpfSBkaXNhYmxlZD17IW5lYXJlc3ROZXh0fQogICAgICAgICAgICBjbGFzc05hbWU9InAtMS41IHJvdW5kZWQtWzhweF0gZGlzYWJsZWQ6b3BhY2l0eS0zMCIKICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogJ3ZhcigtLWhvdmVyLWJnKScsIGNvbG9yOiAndmFyKC0tdGV4dC0yKScgfX0+CiAgICAgICAgICAgIDxDaGV2cm9uUmlnaHQgc2l6ZT17MTZ9IC8+CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgIDxidXR0b24gb25DbGljaz17KCkgPT4gc2V0U2VsZWN0ZWRNb250aChUSElTX01PTlRIKX0gY2xhc3NOYW1lPSJtbC0xIHRleHQteHMgcHgtMyBweS0xIgogICAgICAgICAgICBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLWFjY2VudCknLCB0ZXh0RGVjb3JhdGlvbjogaXNUaGlzTW9udGggPyAnbm9uZScgOiAndW5kZXJsaW5lJywgb3BhY2l0eTogaXNUaGlzTW9udGggPyAwLjQgOiAxIH19PgogICAgICAgICAgICDguJvguLHguIjguIjguLjguJrguLHguJkKICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgIDwvZGl2PgoKICAgICAgICB7LyogU3VtbWFyeSBjYXJkcyAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBnYXAtMyBmbGV4LXdyYXAiPgogICAgICAgICAgey8qIFRvdGFsICovfQogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHB4LTQgcHktMi41IHJvdW5kZWQtWzEwcHhdIgogICAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0tY2FyZC1iZyknLCBib3JkZXI6ICcxcHggc29saWQgdmFyKC0tY2FyZC1ib3JkZXIpJyB9fT4KICAgICAgICAgICAgPGRpdj4KICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtWzEwcHhdIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJyB9fT7guIjguLPguJnguKfguJnguKvguYnguK3guIc8L3A+CiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWxnIGZvbnQtYm9sZCBsZWFkaW5nLXRpZ2h0IiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMSknIH19PgogICAgICAgICAgICAgICAge2RlbGl2ZXJlZFJvb21zfSA8c3BhbiBjbGFzc05hbWU9InRleHQtc20gZm9udC1ub3JtYWwiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+LyB7dG90YWxSb29tc30g4Lir4LmJ4Lit4LiHPC9zcGFuPgogICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgICB7ZGVsaXZlcmVkUm9vbXMgPiAwICYmIDxwIGNsYXNzTmFtZT0idGV4dC1bMTBweF0iIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tYWNjZW50LWdyZWVuKScgfX0+4Liq4LmI4LiH4Lih4Lit4Lia4LmB4Lil4LmJ4LinIHtNYXRoLnJvdW5kKGRlbGl2ZXJlZFJvb21zIC8gdG90YWxSb29tcyAqIDEwMCl9JTwvcD59CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICB7LyogVmFsdWUgKi99CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcHgtNCBweS0yLjUgcm91bmRlZC1bMTBweF0iCiAgICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1jYXJkLWJnKScsIGJvcmRlcjogJzFweCBzb2xpZCB2YXIoLS1jYXJkLWJvcmRlciknIH19PgogICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1bMTBweF0gdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVyIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19PuC4oeC4ueC4peC4hOC5iOC4suC4h+C4suC4mTwvcD4KICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtYmFzZSBmb250LWJvbGQgbGVhZGluZy10aWdodCIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS1hY2NlbnQpJyB9fT57ZihkZWxpdmVyZWRWYWx1ZSl9PC9wPgogICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1bMTBweF0iIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+LyB7Zih0b3RhbFZhbHVlKX08L3A+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICB7LyogT3ZlcmR1ZSAqL30KICAgICAgICAgIHtvdmVyZHVlUm9vbXMgPiAwICYmICgKICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHB4LTQgcHktMi41IHJvdW5kZWQtWzEwcHhdIgogICAgICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1jYXJkLWJnKScsIGJvcmRlcjogJzFweCBzb2xpZCB2YXIoLS1jYXJkLWJvcmRlciknIH19PgogICAgICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtWzEwcHhdIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJyB9fT7guKvguKXguLjguJTguKrguYjguIfguKHguK3guJo8L3A+CiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtbGcgZm9udC1ib2xkIGxlYWRpbmctdGlnaHQiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tYWNjZW50LXJlZCknIH19PntvdmVyZHVlUm9vbXN9IOC4q+C5ieC4reC4hzwvcD4KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICApfQogICAgICAgICAgey8qIE5vIHN0YXJ0IGRhdGUgKi99CiAgICAgICAgICB7bm9TdGFydFJvb21zID4gMCAmJiAoCiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBweC00IHB5LTIuNSByb3VuZGVkLVsxMHB4XSIKICAgICAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0tY2FyZC1iZyknLCBib3JkZXI6ICcxcHggc29saWQgdmFyKC0tY2FyZC1ib3JkZXIpJyB9fT4KICAgICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LVsxMHB4XSB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+4Lii4Lix4LiH4LmE4Lih4LmI4Lih4Li14Lin4Lix4LiZ4LmA4Lij4Li04LmI4Lih4LiH4Liy4LiZPC9wPgogICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWxnIGZvbnQtYm9sZCBsZWFkaW5nLXRpZ2h0IiBzdHlsZT17eyBjb2xvcjogJyNmNTllMGInIH19Pntub1N0YXJ0Um9vbXN9IOC4q+C5ieC4reC4hzwvcD4KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICApfQogICAgICAgIDwvZGl2PgogICAgICA8L2Rpdj4KCiAgICAgIHsvKiBDb250ZW50ICovfQogICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC0xIG92ZXJmbG93LXktYXV0byBwLTYiPgogICAgICAgIHt0b3RhbFJvb21zID09PSAwID8gKAogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGgtMzIiPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtc20iIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+4LmE4Lih4LmI4Lih4Li14LiC4LmJ4Lit4Lih4Li54Lil4Liq4Liz4Lir4Lij4Lix4Lia4LmA4LiU4Li34Lit4LiZ4LiZ4Li14LmJPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgKSA6ICgKICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJzcGFjZS15LTQiPgogICAgICAgICAgICB7YnlQcm9qZWN0Lm1hcCgoeyBuYW1lLCByb29tcyB9KSA9PiB7CiAgICAgICAgICAgICAgY29uc3QgcHJvalZhbHVlID0gcm9vbXMucmVkdWNlKChzLCByKSA9PiBzICsgci5yZXZlbnVlLCAwKQogICAgICAgICAgICAgIGNvbnN0IHByb2pEZWxpdmVyZWQgPSByb29tcy5maWx0ZXIociA9PiByLmlzX2RlbGl2ZXJlZCkubGVuZ3RoCiAgICAgICAgICAgICAgY29uc3QgcHJvak92ZXJkdWUgPSByb29tcy5maWx0ZXIociA9PiByLmlzX292ZXJkdWUpLmxlbmd0aAogICAgICAgICAgICAgIHJldHVybiAoCiAgICAgICAgICAgICAgICA8ZGl2IGtleT17bmFtZX0gY2xhc3NOYW1lPSJyb3VuZGVkLVsxNHB4XSBvdmVyZmxvdy1oaWRkZW4iCiAgICAgICAgICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1jYXJkLWJnKScsIGJvcmRlcjogJzFweCBzb2xpZCB2YXIoLS1jYXJkLWJvcmRlciknIH19PgogICAgICAgICAgICAgICAgICB7LyogUHJvamVjdCBoZWFkZXIgKi99CiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBweC00IHB5LTMiIHN0eWxlPXt7IGJvcmRlckJvdHRvbTogJzFweCBzb2xpZCB2YXIoLS1kaXZpZGVyKScsIGJhY2tncm91bmQ6ICd2YXIoLS1ob3Zlci1iZyknIH19PgogICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0iZm9udC1zZW1pYm9sZCB0ZXh0LXNtIGZsZXgtMSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT57bmFtZX08L3A+CiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIj4KICAgICAgICAgICAgICAgICAgICAgIHtwcm9qT3ZlcmR1ZSA+IDAgJiYgKAogICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtWzExcHhdIGZvbnQtc2VtaWJvbGQgcHgtMS41IHB5LTAuNSByb3VuZGVkLVs0cHhdIgogICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICdjb2xvci1taXgoaW4gc3JnYiwgdmFyKC0tYWNjZW50LXJlZCkgOCUsIHRyYW5zcGFyZW50KScsIGJvcmRlcjogJzFweCBzb2xpZCBjb2xvci1taXgoaW4gc3JnYiwgdmFyKC0tYWNjZW50LXJlZCkgMjUlLCB0cmFuc3BhcmVudCknLCBjb2xvcjogJ3ZhcigtLWFjY2VudC1yZWQpJyB9fT4KICAgICAgICAgICAgICAgICAgICAgICAgICB7cHJvak92ZXJkdWV9IOC4q+C4peC4uOC4lAogICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgICAgICAgICApfQogICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXhzIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMiknIH19PgogICAgICAgICAgICAgICAgICAgICAgICB7cHJvakRlbGl2ZXJlZH0ve3Jvb21zLmxlbmd0aH0g4Lir4LmJ4Lit4LiHCiAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQteHMgZm9udC1zZW1pYm9sZCIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS1hY2NlbnQpJyB9fT57Zihwcm9qVmFsdWUpfTwvc3Bhbj4KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICAgIHsvKiBSb29tIGNoaXBzICovfQogICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0icC00IGZsZXggZmxleC13cmFwIGdhcC0yIj4KICAgICAgICAgICAgICAgICAgICB7cm9vbXMubWFwKHIgPT4gPFJvb21DaGlwIGtleT17ci5pZH0gZW50cnk9e3J9IG9uQ2xpY2s9eygpID0+IG9wZW5FZGl0KHIpfSAvPil9CiAgICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgKQogICAgICAgICAgICB9KX0KICAgICAgICAgIDwvZGl2PgogICAgICAgICl9CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKQp9Cg0K"}
+﻿'use client'
+
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { ChevronLeft, ChevronRight, CheckCircle2, X, Save } from 'lucide-react'
+import { PageSpinner } from '@/components/ui/StateUI'
+
+// ─── Types ─────────────────────────────────────────────────
+interface Job {
+  id: string
+  room_no: string
+  project_id: string
+  revenue_inc_vat: number
+  work_start_date: string | null
+  work_days: number | null
+  actual_deliver_date: string | null
+  working_status: string
+  projects: { name: string } | null
+  sales: { name: string } | null
+}
+
+interface RoomEntry {
+  id: string
+  room_no: string
+  project_id: string
+  project_name: string
+  revenue: number
+  expected_date: string         // YYYY-MM-DD
+  actual_date: string | null    // YYYY-MM-DD if delivered
+  display_month: string         // YYYY-MM — month this room appears under
+  is_delivered: boolean
+  is_overdue: boolean
+  days_overdue: number          // 0 if not overdue
+  no_start_date: boolean        // true = ไม่มี work_start_date
+}
+
+// ─── Helpers ───────────────────────────────────────────────
+const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0)
+const THIS_MONTH = TODAY.toISOString().slice(0, 7)
+
+function addDays(d: string, n: number): string {
+  const dt = new Date(d); dt.setDate(dt.getDate() + n)
+  return dt.toISOString().slice(0, 10)
+}
+
+function monthLabel(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+  return `${thaiMonths[m - 1]} ${y + 543}`
+}
+
+function prevMonth(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`
+}
+
+function nextMonth(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`
+}
+
+function daysDiff(dateStr: string): number {
+  const d = new Date(dateStr); d.setHours(0, 0, 0, 0)
+  return Math.floor((TODAY.getTime() - d.getTime()) / 86400000)
+}
+
+// ─── RoomChip ───────────────────────────────────────────────
+function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void }) {
+  const base = "cursor-pointer transition-opacity hover:opacity-70 active:opacity-50"
+  if (entry.no_start_date) {
+    return (
+      <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+        style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: '1px solid color-mix(in srgb, #f59e0b 30%, transparent)', color: '#f59e0b' }}
+        title="ยังไม่มีวันเริ่มงาน — คลิกเพื่อแก้ไข">
+        {entry.room_no}
+      </button>
+    )
+  }
+  if (entry.is_delivered) {
+    return (
+      <button onClick={onClick} className={`${base} flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+        style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
+        <CheckCircle2 size={10} />
+        {entry.room_no}
+      </button>
+    )
+  }
+  if (entry.is_overdue) {
+    return (
+      <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+        style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
+        {entry.room_no}
+        <span className="text-[10px] font-normal opacity-60">+{entry.days_overdue}d</span>
+      </button>
+    )
+  }
+  return (
+    <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+      {entry.room_no}
+    </button>
+  )
+}
+
+// ─── Edit Drawer ────────────────────────────────────────────
+interface EditState {
+  id: string; room_no: string; project_name: string
+  work_start_date: string; work_days: string; actual_deliver_date: string
+}
+
+function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: () => void; onSaved: () => void }) {
+  const supabase = createClient()
+  const [form, setForm] = useState(entry)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setSaving(true)
+    await supabase.from('jobs').update({
+      work_start_date: form.work_start_date || null,
+      work_days: form.work_days ? parseInt(form.work_days) : null,
+      actual_deliver_date: form.actual_deliver_date || null,
+    }).eq('id', form.id)
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* Panel */}
+      <div onClick={e => e.stopPropagation()}
+        className="relative flex flex-col shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[20px]"
+        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+
+        {/* Drag handle (mobile only) */}
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-base truncate" style={{ color: 'var(--text-1)' }}>{form.room_no}</p>
+            <p className="text-sm truncate" style={{ color: 'var(--text-3)' }}>{form.project_name}</p>
+          </div>
+          <button onClick={onClose}
+            className="flex-shrink-0 flex items-center justify-center rounded-full"
+            style={{ width: 36, height: 36, background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Fields */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+          <div>
+            <label className="field-label mb-2 block">วันเริ่มงาน</label>
+            <input type="date" lang="th-TH" value={form.work_start_date}
+              onChange={e => setForm(f => ({ ...f, work_start_date: e.target.value }))}
+              className="field-input text-base" style={{ minHeight: 44 }} />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-3)' }}>
+              ⚡ อัพเดทอัตโนมัติเมื่อเซลล์บันทึกการชำระงวดเริ่มงาน
+            </p>
+          </div>
+          <div>
+            <label className="field-label mb-2 block">จำนวนวันทำงาน</label>
+            <input type="number" value={form.work_days} min={1} inputMode="numeric"
+              onChange={e => setForm(f => ({ ...f, work_days: e.target.value }))}
+              className="field-input text-base" style={{ minHeight: 44 }} />
+          </div>
+          <div>
+            <label className="field-label mb-2 block">วันส่งมอบจริง</label>
+            <input type="date" lang="th-TH" value={form.actual_deliver_date}
+              onChange={e => setForm(f => ({ ...f, actual_deliver_date: e.target.value }))}
+              className="field-input text-base" style={{ minHeight: 44 }} />
+          </div>
+        </div>
+
+        {/* Save */}
+        <div className="px-5 py-4 pb-safe" style={{ borderTop: '1px solid var(--divider)' }}>
+          <button onClick={save} disabled={saving}
+            className="w-full flex items-center justify-center gap-2 rounded-[12px] font-semibold disabled:opacity-50"
+            style={{ background: 'var(--accent)', color: '#fff', minHeight: 48, fontSize: 15 }}>
+            <Save size={15} />
+            {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main ───────────────────────────────────────────────────
+export default function HandoverPage() {
+  const supabase = createClient()
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState(THIS_MONTH)
+  const [editEntry, setEditEntry] = useState<EditState | null>(null)
+
+  useEffect(() => {
+    const m = new URLSearchParams(window.location.search).get('month')
+    if (m) setSelectedMonth(m)
+  }, [])
+
+  function openEdit(entry: RoomEntry) {
+    const job = jobs.find(j => j.id === entry.id)
+    if (!job) return
+    setEditEntry({
+      id: job.id,
+      room_no: job.room_no,
+      project_name: entry.project_name,
+      work_start_date: job.work_start_date || '',
+      work_days: job.work_days != null ? String(job.work_days) : '45',
+      actual_deliver_date: job.actual_deliver_date || '',
+    })
+  }
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('jobs')
+      .select('id, room_no, project_id, revenue_inc_vat, work_start_date, work_days, actual_deliver_date, working_status, projects(name), sales:users!sales_id(name)')
+      .neq('working_status', 'ยกเลิก')
+      .or('work_start_date.not.is.null,actual_deliver_date.not.is.null')
+      .order('project_id')
+    setJobs((data as any) || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  // Build room entries with display_month logic
+  const entries: RoomEntry[] = useMemo(() => {
+    return jobs.map(j => {
+      const no_start_date = !j.work_start_date
+      const is_delivered = !!j.actual_deliver_date
+      const actual_month = j.actual_deliver_date?.slice(0, 7) ?? null
+
+      // If no work_start_date: can't calculate expected date
+      const expected = no_start_date
+        ? (j.actual_deliver_date ?? TODAY.toISOString().slice(0, 10))
+        : addDays(j.work_start_date!, j.work_days ?? 45)
+      const expected_month = expected.slice(0, 7)
+
+      const days_over = (!is_delivered && !no_start_date) ? Math.max(0, daysDiff(expected)) : 0
+      const is_overdue = !is_delivered && !no_start_date && expected < TODAY.toISOString().slice(0, 10)
+
+      // Which month does this room appear under?
+      let display_month: string
+      if (is_delivered) {
+        display_month = actual_month!
+      } else if (no_start_date) {
+        display_month = THIS_MONTH // no start date → always show in current month
+      } else if (is_overdue) {
+        display_month = THIS_MONTH
+      } else {
+        display_month = expected_month
+      }
+
+      return {
+        id: j.id,
+        room_no: j.room_no,
+        project_id: j.project_id,
+        project_name: (j.projects as any)?.name || j.project_id,
+        revenue: j.revenue_inc_vat || 0,
+        expected_date: expected,
+        actual_date: j.actual_deliver_date,
+        display_month,
+        is_delivered,
+        is_overdue,
+        days_overdue: days_over,
+        no_start_date,
+      }
+    })
+  }, [jobs])
+
+  // Get all available months (sorted desc) for navigation
+  // All months with data, sorted descending
+  const allMonths = useMemo(() => {
+    const set = new Set(entries.map(e => e.display_month))
+    set.add(THIS_MONTH)
+    return Array.from(set).sort((a, b) => b.localeCompare(a))
+  }, [entries])
+
+  // Jump to nearest available month (skips empty months)
+  const nearestPrev = useMemo(() => allMonths.find(m => m < selectedMonth) ?? null, [allMonths, selectedMonth])
+  const nearestNext = useMemo(() => [...allMonths].reverse().find(m => m > selectedMonth) ?? null, [allMonths, selectedMonth])
+
+  // Filter to selected month
+  const monthEntries = useMemo(() => entries.filter(e => e.display_month === selectedMonth), [entries, selectedMonth])
+
+  // Group by project
+  const byProject = useMemo(() => {
+    const map = new Map<string, { name: string; rooms: RoomEntry[] }>()
+    for (const e of monthEntries) {
+      if (!map.has(e.project_id)) map.set(e.project_id, { name: e.project_name, rooms: [] })
+      map.get(e.project_id)!.rooms.push(e)
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [monthEntries])
+
+  // Summary
+  const totalRooms = monthEntries.length
+  const deliveredRooms = monthEntries.filter(e => e.is_delivered).length
+  const overdueRooms = monthEntries.filter(e => e.is_overdue).length
+  const noStartRooms = monthEntries.filter(e => e.no_start_date).length
+  const totalValue = monthEntries.reduce((s, e) => s + e.revenue, 0)
+  const deliveredValue = monthEntries.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0)
+
+  const f = (n: number) => '฿' + n.toLocaleString('th-TH')
+  const isThisMonth = selectedMonth === THIS_MONTH
+
+  if (loading) return <PageSpinner />
+
+  return (
+    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+      {editEntry && <EditDrawer entry={editEntry} onClose={() => setEditEntry(null)} onSaved={load} />}
+
+      {/* Header */}
+      <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+        <div className="flex items-center gap-4 mb-4">
+          <h1 className="text-lg font-bold flex-1" style={{ color: 'var(--text-1)' }}>Handover</h1>
+          <button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]"
+            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+            รีเฟรช
+          </button>
+        </div>
+
+        {/* Month navigator */}
+        <div className="flex items-center gap-3 mb-4">
+          <button onClick={() => nearestPrev && setSelectedMonth(nearestPrev)} disabled={!nearestPrev}
+            className="p-1.5 rounded-[8px] disabled:opacity-30"
+            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <ChevronLeft size={16} />
+          </button>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>{monthLabel(selectedMonth)}</h2>
+            {isThisMonth && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+                style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: 'var(--accent)' }}>เดือนนี้</span>
+            )}
+          </div>
+          <button onClick={() => nearestNext && setSelectedMonth(nearestNext)} disabled={!nearestNext}
+            className="p-1.5 rounded-[8px] disabled:opacity-30"
+            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <ChevronRight size={16} />
+          </button>
+          <button onClick={() => setSelectedMonth(THIS_MONTH)} className="ml-1 text-xs px-3 py-1"
+            style={{ color: 'var(--accent)', textDecoration: isThisMonth ? 'none' : 'underline', opacity: isThisMonth ? 0.4 : 1 }}>
+            ปัจจุบัน
+          </button>
+        </div>
+
+        {/* Summary cards */}
+        <div className="flex gap-3 flex-wrap">
+          {/* Total */}
+          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
+              <p className="text-lg font-bold leading-tight" style={{ color: 'var(--text-1)' }}>
+                {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
+              </p>
+              {deliveredRooms > 0 && <p className="text-[10px]" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
+            </div>
+          </div>
+          {/* Value */}
+          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
+              <p className="text-base font-bold leading-tight" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
+            </div>
+          </div>
+          {/* Overdue */}
+          {overdueRooms > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
+                <p className="text-lg font-bold leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
+              </div>
+            </div>
+          )}
+          {/* No start date */}
+          {noStartRooms > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
+                <p className="text-lg font-bold leading-tight" style={{ color: '#f59e0b' }}>{noStartRooms} ห้อง</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {totalRooms === 0 ? (
+          <div className="flex items-center justify-center h-32">
+            <p className="text-sm" style={{ color: 'var(--text-3)' }}>ไม่มีข้อมูลสำหรับเดือนนี้</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {byProject.map(({ name, rooms }) => {
+              const projValue = rooms.reduce((s, r) => s + r.revenue, 0)
+              const projDelivered = rooms.filter(r => r.is_delivered).length
+              const projOverdue = rooms.filter(r => r.is_overdue).length
+              return (
+                <div key={name} className="rounded-[14px] overflow-hidden"
+                  style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                  {/* Project header */}
+                  <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--divider)', background: 'var(--hover-bg)' }}>
+                    <p className="font-semibold text-sm flex-1" style={{ color: 'var(--text-1)' }}>{name}</p>
+                    <div className="flex items-center gap-3">
+                      {projOverdue > 0 && (
+                        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-[4px]"
+                          style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
+                          {projOverdue} หลุด
+                        </span>
+                      )}
+                      <span className="text-xs" style={{ color: 'var(--text-2)' }}>
+                        {projDelivered}/{rooms.length} ห้อง
+                      </span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{f(projValue)}</span>
+                    </div>
+                  </div>
+                  {/* Room chips */}
+                  <div className="p-4 flex flex-wrap gap-2">
+                    {rooms.map(r => <RoomChip key={r.id} entry={r} onClick={() => openEdit(r)} />)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+

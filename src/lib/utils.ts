@@ -1,1 +1,39 @@
-{"data":"aW1wb3J0IHsgdHlwZSBDbGFzc1ZhbHVlLCBjbHN4IH0gZnJvbSAnY2xzeCcKaW1wb3J0IHsgdHdNZXJnZSB9IGZyb20gJ3RhaWx3aW5kLW1lcmdlJwoKZXhwb3J0IGZ1bmN0aW9uIGNuKC4uLmlucHV0czogQ2xhc3NWYWx1ZVtdKSB7CiAgcmV0dXJuIHR3TWVyZ2UoY2xzeChpbnB1dHMpKQp9CgovLyDilIDilIAgRGF0ZSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKLy8gU3RhbmRhcmQgc2hvcnQgZGF0ZTogMTUg4LihLuC4hC4gNjggICjguKfguLHguJkg4LmA4LiU4Li34Lit4LiZIOC4m+C4tSDguYDguKrguKHguK0pCmV4cG9ydCBmdW5jdGlvbiBmbXREYXRlKGQ6IHN0cmluZyB8IG51bGwgfCB1bmRlZmluZWQpOiBzdHJpbmcgewogIGlmICghZCkgcmV0dXJuICfigJQnCiAgY29uc3QgZGF0ZSA9IG5ldyBEYXRlKGQpCiAgaWYgKGlzTmFOKGRhdGUuZ2V0VGltZSgpKSkgcmV0dXJuICfigJQnCiAgcmV0dXJuIGRhdGUudG9Mb2NhbGVEYXRlU3RyaW5nKCd0aC1USCcsIHsgZGF5OiAnMi1kaWdpdCcsIG1vbnRoOiAnc2hvcnQnLCB5ZWFyOiAnMi1kaWdpdCcgfSkKfQoKLy8gTG9uZyBkYXRlOiAxNSDguKHguIHguKPguLLguITguKEgMjU2OApleHBvcnQgZnVuY3Rpb24gZm10RGF0ZUxvbmcoZDogc3RyaW5nIHwgbnVsbCB8IHVuZGVmaW5lZCk6IHN0cmluZyB7CiAgaWYgKCFkKSByZXR1cm4gJ+KAlCcKICBjb25zdCBkYXRlID0gbmV3IERhdGUoZCkKICBpZiAoaXNOYU4oZGF0ZS5nZXRUaW1lKCkpKSByZXR1cm4gJ+KAlCcKICByZXR1cm4gZGF0ZS50b0xvY2FsZURhdGVTdHJpbmcoJ3RoLVRIJywgeyBkYXk6ICdudW1lcmljJywgbW9udGg6ICdsb25nJywgeWVhcjogJ251bWVyaWMnIH0pCn0KCi8vIOKUgOKUgCBNb25leSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKLy8gRnVsbDogMSw1MDAsMDAwCmV4cG9ydCBmdW5jdGlvbiBmbXRNb25leShuOiBudW1iZXIgfCBudWxsIHwgdW5kZWZpbmVkKTogc3RyaW5nIHsKICBpZiAobiA9PSBudWxsKSByZXR1cm4gJ+KAlCcKICByZXR1cm4gTWF0aC5yb3VuZChuKS50b0xvY2FsZVN0cmluZygndGgtVEgnKQp9CgovLyBDb21wYWN0IGZvciBtb2JpbGU6IDEuNU0gLyA1MDBLIC8gNTBLCmV4cG9ydCBmdW5jdGlvbiBmbXRDb21wYWN0KG46IG51bWJlciB8IG51bGwgfCB1bmRlZmluZWQpOiBzdHJpbmcgewogIGlmIChuID09IG51bGwpIHJldHVybiAn4oCUJwogIGNvbnN0IGFicyA9IE1hdGguYWJzKG4pCiAgaWYgKGFicyA+PSAxXzAwMF8wMDApIHJldHVybiAobiAvIDFfMDAwXzAwMCkudG9GaXhlZChhYnMgJSAxXzAwMF8wMDAgPT09IDAgPyAwIDogMSkgKyAnTScKICBpZiAoYWJzID49IDFfMDAwKSByZXR1cm4gKG4gLyAxXzAwMCkudG9GaXhlZChhYnMgJSAxXzAwMCA9PT0gMCA/IDAgOiAxKSArICdLJwogIHJldHVybiBTdHJpbmcoTWF0aC5yb3VuZChuKSkKfQo="}
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// ── Date ──────────────────────────────────────────────────────────
+// Standard short date: 15 ม.ค. 68  (วัน เดือน ปี เสมอ)
+export function fmtDate(d: string | null | undefined): string {
+  if (!d) return '—'
+  const date = new Date(d)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
+}
+
+// Long date: 15 มกราคม 2568
+export function fmtDateLong(d: string | null | undefined): string {
+  if (!d) return '—'
+  const date = new Date(d)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+// ── Money ─────────────────────────────────────────────────────────
+// Full: 1,500,000
+export function fmtMoney(n: number | null | undefined): string {
+  if (n == null) return '—'
+  return Math.round(n).toLocaleString('th-TH')
+}
+
+// Compact for mobile: 1.5M / 500K / 50K
+export function fmtCompact(n: number | null | undefined): string {
+  if (n == null) return '—'
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(abs % 1_000_000 === 0 ? 0 : 1) + 'M'
+  if (abs >= 1_000) return (n / 1_000).toFixed(abs % 1_000 === 0 ? 0 : 1) + 'K'
+  return String(Math.round(n))
+}

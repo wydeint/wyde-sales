@@ -1,1 +1,194 @@
-{"data":"J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VSZWYsIHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCcKaW1wb3J0IHsgUGFwZXJjbGlwLCBGaWxlVGV4dCwgSW1hZ2VJY29uLCBFeHRlcm5hbExpbmssIExvYWRlcjIsIFRyYXNoMiB9IGZyb20gJ2x1Y2lkZS1yZWFjdCcKaW1wb3J0IHsgY3JlYXRlQ2xpZW50IH0gZnJvbSAnQC9saWIvc3VwYWJhc2UvY2xpZW50JwoKaW50ZXJmYWNlIEpvYkZpbGUgewogIGlkOiBzdHJpbmcKICBmaWxlX25hbWU6IHN0cmluZwogIGZpbGVfdXJsOiBzdHJpbmcKICBkcml2ZV9maWxlX2lkOiBzdHJpbmcgfCBudWxsCiAgY3JlYXRlZF9hdDogc3RyaW5nCn0KCmludGVyZmFjZSBQcm9wcyB7CiAgam9iSWQ/OiBzdHJpbmcKICBjdXN0b21lcklkPzogc3RyaW5nCiAgcHJvamVjdE5hbWU6IHN0cmluZwogIHJvb21Obzogc3RyaW5nCn0KCmNvbnN0IE1BWF9GSUxFUyA9IDEwCmNvbnN0IE1BWF9TSVpFID0gNSAqIDEwMjQgKiAxMDI0CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBGaWxlQXR0YWNoKHsgam9iSWQsIGN1c3RvbWVySWQsIHByb2plY3ROYW1lLCByb29tTm8gfTogUHJvcHMpIHsKICBjb25zdCBzdXBhYmFzZSA9IGNyZWF0ZUNsaWVudCgpCiAgY29uc3QgaW5wdXRSZWYgPSB1c2VSZWY8SFRNTElucHV0RWxlbWVudD4obnVsbCkKICBjb25zdCBbZmlsZXMsIHNldEZpbGVzXSA9IHVzZVN0YXRlPEpvYkZpbGVbXT4oW10pCiAgY29uc3QgW3VwbG9hZGluZywgc2V0VXBsb2FkaW5nXSA9IHVzZVN0YXRlKGZhbHNlKQogIGNvbnN0IFtkZWxldGluZ0lkLCBzZXREZWxldGluZ0lkXSA9IHVzZVN0YXRlPHN0cmluZyB8IG51bGw+KG51bGwpCiAgY29uc3QgW2Vycm9yLCBzZXRFcnJvcl0gPSB1c2VTdGF0ZSgnJykKICBjb25zdCBbcGVuZGluZ05hbWVzLCBzZXRQZW5kaW5nTmFtZXNdID0gdXNlU3RhdGU8c3RyaW5nW10+KFtdKQoKICB1c2VFZmZlY3QoKCkgPT4geyBsb2FkRmlsZXMoKSB9LCBbam9iSWQsIGN1c3RvbWVySWRdKQoKICBhc3luYyBmdW5jdGlvbiBsb2FkRmlsZXMoKSB7CiAgICBpZiAoIWpvYklkICYmICFjdXN0b21lcklkKSByZXR1cm4KICAgIGxldCBxID0gc3VwYWJhc2UuZnJvbSgnam9iX2ZpbGVzJykuc2VsZWN0KCdpZCwgZmlsZV9uYW1lLCBmaWxlX3VybCwgZHJpdmVfZmlsZV9pZCwgY3JlYXRlZF9hdCcpLm9yZGVyKCdjcmVhdGVkX2F0JywgeyBhc2NlbmRpbmc6IGZhbHNlIH0pCiAgICBpZiAoam9iSWQpIHEgPSBxLmVxKCdqb2JfaWQnLCBqb2JJZCkKICAgIGVsc2UgaWYgKGN1c3RvbWVySWQpIHEgPSBxLmVxKCdjdXN0b21lcl9pZCcsIGN1c3RvbWVySWQpCiAgICBjb25zdCB7IGRhdGEgfSA9IGF3YWl0IHEKICAgIHNldEZpbGVzKChkYXRhIGFzIEpvYkZpbGVbXSkgfHwgW10pCiAgfQoKICBhc3luYyBmdW5jdGlvbiBoYW5kbGVTZWxlY3QoZTogUmVhY3QuQ2hhbmdlRXZlbnQ8SFRNTElucHV0RWxlbWVudD4pIHsKICAgIGNvbnN0IHNlbGVjdGVkID0gQXJyYXkuZnJvbShlLnRhcmdldC5maWxlcyB8fCBbXSkKICAgIGUudGFyZ2V0LnZhbHVlID0gJycKICAgIHNldEVycm9yKCcnKQoKICAgIGlmICghc2VsZWN0ZWQubGVuZ3RoKSByZXR1cm4KICAgIGlmIChzZWxlY3RlZC5sZW5ndGggPiBNQVhfRklMRVMpIHsKICAgICAgc2V0RXJyb3IoJ+C5gOC4peC4t+C4reC4geC5hOC4lOC5ieC4quC4ueC4h+C4quC4uOC4lCAnICsgTUFYX0ZJTEVTICsgJyDguYTguJ/guKXguYwnKQogICAgICByZXR1cm4KICAgIH0KICAgIGZvciAoY29uc3QgZiBvZiBzZWxlY3RlZCkgewogICAgICBpZiAoIVsnaW1hZ2UvanBlZycsICdpbWFnZS9qcGcnLCAnYXBwbGljYXRpb24vcGRmJ10uaW5jbHVkZXMoZi50eXBlKSkgewogICAgICAgIHNldEVycm9yKCciJyArIGYubmFtZSArICciIOC4leC5ieC4reC4h+C5gOC4m+C5h+C4mSBKUEcg4Lir4Lij4Li34LitIFBERiDguYDguJfguYjguLLguJnguLHguYnguJknKQogICAgICAgIHJldHVybgogICAgICB9CiAgICAgIGlmIChmLnNpemUgPiBNQVhfU0laRSkgewogICAgICAgIHNldEVycm9yKCciJyArIGYubmFtZSArICciIOC4guC4meC4suC4lOC5gOC4geC4tOC4mSA1TUInKQogICAgICAgIHJldHVybgogICAgICB9CiAgICB9CgogICAgc2V0UGVuZGluZ05hbWVzKHNlbGVjdGVkLm1hcChmID0+IGYubmFtZSkpCiAgICBzZXRVcGxvYWRpbmcodHJ1ZSkKCiAgICBjb25zdCB7IGRhdGE6IHsgc2Vzc2lvbiB9IH0gPSBhd2FpdCBzdXBhYmFzZS5hdXRoLmdldFNlc3Npb24oKQogICAgY29uc3QgZm9ybSA9IG5ldyBGb3JtRGF0YSgpCiAgICBpZiAoam9iSWQpIGZvcm0uYXBwZW5kKCdqb2JfaWQnLCBqb2JJZCkKICAgIGlmIChjdXN0b21lcklkKSBmb3JtLmFwcGVuZCgnY3VzdG9tZXJfaWQnLCBjdXN0b21lcklkKQogICAgZm9ybS5hcHBlbmQoJ3Byb2plY3RfbmFtZScsIHByb2plY3ROYW1lKQogICAgZm9ybS5hcHBlbmQoJ3Jvb21fbm8nLCByb29tTm8pCiAgICBpZiAoc2Vzc2lvbj8udXNlcj8uaWQpIGZvcm0uYXBwZW5kKCd1c2VyX2lkJywgc2Vzc2lvbi51c2VyLmlkKQogICAgc2VsZWN0ZWQuZm9yRWFjaChmID0+IGZvcm0uYXBwZW5kKCdmaWxlcycsIGYpKQoKICAgIGNvbnN0IHJlcyA9IGF3YWl0IGZldGNoKCcvYXBpL2RyaXZlL3VwbG9hZCcsIHsKICAgICAgbWV0aG9kOiAnUE9TVCcsCiAgICAgIGhlYWRlcnM6IHNlc3Npb24/LmFjY2Vzc190b2tlbiA/IHsgQXV0aG9yaXphdGlvbjogJ0JlYXJlciAnICsgc2Vzc2lvbi5hY2Nlc3NfdG9rZW4gfSA6IHt9LAogICAgICBib2R5OiBmb3JtLAogICAgfSkKICAgIGNvbnN0IGpzb24gPSBhd2FpdCByZXMuanNvbigpCgogICAgc2V0VXBsb2FkaW5nKGZhbHNlKQogICAgc2V0UGVuZGluZ05hbWVzKFtdKQoKICAgIGlmICghcmVzLm9rKSB7CiAgICAgIHNldEVycm9yKGpzb24uZXJyb3IgfHwgJ1VwbG9hZCDguKXguYnguKHguYDguKvguKXguKcnKQogICAgICByZXR1cm4KICAgIH0KICAgIGF3YWl0IGxvYWRGaWxlcygpCiAgfQoKICBhc3luYyBmdW5jdGlvbiBkZWxldGVGaWxlKGY6IEpvYkZpbGUpIHsKICAgIGlmICghY29uZmlybSgn4Lil4Lia4LmE4Lif4Lil4LmMICInICsgZi5maWxlX25hbWUgKyAnIiDguK3guK3guIHguIjguLLguIHguKPguLDguJrguJrguYHguKXguLAgR29vZ2xlIERyaXZlPycpKSByZXR1cm4KICAgIHNldERlbGV0aW5nSWQoZi5pZCkKICAgIGNvbnN0IHsgZGF0YTogeyBzZXNzaW9uIH0gfSA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0U2Vzc2lvbigpCiAgICBhd2FpdCBmZXRjaCgnL2FwaS9kcml2ZS9kZWxldGUnLCB7CiAgICAgIG1ldGhvZDogJ0RFTEVURScsCiAgICAgIGhlYWRlcnM6IHsKICAgICAgICAnQ29udGVudC1UeXBlJzogJ2FwcGxpY2F0aW9uL2pzb24nLAogICAgICAgIC4uLihzZXNzaW9uPy5hY2Nlc3NfdG9rZW4gPyB7IEF1dGhvcml6YXRpb246ICdCZWFyZXIgJyArIHNlc3Npb24uYWNjZXNzX3Rva2VuIH0gOiB7fSksCiAgICAgIH0sCiAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgam9iX2ZpbGVfaWQ6IGYuaWQsIGRyaXZlX2ZpbGVfaWQ6IGYuZHJpdmVfZmlsZV9pZCB9KSwKICAgIH0pCiAgICBzZXREZWxldGluZ0lkKG51bGwpCiAgICBhd2FpdCBsb2FkRmlsZXMoKQogIH0KCiAgY29uc3QgaXNKcGcgPSAobmFtZTogc3RyaW5nKSA9PiAvXC4oanBnfGpwZWcpJC9pLnRlc3QobmFtZSkKCiAgcmV0dXJuICgKICAgIDxkaXY+CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gbWItMiI+CiAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXhzIGZvbnQtc2VtaWJvbGQiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0yKScgfX0+CiAgICAgICAgICDguYTguJ/guKXguYzguYHguJnguJogKHtmaWxlcy5sZW5ndGh9KQogICAgICAgIDwvc3Bhbj4KICAgICAgICA8YnV0dG9uCiAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBpbnB1dFJlZi5jdXJyZW50Py5jbGljaygpfQogICAgICAgICAgZGlzYWJsZWQ9e3VwbG9hZGluZ30KICAgICAgICAgIGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSBweC0zIHB5LTEuNSByb3VuZGVkLVs4cHhdIHRleHQteHMgZm9udC1zZW1pYm9sZCB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1ob3Zlci1iZyknLCBib3JkZXI6ICcxcHggc29saWQgdmFyKC0tZGl2aWRlciknLCBjb2xvcjogJ3ZhcigtLXRleHQtMiknIH19PgogICAgICAgICAge3VwbG9hZGluZwogICAgICAgICAgICA/IDxMb2FkZXIyIHNpemU9ezEyfSBjbGFzc05hbWU9ImFuaW1hdGUtc3BpbiIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJyB9fSAvPgogICAgICAgICAgICA6IDxQYXBlcmNsaXAgc2l6ZT17MTJ9IHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0gLz59CiAgICAgICAgICB7dXBsb2FkaW5nID8gJ+C4geC4s+C4peC4seC4h+C4reC4seC4m+C5guC4q+C4peC4lC4uLicgOiAn4LmB4LiZ4Lia4LmE4Lif4Lil4LmMJ30KICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8aW5wdXQKICAgICAgICAgIHJlZj17aW5wdXRSZWZ9CiAgICAgICAgICB0eXBlPSJmaWxlIgogICAgICAgICAgbXVsdGlwbGUKICAgICAgICAgIGFjY2VwdD0iLmpwZywuanBlZywucGRmIgogICAgICAgICAgY2xhc3NOYW1lPSJoaWRkZW4iCiAgICAgICAgICBvbkNoYW5nZT17aGFuZGxlU2VsZWN0fQogICAgICAgIC8+CiAgICAgIDwvZGl2PgoKICAgICAge2Vycm9yICYmICgKICAgICAgICA8cCBjbGFzc05hbWU9InRleHQteHMgbWItMiBweC0yIHB5LTEuNSByb3VuZGVkLVs2cHhdIgogICAgICAgICAgc3R5bGU9e3sgY29sb3I6ICcjZjg3MTcxJywgYmFja2dyb3VuZDogJ3JnYmEoMjQ4LDExMywxMTMsMC4xKScgfX0+CiAgICAgICAgICB7ZXJyb3J9CiAgICAgICAgPC9wPgogICAgICApfQoKICAgICAge3BlbmRpbmdOYW1lcy5sZW5ndGggPiAwICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ic3BhY2UteS0xIG1iLTIiPgogICAgICAgICAge3BlbmRpbmdOYW1lcy5tYXAoKG5hbWUsIGkpID0+ICgKICAgICAgICAgICAgPGRpdiBrZXk9e2l9IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgcHgtMyBweS0yIHJvdW5kZWQtWzhweF0iCiAgICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogJ3ZhcigtLWhvdmVyLWJnKScsIGJvcmRlcjogJzFweCBzb2xpZCB2YXIoLS1kaXZpZGVyKScgfX0+CiAgICAgICAgICAgICAgPExvYWRlcjIgc2l6ZT17MTF9IGNsYXNzTmFtZT0iYW5pbWF0ZS1zcGluIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19IC8+CiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXhzIGZsZXgtMSB0cnVuY2F0ZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTIpJyB9fT57bmFtZX08L3NwYW4+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgKSl9CiAgICAgICAgPC9kaXY+CiAgICAgICl9CgogICAgICB7ZmlsZXMubGVuZ3RoID4gMCAmJiAoCiAgICAgICAgPGRpdiBjbGFzc05hbWU9InNwYWNlLXktMSI+CiAgICAgICAgICB7ZmlsZXMubWFwKGYgPT4gKAogICAgICAgICAgICA8ZGl2IGtleT17Zi5pZH0gY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBweC0zIHB5LTIgcm91bmRlZC1bOHB4XSIKICAgICAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0taG92ZXItYmcpJywgYm9yZGVyOiAnMXB4IHNvbGlkIHZhcigtLWRpdmlkZXIpJyB9fT4KICAgICAgICAgICAgICB7aXNKcGcoZi5maWxlX25hbWUpCiAgICAgICAgICAgICAgICA/IDxJbWFnZUljb24gc2l6ZT17MTJ9IHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0gLz4KICAgICAgICAgICAgICAgIDogPEZpbGVUZXh0IHNpemU9ezEyfSBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19IC8+fQogICAgICAgICAgICAgIDxhIGhyZWY9e2YuZmlsZV91cmx9IHRhcmdldD0iX2JsYW5rIiByZWw9Im5vb3BlbmVyIG5vcmVmZXJyZXIiCiAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImZsZXgtMSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBtaW4tdy0wIj4KICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC14cyB0cnVuY2F0ZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT57Zi5maWxlX25hbWV9PC9zcGFuPgogICAgICAgICAgICAgICAgPEV4dGVybmFsTGluayBzaXplPXsxMX0gc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJywgZmxleFNocmluazogMCB9fSAvPgogICAgICAgICAgICAgIDwvYT4KICAgICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBkZWxldGVGaWxlKGYpfQogICAgICAgICAgICAgICAgZGlzYWJsZWQ9e2RlbGV0aW5nSWQgPT09IGYuaWR9CiAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImZsZXgtc2hyaW5rLTAgcC0xIHJvdW5kZWQgdHJhbnNpdGlvbi1jb2xvcnMgZGlzYWJsZWQ6b3BhY2l0eS00MCIKICAgICAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0KICAgICAgICAgICAgICAgIG9uTW91c2VFbnRlcj17ZSA9PiAoZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmNvbG9yID0gJyNmODcxNzEnKX0KICAgICAgICAgICAgICAgIG9uTW91c2VMZWF2ZT17ZSA9PiAoZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmNvbG9yID0gJ3ZhcigtLXRleHQtMyknKX0+CiAgICAgICAgICAgICAgICB7ZGVsZXRpbmdJZCA9PT0gZi5pZAogICAgICAgICAgICAgICAgICA/IDxMb2FkZXIyIHNpemU9ezExfSBjbGFzc05hbWU9ImFuaW1hdGUtc3BpbiIgLz4KICAgICAgICAgICAgICAgICAgOiA8VHJhc2gyIHNpemU9ezExfSAvPn0KICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICApKX0KICAgICAgICA8L2Rpdj4KICAgICAgKX0KCiAgICAgIHtmaWxlcy5sZW5ndGggPT09IDAgJiYgIXVwbG9hZGluZyAmJiAoCiAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXhzIHRleHQtY2VudGVyIHB5LTMiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+4Lii4Lix4LiH4LmE4Lih4LmI4Lih4Li14LmE4Lif4Lil4LmM4LmB4LiZ4LiaPC9wPgogICAgICApfQoKICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXhzIG10LTIiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+SlBHLCBQREYgwrcg4Liq4Li54LiH4Liq4Li44LiUIDEwIOC5hOC4n+C4peC5jCDCtyA1TUIv4LmE4Lif4Lil4LmMPC9wPgogICAgPC9kaXY+CiAgKQp9Cg=="}
+'use client'
+
+import { useRef, useState, useEffect } from 'react'
+import { Paperclip, FileText, ImageIcon, ExternalLink, Loader2, Trash2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+
+interface JobFile {
+  id: string
+  file_name: string
+  file_url: string
+  drive_file_id: string | null
+  created_at: string
+}
+
+interface Props {
+  jobId?: string
+  customerId?: string
+  projectName: string
+  roomNo: string
+}
+
+const MAX_FILES = 10
+const MAX_SIZE = 5 * 1024 * 1024
+
+export default function FileAttach({ jobId, customerId, projectName, roomNo }: Props) {
+  const supabase = createClient()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [files, setFiles] = useState<JobFile[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [pendingNames, setPendingNames] = useState<string[]>([])
+
+  useEffect(() => { loadFiles() }, [jobId, customerId])
+
+  async function loadFiles() {
+    if (!jobId && !customerId) return
+    let q = supabase.from('job_files').select('id, file_name, file_url, drive_file_id, created_at').order('created_at', { ascending: false })
+    if (jobId) q = q.eq('job_id', jobId)
+    else if (customerId) q = q.eq('customer_id', customerId)
+    const { data } = await q
+    setFiles((data as JobFile[]) || [])
+  }
+
+  async function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files || [])
+    e.target.value = ''
+    setError('')
+
+    if (!selected.length) return
+    if (selected.length > MAX_FILES) {
+      setError('เลือกได้สูงสุด ' + MAX_FILES + ' ไฟล์')
+      return
+    }
+    for (const f of selected) {
+      if (!['image/jpeg', 'image/jpg', 'application/pdf'].includes(f.type)) {
+        setError('"' + f.name + '" ต้องเป็น JPG หรือ PDF เท่านั้น')
+        return
+      }
+      if (f.size > MAX_SIZE) {
+        setError('"' + f.name + '" ขนาดเกิน 5MB')
+        return
+      }
+    }
+
+    setPendingNames(selected.map(f => f.name))
+    setUploading(true)
+
+    const { data: { session } } = await supabase.auth.getSession()
+    const form = new FormData()
+    if (jobId) form.append('job_id', jobId)
+    if (customerId) form.append('customer_id', customerId)
+    form.append('project_name', projectName)
+    form.append('room_no', roomNo)
+    if (session?.user?.id) form.append('user_id', session.user.id)
+    selected.forEach(f => form.append('files', f))
+
+    const res = await fetch('/api/drive/upload', {
+      method: 'POST',
+      headers: session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {},
+      body: form,
+    })
+    const json = await res.json()
+
+    setUploading(false)
+    setPendingNames([])
+
+    if (!res.ok) {
+      setError(json.error || 'Upload ล้มเหลว')
+      return
+    }
+    await loadFiles()
+  }
+
+  async function deleteFile(f: JobFile) {
+    if (!confirm('ลบไฟล์ "' + f.file_name + '" ออกจากระบบและ Google Drive?')) return
+    setDeletingId(f.id)
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch('/api/drive/delete', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: 'Bearer ' + session.access_token } : {}),
+      },
+      body: JSON.stringify({ job_file_id: f.id, drive_file_id: f.drive_file_id }),
+    })
+    setDeletingId(null)
+    await loadFiles()
+  }
+
+  const isJpg = (name: string) => /\.(jpg|jpeg)$/i.test(name)
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>
+          ไฟล์แนบ ({files.length})
+        </span>
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
+          style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+          {uploading
+            ? <Loader2 size={12} className="animate-spin" style={{ color: 'var(--text-3)' }} />
+            : <Paperclip size={12} style={{ color: 'var(--text-3)' }} />}
+          {uploading ? 'กำลังอัปโหลด...' : 'แนบไฟล์'}
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept=".jpg,.jpeg,.pdf"
+          className="hidden"
+          onChange={handleSelect}
+        />
+      </div>
+
+      {error && (
+        <p className="text-xs mb-2 px-2 py-1.5 rounded-[6px]"
+          style={{ color: '#f87171', background: 'rgba(248,113,113,0.1)' }}>
+          {error}
+        </p>
+      )}
+
+      {pendingNames.length > 0 && (
+        <div className="space-y-1 mb-2">
+          {pendingNames.map((name, i) => (
+            <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
+              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <Loader2 size={11} className="animate-spin" style={{ color: 'var(--text-3)' }} />
+              <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-2)' }}>{name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {files.length > 0 && (
+        <div className="space-y-1">
+          {files.map(f => (
+            <div key={f.id} className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
+              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              {isJpg(f.file_name)
+                ? <ImageIcon size={12} style={{ color: 'var(--text-3)' }} />
+                : <FileText size={12} style={{ color: 'var(--text-3)' }} />}
+              <a href={f.file_url} target="_blank" rel="noopener noreferrer"
+                className="flex-1 flex items-center gap-1 min-w-0">
+                <span className="text-xs truncate" style={{ color: 'var(--text-1)' }}>{f.file_name}</span>
+                <ExternalLink size={11} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+              </a>
+              <button
+                onClick={() => deleteFile(f)}
+                disabled={deletingId === f.id}
+                className="flex-shrink-0 p-1 rounded transition-colors disabled:opacity-40"
+                style={{ color: 'var(--text-3)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
+                {deletingId === f.id
+                  ? <Loader2 size={11} className="animate-spin" />
+                  : <Trash2 size={11} />}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {files.length === 0 && !uploading && (
+        <p className="text-xs text-center py-3" style={{ color: 'var(--text-3)' }}>ยังไม่มีไฟล์แนบ</p>
+      )}
+
+      <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>JPG, PDF · สูงสุด 10 ไฟล์ · 5MB/ไฟล์</p>
+    </div>
+  )
+}

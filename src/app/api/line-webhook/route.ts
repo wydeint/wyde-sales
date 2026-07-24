@@ -1,1 +1,28 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gJ25leHQvc2VydmVyJwoKLy8gTElORSBzZW5kcyBQT1NUIHdpdGggZXZlbnRzIHdoZW4gc29tZXRoaW5nIGhhcHBlbnMgaW4gdGhlIGdyb3VwLgovLyBXZSBsb2cgdGhlIGdyb3VwSWQgaGVyZSBzbyB5b3UgY2FuIGNvcHkgaXQgZnJvbSBWZXJjZWwgbG9ncyBhbmQgc2V0IExJTkVfR1JPVVBfSUQgZW52LgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgdHJ5IHsKICAgIGNvbnN0IGJvZHkgPSBhd2FpdCByZXEuanNvbigpCiAgICBjb25zdCBldmVudHM6IGFueVtdID0gYm9keS5ldmVudHMgPz8gW10KCiAgICBmb3IgKGNvbnN0IGV2ZW50IG9mIGV2ZW50cykgewogICAgICBjb25zdCBzb3VyY2UgPSBldmVudC5zb3VyY2UgPz8ge30KICAgICAgaWYgKHNvdXJjZS50eXBlID09PSAnZ3JvdXAnICYmIHNvdXJjZS5ncm91cElkKSB7CiAgICAgICAgLy8gQ29weSB0aGlzIHZhbHVlIGZyb20gVmVyY2VsIGxvZ3Mg4oaSIHNldCBhcyBMSU5FX0dST1VQX0lEIGVudiB2YXJpYWJsZQogICAgICAgIGNvbnNvbGUubG9nKCdbTElORSBXZWJob29rXSBncm91cElkOicsIHNvdXJjZS5ncm91cElkLCAnfCBldmVudFR5cGU6JywgZXZlbnQudHlwZSkKICAgICAgfQogICAgfQoKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiB0cnVlIH0pCiAgfSBjYXRjaCB7CiAgICAvLyBBbHdheXMgcmV0dXJuIDIwMCBzbyBMSU5FIGRvZXNuJ3QgcmV0cnkKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiB0cnVlIH0pCiAgfQp9CgovLyBMSU5FIGNvbnNvbGUgIlZlcmlmeSIgYnV0dG9uIHNlbmRzIEdFVCDigJQgbXVzdCByZXR1cm4gMjAwCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQoKSB7CiAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgb2s6IHRydWUgfSkKfQo="}
+import { NextRequest, NextResponse } from 'next/server'
+
+// LINE sends POST with events when something happens in the group.
+// We log the groupId here so you can copy it from Vercel logs and set LINE_GROUP_ID env.
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const events: any[] = body.events ?? []
+
+    for (const event of events) {
+      const source = event.source ?? {}
+      if (source.type === 'group' && source.groupId) {
+        // Copy this value from Vercel logs → set as LINE_GROUP_ID env variable
+        console.log('[LINE Webhook] groupId:', source.groupId, '| eventType:', event.type)
+      }
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch {
+    // Always return 200 so LINE doesn't retry
+    return NextResponse.json({ ok: true })
+  }
+}
+
+// LINE console "Verify" button sends GET — must return 200
+export async function GET() {
+  return NextResponse.json({ ok: true })
+}

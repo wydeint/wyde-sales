@@ -1,1 +1,79 @@
-{"data":"J3VzZSBjbGllbnQnDQoNCmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCcNCmltcG9ydCB7IHVzZVBhdGhuYW1lIH0gZnJvbSAnbmV4dC9uYXZpZ2F0aW9uJw0KaW1wb3J0IHsgTWVudSB9IGZyb20gJ2x1Y2lkZS1yZWFjdCcNCmltcG9ydCBTaWRlYmFyIGZyb20gJy4vU2lkZWJhcicNCg0KZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gRGFzaGJvYXJkU2hlbGwoeyBjaGlsZHJlbiB9OiB7IGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGUgfSkgew0KICBjb25zdCBbb3Blbiwgc2V0T3Blbl0gPSB1c2VTdGF0ZShmYWxzZSkNCiAgY29uc3QgcGF0aG5hbWUgPSB1c2VQYXRobmFtZSgpDQoNCiAgdXNlRWZmZWN0KCgpID0+IHsgc2V0T3BlbihmYWxzZSkgfSwgW3BhdGhuYW1lXSkNCg0KICB1c2VFZmZlY3QoKCkgPT4gew0KICAgIGNvbnN0IGggPSAoZTogS2V5Ym9hcmRFdmVudCkgPT4geyBpZiAoZS5rZXkgPT09ICdFc2NhcGUnKSBzZXRPcGVuKGZhbHNlKSB9DQogICAgd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoJ2tleWRvd24nLCBoKQ0KICAgIHJldHVybiAoKSA9PiB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcigna2V5ZG93bicsIGgpDQogIH0sIFtdKQ0KDQogIHJldHVybiAoDQogICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaC1zY3JlZW4gb3ZlcmZsb3ctaGlkZGVuIj4NCg0KICAgICAgey8qIOKUgOKUgCBEZXNrdG9wIHNpZGViYXIg4oCUIGFsd2F5cyB2aXNpYmxlIChsZyspIOKUgOKUgCAqL30NCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJoaWRkZW4gbGc6ZmxleCBmbGV4LXNocmluay0wIj4NCiAgICAgICAgPFNpZGViYXIgLz4NCiAgICAgIDwvZGl2Pg0KDQogICAgICB7Lyog4pSA4pSAIE1vYmlsZS9pUGFkIOKAlCBvdmVybGF5IHNpZGViYXIgKDwgbGcpIOKUgOKUgCAqL30NCiAgICAgIHtvcGVuICYmICgNCiAgICAgICAgPGRpdg0KICAgICAgICAgIGNsYXNzTmFtZT0ibGc6aGlkZGVuIGZpeGVkIGluc2V0LTAgei00MCINCiAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRPcGVuKGZhbHNlKX0NCiAgICAgICAgICBhcmlhLWhpZGRlbj0idHJ1ZSINCiAgICAgICAgICBzdHlsZT17eyBiYWNrZ3JvdW5kOiAncmdiYSgwLDAsMCwwLjQ1KScsIGJhY2tkcm9wRmlsdGVyOiAnYmx1cigycHgpJyB9fQ0KICAgICAgICAvPg0KICAgICAgKX0NCiAgICAgIDxkaXYgY2xhc3NOYW1lPXtbDQogICAgICAgICdsZzpoaWRkZW4gZml4ZWQgaW5zZXQteS0wIGxlZnQtMCB6LTUwIHRyYW5zaXRpb24tdHJhbnNmb3JtIGR1cmF0aW9uLTMwMCBlYXNlLWluLW91dCcsDQogICAgICAgIG9wZW4gPyAndHJhbnNsYXRlLXgtMCcgOiAnLXRyYW5zbGF0ZS14LWZ1bGwnLA0KICAgICAgXS5qb2luKCcgJyl9Pg0KICAgICAgICA8U2lkZWJhciBvbkNsb3NlPXsoKSA9PiBzZXRPcGVuKGZhbHNlKX0gLz4NCiAgICAgIDwvZGl2Pg0KDQogICAgICB7Lyog4pSA4pSAIE1haW4gY29udGVudCDilIDilIAgKi99DQogICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC0xIGZsZXggZmxleC1jb2wgb3ZlcmZsb3ctaGlkZGVuIG1pbi13LTAiPg0KDQogICAgICAgIHsvKiBUb3BiYXIg4oCUIG1vYmlsZS9pUGFkIG9ubHkgKi99DQogICAgICAgIDxoZWFkZXINCiAgICAgICAgICBjbGFzc05hbWU9ImxnOmhpZGRlbiBmbGV4LXNocmluay0wIGZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHB4LTQgaC0xNCINCiAgICAgICAgICBzdHlsZT17ew0KICAgICAgICAgICAgYmFja2dyb3VuZDogJ3ZhcigtLXNpZGViYXItYmcpJywNCiAgICAgICAgICAgIGJvcmRlckJvdHRvbTogJzFweCBzb2xpZCB2YXIoLS1zaWRlYmFyLWJvcmRlciknLA0KICAgICAgICAgICAgYmFja2Ryb3BGaWx0ZXI6ICdibHVyKDIwcHgpIHNhdHVyYXRlKDE4MCUpJywNCiAgICAgICAgICAgIFdlYmtpdEJhY2tkcm9wRmlsdGVyOiAnYmx1cigyMHB4KSBzYXR1cmF0ZSgxODAlKScsDQogICAgICAgICAgfX0NCiAgICAgICAgPg0KICAgICAgICAgIDxidXR0b24NCiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldE9wZW4odiA9PiAhdil9DQogICAgICAgICAgICBhcmlhLWxhYmVsPSLguYDguJvguLTguJQv4Lib4Li04LiU4LmA4Lih4LiZ4Li5Ig0KICAgICAgICAgICAgY2xhc3NOYW1lPSJ3LTEwIGgtMTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcm91bmRlZC1bMTFweF0gZmxleC1zaHJpbmstMCB0cmFuc2l0aW9uLWNvbG9ycyINCiAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0yKScgfX0NCiAgICAgICAgICAgIG9uTW91c2VFbnRlcj17ZSA9PiAoZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmJhY2tncm91bmQgPSAndmFyKC0taG92ZXItYmcpJyl9DQogICAgICAgICAgICBvbk1vdXNlTGVhdmU9e2UgPT4gKGUuY3VycmVudFRhcmdldC5zdHlsZS5iYWNrZ3JvdW5kID0gJ3RyYW5zcGFyZW50Jyl9DQogICAgICAgICAgPg0KICAgICAgICAgICAgPE1lbnUgc2l6ZT17MjB9IC8+DQogICAgICAgICAgPC9idXR0b24+DQogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0yLjUgbWluLXctMCI+DQogICAgICAgICAgICA8aW1nIHNyYz0iL2xvZ28uc3ZnIiBhbHQ9Ild5ZEUiIHN0eWxlPXt7IHdpZHRoOiA1MiwgaGVpZ2h0OiAyMiwgb2JqZWN0Rml0OiAnY29udGFpbicgfX0gLz4NCiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC1zbSBmb250LXNlbWlib2xkIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMSknIH19PlN1cGVyIFNhbGVzPC9zcGFuPg0KICAgICAgICAgIDwvZGl2Pg0KICAgICAgICA8L2hlYWRlcj4NCg0KICAgICAgICA8bWFpbiBjbGFzc05hbWU9ImZsZXgtMSBvdmVyZmxvdy15LWF1dG8gb3ZlcnNjcm9sbC1ub25lIiBzdHlsZT17eyBXZWJraXRPdmVyZmxvd1Njcm9sbGluZzogJ3RvdWNoJyB9fT4NCiAgICAgICAgICB7Y2hpbGRyZW59DQogICAgICAgIDwvbWFpbj4NCiAgICAgIDwvZGl2Pg0KICAgIDwvZGl2Pg0KICApDQp9DQo="}
+'use client'
+
+import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import { Menu } from 'lucide-react'
+import Sidebar from './Sidebar'
+
+export default function DashboardShell({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => { setOpen(false) }, [pathname])
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [])
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+
+      {/* ── Desktop sidebar — always visible (lg+) ── */}
+      <div className="hidden lg:flex flex-shrink-0">
+        <Sidebar />
+      </div>
+
+      {/* ── Mobile/iPad — overlay sidebar (< lg) ── */}
+      {open && (
+        <div
+          className="lg:hidden fixed inset-0 z-40"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+          style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)' }}
+        />
+      )}
+      <div className={[
+        'lg:hidden fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out',
+        open ? 'translate-x-0' : '-translate-x-full',
+      ].join(' ')}>
+        <Sidebar onClose={() => setOpen(false)} />
+      </div>
+
+      {/* ── Main content ── */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+
+        {/* Topbar — mobile/iPad only */}
+        <header
+          className="lg:hidden flex-shrink-0 flex items-center gap-3 px-4 h-14"
+          style={{
+            background: 'var(--sidebar-bg)',
+            borderBottom: '1px solid var(--sidebar-border)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          }}
+        >
+          <button
+            onClick={() => setOpen(v => !v)}
+            aria-label="เปิด/ปิดเมนู"
+            className="w-10 h-10 flex items-center justify-center rounded-[11px] flex-shrink-0 transition-colors"
+            style={{ color: 'var(--text-2)' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <Menu size={20} />
+          </button>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img src="/logo.svg" alt="WydE" style={{ width: 52, height: 22, objectFit: 'contain' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Super Sales</span>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto overscroll-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}

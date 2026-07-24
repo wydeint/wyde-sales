@@ -1,1 +1,8 @@
-{"data":"aW1wb3J0IHsgY3JlYXRlQnJvd3NlckNsaWVudCB9IGZyb20gJ0BzdXBhYmFzZS9zc3InCgpleHBvcnQgZnVuY3Rpb24gY3JlYXRlQ2xpZW50KCkgewogIHJldHVybiBjcmVhdGVCcm93c2VyQ2xpZW50KAogICAgcHJvY2Vzcy5lbnYuTkVYVF9QVUJMSUNfU1VQQUJBU0VfVVJMISwKICAgIHByb2Nlc3MuZW52Lk5FWFRfUFVCTElDX1NVUEFCQVNFX0FOT05fS0VZIQogICkKfQo="}
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}

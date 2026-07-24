@@ -1,1 +1,45 @@
-{"data":"aW1wb3J0IHsgY3JlYXRlU2VydmVyQ2xpZW50IH0gZnJvbSAnQHN1cGFiYXNlL3NzcicNCmltcG9ydCB7IE5leHRSZXNwb25zZSwgdHlwZSBOZXh0UmVxdWVzdCB9IGZyb20gJ25leHQvc2VydmVyJw0KDQpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbWlkZGxld2FyZShyZXF1ZXN0OiBOZXh0UmVxdWVzdCkgew0KICBsZXQgc3VwYWJhc2VSZXNwb25zZSA9IE5leHRSZXNwb25zZS5uZXh0KHsgcmVxdWVzdCB9KQ0KDQogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmVyQ2xpZW50KA0KICAgIHByb2Nlc3MuZW52Lk5FWFRfUFVCTElDX1NVUEFCQVNFX1VSTCEsDQogICAgcHJvY2Vzcy5lbnYuTkVYVF9QVUJMSUNfU1VQQUJBU0VfQU5PTl9LRVkhLA0KICAgIHsNCiAgICAgIGNvb2tpZXM6IHsNCiAgICAgICAgZ2V0QWxsKCkgeyByZXR1cm4gcmVxdWVzdC5jb29raWVzLmdldEFsbCgpIH0sDQogICAgICAgIHNldEFsbChjb29raWVzVG9TZXQpIHsNCiAgICAgICAgICBjb29raWVzVG9TZXQuZm9yRWFjaCgoeyBuYW1lLCB2YWx1ZSB9KSA9PiByZXF1ZXN0LmNvb2tpZXMuc2V0KG5hbWUsIHZhbHVlKSkNCiAgICAgICAgICBzdXBhYmFzZVJlc3BvbnNlID0gTmV4dFJlc3BvbnNlLm5leHQoeyByZXF1ZXN0IH0pDQogICAgICAgICAgY29va2llc1RvU2V0LmZvckVhY2goKHsgbmFtZSwgdmFsdWUsIG9wdGlvbnMgfSkgPT4NCiAgICAgICAgICAgIHN1cGFiYXNlUmVzcG9uc2UuY29va2llcy5zZXQobmFtZSwgdmFsdWUsIG9wdGlvbnMpDQogICAgICAgICAgKQ0KICAgICAgICB9LA0KICAgICAgfSwNCiAgICB9DQogICkNCg0KICBjb25zdCB7IGRhdGE6IHsgdXNlciB9IH0gPSBhd2FpdCBzdXBhYmFzZS5hdXRoLmdldFVzZXIoKQ0KICBjb25zdCBwYXRobmFtZSA9IHJlcXVlc3QubmV4dFVybC5wYXRobmFtZQ0KDQogIC8vIOC4luC5ieC4suC4ouC4seC4h+C5hOC4oeC5iCBsb2dpbiDguYHguKXguLDguYTguKHguYjguYTguJTguYnguK3guKLguLnguYjguJfguLXguYjguKvguJnguYnguLIgbG9naW4g4oaSIHJlZGlyZWN0IOC5hOC4myBsb2dpbg0KICAvLyAvZGVzaWduLXByZXZpZXcg4LmA4Lib4LmH4LiZ4Lir4LiZ4LmJ4LiyIFFBIOC4lOC4teC5hOC4i+C4meC5jOC4iuC4seC5iOC4p+C4hOC4o+C4suC4pyDguYDguJvguLTguJTguKrguLLguJjguLLguKPguJPguLDguYTguKfguYnguYDguJ7guLfguYjguK0gcmV2aWV3IOC5guC4lOC4ouC5hOC4oeC5iOC4leC5ieC4reC4hyBsb2dpbg0KICBpZiAoIXVzZXIgJiYgIXBhdGhuYW1lLnN0YXJ0c1dpdGgoJy9sb2dpbicpICYmICFwYXRobmFtZS5zdGFydHNXaXRoKCcvYXV0aCcpICYmICFwYXRobmFtZS5zdGFydHNXaXRoKCcvZGVzaWduLXByZXZpZXcnKSAmJiAhcGF0aG5hbWUuc3RhcnRzV2l0aCgnL2FwaS9saW5lLXdlYmhvb2snKSkgew0KICAgIHJldHVybiBOZXh0UmVzcG9uc2UucmVkaXJlY3QobmV3IFVSTCgnL2xvZ2luJywgcmVxdWVzdC51cmwpKQ0KICB9DQoNCiAgLy8g4LiW4LmJ4LiyIGxvZ2luIOC5geC4peC5ieC4p+C5gOC4guC5ieC4suC4q+C4meC5ieC4siBsb2dpbiDihpIgcmVkaXJlY3Qg4LmE4LibIGRhc2hib2FyZA0KICBpZiAodXNlciAmJiBwYXRobmFtZS5zdGFydHNXaXRoKCcvbG9naW4nKSkgew0KICAgIHJldHVybiBOZXh0UmVzcG9uc2UucmVkaXJlY3QobmV3IFVSTCgnL2Rhc2hib2FyZCcsIHJlcXVlc3QudXJsKSkNCiAgfQ0KDQogIHJldHVybiBzdXBhYmFzZVJlc3BvbnNlDQp9DQoNCmV4cG9ydCBjb25zdCBjb25maWcgPSB7DQogIG1hdGNoZXI6IFsNCiAgICAnLygoPyFfbmV4dC9zdGF0aWN8X25leHQvaW1hZ2V8ZmF2aWNvbi5pY298c3dcXC5qc3xtYW5pZmVzdFxcLndlYm1hbmlmZXN0fGljb24tLipcXC5wbmd8LipcXC4oPzpzdmd8cG5nfGpwZ3xqcGVnfGdpZnx3ZWJwKSQpLiopJywNCiAgXSwNCn0NCg=="}
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const pathname = request.nextUrl.pathname
+
+  // ถ้ายังไม่ login และไม่ได้อยู่ที่หน้า login → redirect ไป login
+  // /design-preview เป็นหน้า QA ดีไซน์ชั่วคราว เปิดสาธารณะไว้เพื่อ review โดยไม่ต้อง login
+  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/auth') && !pathname.startsWith('/design-preview') && !pathname.startsWith('/api/line-webhook')) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // ถ้า login แล้วเข้าหน้า login → redirect ไป dashboard
+  if (user && pathname.startsWith('/login')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  return supabaseResponse
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.webmanifest|icon-.*\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

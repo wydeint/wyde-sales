@@ -1,1 +1,43 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gJ25leHQvc2VydmVyJwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCB0b2tlbiA9IHByb2Nlc3MuZW52LkxJTkVfQUNDRVNTX1RPS0VOPy5yZXBsYWNlKC9e77u/LywgJycpLnRyaW0oKQogICAgY29uc3QgZ3JvdXBJZCA9IHByb2Nlc3MuZW52LkxJTkVfR1JPVVBfSUQ/LnRyaW0oKQoKICAgIGlmICghdG9rZW4pIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAnTm8gTElORSB0b2tlbiBjb25maWd1cmVkJyB9LCB7IHN0YXR1czogNTAwIH0pCiAgICBpZiAoIWdyb3VwSWQpIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAnTm8gTElORV9HUk9VUF9JRCBjb25maWd1cmVkJyB9LCB7IHN0YXR1czogNTAwIH0pCgogICAgbGV0IGJvZHk6IHsgbWVzc2FnZT86IHN0cmluZyB9CiAgICB0cnkgewogICAgICBib2R5ID0gYXdhaXQgcmVxLmpzb24oKQogICAgfSBjYXRjaCB7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAnSW52YWxpZCBKU09OIGJvZHknIH0sIHsgc3RhdHVzOiA0MDAgfSkKICAgIH0KCiAgICBjb25zdCB7IG1lc3NhZ2UgfSA9IGJvZHkKICAgIGlmICghbWVzc2FnZSkgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICdNaXNzaW5nIG1lc3NhZ2UnIH0sIHsgc3RhdHVzOiA0MDAgfSkKCiAgICBjb25zdCBsaW5lUmVzID0gYXdhaXQgZmV0Y2goJ2h0dHBzOi8vYXBpLmxpbmUubWUvdjIvYm90L21lc3NhZ2UvcHVzaCcsIHsKICAgICAgbWV0aG9kOiAnUE9TVCcsCiAgICAgIGhlYWRlcnM6IHsKICAgICAgICAnQ29udGVudC1UeXBlJzogJ2FwcGxpY2F0aW9uL2pzb24nLAogICAgICAgICdBdXRob3JpemF0aW9uJzogYEJlYXJlciAke3Rva2VufWAsCiAgICAgIH0sCiAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsKICAgICAgICB0bzogZ3JvdXBJZCwKICAgICAgICBtZXNzYWdlczogW3sgdHlwZTogJ3RleHQnLCB0ZXh0OiBtZXNzYWdlIH1dLAogICAgICB9KSwKICAgIH0pCgogICAgY29uc3QgcmVzcG9uc2VUZXh0ID0gYXdhaXQgbGluZVJlcy50ZXh0KCkKICAgIGlmICghbGluZVJlcy5vaykgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogcmVzcG9uc2VUZXh0LCBzdGF0dXM6IGxpbmVSZXMuc3RhdHVzIH0sIHsgc3RhdHVzOiBsaW5lUmVzLnN0YXR1cyB9KQogICAgfQoKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiB0cnVlIH0pCiAgfSBjYXRjaCAoZTogdW5rbm93bikgewogICAgY29uc3QgbXNnID0gZSBpbnN0YW5jZW9mIEVycm9yID8gZS5tZXNzYWdlIDogU3RyaW5nKGUpCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogbXNnIH0sIHsgc3RhdHVzOiA1MDAgfSkKICB9Cn0K"}
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(req: NextRequest) {
+  try {
+    const token = process.env.LINE_ACCESS_TOKEN?.replace(/^﻿/, '').trim()
+    const groupId = process.env.LINE_GROUP_ID?.trim()
+
+    if (!token) return NextResponse.json({ error: 'No LINE token configured' }, { status: 500 })
+    if (!groupId) return NextResponse.json({ error: 'No LINE_GROUP_ID configured' }, { status: 500 })
+
+    let body: { message?: string }
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+
+    const { message } = body
+    if (!message) return NextResponse.json({ error: 'Missing message' }, { status: 400 })
+
+    const lineRes = await fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        to: groupId,
+        messages: [{ type: 'text', text: message }],
+      }),
+    })
+
+    const responseText = await lineRes.text()
+    if (!lineRes.ok) {
+      return NextResponse.json({ error: responseText, status: lineRes.status }, { status: lineRes.status })
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+}

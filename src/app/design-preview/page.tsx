@@ -1,1 +1,121 @@
-{"data":"J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gJ3JlYWN0JwppbXBvcnQgTW9kYWwgZnJvbSAnQC9jb21wb25lbnRzL3VpL01vZGFsJwppbXBvcnQgeyBJbnB1dCwgU2VsZWN0LCBUZXh0QXJlYSB9IGZyb20gJ0AvY29tcG9uZW50cy91aS9JbnB1dCcKaW1wb3J0IHsgUGFnZUVycm9yLCBUYWJsZUVycm9yLCBQYWdlU3Bpbm5lciB9IGZyb20gJ0AvY29tcG9uZW50cy91aS9TdGF0ZVVJJwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gRGVzaWduUHJldmlld1BhZ2UoKSB7CiAgY29uc3QgW21vZGFsT3Blbiwgc2V0TW9kYWxPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKQogIGNvbnN0IFt0YWIsIHNldFRhYl0gPSB1c2VTdGF0ZSgnYScpCgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtc2NyZWVuIHAtOCBzcGFjZS15LTEwIG1heC13LTR4bCBteC1hdXRvIj4KICAgICAgPGRpdj4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQteHMgbWItMSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJyB9fT4KICAgICAgICAgIFN0eWxlIGd1aWRlIOKAlCDguK3guYnguLLguIfguK3guLTguIfguIjguLLguIEgLmNsYXVkZS9kZXNpZ24vZGVzaWduLm1kLCDguYDguJvguLTguJTguKrguLLguJjguLLguKPguJPguLDguYTguKfguYnguJXguLHguYnguIfguYPguIgg4LmE4Lih4LmI4LmD4LiK4LmI4Lir4LiZ4LmJ4Liy4LmD4LiZ4Lij4Liw4Lia4Lia4LiI4Lij4Li04LiHCiAgICAgICAgPC9wPgogICAgICAgIDxoMSBjbGFzc05hbWU9InRleHQtcGFnZS10aXRsZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT5XeWRFIFNhbGVzIOKAlCBTdHlsZSBHdWlkZTwvaDE+CiAgICAgIDwvZGl2PgoKICAgICAgey8qIFR5cG9ncmFwaHkgKi99CiAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT0ic3BhY2UteS0yIj4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtbGFiZWwtdXBwZXIiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+VHlwb2dyYXBoeTwvcD4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZ2xhc3MtY2FyZCBwLTUgc3BhY2UteS0zIj4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1wYWdlLXRpdGxlIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMSknIH19PlBhZ2UgVGl0bGUgMjBweC83MDA8L3A+CiAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtc2VjdGlvbi10aXRsZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT5TZWN0aW9uIFRpdGxlIDE1cHgvNjAwPC9wPgogICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWNhcmQtdGl0bGUiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0xKScgfX0+Q2FyZCBUaXRsZSAxM3B4LzYwMDwvcD4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1ib2R5LXN0cm9uZyIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT5Cb2R5IFN0cm9uZyAxM3B4LzYwMDwvcD4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1zbSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTIpJyB9fT5Cb2R5IOC4m+C4geC4leC4tCAoVGFpbHdpbmQgdGV4dC1zbSkg4oCUIOC4ouC4seC4h+C5hOC4oeC5iOC5gOC4m+C4peC4teC5iOC4ouC4meC5g+C4meC4o+C4reC4muC4meC4teC5iTwvcD4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1rcGktbnVtYmVyIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMSknIH19PuC4vzEsMjM0LDU2NzwvcD4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1sYWJlbC11cHBlciIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJyB9fT5MYWJlbCBVcHBlcmNhc2UgMTFweC82MDA8L3A+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvc2VjdGlvbj4KCiAgICAgIHsvKiBDYXJkICovfQogICAgICA8c2VjdGlvbiBjbGFzc05hbWU9InNwYWNlLXktMiI+CiAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWxhYmVsLXVwcGVyIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19PkNhcmQgKC5nbGFzcy1jYXJkKSDigJQgcmFkaXVzIDE4cHgsIG5vIHNoYWRvdzwvcD4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZ3JpZCBncmlkLWNvbHMtMiBnYXAtNCI+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZ2xhc3MtY2FyZCBwLTQiPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtY2FyZC10aXRsZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT5LUEkg4LiB4Liy4Lij4LmM4LiUPC9wPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQta3BpLW51bWJlciBtdC0xIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMSknIH19PjEyODwvcD4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXhzIG10LTEiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+4Lil4Li54LiB4LiE4LmJ4Liy4LiX4Lix4LmJ4LiH4Lir4Lih4LiUPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZ2xhc3MtY2FyZCBwLTQiPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtY2FyZC10aXRsZSIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTEpJyB9fT5LUEkg4LiB4Liy4Lij4LmM4LiUIDI8L3A+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1rcGktbnVtYmVyIG10LTEiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0xKScgfX0+4Li/NC4yTTwvcD4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXhzIG10LTEiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+4Lii4Lit4LiU4LiC4Liy4Lii4LmA4LiU4Li34Lit4LiZ4LiZ4Li14LmJPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvc2VjdGlvbj4KCiAgICAgIHsvKiBCdXR0b25zICovfQogICAgICA8c2VjdGlvbiBjbGFzc05hbWU9InNwYWNlLXktMiI+CiAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWxhYmVsLXVwcGVyIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19PkJ1dHRvbnMg4oCUIHBpbGwgcmFkaXVzLCB3ZWlnaHQgNjAwLCBwcmVzcyA9IHNjYWxlKDAuOTUpPC9wPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBmbGV4LXdyYXAiPgogICAgICAgICAgPGJ1dHRvbiBjbGFzc05hbWU9InB4LTQgcHktMiBidG4tZ3JlZW4gdGV4dC13aGl0ZSB0ZXh0LXNtIj7guYDguJ7guLTguYjguKHguKPguLLguKLguIHguLLguKM8L2J1dHRvbj4KICAgICAgICAgIDxidXR0b24gY2xhc3NOYW1lPSJweC00IHB5LTIgYnRuLXB1cnBsZSB0ZXh0LXdoaXRlIHRleHQtc20iPldhcnJhbnR5PC9idXR0b24+CiAgICAgICAgICA8YnV0dG9uIGNsYXNzTmFtZT0icHgtNCBweS0yIGJ0bi1ibHVlIHRleHQtd2hpdGUgdGV4dC1zbSI+4LiU4Li54Lij4Liy4Lii4Lil4Liw4LmA4Lit4Li14Lii4LiUPC9idXR0b24+CiAgICAgICAgICA8YnV0dG9uIG9uQ2xpY2s9eygpID0+IHNldE1vZGFsT3Blbih0cnVlKX0gY2xhc3NOYW1lPSJweC00IHB5LTIgYnRuLWdyZWVuIHRleHQtd2hpdGUgdGV4dC1zbSI+4LmA4Lib4Li04LiUIE1vZGFsPC9idXR0b24+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvc2VjdGlvbj4KCiAgICAgIHsvKiBUYWIgZ3JvdXAgKi99CiAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT0ic3BhY2UteS0yIj4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtbGFiZWwtdXBwZXIiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+VGFiIGdyb3VwIOKAlCByYWRpdXMgc2NhbGUsIHdlaWdodCA2MDAsIG5vIGdsb3cgc2hhZG93PC9wPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0YWItZ3JvdXAgdy1maXQiPgogICAgICAgICAgPGJ1dHRvbiBjbGFzc05hbWU9e2B0YWItYnRuICR7dGFiID09PSAnYScgPyAnYWN0aXZlJyA6ICcnfWB9IG9uQ2xpY2s9eygpID0+IHNldFRhYignYScpfT7guKPguLLguKLguKPguLHguJo8L2J1dHRvbj4KICAgICAgICAgIDxidXR0b24gY2xhc3NOYW1lPXtgdGFiLWJ0biAke3RhYiA9PT0gJ2InID8gJ2FjdGl2ZScgOiAnJ31gfSBvbkNsaWNrPXsoKSA9PiBzZXRUYWIoJ2InKX0+4Lij4Liy4Lii4LiI4LmI4Liy4LiiPC9idXR0b24+CiAgICAgICAgICA8YnV0dG9uIGNsYXNzTmFtZT17YHRhYi1idG4gJHt0YWIgPT09ICdjJyA/ICdhY3RpdmUnIDogJyd9YH0gb25DbGljaz17KCkgPT4gc2V0VGFiKCdjJyl9PuC4quC4o+C4uOC4mzwvYnV0dG9uPgogICAgICAgIDwvZGl2PgogICAgICA8L3NlY3Rpb24+CgogICAgICB7LyogSW5wdXRzICovfQogICAgICA8c2VjdGlvbiBjbGFzc05hbWU9InNwYWNlLXktMiI+CiAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWxhYmVsLXVwcGVyIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMyknIH19PklucHV0cyAoLmZpZWxkLWlucHV0KSDigJQgcmFkaXVzIDhweDwvcD4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZ2xhc3MtY2FyZCBwLTUgZ3JpZCBncmlkLWNvbHMtMiBnYXAtNCI+CiAgICAgICAgICA8SW5wdXQgbGFiZWw9IuC4iuC4t+C5iOC4reC4peC4ueC4geC4hOC5ieC4siIgcGxhY2Vob2xkZXI9IuC4geC4o+C4reC4geC4iuC4t+C5iOC4rSIgcmVxdWlyZWQgLz4KICAgICAgICAgIDxTZWxlY3QgbGFiZWw9IuC4quC4luC4suC4meC4sCIgb3B0aW9ucz17W3sgdmFsdWU6ICduZXcnLCBsYWJlbDogJ+C5g+C4q+C4oeC5iCcgfSwgeyB2YWx1ZTogJ2Nsb3NlZCcsIGxhYmVsOiAn4Lib4Li04LiU4LmB4Lil4LmJ4LinJyB9XX0gLz4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJjb2wtc3Bhbi0yIj4KICAgICAgICAgICAgPFRleHRBcmVhIGxhYmVsPSLguKvguKHguLLguKLguYDguKvguJXguLgiIHBsYWNlaG9sZGVyPSLguKPguLLguKLguKXguLDguYDguK3guLXguKLguJTguYDguJ7guLTguYjguKHguYDguJXguLTguKEiIC8+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L2Rpdj4KICAgICAgPC9zZWN0aW9uPgoKICAgICAgey8qIE5hdi1pdGVtLXN0eWxlIHJhZGl1cyBzYW1wbGUgKi99CiAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT0ic3BhY2UteS0yIj4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtbGFiZWwtdXBwZXIiIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0zKScgfX0+TmF2IGl0ZW0gcmFkaXVzICgxMXB4KSDigJQg4LiI4Liz4Lil4Lit4LiH4LiI4Liy4LiBIFNpZGViYXI8L3A+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9InctNTYgc3BhY2UteS0wLjUiPgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0yLjUgcm91bmRlZC1bMTFweF0gcHgtMyBweS0yIHRleHQtc20iIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1hY3RpdmUtYmcpJywgY29sb3I6ICd2YXIoLS1hY2NlbnQpJyB9fT4KICAgICAgICAgICAg4LmA4Lih4LiZ4Li54LiX4Li14LmI4LiB4Liz4Lil4Lix4LiH4LmA4Lib4Li04LiU4Lit4Lii4Li54LmICiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41IHJvdW5kZWQtWzExcHhdIHB4LTMgcHktMiB0ZXh0LXNtIiBzdHlsZT17eyBjb2xvcjogJ3ZhcigtLXRleHQtMiknIH19PgogICAgICAgICAgICDguYDguKHguJnguLnguJvguIHguJXguLQKICAgICAgICAgIDwvZGl2PgogICAgICAgIDwvZGl2PgogICAgICA8L3NlY3Rpb24+CgogICAgICB7LyogU3RhdGVVSSAqL30KICAgICAgPHNlY3Rpb24gY2xhc3NOYW1lPSJzcGFjZS15LTIiPgogICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1sYWJlbC11cHBlciIgc3R5bGU9e3sgY29sb3I6ICd2YXIoLS10ZXh0LTMpJyB9fT5TdGF0ZVVJIOKAlCByZXRyeSBidXR0b24gbm93IHBpbGwsIHdlaWdodCA2MDA8L3A+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImdsYXNzLWNhcmQgcC0yIj4KICAgICAgICAgIDxQYWdlRXJyb3IgbWVzc2FnZT0i4LiV4Lix4Lin4Lit4Lii4LmI4Liy4LiH4LiC4LmJ4Lit4LiE4Lin4Liy4LihIGVycm9yIiBvblJldHJ5PXsoKSA9PiB7fX0gLz4KICAgICAgICA8L2Rpdj4KICAgICAgICA8dGFibGUgY2xhc3NOYW1lPSJ3LWZ1bGwgZ2xhc3MtY2FyZCI+CiAgICAgICAgICA8dGJvZHk+CiAgICAgICAgICAgIDxUYWJsZUVycm9yIGNvbFNwYW49ezN9IG1lc3NhZ2U9IuC5guC4q+C4peC4lOC4leC4suC4o+C4suC4h+C5hOC4oeC5iOC4quC4s+C5gOC4o+C5h+C4iCAo4LiV4Lix4Lin4Lit4Lii4LmI4Liy4LiHKSIgb25SZXRyeT17KCkgPT4ge319IC8+CiAgICAgICAgICA8L3Rib2R5PgogICAgICAgIDwvdGFibGU+CiAgICAgIDwvc2VjdGlvbj4KCiAgICAgIDxNb2RhbCBvcGVuPXttb2RhbE9wZW59IG9uQ2xvc2U9eygpID0+IHNldE1vZGFsT3BlbihmYWxzZSl9IHRpdGxlPSLguJXguLHguKfguK3guKLguYjguLLguIcgTW9kYWwg4oCUIHJhZGl1cyAxOHB4Ij4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtc20iIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tdGV4dC0yKScgfX0+CiAgICAgICAgICDguJnguLXguYjguITguLfguK3guJXguLHguKfguK3guKLguYjguLLguIfguYDguJnguLfguYnguK3guKvguLLguYPguJkgTW9kYWwg4Lir4Lil4Lix4LiH4Lib4Lij4Lix4LiaIHJhZGl1cyDguYDguJvguYfguJkgMThweCDguJXguLLguKEgZGVzaWduLm1kIOKAlCDguYDguIfguLLguKLguLHguIfguITguIfguK3guKLguLnguYjguJXguLLguKHguILguYnguK3guKLguIHguYDguKfguYnguJnguILguK3guIcgb3ZlcmxheQogICAgICAgIDwvcD4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibXQtNCBmbGV4IGp1c3RpZnktZW5kIGdhcC0yIj4KICAgICAgICAgIDxidXR0b24gb25DbGljaz17KCkgPT4gc2V0TW9kYWxPcGVuKGZhbHNlKX0gY2xhc3NOYW1lPSJweC00IHB5LTIgYnRuLWJsdWUgdGV4dC13aGl0ZSB0ZXh0LXNtIj7guJvguLTguJQ8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KICAgICAgPC9Nb2RhbD4KICAgIDwvZGl2PgogICkKfQo="}
+'use client'
+
+import { useState } from 'react'
+import Modal from '@/components/ui/Modal'
+import { Input, Select, TextArea } from '@/components/ui/Input'
+import { PageError, TableError, PageSpinner } from '@/components/ui/StateUI'
+
+export default function DesignPreviewPage() {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [tab, setTab] = useState('a')
+
+  return (
+    <div className="min-h-screen p-8 space-y-10 max-w-4xl mx-auto">
+      <div>
+        <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
+          Style guide — อ้างอิงจาก .claude/design/design.md, เปิดสาธารณะไว้ตั้งใจ ไม่ใช่หน้าในระบบจริง
+        </p>
+        <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>WydE Sales — Style Guide</h1>
+      </div>
+
+      {/* Typography */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Typography</p>
+        <div className="glass-card p-5 space-y-3">
+          <p className="text-page-title" style={{ color: 'var(--text-1)' }}>Page Title 20px/700</p>
+          <p className="text-section-title" style={{ color: 'var(--text-1)' }}>Section Title 15px/600</p>
+          <p className="text-card-title" style={{ color: 'var(--text-1)' }}>Card Title 13px/600</p>
+          <p className="text-body-strong" style={{ color: 'var(--text-1)' }}>Body Strong 13px/600</p>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>Body ปกติ (Tailwind text-sm) — ยังไม่เปลี่ยนในรอบนี้</p>
+          <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>฿1,234,567</p>
+          <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Label Uppercase 11px/600</p>
+        </div>
+      </section>
+
+      {/* Card */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Card (.glass-card) — radius 18px, no shadow</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="glass-card p-4">
+            <p className="text-card-title" style={{ color: 'var(--text-1)' }}>KPI การ์ด</p>
+            <p className="text-kpi-number mt-1" style={{ color: 'var(--text-1)' }}>128</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ลูกค้าทั้งหมด</p>
+          </div>
+          <div className="glass-card p-4">
+            <p className="text-card-title" style={{ color: 'var(--text-1)' }}>KPI การ์ด 2</p>
+            <p className="text-kpi-number mt-1" style={{ color: 'var(--text-1)' }}>฿4.2M</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ยอดขายเดือนนี้</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Buttons */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Buttons — pill radius, weight 600, press = scale(0.95)</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button className="px-4 py-2 btn-green text-white text-sm">เพิ่มรายการ</button>
+          <button className="px-4 py-2 btn-purple text-white text-sm">Warranty</button>
+          <button className="px-4 py-2 btn-blue text-white text-sm">ดูรายละเอียด</button>
+          <button onClick={() => setModalOpen(true)} className="px-4 py-2 btn-green text-white text-sm">เปิด Modal</button>
+        </div>
+      </section>
+
+      {/* Tab group */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Tab group — radius scale, weight 600, no glow shadow</p>
+        <div className="tab-group w-fit">
+          <button className={`tab-btn ${tab === 'a' ? 'active' : ''}`} onClick={() => setTab('a')}>รายรับ</button>
+          <button className={`tab-btn ${tab === 'b' ? 'active' : ''}`} onClick={() => setTab('b')}>รายจ่าย</button>
+          <button className={`tab-btn ${tab === 'c' ? 'active' : ''}`} onClick={() => setTab('c')}>สรุป</button>
+        </div>
+      </section>
+
+      {/* Inputs */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Inputs (.field-input) — radius 8px</p>
+        <div className="glass-card p-5 grid grid-cols-2 gap-4">
+          <Input label="ชื่อลูกค้า" placeholder="กรอกชื่อ" required />
+          <Select label="สถานะ" options={[{ value: 'new', label: 'ใหม่' }, { value: 'closed', label: 'ปิดแล้ว' }]} />
+          <div className="col-span-2">
+            <TextArea label="หมายเหตุ" placeholder="รายละเอียดเพิ่มเติม" />
+          </div>
+        </div>
+      </section>
+
+      {/* Nav-item-style radius sample */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Nav item radius (11px) — จำลองจาก Sidebar</p>
+        <div className="w-56 space-y-0.5">
+          <div className="flex items-center gap-2.5 rounded-[11px] px-3 py-2 text-sm" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>
+            เมนูที่กำลังเปิดอยู่
+          </div>
+          <div className="flex items-center gap-2.5 rounded-[11px] px-3 py-2 text-sm" style={{ color: 'var(--text-2)' }}>
+            เมนูปกติ
+          </div>
+        </div>
+      </section>
+
+      {/* StateUI */}
+      <section className="space-y-2">
+        <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>StateUI — retry button now pill, weight 600</p>
+        <div className="glass-card p-2">
+          <PageError message="ตัวอย่างข้อความ error" onRetry={() => {}} />
+        </div>
+        <table className="w-full glass-card">
+          <tbody>
+            <TableError colSpan={3} message="โหลดตารางไม่สำเร็จ (ตัวอย่าง)" onRetry={() => {}} />
+          </tbody>
+        </table>
+      </section>
+
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="ตัวอย่าง Modal — radius 18px">
+        <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+          นี่คือตัวอย่างเนื้อหาใน Modal หลังปรับ radius เป็น 18px ตาม design.md — เงายังคงอยู่ตามข้อยกเว้นของ overlay
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={() => setModalOpen(false)} className="px-4 py-2 btn-blue text-white text-sm">ปิด</button>
+        </div>
+      </Modal>
+    </div>
+  )
+}

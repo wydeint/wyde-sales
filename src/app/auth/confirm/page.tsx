@@ -1,1 +1,26 @@
-{"data":"J3VzZSBjbGllbnQnCgppbXBvcnQgeyB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCcKaW1wb3J0IHsgdXNlUm91dGVyIH0gZnJvbSAnbmV4dC9uYXZpZ2F0aW9uJwppbXBvcnQgeyBjcmVhdGVDbGllbnQgfSBmcm9tICdAL2xpYi9zdXBhYmFzZS9jbGllbnQnCgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBBdXRoQ29uZmlybVBhZ2UoKSB7CiAgY29uc3Qgcm91dGVyID0gdXNlUm91dGVyKCkKCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlQ2xpZW50KCkKICAgIHN1cGFiYXNlLmF1dGguZ2V0U2Vzc2lvbigpLnRoZW4oKHsgZGF0YSB9KSA9PiB7CiAgICAgIGlmIChkYXRhLnNlc3Npb24pIHsKICAgICAgICByb3V0ZXIucmVwbGFjZSgnL2Rhc2hib2FyZCcpCiAgICAgIH0gZWxzZSB7CiAgICAgICAgcm91dGVyLnJlcGxhY2UoJy9sb2dpbicpCiAgICAgIH0KICAgIH0pCiAgfSwgW3JvdXRlcl0pCgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtc2NyZWVuIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIj4KICAgICAgPGRpdiBjbGFzc05hbWU9InctNSBoLTUgYm9yZGVyLTIgYm9yZGVyLWluZGlnby01MDAgYm9yZGVyLXQtdHJhbnNwYXJlbnQgcm91bmRlZC1mdWxsIGFuaW1hdGUtc3BpbiIgLz4KICAgIDwvZGl2PgogICkKfQo="}
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+export default function AuthConfirmPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        router.replace('/dashboard')
+      } else {
+        router.replace('/login')
+      }
+    })
+  }, [router])
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}

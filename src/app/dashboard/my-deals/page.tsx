@@ -2090,10 +2090,11 @@ export default function MyDealsPage() {
     const visible = jobs.filter(j => {
       if (filterProject && j.project_id !== filterProject) return false
       if (filterSales && j.sales_name !== filterSales) return false
-      // Only show jobs with ≥50% settled (cash + voucher) — unless B2B or already delivered
+      // Only show jobs with ≥50% settled (cash + voucher) — unless B2B, already delivered, or work has started
       if (j.customer_type !== 'B2B' && !j.actual_deliver_date) {
+        const workStarted = j.working_status === 'ดำเนินการ' || j.working_status === 'รอส่งมอบ'
         const jobValue = j.revenue_inc_vat || 0
-        if (jobValue > 0 && j.total_settled / jobValue < 0.5) return false
+        if (jobValue > 0 && !workStarted && j.total_settled / jobValue < 0.5) return false
       }
       if (q) {
         const room = j.room_no.toLowerCase().replace(/[-\s]/g, '')

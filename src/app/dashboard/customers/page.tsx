@@ -637,7 +637,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap items-center">
+      <div className="filter-row mb-4 items-center">
         <label htmlFor={searchId} className="sr-only">ค้นหาลูกค้า</label>
         <div className="relative flex-1 min-w-[200px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
@@ -660,11 +660,9 @@ export default function CustomersPage() {
       </div>
 
       {/* Status filter pills */}
-      <div className="flex gap-1 rounded-[11px] p-1 mb-4 w-fit flex-wrap"
-        style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+      <div className="tab-group mb-4 flex-wrap">
         <button onClick={() => setFilterStatus('')}
-          className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-          style={{ background: !filterStatus ? 'var(--accent)' : 'transparent', color: !filterStatus ? '#fff' : 'var(--text-2)' }}>
+          className={`tab-btn ${!filterStatus ? 'active' : ''}`}>
           ทั้งหมด {customers.length}
         </button>
         {STATUS_LIST.map(s => {
@@ -672,8 +670,7 @@ export default function CustomersPage() {
           if (!count) return null
           return (
             <button key={s.value} onClick={() => setFilterStatus(filterStatus === s.value ? '' : s.value)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-              style={{ background: filterStatus === s.value ? 'var(--accent)' : 'transparent', color: filterStatus === s.value ? '#fff' : 'var(--text-2)' }}>
+              className={`tab-btn ${filterStatus === s.value ? 'active' : ''}`}>
               {s.label} {count}
             </button>
           )

@@ -593,7 +593,7 @@ export default function LeadsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap">
+      <div className="filter-row mb-4">
         <div className="flex items-center gap-2 rounded-[8px] px-3 py-2 flex-1 min-w-[200px]"
           style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
           <Search size={14} style={{ color: 'var(--text-3)' }} />

@@ -156,7 +156,7 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left rounded-[14px] p-3 flex flex-col gap-2 transition-all group"
+      className="w-full text-left rounded-[11px] p-3 flex flex-col gap-2 transition-all group"
       style={{
         background: 'var(--card-bg)',
         border: `1px solid ${isOverdue ? 'color-mix(in srgb, var(--accent-red) 35%, transparent)' : 'var(--card-border)'}`,
@@ -399,7 +399,7 @@ function AddJobModal({
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={save} disabled={saving}
-            className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#666' : 'var(--accent)' }}>
             {saving ? 'กำลังสร้างงาน...' : '+ เพิ่มงาน'}
           </button>

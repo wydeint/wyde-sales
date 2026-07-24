@@ -98,7 +98,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
   const displayValue = jobRev ?? (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0)
   const isClosed = c.status === 'closed'
   return (
-    <div className="relative group w-full rounded-[14px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+    <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
       style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? '#22c55e40' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
       onMouseEnter={e => (e.currentTarget.style.borderColor = isClosed ? '#22c55e80' : 'var(--accent)')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = isClosed ? '#22c55e40' : 'var(--card-border)')}
@@ -513,7 +513,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
             const displayVal = jobRev || customer.budget
             const label = jobRev > 0 ? 'มูลค่างาน (inc. VAT)' : 'งบประมาณ'
             return (
-          <div className="rounded-[12px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
+          <div className="rounded-[11px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>{label}</p>
               <p className="text-xl font-bold mt-0.5" style={{ color: displayVal > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
@@ -542,7 +542,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                 </p>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-[10px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                   <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{j.customer_type === 'B2B' ? 'วันรับ PO / ยอด' : 'วันรับจอง'}</p>
                   <input type="date" lang="th-TH" defaultValue={j.order_date || ''}
                     onBlur={async e => {
@@ -553,7 +553,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                     className="w-full text-xs font-semibold focus:outline-none"
                     style={{ background: 'transparent', color: j.order_date ? 'var(--text-1)' : 'var(--text-3)', border: 'none' }} />
                 </div>
-                <div className="rounded-[10px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+                <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                   <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>วันเซ็นสัญญา</p>
                   <input type="date" lang="th-TH" defaultValue={j.contract_date || ''}
                     onBlur={async e => {
@@ -599,7 +599,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
 
           {/* Edit form */}
           {editing && (
-            <div className="space-y-3 p-4 rounded-[12px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            <div className="space-y-3 p-4 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>แก้ไขข้อมูล</p>
               <Input label="ชื่อลูกค้า" value={form.customer_name} onChange={e => setForm(p => ({ ...p, customer_name: e.target.value }))} />
               <div className="grid grid-cols-2 gap-2">
@@ -665,14 +665,14 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                 )}
               </div>
               {customer.notes && (
-                <div className="p-3 rounded-[10px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{customer.notes}</div>
+                <div className="p-3 rounded-[8px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{customer.notes}</div>
               )}
             </div>
           )}
 
           {/* Warranties */}
           {!loadingDetail && warranties.length > 0 && (
-            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
               <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                 <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</span>
               </div>
@@ -696,7 +696,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
             const docCount = [j.quotation1_url, j.quotation2_url, j.id_card_url, j.delivery_doc_url, j.satisfaction_url].filter(Boolean).length
             const expanded = docsExpanded[j.id] ?? false
             return (
-              <div key={j.id} className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+              <div key={j.id} className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
                 <button className="w-full flex items-center justify-between px-4 py-2.5"
                   style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}
                   onClick={() => setDocsExpanded(e => ({ ...e, [j.id]: !e[j.id] }))}>
@@ -725,7 +725,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
           })})()}
 
           {/* File Attachments */}
-          <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
+          <div className="rounded-[11px] p-3" style={{ border: '1px solid var(--divider)' }}>
             <FileAttach
               customerId={customer.id}
               projectName={(customer as any).projects?.name || customer.project_id || ''}
@@ -744,7 +744,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                 สถานะพิเศษ / ลูกค้ายกเลิก
               </button>
               {showCancelSection && (
-                <div className="mt-2 rounded-[10px] p-3 space-y-3"
+                <div className="mt-2 rounded-[8px] p-3 space-y-3"
                   style={{ background: 'color-mix(in srgb, #f87171 6%, transparent)', border: '1px solid color-mix(in srgb, #f87171 20%, transparent)' }}>
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input type="checkbox" checked={cancelConfirmed} onChange={e => setCancelConfirmed(e.target.checked)}
@@ -907,7 +907,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
         <div className="p-5 space-y-3">
           {/* Booking data banner */}
           {booking && booking.booking_value && (
-            <div className="rounded-[10px] px-3 py-2.5 flex flex-col gap-1"
+            <div className="rounded-[8px] px-3 py-2.5 flex flex-col gap-1"
               style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
               <p className="text-[11px] font-semibold" style={{ color: 'var(--accent-green)' }}>พบข้อมูล Booking</p>
               <p className="text-[11px]" style={{ color: 'var(--text-2)' }}>
@@ -965,7 +965,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={save} disabled={saving}
-            className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#666' : '#059669' }}>
             {saving ? 'กำลังสร้างงาน...' : '⚡ เริ่มงาน'}
           </button>
@@ -1136,9 +1136,9 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
       <TextArea label="หมายเหตุ" value={form.notes} onChange={s('notes')} rows={2} />
       {errMsg && <p className="text-xs py-1 px-2 rounded-[8px]" style={{ color: '#ef4444', background: '#fee2e2' }}>{errMsg}</p>}
       <div className="flex gap-2 pt-1">
-        <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-[10px] text-sm border" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
+        <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-[8px] text-sm border" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
         <button type="submit" disabled={saving}
-          className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold text-white"
+          className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
           style={{ background: saving ? '#666' : 'var(--accent)' }}>
           {saving ? 'กำลังบันทึก...' : 'บันทึก'}
         </button>
@@ -1350,7 +1350,7 @@ export default function ProspectsKanbanPage() {
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{customers.length} ราย</p>
           </div>
           <button onClick={() => setAddModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-semibold text-white"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> เพิ่ม Prospect
           </button>
@@ -1393,7 +1393,7 @@ export default function ProspectsKanbanPage() {
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input value={search} onChange={e => { setSearch(e.target.value); setSelectedCustomer(null) }}
             placeholder="ค้นหาห้อง, ลูกค้า..."
-            className="pl-8 pr-7 py-2 rounded-[10px] text-sm focus:outline-none w-44"
+            className="pl-8 pr-7 py-2 rounded-[8px] text-sm focus:outline-none w-44"
             style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           {search && (
             <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
@@ -1402,13 +1402,13 @@ export default function ProspectsKanbanPage() {
           )}
         </div>
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[10px] text-sm focus:outline-none appearance-none"
+          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
           style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)' }}>
           <option value="">โครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[10px] text-sm focus:outline-none appearance-none"
+          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
           style={{ background: 'var(--input-bg)', border: `1px solid ${filterSales ? 'var(--accent)' : 'var(--divider)'}`, color: filterSales ? 'var(--text-1)' : 'var(--text-3)' }}>
           <option value="">Sales</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -1530,11 +1530,11 @@ export default function ProspectsKanbanPage() {
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>ต้องการสร้างงานที่ {dupRoomCustomer.jobCount + 1} ให้ห้องนี้ไหม?</p>
             <div className="flex gap-2 pt-1">
               <button onClick={() => { setDupRoomCustomer(null); setPendingAddForm(null) }}
-                className="flex-1 py-2.5 rounded-[10px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                className="flex-1 py-2.5 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                 ยกเลิก
               </button>
               <button onClick={confirmAddNewJob}
-                className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold text-white"
+                className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
                 style={{ background: 'var(--accent)' }}>
                 สร้างงานที่ {dupRoomCustomer.jobCount + 1}
               </button>
@@ -1558,11 +1558,11 @@ export default function ProspectsKanbanPage() {
             <p className="text-xs" style={{ color: 'var(--text-3)' }}>ข้อมูลจะหายถาวร ไม่สามารถกู้คืนได้</p>
             <div className="flex gap-2 pt-1">
               <button onClick={() => setDeleteTarget(null)} disabled={deleting}
-                className="flex-1 py-2.5 rounded-[10px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                className="flex-1 py-2.5 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                 ยกเลิก
               </button>
               <button onClick={confirmDelete} disabled={deleting}
-                className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold text-white"
+                className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
                 style={{ background: deleting ? '#666' : '#ef4444' }}>
                 {deleting ? 'กำลังลบ...' : 'ลบ'}
               </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -426,10 +426,10 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
           )}
           <div className="flex gap-2 pt-1">
             <button onClick={onClose}
-              className="flex-1 py-2.5 rounded-[10px] text-sm border"
+              className="flex-1 py-2.5 rounded-[8px] text-sm border"
               style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
             <button onClick={() => { onApply(col, val); onClose() }}
-              className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold text-white"
+              className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
               style={{ background: 'var(--accent)' }}>
               อัปเดต {count} แถว
             </button>
@@ -571,7 +571,7 @@ function ReconcileCheck() {
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments</p>
           </div>
           <button onClick={run} disabled={loading}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-semibold text-white"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
             style={{ background: loading ? '#666' : 'var(--accent)' }}>
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
             {loading ? 'กำลังตรวจ...' : ran ? 'ตรวจอีกครั้ง' : 'เริ่มตรวจ'}
@@ -580,7 +580,7 @@ function ReconcileCheck() {
 
         {/* Summary badge */}
         {ran && !loading && (
-          <div className="px-4 py-3 rounded-[12px] flex items-center gap-3"
+          <div className="px-4 py-3 rounded-[11px] flex items-center gap-3"
             style={{ background: passCount === checks.length ? 'rgba(74,222,128,0.08)' : 'rgba(251,146,60,0.08)', border: `1px solid ${passCount === checks.length ? 'rgba(74,222,128,0.3)' : 'rgba(251,146,60,0.3)'}` }}>
             {passCount === checks.length
               ? <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
@@ -593,7 +593,7 @@ function ReconcileCheck() {
 
         {/* Check items */}
         {ran && !loading && checks.map((item, i) => (
-          <div key={i} className="rounded-[12px] p-4 space-y-3"
+          <div key={i} className="rounded-[11px] p-4 space-y-3"
             style={{ background: 'var(--card-bg)', border: `1px solid ${item.pass ? 'var(--card-border)' : 'rgba(251,146,60,0.4)'}` }}>
             <div className="flex items-start gap-2.5">
               {item.pass
@@ -664,11 +664,11 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           onKeyDown={e => e.key === 'Enter' && attempt()}
           placeholder="รหัสผ่าน"
           autoFocus
-          className="w-full px-4 py-2.5 rounded-[10px] text-sm mb-3 outline-none"
+          className="w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none"
           style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
         {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง</p>}
-        <button onClick={attempt} className="w-full py-2.5 rounded-[10px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+        <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
           เข้าสู่ระบบ
         </button>
       </div>
@@ -876,7 +876,7 @@ export default function AdminDataPage() {
 
       {/* Bulk action bar */}
       {!isReconcile && selectedIds.size > 0 && (
-        <div className="flex-shrink-0 mx-5 mb-2 px-4 py-2.5 rounded-[10px] flex items-center gap-3"
+        <div className="flex-shrink-0 mx-5 mb-2 px-4 py-2.5 rounded-[8px] flex items-center gap-3"
           style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)' }}>
           <Layers size={14} className="text-indigo-400" />
           <span className="text-sm font-semibold text-indigo-400">{selectedIds.size} แถวที่เลือก</span>
@@ -895,7 +895,7 @@ export default function AdminDataPage() {
       )}
 
       {/* Table */}
-      {!isReconcile && <div className="flex-1 overflow-auto mx-5 mb-5 rounded-[12px]"
+      {!isReconcile && <div className="flex-1 overflow-auto mx-5 mb-5 rounded-[11px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         {loading ? (
           <div className="flex items-center justify-center h-48">

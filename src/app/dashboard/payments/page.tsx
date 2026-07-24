@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -133,11 +133,11 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Summary */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-[10px]" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
+            <div className="p-3 rounded-[8px]" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
               <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
               <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
             </div>
-            <div className="p-3 rounded-[10px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
+            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
               <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
               <p className="font-bold text-base" style={{ color: 'var(--accent-red)' }}>{f(job.unpaid_total)}</p>
             </div>
@@ -152,7 +152,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
               {job.installments.map(inst => {
                 const txtColor = inst.status === 'paid' ? 'var(--accent-green)' : inst.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-3)'
                 return (
-                  <div key={inst.id} className="flex items-center gap-3 p-3 rounded-[10px]"
+                  <div key={inst.id} className="flex items-center gap-3 p-3 rounded-[8px]"
                     style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                     <div className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                       style={{ background: inst.status === 'paid' ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : inst.status === 'overdue' ? 'color-mix(in srgb, var(--accent-red) 20%, transparent)' : 'var(--card-bg)', color: txtColor }}>
@@ -362,7 +362,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto mx-6 mb-6 rounded-[12px]"
+      <div className="flex-1 overflow-auto mx-6 mb-6 rounded-[11px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900, fontSize: 12 }}>
           <thead>

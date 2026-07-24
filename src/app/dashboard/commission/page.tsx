@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -148,11 +148,11 @@ function IndividualTab({
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-[14px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าคอม {selectedName} · {filtered.length} งาน</p>
           <p className="text-kpi-number" style={{ color: '#fbbf24' }}>{f(totalComm)}</p>
         </div>
-        <div className="rounded-[14px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวม</p>
           <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
         </div>
@@ -339,7 +339,7 @@ function ReferralTab({
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="rounded-[14px] p-4 flex items-center justify-between" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="rounded-[11px] p-4 flex items-center justify-between" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div>
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวมทั้งหมด</p>
           <p className="text-2xl font-bold mt-0.5" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
@@ -379,7 +379,7 @@ function ReferralTab({
           const editable = canEdit(j)
 
           return (
-            <div key={j.id} className="rounded-[14px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={j.id} className="rounded-[11px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               {/* Job header */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div>
@@ -558,7 +558,7 @@ function StatusTab({
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3">
         {/* This month */}
-        <div className="col-span-2 rounded-[14px] p-4" style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+        <div className="col-span-2 rounded-[11px] p-4" style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
           <p className="text-xs font-semibold mb-2" style={{ color: 'var(--accent)' }}>เดือนนี้ · {monthLabel(curMonth)}</p>
           <div className="flex gap-6">
             <div>
@@ -584,7 +584,7 @@ function StatusTab({
           const commAmt = s === 'pending' ? pendingComm : s === 'approved' ? approvedComm : paidComm
           const cnt = jobs.filter(j => getStatus(j) === s).length
           return (
-            <div key={s} className="rounded-[14px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={s} className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div className="flex items-center gap-1.5 mb-2">
                 <Icon size={13} style={{ color: cfg.color }} />
                 <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
@@ -596,7 +596,7 @@ function StatusTab({
         })}
 
         {/* Referral total */}
-        <div className="rounded-[14px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center gap-1.5 mb-2">
             <Users size={13} style={{ color: 'var(--accent-blue)' }} />
             <p className="text-xs font-semibold" style={{ color: 'var(--accent-blue)' }}>ค่าแนะนำรวม</p>

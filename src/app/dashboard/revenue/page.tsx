@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -539,7 +539,7 @@ export default function RevenuePage() {
                     {expanded && (
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         <td colSpan={mainTab === 'deliver' ? 6 : 3} className="px-4 pb-3 pt-0">
-                          <div className="rounded-[10px] overflow-hidden" style={{ background: 'var(--active-bg)', border: '1px solid var(--divider)' }}>
+                          <div className="rounded-[8px] overflow-hidden" style={{ background: 'var(--active-bg)', border: '1px solid var(--divider)' }}>
                             <table className="w-full text-xs">
                               <thead>
                                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>

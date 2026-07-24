@@ -470,7 +470,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                   )}
                 </div>
               )}
-              <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <div className="rounded-[8px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
                     className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-blue)' }} />
@@ -633,7 +633,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
               </div>
             )}
           </div>
-          <div className="rounded-[10px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
                 className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-blue)' }} />
@@ -646,7 +646,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
             </label>
           </div>
           {useVoucher && voucherAmount > 0 && (
-            <div className="rounded-[10px] px-3 py-2.5 space-y-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            <div className="rounded-[8px] px-3 py-2.5 space-y-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               <div className="flex justify-between text-xs" style={{ color: 'var(--text-2)' }}>
                 <span>มูลค่างวด</span><span>{fmtBaht(paidAmount)}</span>
               </div>
@@ -791,7 +791,7 @@ export function RevenueCard({ job, onUpdated }: {
   }
 
   if (editing) return (
-    <div className="rounded-[12px] p-4" style={{ background: 'var(--hover-bg)', border: '1px solid var(--accent)' }}>
+    <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)', border: '1px solid var(--accent)' }}>
       <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>แก้ไขมูลค่างาน (VAT 7%)</p>
       <div className="space-y-2">
         <div>
@@ -815,7 +815,7 @@ export function RevenueCard({ job, onUpdated }: {
   )
 
   return (
-    <div className="rounded-[12px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
+    <div className="rounded-[11px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
       <div>
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
         <p className="text-xl font-bold mt-0.5" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenue_inc_vat || job.revenue_ex_vat)}</p>
@@ -1184,7 +1184,7 @@ export function DocField({ jobId, field, label, value, onUpdate }: {
     onUpdate(newVal); setSaving(false)
   }
   return (
-    <label className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] cursor-pointer select-none"
+    <label className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] cursor-pointer select-none"
       style={{ background: checked ? 'color-mix(in srgb, var(--accent-green) 10%, transparent)' : 'var(--hover-bg)', border: `1px solid ${checked ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'var(--divider)'}` }}>
       <input type="checkbox" checked={checked} onChange={toggle} disabled={saving}
         className="w-4 h-4 rounded flex-shrink-0" style={{ accentColor: 'var(--accent-green)' }} />
@@ -1329,14 +1329,14 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             {/* 3-column date row — same height, same Thai format */}
             <div className="grid grid-cols-3 gap-2">
               {/* วันรับจอง / รับ PO — read-only */}
-              <div className="rounded-[12px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[11px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{job.customer_type === 'B2B' ? 'วันรับ PO' : 'วันรับจอง'}</p>
                 <p className="text-xs font-bold mt-1.5" style={{ color: job.order_date ? 'var(--text-1)' : 'var(--text-3)' }}>
                   {job.order_date ? fmtDate(job.order_date) : '—'}
                 </p>
               </div>
               {/* วันทำสัญญา — click to edit */}
-              <div className="rounded-[12px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
+              <div className="rounded-[11px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
                 onClick={() => !editingContract && setEditingContract(true)}>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>วันทำสัญญา</p>
                 {editingContract ? (
@@ -1353,7 +1353,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                 )}
               </div>
               {/* วันคาดเสร็จ — click to edit */}
-              <div className="rounded-[12px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
+              <div className="rounded-[11px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
                 onClick={() => !editingExpected && setEditingExpected(true)}>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>วันคาดเสร็จ</p>
                 {editingExpected ? (
@@ -1375,7 +1375,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             {topSlot}
 
             {hasPlan && totalCount > 0 && (
-              <div className="rounded-[12px] px-4 py-3 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[11px] px-4 py-3 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                   {paidCount}/{totalCount} งวด
                 </p>
@@ -1423,7 +1423,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
 
             {/* Installments */}
             {hasPlan && (
-              <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+              <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
                 <div className="flex items-center" style={{ background: 'var(--hover-bg)' }}>
                   <span className="flex-1 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งวดชำระเงิน</span>
                   <button onClick={() => setActionModal('setup')}
@@ -1446,7 +1446,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             )}
 
             {/* Documents */}
-            <div className="rounded-[12px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
               <button className="w-full flex items-center justify-between px-4 py-2.5"
                 style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}
                 onClick={() => setDocsExpanded(e => !e)}>
@@ -1470,7 +1470,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             </div>
 
             {/* File Attachments */}
-            <div className="rounded-[12px] p-3" style={{ border: '1px solid var(--divider)' }}>
+            <div className="rounded-[11px] p-3" style={{ border: '1px solid var(--divider)' }}>
               <FileAttach jobId={job.id} projectName={job.project_name} roomNo={job.room_no} />
             </div>
 
@@ -1484,7 +1484,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                   สถานะพิเศษ / ลูกค้ายกเลิก
                 </button>
                 {showCancelSection && (
-                  <div className="mt-2 rounded-[10px] p-3 space-y-3"
+                  <div className="mt-2 rounded-[8px] p-3 space-y-3"
                     style={{ background: 'color-mix(in srgb, #f87171 6%, transparent)', border: '1px solid color-mix(in srgb, #f87171 20%, transparent)' }}>
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input type="checkbox" checked={cancelConfirmed} onChange={e => setCancelConfirmed(e.target.checked)}
@@ -1505,15 +1505,15 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             <div className="pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
               {delivered ? (
                 <div className="space-y-2">
-                  <div className="rounded-[12px] p-3 text-center"
+                  <div className="rounded-[11px] p-3 text-center"
                     style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
                     <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
                     {job.warranty_end && <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setActionModal('pay')} className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
+                    <button onClick={() => setActionModal('pay')} className="flex-1 py-2 rounded-[8px] text-xs font-semibold"
                       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>แก้ไขงวดเงิน</button>
-                    <button onClick={() => setActionModal('handover')} className="flex-1 py-2 rounded-[10px] text-xs font-semibold"
+                    <button onClick={() => setActionModal('handover')} className="flex-1 py-2 rounded-[8px] text-xs font-semibold"
                       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>แก้ไขวันส่งมอบ</button>
                   </div>
                 </div>

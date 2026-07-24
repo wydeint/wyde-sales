@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -27,11 +27,11 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           placeholder="รหัสผ่าน"
           autoComplete="current-password"
           autoFocus
-          className={`w-full px-4 py-2.5 rounded-[10px] text-sm mb-3 outline-none ${shake ? 'animate-shake' : ''}`}
+          className={`w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none ${shake ? 'animate-shake' : ''}`}
           style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
         {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>}
-        <button onClick={attempt} className="w-full py-2.5 rounded-[10px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+        <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
           เข้าสู่ระบบ
         </button>
       </div>

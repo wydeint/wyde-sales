@@ -176,7 +176,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
         {/* Save */}
         <div className="px-5 py-4 pb-safe" style={{ borderTop: '1px solid var(--divider)' }}>
           <button onClick={save} disabled={saving}
-            className="w-full flex items-center justify-center gap-2 rounded-[12px] font-semibold disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-[11px] font-semibold disabled:opacity-50"
             style={{ background: 'var(--accent)', color: '#fff', minHeight: 48, fontSize: 15 }}>
             <Save size={15} />
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
@@ -352,7 +352,7 @@ export default function HandoverPage() {
         {/* Summary cards */}
         <div className="flex gap-3 flex-wrap">
           {/* Total */}
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <div>
               <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
@@ -363,7 +363,7 @@ export default function HandoverPage() {
             </div>
           </div>
           {/* Value */}
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <div>
               <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
@@ -373,7 +373,7 @@ export default function HandoverPage() {
           </div>
           {/* Overdue */}
           {overdueRooms > 0 && (
-            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
@@ -383,7 +383,7 @@ export default function HandoverPage() {
           )}
           {/* No start date */}
           {noStartRooms > 0 && (
-            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[10px]"
+            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
@@ -407,7 +407,7 @@ export default function HandoverPage() {
               const projDelivered = rooms.filter(r => r.is_delivered).length
               const projOverdue = rooms.filter(r => r.is_overdue).length
               return (
-                <div key={name} className="rounded-[14px] overflow-hidden"
+                <div key={name} className="rounded-[11px] overflow-hidden"
                   style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                   {/* Project header */}
                   <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--divider)', background: 'var(--hover-bg)' }}>

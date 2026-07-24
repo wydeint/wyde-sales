@@ -183,7 +183,7 @@ export default function DashboardPage() {
             {new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="filter-row items-center">
           <span className="text-xs" style={{ color: 'var(--text-3)' }}>ประเภทลูกค้า</span>
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>

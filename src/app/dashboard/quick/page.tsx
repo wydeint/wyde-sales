@@ -1478,7 +1478,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
           <button onClick={() => setSelected(null)} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selected.name} · {selected.room}
           </button>
-          <div className="rounded-[14px] p-4 mb-4" style={sheetCard}>
+          <div className="rounded-[11px] p-4 mb-4" style={sheetCard}>
             <p className="font-semibold text-sm mb-0.5" style={t1}>{selected.name}</p>
             <p className="text-xs" style={t2}>{selected.room} · {selected.projectName}</p>
           </div>

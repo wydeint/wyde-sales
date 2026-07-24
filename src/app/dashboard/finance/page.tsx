@@ -369,7 +369,8 @@ export default function FinancePage() {
       </div>
 
       {/* Tabs */}
-      <div className="tab-group mb-5 w-fit">
+      <div className="overflow-x-auto mb-5">
+      <div className="tab-group w-fit">
         {[
           { key: 'overview', label: 'รายรับ', icon: DollarSign },
           { key: 'segment', label: 'แยกประเภท', icon: Package },
@@ -384,6 +385,7 @@ export default function FinancePage() {
             </button>
           )
         })}
+      </div>
       </div>
 
       {/* Period selector — always visible regardless of tab */}

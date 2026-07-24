@@ -2150,7 +2150,7 @@ export default function MyDealsPage() {
         </div>
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)' }}>
+          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)', maxWidth: '10rem' }}>
           <option value="">โครงการ</option>
           {projectOptions.map(([pid, name]) => <option key={pid} value={pid}>{name}</option>)}
         </select>
@@ -2223,8 +2223,8 @@ export default function MyDealsPage() {
             return grouped.map(({ pid, name, active, done }) => (
             <div key={pid}>
               {/* Project header */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{name}</span>
+              <div className="flex items-center gap-2 mb-3 min-w-0">
+                <span className="text-sm font-semibold truncate min-w-0" style={{ color: 'var(--text-1)' }}>{name}</span>
                 <span className="text-xs px-2 py-0.5 rounded-[4px] font-semibold"
                   style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                   {active.length} ห้อง

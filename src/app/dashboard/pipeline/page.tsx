@@ -1403,7 +1403,7 @@ export default function ProspectsKanbanPage() {
         </div>
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)' }}>
+          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)', maxWidth: '10rem' }}>
           <option value="">โครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>

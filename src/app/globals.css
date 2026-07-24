@@ -538,6 +538,10 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 @media (max-width: 640px) {
   .mobile-stack { grid-template-columns: 1fr !important; }
   .mobile-p { padding: 1rem !important; }
+  /* Hero / page-title font — slightly smaller on compact phones (390px) */
+  :root { --fs-page-title: 17px; }
+  /* Prevent project/sales selects from sizing to longest option value */
+  select.field-input, .filter-row select { max-width: 10rem; }
 }
 
 /* ══════════════════════════════════════════

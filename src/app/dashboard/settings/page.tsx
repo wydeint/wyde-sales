@@ -128,7 +128,8 @@ export default function SettingsPage() {
           <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>คำนวณจาก Revenue (Ex.VAT)</span>
         </div>
 
-        <div className="space-y-2">
+        <div className="overflow-x-auto">
+        <div className="space-y-2" style={{ minWidth: '420px' }}>
           {/* Header */}
           <div className="grid grid-cols-12 gap-2 px-2 pb-1" style={{ borderBottom: '1px solid var(--divider)' }}>
             {['ชื่อ Tier', 'Revenue ขั้นต่ำ', 'Revenue สูงสุด', 'Rate (%)', 'ใช้งาน'].map(h => (
@@ -183,6 +184,7 @@ export default function SettingsPage() {
               </div>
             </div>
           ))}
+        </div>
         </div>
 
         {/* Preview table */}

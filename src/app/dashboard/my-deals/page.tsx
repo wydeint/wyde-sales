@@ -1075,22 +1075,23 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated }: { inst: Insta
     )
   }
 
+  const LABEL_W = 'w-[72px] flex-shrink-0 text-[10px]'
+
   return (
-    <div className="px-4 py-2.5">
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0">
+    <div className="px-4 py-3">
+      {/* Row 1 — installment header */}
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-2 min-w-0">
           {inst.status === 'paid'
-            ? <CheckCircle2 size={14} style={{ color: 'var(--accent-green)' }} />
-            : <Circle size={14} style={{ color: 'var(--text-3)' }} />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <span className="text-xs" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
-          {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
+            ? <CheckCircle2 size={14} style={{ color: 'var(--accent-green)' }} className="flex-shrink-0" />
+            : <Circle size={14} style={{ color: 'var(--text-3)' }} className="flex-shrink-0" />}
+          <span className="text-xs font-medium truncate" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
+          {inst.is_final && <span className="flex-shrink-0 text-[9px] px-1 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
           {inst.due_date && inst.status !== 'paid' && (
-            <span className="ml-1.5 text-[9px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>
+            <span className="flex-shrink-0 text-[9px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>
           )}
         </div>
-        <div className="text-right flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {inst.status !== 'paid' && (
             <button onClick={() => { setEditName(inst.installment_name); setEditAmount(String(inst.amount || '')); setEditDueDate(inst.due_date || todayStr()); setEditing(true) }}
               className="p-1 rounded" style={{ color: 'var(--text-3)' }}
@@ -1099,101 +1100,119 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated }: { inst: Insta
               <Pencil size={11} />
             </button>
           )}
-          <div className="text-right">
-            {inst.status === 'paid' && editingAmount ? (
-              <div className="flex items-center gap-1">
-                <input type="number" value={amountVal} onChange={e => setAmountVal(e.target.value)}
-                  className="text-[10px] rounded px-1 py-0.5 focus:outline-none w-24 text-right"
-                  style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}
-                  autoFocus onKeyDown={e => { if (e.key === 'Enter') saveAmount(); if (e.key === 'Escape') setEditingAmount(false) }} />
-                <button onClick={saveAmount} disabled={saving}
-                  className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white"
-                  style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
-                <button onClick={() => setEditingAmount(false)} className="text-[10px]" style={{ color: 'var(--text-3)' }}>✕</button>
-              </div>
-            ) : inst.voucher_amount > 0 && inst.status === 'paid' ? (
-              <>
-                <span className="text-[10px] line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
-                <span className="text-[10px] text-pink-400 ml-1">-{fmtBaht(inst.voucher_amount)}</span>
-                <button onClick={() => { setAmountVal(String(inst.paid_amount ?? inst.amount ?? '')); setEditingAmount(true) }}
-                  className="block text-xs font-semibold text-green-400 hover:underline text-right w-full">
-                  {fmtBaht(inst.paid_amount ?? 0)}
-                </button>
-              </>
-            ) : (
-              <button onClick={inst.status === 'paid' ? () => { setAmountVal(String(inst.paid_amount ?? inst.amount ?? '')); setEditingAmount(true) } : undefined}
-                className={`text-xs font-semibold${inst.status === 'paid' ? ' hover:underline' : ''}`}
-                style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-1)', cursor: inst.status === 'paid' ? 'pointer' : 'default' }}>
-                {fmtBaht(inst.status === 'paid' ? (inst.paid_amount ?? inst.amount) : inst.amount)}
-              </button>
-            )}
-          </div>
-          {inst.status === 'paid' && (
-            <div>
-              {editingDate ? (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <input type="date" value={dateVal} onChange={e => setDateVal(e.target.value)}
-                    className="text-[10px] rounded px-1 py-0.5 focus:outline-none w-28"
-                    style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-                  <button onClick={saveDate} disabled={saving}
-                    className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white"
-                    style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
-                  <button onClick={() => setEditingDate(false)} className="text-[10px]" style={{ color: 'var(--text-3)' }}>✕</button>
-                </div>
-              ) : (
-                <button onClick={() => { setDateVal(inst.paid_date || todayStr()); setEditingDate(true) }}
-                  className="text-[10px] mt-0.5 flex items-center gap-0.5"
-                  style={{ color: inst.paid_date ? 'var(--text-3)' : 'var(--accent-orange)' }}>
-                  {inst.paid_date ? fmtDate(inst.paid_date) : '+ วันที่รับเงิน'}
-                </button>
-              )}
+          {inst.status === 'paid' && editingAmount ? (
+            <div className="flex items-center gap-1">
+              <input type="number" value={amountVal} onChange={e => setAmountVal(e.target.value)}
+                className="text-[10px] rounded px-1 py-0.5 focus:outline-none w-20 text-right"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}
+                autoFocus onKeyDown={e => { if (e.key === 'Enter') saveAmount(); if (e.key === 'Escape') setEditingAmount(false) }} />
+              <button onClick={saveAmount} disabled={saving} className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white" style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
+              <button onClick={() => setEditingAmount(false)} className="text-[10px]" style={{ color: 'var(--text-3)' }}>✕</button>
             </div>
+          ) : inst.voucher_amount > 0 && inst.status === 'paid' ? (
+            <div className="text-right">
+              <span className="text-[10px] line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
+              <span className="text-[10px] text-pink-400 ml-1">-{fmtBaht(inst.voucher_amount)}</span>
+              <button onClick={() => { setAmountVal(String(inst.paid_amount ?? inst.amount ?? '')); setEditingAmount(true) }}
+                className="block text-xs font-semibold text-green-400 hover:underline text-right w-full">
+                {fmtBaht(inst.paid_amount ?? 0)}
+              </button>
+            </div>
+          ) : (
+            <button onClick={inst.status === 'paid' ? () => { setAmountVal(String(inst.paid_amount ?? inst.amount ?? '')); setEditingAmount(true) } : undefined}
+              className={`text-xs font-semibold${inst.status === 'paid' ? ' hover:underline' : ''}`}
+              style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-1)', cursor: inst.status === 'paid' ? 'pointer' : 'default' }}>
+              {fmtBaht(inst.status === 'paid' ? (inst.paid_amount ?? inst.amount) : inst.amount)}
+            </button>
           )}
         </div>
       </div>
+
       {inst.status === 'paid' && (
-        <div className="flex gap-1.5 mt-2 ml-7 flex-wrap">
-          <select value={channel} onChange={e => saveChannel(e.target.value)}
-            className="text-[10px] px-2 py-1 rounded-[6px] focus:outline-none appearance-none"
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-            {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <button onClick={toggleSlip} disabled={savingSlip}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
-            style={{
-              background: slipUrl ? 'rgba(96,165,250,0.12)' : 'var(--hover-bg)',
-              border: `1px solid ${slipUrl ? 'rgba(96,165,250,0.3)' : 'var(--divider)'}`,
-              color: slipUrl ? '#60a5fa' : 'var(--text-3)',
-              opacity: savingSlip ? 0.5 : 1,
-            }}>
-            {slipUrl ? <CheckCircle2 size={11} /> : <Circle size={11} />} Slip
-          </button>
-          <button onClick={toggleReceipt} disabled={savingReceipt}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
-            style={{
-              background: receiptUrl ? 'rgba(74,222,128,0.12)' : 'var(--hover-bg)',
-              border: `1px solid ${receiptUrl ? 'rgba(74,222,128,0.3)' : 'var(--divider)'}`,
-              color: receiptUrl ? '#4ade80' : 'var(--text-3)',
-              opacity: savingReceipt ? 0.5 : 1,
-            }}>
-            {receiptUrl ? <CheckCircle2 size={11} /> : <Circle size={11} />} ใบเสร็จ
-          </button>
-          <button onClick={copyLine}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
-            style={{
-              background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(0,185,107,0.08)',
-              border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(0,185,107,0.25)'}`,
-              color: copied ? '#4ade80' : '#00b96b',
-            }}>
-            {copied ? <CheckCircle2 size={11} /> : '💬'} {copied ? 'คัดลอกแล้ว!' : 'LINE'}
-          </button>
-          <button onClick={deleteInst} disabled={deleting}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95 disabled:opacity-40"
-            style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-3)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
-            {deleting ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
-          </button>
+        <div className="ml-6 mt-2 space-y-2">
+          {/* Row 2 — วันที่รับเงิน */}
+          <div className="flex items-center gap-2">
+            <span className={LABEL_W} style={{ color: 'var(--text-3)' }}>วันที่รับเงิน</span>
+            {editingDate ? (
+              <div className="flex items-center gap-1">
+                <input type="date" value={dateVal} onChange={e => setDateVal(e.target.value)}
+                  className="text-[10px] rounded-[6px] px-2 py-1 focus:outline-none"
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+                <button onClick={saveDate} disabled={saving}
+                  className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white"
+                  style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
+                <button onClick={() => setEditingDate(false)} className="text-[10px]" style={{ color: 'var(--text-3)' }}>✕</button>
+              </div>
+            ) : (
+              <button onClick={() => { setDateVal(inst.paid_date || todayStr()); setEditingDate(true) }}
+                className="text-[10px] px-2 py-0.5 rounded-[6px]"
+                style={{
+                  background: inst.paid_date ? 'var(--hover-bg)' : 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',
+                  border: '1px solid var(--divider)',
+                  color: inst.paid_date ? 'var(--text-2)' : 'var(--accent-orange)',
+                }}>
+                {inst.paid_date ? fmtDate(inst.paid_date) : '+ วันที่รับเงิน'}
+              </button>
+            )}
+          </div>
+
+          {/* Row 3 — ช่องทางชำระ */}
+          <div className="flex items-center gap-2">
+            <span className={LABEL_W} style={{ color: 'var(--text-3)' }}>ช่องทางชำระ</span>
+            <select value={channel} onChange={e => saveChannel(e.target.value)}
+              className="text-[10px] px-2 py-1 rounded-[6px] focus:outline-none appearance-none flex-1 min-w-0"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+              {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          {/* Row 4 — เอกสาร */}
+          <div className="flex items-center gap-2">
+            <span className={LABEL_W} style={{ color: 'var(--text-3)' }}>เอกสาร</span>
+            <div className="flex items-center gap-1.5 flex-1">
+              <button onClick={toggleSlip} disabled={savingSlip}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[10px] font-semibold transition-all active:scale-95"
+                style={{
+                  background: slipUrl ? 'rgba(96,165,250,0.12)' : 'var(--hover-bg)',
+                  border: `1px solid ${slipUrl ? 'rgba(96,165,250,0.3)' : 'var(--divider)'}`,
+                  color: slipUrl ? '#60a5fa' : 'var(--text-3)',
+                  opacity: savingSlip ? 0.5 : 1,
+                }}>
+                {slipUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} Slip
+              </button>
+              <button onClick={toggleReceipt} disabled={savingReceipt}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[10px] font-semibold transition-all active:scale-95"
+                style={{
+                  background: receiptUrl ? 'rgba(74,222,128,0.12)' : 'var(--hover-bg)',
+                  border: `1px solid ${receiptUrl ? 'rgba(74,222,128,0.3)' : 'var(--divider)'}`,
+                  color: receiptUrl ? '#4ade80' : 'var(--text-3)',
+                  opacity: savingReceipt ? 0.5 : 1,
+                }}>
+                {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จ
+              </button>
+              <button onClick={deleteInst} disabled={deleting}
+                className="ml-auto flex items-center px-2 py-1 rounded-[6px] text-[10px] transition-all active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-3)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
+                {deleting ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Row 5 — แจ้งทีม */}
+          <div className="flex items-center gap-2">
+            <span className={LABEL_W} style={{ color: 'var(--text-3)' }}>แจ้งทีม</span>
+            <button onClick={copyLine}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[10px] font-semibold transition-all active:scale-95"
+              style={{
+                background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(0,185,107,0.08)',
+                border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(0,185,107,0.25)'}`,
+                color: copied ? '#4ade80' : '#00b96b',
+              }}>
+              {copied ? <CheckCircle2 size={10} /> : '💬'} {copied ? 'คัดลอกแล้ว!' : 'LINE คัดลอก'}
+            </button>
+          </div>
         </div>
       )}
     </div>

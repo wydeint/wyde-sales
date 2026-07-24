@@ -369,7 +369,7 @@ export default function FinancePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-[11px] p-1 mb-5 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+      <div className="tab-group mb-5 w-fit">
         {[
           { key: 'overview', label: 'รายรับ', icon: DollarSign },
           { key: 'segment', label: 'แยกประเภท', icon: Package },
@@ -379,8 +379,7 @@ export default function FinancePage() {
           const Icon = t.icon
           return (
             <button key={t.key} onClick={() => setTab(t.key as any)}
-              className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
-              style={{ background: tab === t.key ? 'var(--accent)' : 'transparent', color: tab === t.key ? '#fff' : 'var(--text-2)' }}>
+              className={`tab-btn ${tab === t.key ? 'active' : ''}`}>
               <Icon size={14} />{t.label}
             </button>
           )
@@ -389,11 +388,10 @@ export default function FinancePage() {
 
       {/* Period selector — always visible regardless of tab */}
       <div className="flex items-center gap-3 flex-wrap mb-5">
-        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+        <div className="tab-group">
           {(['today','week','month','quarter','year'] as Period[]).map(p => (
             <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-              className="px-3 py-1.5 text-xs font-semibold"
-              style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
+              className={`tab-btn ${period === p ? 'active' : ''}`}>
               {PERIOD_LABELS[p]}
             </button>
           ))}
@@ -644,7 +642,7 @@ export default function FinancePage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>รายรับรวม</p>
-                    <p className="text-xl font-bold" style={{ color: '#60a5fa' }}>{f(periodPaidAmount)}</p>
+                    <p className="text-kpi-number" style={{ color: '#60a5fa' }}>{f(periodPaidAmount)}</p>
                   </div>
                 </div>
 
@@ -743,11 +741,10 @@ export default function FinancePage() {
           <div className="space-y-6">
             {/* Period filter + date mode toggle */}
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex gap-1 p-1 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <div className="tab-group">
                 {(['month','quarter','year'] as Period[]).map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
-                    className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                    style={{ background: period === p ? 'var(--accent)' : 'transparent', color: period === p ? '#fff' : 'var(--text-2)' }}>
+                    className={`tab-btn ${period === p ? 'active' : ''}`}>
                     {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
                   </button>
                 ))}
@@ -756,15 +753,13 @@ export default function FinancePage() {
               <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</span>
               <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronRight size={14} /></button>
               {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
-              <div className="flex gap-1 p-1 rounded-[11px] ml-auto" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <div className="tab-group ml-auto">
                 <button onClick={() => setSegDateMode('order')}
-                  className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                  style={{ background: segDateMode === 'order' ? 'var(--accent)' : 'transparent', color: segDateMode === 'order' ? '#fff' : 'var(--text-2)' }}>
+                  className={`tab-btn ${segDateMode === 'order' ? 'active' : ''}`}>
                   วันที่สั่งงาน
                 </button>
                 <button onClick={() => setSegDateMode('deliver')}
-                  className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                  style={{ background: segDateMode === 'deliver' ? 'var(--accent)' : 'transparent', color: segDateMode === 'deliver' ? '#fff' : 'var(--text-2)' }}>
+                  className={`tab-btn ${segDateMode === 'deliver' ? 'active' : ''}`}>
                   วันส่งมอบ
                 </button>
               </div>
@@ -935,7 +930,7 @@ export default function FinancePage() {
               รวม <span className="font-bold ml-1" style={{ color: '#f87171' }}>{f(filteredEntries.reduce((s, e) => s + e.amount, 0))}</span>
             </div>
           </div>
-          <div className="ds-card overflow-x-auto">
+          <div className="ds-card tbl-scroll">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -984,34 +979,33 @@ export default function FinancePage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับทั้งหมด</p>
-              <p className="text-lg font-bold text-yellow-400">{f(outstanding.reduce((s, p) => s + p.amount, 0))}</p>
+              <p className="text-kpi-number text-yellow-400">{f(outstanding.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.length} งวด</p>
             </div>
             <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
-              <p className="text-lg font-bold text-red-400">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
+              <p className="text-kpi-number text-red-400">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
             </div>
             <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว</p>
-              <p className="text-lg font-bold text-green-400">{f(paidPayments.reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
+              <p className="text-kpi-number text-green-400">{f(paidPayments.reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{paidPayments.length} งวด</p>
             </div>
           </div>
-          <div className="flex gap-1 rounded-[11px] p-1 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="tab-group w-fit">
             {[
               { key: 'outstanding', label: `ค้างชำระ (${outstanding.length})` },
               { key: 'paid', label: `ชำระแล้ว (${paidPayments.length})` },
               { key: 'all', label: 'ทั้งหมด' },
             ].map(t => (
               <button key={t.key} onClick={() => setPayTab(t.key as any)}
-                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                style={{ background: payTab === t.key ? 'var(--accent)' : 'transparent', color: payTab === t.key ? '#fff' : 'var(--text-2)' }}>
+                className={`tab-btn ${payTab === t.key ? 'active' : ''}`}>
                 {t.label}
               </button>
             ))}
           </div>
-          <div className="ds-card overflow-x-auto">
+          <div className="ds-card tbl-scroll">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>

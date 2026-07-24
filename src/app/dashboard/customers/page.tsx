@@ -646,8 +646,8 @@ export default function CustomersPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหาชื่อ ห้อง โครงการ เบอร์..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}
+            className="field-input pl-9"
+            style={{ paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
           />
         </div>
         <SearchableSelect

@@ -323,29 +323,23 @@ export default function RevenuePage() {
       </div>
 
       {/* Main tab: ยอดขาย / ยอดส่งมอบ */}
-      <div className="flex gap-1 p-1 rounded-[13px] w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+      <div className="tab-group w-fit">
         {([
           ['sales', ShoppingCart, 'ยอดขาย'],
           ['deliver', TrendingUp, 'ยอดส่งมอบ'],
         ] as const).map(([key, Icon, lbl]) => (
           <button key={key} onClick={() => { setMainTab(key); setExpandedProjects(new Set()); setExpandedSales(new Set()) }}
-            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-sm font-semibold transition-colors"
-            style={{
-              background: mainTab === key ? 'var(--panel-bg)' : 'transparent',
-              color: mainTab === key ? 'var(--text-1)' : 'var(--text-3)',
-              boxShadow: mainTab === key ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
-            }}>
+            className={`tab-btn ${mainTab === key ? 'active' : ''}`}>
             <Icon size={14} />{lbl}
           </button>
         ))}
       </div>
 
       {/* View tabs */}
-      <div className="flex gap-1 rounded-[11px] p-1 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+      <div className="tab-group w-fit">
         {([['summary', BarChart3, 'สรุป'], ['sales', Users, 'รายคน'], ['project', Building2, 'รายโครงการ'], ['list', List, 'รายงาน']] as const).map(([v, Icon, lbl]) => (
           <button key={v} onClick={() => setView(v)}
-            className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
-            style={{ background: view === v ? 'var(--accent)' : 'transparent', color: view === v ? '#fff' : 'var(--text-2)' }}>
+            className={`tab-btn ${view === v ? 'active' : ''}`}>
             <Icon size={14} />{lbl}
           </button>
         ))}
@@ -502,7 +496,7 @@ export default function RevenuePage() {
 
       {/* ── Sales view ── */}
       {view === 'sales' && (
-        <div className="ds-card overflow-x-auto">
+        <div className="ds-card tbl-scroll">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -698,7 +692,7 @@ export default function RevenuePage() {
 
       {/* ── List view ── */}
       {view === 'list' && (
-        <div className="ds-card overflow-x-auto">
+        <div className="ds-card tbl-scroll">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>

@@ -321,7 +321,7 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-3">
         <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-lg font-bold flex-1" style={{ color: 'var(--text-1)' }}>สถานะชำระเงิน & เอกสาร</h1>
+          <h1 className="text-page-title flex-1" style={{ color: 'var(--text-1)' }}>สถานะชำระเงิน & เอกสาร</h1>
           <button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]" style={inputStyle}>รีเฟรช</button>
         </div>
 

@@ -8,9 +8,10 @@ import { PageSpinner, PageError } from '@/components/ui/StateUI'
 function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
   const [err, setErr] = useState(false)
+  const [shake, setShake] = useState(false)
   function attempt() {
     if (pw === 'Wyde2026') { onUnlock() }
-    else { setErr(true); setPw('') }
+    else { setErr(true); setPw(''); setShake(true); setTimeout(() => setShake(false), 500) }
   }
   return (
     <div className="h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
@@ -24,11 +25,12 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           type="password" value={pw} onChange={e => { setPw(e.target.value); setErr(false) }}
           onKeyDown={e => e.key === 'Enter' && attempt()}
           placeholder="รหัสผ่าน"
+          autoComplete="current-password"
           autoFocus
-          className="w-full px-4 py-2.5 rounded-[10px] text-sm mb-3 outline-none"
+          className={`w-full px-4 py-2.5 rounded-[10px] text-sm mb-3 outline-none ${shake ? 'animate-shake' : ''}`}
           style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
-        {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง</p>}
+        {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>}
         <button onClick={attempt} className="w-full py-2.5 rounded-[10px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
           เข้าสู่ระบบ
         </button>

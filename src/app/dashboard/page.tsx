@@ -253,7 +253,7 @@ export default function DashboardPage() {
               </div>
               {onClick && <ChevronRight size={13} style={{ color: 'var(--text-3)' }} />}
             </div>
-            <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{value}</p>
+            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{value}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>
           </div>
         ))}

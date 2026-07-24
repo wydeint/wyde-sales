@@ -317,7 +317,7 @@ export default function HandoverPage() {
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
         <div className="flex items-center gap-4 mb-4">
-          <h1 className="text-lg font-bold flex-1" style={{ color: 'var(--text-1)' }}>Handover</h1>
+          <h1 className="text-page-title flex-1" style={{ color: 'var(--text-1)' }}>Handover</h1>
           <button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
             รีเฟรช
@@ -356,7 +356,7 @@ export default function HandoverPage() {
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <div>
               <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
-              <p className="text-lg font-bold leading-tight" style={{ color: 'var(--text-1)' }}>
+              <p className="text-kpi-number leading-tight" style={{ color: 'var(--text-1)' }}>
                 {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
               </p>
               {deliveredRooms > 0 && <p className="text-[10px]" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
@@ -377,7 +377,7 @@ export default function HandoverPage() {
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
-                <p className="text-lg font-bold leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
+                <p className="text-kpi-number leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
               </div>
             </div>
           )}
@@ -387,7 +387,7 @@ export default function HandoverPage() {
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
                 <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
-                <p className="text-lg font-bold leading-tight" style={{ color: '#f59e0b' }}>{noStartRooms} ห้อง</p>
+                <p className="text-kpi-number leading-tight" style={{ color: '#f59e0b' }}>{noStartRooms} ห้อง</p>
               </div>
             </div>
           )}

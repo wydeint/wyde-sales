@@ -150,11 +150,11 @@ function IndividualTab({
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-[14px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าคอม {selectedName} · {filtered.length} งาน</p>
-          <p className="text-xl font-bold" style={{ color: '#fbbf24' }}>{f(totalComm)}</p>
+          <p className="text-kpi-number" style={{ color: '#fbbf24' }}>{f(totalComm)}</p>
         </div>
         <div className="rounded-[14px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวม</p>
-          <p className="text-xl font-bold" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
+          <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
         </div>
       </div>
 
@@ -353,11 +353,10 @@ function ReferralTab({
           placeholder="ค้นหาลูกค้า ห้อง หรือโครงการ..."
           className="flex-1 min-w-[180px] px-4 py-2.5 rounded-[11px] text-sm focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-        <div className="flex gap-1 p-1 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+        <div className="tab-group">
           {STATUS_OPTS.map(opt => (
             <button key={opt.value} onClick={() => setFilterStatus(opt.value)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold whitespace-nowrap"
-              style={{ background: filterStatus === opt.value ? 'var(--accent)' : 'transparent', color: filterStatus === opt.value ? '#fff' : 'var(--text-2)' }}>
+              className={`tab-btn whitespace-nowrap ${filterStatus === opt.value ? 'active' : ''}`}>
               {opt.label}
             </button>
           ))}
@@ -564,16 +563,16 @@ function StatusTab({
           <div className="flex gap-6">
             <div>
               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ค่าคอมเซลล์</p>
-              <p className="text-lg font-bold" style={{ color: '#fbbf24' }}>{f(thisMonthComm)}</p>
+              <p className="text-kpi-number" style={{ color: '#fbbf24' }}>{f(thisMonthComm)}</p>
               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{thisMonthJobs.length} งาน</p>
             </div>
             <div>
               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ค่าแนะนำ</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--accent-blue)' }}>{f(thisMonthRef)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(thisMonthRef)}</p>
             </div>
             <div>
               <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>รวม</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(thisMonthComm + thisMonthRef)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(thisMonthComm + thisMonthRef)}</p>
             </div>
           </div>
         </div>
@@ -590,7 +589,7 @@ function StatusTab({
                 <Icon size={13} style={{ color: cfg.color }} />
                 <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
               </div>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{f(commAmt)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(commAmt)}</p>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{cnt} งาน</p>
             </div>
           )
@@ -602,7 +601,7 @@ function StatusTab({
             <Users size={13} style={{ color: 'var(--accent-blue)' }} />
             <p className="text-xs font-semibold" style={{ color: 'var(--accent-blue)' }}>ค่าแนะนำรวม</p>
           </div>
-          <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{f(totalRef)}</p>
+          <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(totalRef)}</p>
           <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{referrals.length} รายการ</p>
         </div>
       </div>
@@ -639,7 +638,7 @@ function StatusTab({
       </div>
 
       {/* Job list */}
-      <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="ds-card tbl-scroll" style={{ padding: 0 }}>
         {filtered.length === 0 ? (
           <div className="p-10 text-center">
             <AlertCircle size={28} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
@@ -772,15 +771,10 @@ export default function CommissionPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 p-1 rounded-[13px] w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+      <div className="tab-group w-fit">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className="px-4 py-2 rounded-[10px] text-sm font-semibold transition-colors"
-            style={{
-              background: tab === t.key ? 'var(--panel-bg)' : 'transparent',
-              color: tab === t.key ? 'var(--text-1)' : 'var(--text-3)',
-              boxShadow: tab === t.key ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
-            }}>
+            className={`tab-btn ${tab === t.key ? 'active' : ''}`}>
             {t.label}
           </button>
         ))}

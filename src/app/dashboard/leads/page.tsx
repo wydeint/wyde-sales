@@ -464,7 +464,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
           { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
           { label: 'ยังไม่ได้ติดต่อ', value: stats.newLead, color: 'var(--accent-orange)' },

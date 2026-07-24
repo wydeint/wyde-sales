@@ -362,9 +362,9 @@ export default function PaymentsPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto mx-6 mb-6 rounded-[11px]"
-        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
-        <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900, fontSize: 12 }}>
+      <div className="flex-1 overflow-x-auto mx-6 mb-6 rounded-[11px]"
+        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'var(--hover-bg)', position: 'sticky', top: 0, zIndex: 10 }}>
               {['ห้อง / โครงการ', 'ลูกค้า / Sales', 'งวดชำระ', 'รับแล้ว', 'คงเหลือ', 'เอกสาร'].map(h => (

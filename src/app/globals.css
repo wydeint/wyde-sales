@@ -311,8 +311,27 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .text-accent-blue { color: var(--accent-blue); }
 
 /* Responsive table wrapper */
-.tbl-scroll { overflow-x: auto; }
+.tbl-scroll {
+  overflow-x: auto !important;   /* override overflow:hidden from co-applied Tailwind class */
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
 .tbl-scroll > table { min-width: 640px; }
+
+/* ── Standard table typography ─────────────────────────────────────────
+   Single source of truth for all .tbl-scroll tables.
+   Inline text-xs / text-sm classes on individual cells still override
+   these for intentional exceptions (badges, ID columns, summary rows).
+────────────────────────────────────────────────────────────────────── */
+.tbl-scroll table { font-size: var(--fs-body); }
+.tbl-scroll thead th {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  padding: 12px 16px;
+  white-space: nowrap;
+}
+.tbl-scroll tbody td { padding: 10px 16px; }
 
 /* ══════════════════════════════════════════
    Tab group — shared across pages (Finance, Commission, Handover, etc.)
@@ -487,11 +506,13 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
    Mobile utilities
 ══════════════════════════════════════════ */
 
-/* Drawer / modal panels — contain iOS bounce inside the scrollable layer */
+/* Smooth touch scroll + axis lock for ALL scroll containers */
+[class*="overflow-x-auto"],
+[class*="overflow-auto"],
 [data-panel],
 .modal-panel {
-  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Horizontal-scroll filter chip row */
@@ -601,12 +622,12 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 }
 
   /* ── Form elements (CRITICAL: prevents iOS Safari auto-zoom on focus) ──
-     iOS zooms in when focused input font-size < 16px. Force all inputs
-     to use the iOS body token (17px) which exceeds the 16px threshold.   */
+     iOS zooms in when focused input font-size < 16px.
+     --fs-body = 14px on mobile which is still < 16px, so must hardcode 16px. */
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select,
   textarea {
-    font-size: var(--fs-body) !important;
+    font-size: 16px !important;
     line-height: var(--lh-body) !important;
   }
 

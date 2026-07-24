@@ -268,7 +268,7 @@ export default function ProjectSummaryPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-x-auto" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10" style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--divider)' }}>
             <tr>

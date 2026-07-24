@@ -897,13 +897,13 @@ export default function AdminDataPage() {
 
       {/* Table */}
       {!isReconcile && <div className="flex-1 overflow-auto mx-5 mb-5 rounded-[11px]"
-        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
+        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         {loading ? (
           <div className="flex items-center justify-center h-48">
             <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
           </div>
         ) : (
-          <table style={{ borderCollapse: 'collapse', width: 'max-content', minWidth: '100%', fontSize: 12 }}>
+          <table className="text-xs" style={{ borderCollapse: 'collapse', width: 'max-content', minWidth: '100%' }}>
             <thead>
               <tr style={{ background: 'var(--hover-bg)', position: 'sticky', top: 0, zIndex: 10 }}>
                 {/* Checkbox */}

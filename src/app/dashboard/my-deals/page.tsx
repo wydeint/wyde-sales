@@ -1050,11 +1050,9 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
   }
 
   const fieldLabelStyle: React.CSSProperties = { color: 'var(--text-3)', fontSize: '10px', minWidth: '72px', flexShrink: 0 }
-  const docBtnStyle = (active: boolean, activeColor: string, activeBg: string): React.CSSProperties => ({
-    display: 'inline-flex', alignItems: 'center', gap: '5px',
-    fontSize: '10px', fontWeight: 600, padding: '3px 9px', borderRadius: '6px',
-    border: `1px solid ${active ? activeColor : 'var(--divider)'}`,
-    background: active ? activeBg : 'transparent',
+  const docBtnStyle = (active: boolean, activeColor: string): React.CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', gap: '4px',
+    fontSize: '10px', fontWeight: 500, padding: '2px 0', background: 'none', border: 'none',
     color: active ? activeColor : 'var(--text-3)', cursor: 'pointer',
   })
 
@@ -1195,11 +1193,11 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           {/* Line 3 — เอกสาร */}
           <div className="flex items-center gap-2 flex-wrap">
             <span style={fieldLabelStyle}>เอกสาร</span>
-            <button onClick={toggleSlip} disabled={savingSlip} style={{ ...docBtnStyle(!!slipUrl, 'var(--accent-blue)', 'color-mix(in srgb, var(--accent-blue) 10%, transparent)'), opacity: savingSlip ? 0.5 : 1 }}>
+            <button onClick={toggleSlip} disabled={savingSlip} style={{ ...docBtnStyle(!!slipUrl, '#60a5fa'), opacity: savingSlip ? 0.5 : 1 }}>
               {slipUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} Slip
             </button>
-            <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, 'var(--accent-green)', 'color-mix(in srgb, var(--accent-green) 10%, transparent)'), opacity: savingReceipt ? 0.5 : 1 }}>
-              {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จ
+            <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, '#4ade80'), opacity: savingReceipt ? 0.5 : 1 }}>
+              {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จรับเงิน
             </button>
           </div>
           {/* Line 4 — แจ้งทีม */}
@@ -1224,15 +1222,13 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
               </button>
             )}
             <button onClick={copyLine}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-micro font-semibold active:scale-95"
+              className="flex items-center px-2 py-1 rounded-[6px] active:scale-95"
               title="คัดลอกข้อความโพสต์เองใน LINE"
               style={{
-                background: copied ? 'color-mix(in srgb, var(--accent-purple) 12%, transparent)' : 'transparent',
-                border: `1px solid ${copied ? 'color-mix(in srgb, var(--accent-purple) 35%, transparent)' : 'var(--divider)'}`,
+                background: 'transparent', border: 'none',
                 color: copied ? 'var(--accent-purple)' : 'var(--text-3)', cursor: 'pointer',
               }}>
-              {copied ? <CheckCircle2 size={10} /> : <Copy size={10} />}
-              {copied ? 'Copied!' : 'Copy'}{!copied && <span className="text-[8.5px] opacity-50 ml-0.5">โพสต์เอง</span>}
+              {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
             </button>
           </div>
           {/* Trash — ล่างสุดคนเดียว มีเส้น divider คั่น */}

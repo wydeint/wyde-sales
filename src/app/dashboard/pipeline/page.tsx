@@ -49,6 +49,7 @@ const STAGES = [
   { value: 'quoted',        label: 'เสนอราคาแล้ว',       bg: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)',   border: 'color-mix(in srgb, var(--accent-amber) 50%, transparent)', text: 'var(--accent-amber)',  dot: 'var(--accent-amber)',  badge: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)',   chip: 'color-mix(in srgb, var(--accent-amber) 45%, transparent)'  },
   { value: 'close_pending', label: 'รอปิด',              bg: 'color-mix(in srgb, var(--accent-purple) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-purple) 50%, transparent)', text: 'var(--accent-purple)',  dot: 'var(--accent-purple)',  badge: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-purple) 45%, transparent)' },
   { value: 'booked',        label: 'จอง',                bg: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-orange) 50%, transparent)', text: 'var(--accent-orange)',  dot: 'var(--accent-orange)',  badge: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-orange) 45%, transparent)' },
+  { value: 'closed',        label: 'ปิดแล้ว',            bg: 'color-mix(in srgb, var(--accent-green) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-green) 50%, transparent)', text: 'var(--accent-green)',  dot: 'var(--accent-green)',  badge: 'color-mix(in srgb, var(--accent-green) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-green) 45%, transparent)' },
   { value: 'lost',          label: 'หลุด',               bg: 'color-mix(in srgb, var(--accent-red) 8%, transparent)',   border: 'color-mix(in srgb, var(--accent-red) 50%, transparent)', text: 'var(--accent-red)',  dot: 'var(--accent-red)',  badge: 'color-mix(in srgb, var(--accent-red) 15%, transparent)',   chip: 'color-mix(in srgb, var(--accent-red) 45%, transparent)'  },
 ]
 const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
@@ -211,7 +212,7 @@ function BookedJobCard({ job, onClick }: { job: BookedJob; onClick: () => void }
         <p className="font-bold text-sm truncate min-w-0" style={{ color: 'var(--text-1)' }}>{job.room_no || '—'}</p>
         <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
           style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
-          {pctStr}
+          จอง
         </span>
       </div>
       <p className="text-xs truncate w-full" style={{ color: 'var(--text-1)' }}>{job.customer_name}</p>
@@ -1577,7 +1578,7 @@ export default function ProspectsKanbanPage() {
                   <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
                     {name} <span className="font-normal">({items.length})</span>
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                     {items.map(j => (
                       <BookedJobCard key={j.id} job={j} onClick={async () => {
                         setLoadingBookedJobFull(true)
@@ -1618,7 +1619,7 @@ export default function ProspectsKanbanPage() {
                       <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
                         {name} <span className="font-normal">({cards.length})</span>
                       </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                         {cards.map(({ c, jobSeqNo, jobRev, jobId, cardKey }) => (
                           <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} />
                         ))}

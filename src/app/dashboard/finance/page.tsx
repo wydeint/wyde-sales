@@ -773,7 +773,7 @@ export default function FinancePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: RPT_COLOR }} />
-                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>RPT — งานซ้ำ</span>
+                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>RPT — Related Party</span>
                         </div>
                         <span className="font-bold text-sm" style={{ color: RPT_COLOR }}>{fk(rpt)}</span>
                       </div>
@@ -788,7 +788,7 @@ export default function FinancePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: NRPT_COLOR }} />
-                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>N-RPT — งานใหม่</span>
+                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>N-RPT — Non-Related Party</span>
                         </div>
                         <span className="font-bold text-sm" style={{ color: NRPT_COLOR }}>{fk(nrpt)}</span>
                       </div>

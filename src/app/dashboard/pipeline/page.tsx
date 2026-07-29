@@ -125,7 +125,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
             </span>
           )}
         </div>
-        {(() => { const s = stageMap[c.status] || stage; return (
+        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : (stageMap[c.status] || stage); return (
           <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}

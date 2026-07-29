@@ -1621,7 +1621,7 @@ export default function ProspectsKanbanPage() {
                         {name} <span className="font-normal">({cards.length})</span>
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-                        {cards.map(({ c, jobSeqNo, jobRev, jobId, cardKey }) => (
+                        {cards.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, cardKey }) => (
                           <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} />
                         ))}
                       </div>

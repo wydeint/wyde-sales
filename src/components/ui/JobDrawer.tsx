@@ -915,11 +915,9 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
   }
 
   const fieldLabelStyle: React.CSSProperties = { color: 'var(--text-3)', fontSize: '10px', minWidth: '72px', flexShrink: 0 }
-  const docBtnStyle = (active: boolean, activeColor: string, activeBg: string): React.CSSProperties => ({
-    display: 'inline-flex', alignItems: 'center', gap: '5px',
-    fontSize: '10px', fontWeight: 600, padding: '3px 9px', borderRadius: '6px',
-    border: `1px solid ${active ? activeColor : 'var(--divider)'}`,
-    background: active ? activeBg : 'transparent',
+  const docBtnStyle = (active: boolean, activeColor: string): React.CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', gap: '4px',
+    fontSize: '10px', fontWeight: 500, padding: '2px 0', background: 'none', border: 'none',
     color: active ? activeColor : 'var(--text-3)', cursor: 'pointer',
   })
 
@@ -1002,12 +1000,26 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
         <div className="ml-5 mt-0.5 text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</div>
       )}
 
-      {/* Paid: voucher summary */}
+      {/* Paid: voucher box */}
       {inst.status === 'paid' && inst.voucher_amount && inst.voucher_amount > 0 && (
-        <div className="ml-5 mt-1 flex gap-3 text-[10px]" style={{ color: 'var(--text-3)' }}>
-          <span>มูลค่า {fmtBaht(inst.amount)}</span>
-          <span style={{ color: 'var(--accent-orange)' }}>หัก Voucher{inst.voucher_code ? ` ${inst.voucher_code}` : ''} -{fmtBaht(inst.voucher_amount)}</span>
-          <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>รับจริง {fmtBaht(Math.max(0, inst.amount - inst.voucher_amount))}</span>
+        <div className="ml-5 mt-1 text-[10px] rounded-[6px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="px-2 py-1 space-y-0.5" style={{ background: 'var(--hover-bg)' }}>
+            <div className="flex justify-between">
+              <span style={{ color: 'var(--text-3)' }}>ยอดงวด (Gross)</span>
+              <span style={{ color: 'var(--text-2)' }}>{fmtBaht(inst.amount)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span style={{ color: 'var(--text-3)' }}>หัก Voucher</span>
+              <span style={{ color: 'var(--accent-orange)' }}>-{fmtBaht(inst.voucher_amount)}</span>
+            </div>
+            {inst.voucher_code && (
+              <div style={{ color: 'var(--text-3)', paddingLeft: '8px' }}>No. {inst.voucher_code}</div>
+            )}
+          </div>
+          <div className="px-2 py-1 flex justify-between" style={{ borderTop: '1px solid var(--divider)' }}>
+            <span style={{ color: 'var(--text-3)' }}>รับจริง (Net)</span>
+            <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>{fmtBaht(inst.paid_amount ?? Math.max(0, inst.amount - inst.voucher_amount))}</span>
+          </div>
         </div>
       )}
 
@@ -1046,51 +1058,47 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
           {/* Line 3 — เอกสาร */}
           <div className="flex items-center gap-2 flex-wrap">
             <span style={fieldLabelStyle}>เอกสาร</span>
-            <button onClick={toggleSlip} disabled={savingSlip} style={{ ...docBtnStyle(!!slipUrl, '#60a5fa', 'rgba(96,165,250,0.1)'), opacity: savingSlip ? 0.5 : 1 }}>
+            <button onClick={toggleSlip} disabled={savingSlip} style={{ ...docBtnStyle(!!slipUrl, '#60a5fa'), opacity: savingSlip ? 0.5 : 1 }}>
               {slipUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} Slip
             </button>
-            <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, '#4ade80', 'rgba(74,222,128,0.1)'), opacity: savingReceipt ? 0.5 : 1 }}>
-              {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จ
+            <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, '#4ade80'), opacity: savingReceipt ? 0.5 : 1 }}>
+              {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จรับเงิน
             </button>
+          </div>
+          {/* Line 4 — แจ้งทีม (divider คั่นจากเอกสาร) */}
+          <div className="flex items-center gap-2 flex-wrap" style={{ borderTop: '1px solid var(--divider)', paddingTop: '6px', marginTop: '2px' }}>
+            <span style={fieldLabelStyle}>แจ้งทีม</span>
+            {lineNotifiedAt ? (
+              <button onClick={() => sendLine(true)} disabled={lineSending}
+                title={`โพสต์แล้ว ${fmtDate(lineNotifiedAt)} — คลิกส่งซ้ำ`}
+                className="flex items-center p-1 rounded active:scale-95 disabled:opacity-50"
+                style={{ background: 'none', border: 'none', color: 'rgba(6,199,85,0.8)', cursor: 'pointer' }}>
+                {lineSending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+              </button>
+            ) : (
+              <button onClick={() => sendLine()} disabled={lineSending}
+                title={lineSent === 'err' ? 'ส่งไม่สำเร็จ — คลิกลองใหม่' : 'ส่ง LINE อัตโนมัติ'}
+                className="flex items-center p-1 rounded active:scale-95 disabled:opacity-50"
+                style={{ background: 'none', border: 'none', color: lineSent === 'err' ? '#f87171' : '#06C755', cursor: 'pointer' }}>
+                {lineSending ? <Loader2 size={12} className="animate-spin" /> : <span style={{ fontSize: '14px', lineHeight: 1 }}>💬</span>}
+              </button>
+            )}
+            <button onClick={copyLine}
+              className="flex items-center gap-1 p-1 rounded active:scale-95"
+              title="คัดลอกข้อความโพสต์เองใน LINE"
+              style={{ background: 'none', border: 'none', color: copied ? '#a78bfa' : 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}>
+              {copied ? <CheckCircle2 size={10} /> : <Copy size={10} />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
+            </button>
+          </div>
+          {/* Trash — ล่างสุดคนเดียว มีเส้น divider คั่น */}
+          <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '8px', marginTop: '4px' }}>
             <button onClick={deleteInst} disabled={deleting}
-              className="ml-auto flex items-center gap-1 px-2 py-1 rounded-[6px] active:scale-95 disabled:opacity-40"
+              className="flex items-center gap-1 px-2 py-1 rounded-[6px] active:scale-95 disabled:opacity-40"
               style={{ background: 'transparent', border: '1px solid var(--divider)', color: 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.3)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--divider)' }}>
               {deleting ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
-            </button>
-          </div>
-          {/* Line 4 — แจ้งทีม */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span style={fieldLabelStyle}>แจ้งทีม</span>
-            {lineNotifiedAt ? (
-              <button onClick={() => sendLine(true)} disabled={lineSending} title="คลิกเพื่อส่งซ้ำ"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[10px] font-semibold"
-                style={{ background: 'rgba(6,199,85,0.08)', border: '1px solid rgba(6,199,85,0.2)', color: 'rgba(6,199,85,0.7)', opacity: lineSending ? 0.5 : 1, cursor: 'pointer' }}>
-                <CheckCircle2 size={10} /> {lineSending ? '...' : `โพสต์แล้ว ${fmtDate(lineNotifiedAt)}`}
-              </button>
-            ) : (
-              <button onClick={() => sendLine()} disabled={lineSending}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[10px] font-semibold active:scale-95 disabled:opacity-50"
-                style={{
-                  background: lineSent === 'err' ? 'rgba(248,113,113,0.1)' : 'rgba(6,199,85,0.1)',
-                  border: `1px solid ${lineSent === 'err' ? 'rgba(248,113,113,0.3)' : 'rgba(6,199,85,0.28)'}`,
-                  color: lineSent === 'err' ? '#f87171' : '#06C755', cursor: 'pointer',
-                }}>
-                <span className="text-[10px]">💬</span>
-                {lineSending ? '...' : lineSent === 'err' ? 'ส่งไม่ได้' : 'LINE'}{!lineSending && !lineSent && <span className="text-[8.5px] opacity-60 ml-0.5">อัตโนมัติ</span>}
-              </button>
-            )}
-            <button onClick={copyLine}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[10px] font-semibold active:scale-95"
-              title="คัดลอกข้อความโพสต์เองใน LINE"
-              style={{
-                background: copied ? 'rgba(167,139,250,0.12)' : 'transparent',
-                border: `1px solid ${copied ? 'rgba(167,139,250,0.35)' : 'var(--divider)'}`,
-                color: copied ? '#a78bfa' : 'var(--text-3)', cursor: 'pointer',
-              }}>
-              {copied ? <CheckCircle2 size={10} /> : <Copy size={10} />}
-              {copied ? 'Copied!' : 'Copy'}{!copied && <span className="text-[8.5px] opacity-50 ml-0.5">โพสต์เอง</span>}
             </button>
           </div>
         </div>

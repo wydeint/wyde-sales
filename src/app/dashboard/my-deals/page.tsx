@@ -1200,35 +1200,30 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
               {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จรับเงิน
             </button>
           </div>
-          {/* Line 4 — แจ้งทีม */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Line 4 — แจ้งทีม (divider คั่นจากเอกสาร) */}
+          <div className="flex items-center gap-2 flex-wrap" style={{ borderTop: '1px solid var(--divider)', paddingTop: '6px', marginTop: '2px' }}>
             <span style={fieldLabelStyle}>แจ้งทีม</span>
             {lineNotifiedAt ? (
-              <button onClick={() => sendLine(true)} disabled={lineSending} title="คลิกเพื่อส่งซ้ำ"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-micro font-semibold"
-                style={{ background: 'rgba(6,199,85,0.08)', border: '1px solid rgba(6,199,85,0.2)', color: 'rgba(6,199,85,0.7)', opacity: lineSending ? 0.5 : 1, cursor: 'pointer' }}>
-                <CheckCircle2 size={10} /> {lineSending ? '...' : `โพสต์แล้ว ${fmtDate(lineNotifiedAt)}`}
+              <button onClick={() => sendLine(true)} disabled={lineSending}
+                title={`โพสต์แล้ว ${fmtDate(lineNotifiedAt)} — คลิกส่งซ้ำ`}
+                className="flex items-center p-1 rounded active:scale-95 disabled:opacity-50"
+                style={{ background: 'none', border: 'none', color: 'rgba(6,199,85,0.8)', cursor: 'pointer' }}>
+                {lineSending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
               </button>
             ) : (
               <button onClick={() => sendLine()} disabled={lineSending}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-micro font-semibold active:scale-95 disabled:opacity-50"
-                style={{
-                  background: lineSent === 'err' ? 'color-mix(in srgb, var(--accent-red) 10%, transparent)' : 'rgba(6,199,85,0.1)',
-                  border: `1px solid ${lineSent === 'err' ? 'color-mix(in srgb, var(--accent-red) 30%, transparent)' : 'rgba(6,199,85,0.28)'}`,
-                  color: lineSent === 'err' ? 'var(--accent-red)' : '#06C755', cursor: 'pointer',
-                }}>
-                <span className="text-micro">💬</span>
-                {lineSending ? '...' : lineSent === 'err' ? 'ส่งไม่ได้' : 'LINE'}{!lineSending && !lineSent && <span className="text-[8.5px] opacity-60 ml-0.5">อัตโนมัติ</span>}
+                title={lineSent === 'err' ? 'ส่งไม่สำเร็จ — คลิกลองใหม่' : 'ส่ง LINE อัตโนมัติ'}
+                className="flex items-center p-1 rounded active:scale-95 disabled:opacity-50"
+                style={{ background: 'none', border: 'none', color: lineSent === 'err' ? 'var(--accent-red)' : '#06C755', cursor: 'pointer' }}>
+                {lineSending ? <Loader2 size={12} className="animate-spin" /> : <span style={{ fontSize: '14px', lineHeight: 1 }}>💬</span>}
               </button>
             )}
             <button onClick={copyLine}
-              className="flex items-center px-2 py-1 rounded-[6px] active:scale-95"
+              className="flex items-center gap-1 p-1 rounded active:scale-95"
               title="คัดลอกข้อความโพสต์เองใน LINE"
-              style={{
-                background: 'transparent', border: 'none',
-                color: copied ? 'var(--accent-purple)' : 'var(--text-3)', cursor: 'pointer',
-              }}>
-              {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+              style={{ background: 'none', border: 'none', color: copied ? 'var(--accent-purple)' : 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}>
+              {copied ? <CheckCircle2 size={10} /> : <Copy size={10} />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
             </button>
           </div>
           {/* Trash — ล่างสุดคนเดียว มีเส้น divider คั่น */}

@@ -92,11 +92,12 @@ function CardSkeleton() {
 }
 
 // ─── CustomerCard ───────────────────────────────────────────
-function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string }) {
+function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string }) {
   const custType = (c as any).customer_type || 'B2C'
   const workType = (c as any).work_type || ''
   const displayValue = jobRev ?? (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0)
-  const isClosed = c.status === 'closed'
+  const ws = jobWorkingStatus ?? ''
+  const isClosed = ws === 'ดำเนินการ' || ws === 'ส่งมอบแล้ว' || ws === 'รอส่งมอบ'
   return (
     <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
       style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
@@ -176,8 +177,8 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
 }
 
 // ─── Card expand helper ─────────────────────────────────────
-type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number }
-type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; cardKey: string }
+type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string }
+type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; jobWorkingStatus: string | undefined; cardKey: string }
 interface BookedJob {
   id: string; customer_name: string; room_no: string; revenue_inc_vat: number
   sales_name: string | null; project_name: string | null; project_id: string | null
@@ -188,10 +189,10 @@ function expandCards(customers: Customer[]): CardItem[] {
   for (const c of customers) {
     const cJobs = ((c as any).jobs as JobMeta[] | null) || []
     if (cJobs.length <= 1) {
-      result.push({ c, jobSeqNo: undefined, jobRev: cJobs[0]?.revenue_inc_vat, jobId: cJobs[0]?.id, cardKey: c.id })
+      result.push({ c, jobSeqNo: undefined, jobRev: cJobs[0]?.revenue_inc_vat, jobId: cJobs[0]?.id, jobWorkingStatus: cJobs[0]?.working_status, cardKey: c.id })
     } else {
       const sorted = [...cJobs].sort((a, b) => ((a.order_date || a.id) < (b.order_date || b.id) ? -1 : 1))
-      sorted.forEach((j, i) => result.push({ c, jobSeqNo: i + 1, jobRev: j.revenue_inc_vat || 0, jobId: j.id, cardKey: `${c.id}-${j.id}` }))
+      sorted.forEach((j, i) => result.push({ c, jobSeqNo: i + 1, jobRev: j.revenue_inc_vat || 0, jobId: j.id, jobWorkingStatus: j.working_status, cardKey: `${c.id}-${j.id}` }))
     }
   }
   return result
@@ -1222,7 +1223,7 @@ export default function ProspectsKanbanPage() {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1621,7 +1622,7 @@ export default function ProspectsKanbanPage() {
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                         {cards.map(({ c, jobSeqNo, jobRev, jobId, cardKey }) => (
-                          <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} />
+                          <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} />
                         ))}
                       </div>
                     </div>

@@ -38,7 +38,8 @@ interface SegmentJob {
   room_no: string
   customer_type: string
   work_type: string
-  revenue_ex_vat: number
+  revenue_inc_vat: number | null
+  revenue_ex_vat: number | null
   order_date: string | null
   actual_deliver_date: string | null
   projects?: { name: string }
@@ -177,7 +178,6 @@ export default function FinancePage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [payTab, setPayTab] = useState<'outstanding' | 'paid' | 'all'>('outstanding')
-  const [expenseMonth, setExpenseMonth] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true); setFetchError('')
@@ -199,7 +199,7 @@ export default function FinancePage() {
         .eq('status', 'booked'),
       // segment breakdown — ทุก job ที่ไม่ยกเลิก
       supabase.from('jobs')
-        .select('id,customer_name,room_no,customer_type,work_type,revenue_ex_vat,order_date,actual_deliver_date,projects(name)')
+        .select('id,customer_name,room_no,customer_type,work_type,revenue_inc_vat,revenue_ex_vat,order_date,actual_deliver_date,projects(name)')
         .not('working_status', 'eq', 'ยกเลิก'),
       // data entry jobs
       supabase.from('jobs')
@@ -345,7 +345,7 @@ export default function FinancePage() {
 
   const chartMax = Math.max(...monthlyChart.map(m => Math.max(m.received, m.expense)), 1) * 1.2
 
-  const filteredEntries = entries.filter(e => !expenseMonth || e.entry_date?.startsWith(expenseMonth))
+  const filteredEntries = entries.filter(e => e.entry_date >= start && e.entry_date <= end)
   const payBase = payTab === 'outstanding' ? outstanding : payTab === 'paid' ? paidPayments : payments
 
   if (loading) return <div className="flex items-center justify-center h-full"><PageSpinner /></div>
@@ -421,26 +421,26 @@ export default function FinancePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Wallet size={13} style={{ color: '#60a5fa' }} />
+                <Wallet size={13} style={{ color: 'var(--accent-blue)' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>รายรับ (เงินสด)</span>
               </div>
-              <p className="text-kpi-number" style={{ color: '#60a5fa' }}>{fk(periodPaidAmount)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{fk(periodPaidAmount)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodPaid.length} งวด</p>
             </div>
             <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingDown size={13} style={{ color: '#f87171' }} />
+                <TrendingDown size={13} style={{ color: 'var(--accent-red)' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>รายจ่าย</span>
               </div>
-              <p className="text-kpi-number" style={{ color: '#f87171' }}>{fk(periodExpenseTotal)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-red)' }}>{fk(periodExpenseTotal)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodExpenses.length} รายการ</p>
             </div>
             <div className="ds-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp size={13} style={{ color: periodBalance >= 0 ? '#4ade80' : '#f87171' }} />
+                <TrendingUp size={13} style={{ color: periodBalance >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>Balance</span>
               </div>
-              <p className="text-kpi-number" style={{ color: periodBalance >= 0 ? '#4ade80' : '#f87171' }}>{fk(periodBalance)}</p>
+              <p className="text-kpi-number" style={{ color: periodBalance >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{fk(periodBalance)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>รายรับ − รายจ่าย</p>
             </div>
             <div className="ds-card p-4">
@@ -448,7 +448,7 @@ export default function FinancePage() {
                 <DollarSign size={13} style={{ color: 'var(--text-3)' }} />
                 <span className="text-card-title" style={{ color: 'var(--text-3)' }}>รับงวด vs ช่วงก่อน</span>
               </div>
-              <p className="text-kpi-number" style={{ color: growthPct ? (Number(growthPct) >= 0 ? '#4ade80' : '#f87171') : 'var(--text-3)' }}>
+              <p className="text-kpi-number" style={{ color: growthPct ? (Number(growthPct) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') : 'var(--text-3)' }}>
                 {growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}%` : '—'}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
@@ -463,10 +463,10 @@ export default function FinancePage() {
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายรับ vs รายจ่าย 12 เดือนล่าสุด</h2>
               <div className="flex gap-4 text-xs">
                 <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                  <span className="w-3 h-2 rounded-sm inline-block" style={{ background: '#60a5fa' }} />รับงวด
+                  <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--accent-blue)' }} />รับงวด
                 </span>
                 <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                  <span className="w-3 h-2 rounded-sm inline-block" style={{ background: '#f87171' }} />รายจ่าย
+                  <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--accent-red)' }} />รายจ่าย
                 </span>
               </div>
             </div>
@@ -477,33 +477,33 @@ export default function FinancePage() {
                   <div key={m.key} className="flex-shrink-0 flex flex-col items-center gap-0.5 group" style={{ minWidth: '44px' }}>
                     {/* Value labels — income (blue) / expense (red) */}
                     <div style={{ height: '14px', fontSize: '8px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
-                      {m.received > 0 && <span style={{ color: '#60a5fa' }}>{fk(m.received)}</span>}
+                      {m.received > 0 && <span style={{ color: 'var(--accent-blue)' }}>{fk(m.received)}</span>}
                       {m.received > 0 && m.expense > 0 && <span style={{ color: 'var(--text-3)' }}>/</span>}
-                      {m.expense > 0 && <span style={{ color: '#f87171' }}>{fk(m.expense)}</span>}
+                      {m.expense > 0 && <span style={{ color: 'var(--accent-red)' }}>{fk(m.expense)}</span>}
                     </div>
                     <div className="w-full flex gap-0.5 items-end relative" style={{ height: '98px' }}>
                       {/* Received bar */}
                       <div className="flex-1 flex flex-col justify-end" style={{ height: '100%' }}>
                         {m.received > 0 && (
-                          <div className="rounded-t-sm" style={{ height: `${(m.received / chartMax) * 100}%`, background: '#60a5fa' }} />
+                          <div className="rounded-t-sm" style={{ height: `${(m.received / chartMax) * 100}%`, background: 'var(--accent-blue)' }} />
                         )}
                       </div>
                       {/* Expense bar */}
                       <div className="flex-1 flex flex-col justify-end" style={{ height: '100%' }}>
                         {m.expense > 0 && (
-                          <div className="rounded-t-sm" style={{ height: `${(m.expense / chartMax) * 100}%`, background: '#f87171', opacity: 0.75 }} />
+                          <div className="rounded-t-sm" style={{ height: `${(m.expense / chartMax) * 100}%`, background: 'var(--accent-red)', opacity: 0.75 }} />
                         )}
                       </div>
                       {/* Tooltip on hover (desktop) */}
                       {(m.received > 0 || m.expense > 0) && (
-                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-[10px] whitespace-nowrap px-2 py-1 rounded-lg pointer-events-none"
+                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-micro whitespace-nowrap px-2 py-1 rounded-lg pointer-events-none"
                           style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
-                          {m.received > 0 && <div style={{ color: '#60a5fa' }}>รับ {fk(m.received)}</div>}
-                          {m.expense > 0 && <div style={{ color: '#f87171' }}>จ่าย {fk(m.expense)}</div>}
+                          {m.received > 0 && <div style={{ color: 'var(--accent-blue)' }}>รับ {fk(m.received)}</div>}
+                          {m.expense > 0 && <div style={{ color: 'var(--accent-red)' }}>จ่าย {fk(m.expense)}</div>}
                         </div>
                       )}
                     </div>
-                    <p className="text-[10px] whitespace-nowrap"
+                    <p className="text-micro whitespace-nowrap"
                       style={{ color: isCurrentMonth ? 'var(--accent)' : 'var(--text-3)', fontWeight: isCurrentMonth ? 700 : 400 }}>
                       {m.label}
                     </p>
@@ -527,22 +527,22 @@ export default function FinancePage() {
                     <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{bookedCustomers.length} ราย</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: '#4ade80' }}>แปลงเป็น Reserved/Backlog แล้ว</span>
-                    <span className="text-sm font-bold" style={{ color: '#4ade80' }}>{bookedWithJob.length} ราย</span>
+                    <span className="text-xs" style={{ color: 'var(--accent-green)' }}>แปลงเป็น Reserved/Backlog แล้ว</span>
+                    <span className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>{bookedWithJob.length} ราย</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: '#f59e0b' }}>ยังไม่มี Job</span>
-                    <span className="text-sm font-bold" style={{ color: '#f59e0b' }}>{bookedNoJob.length} ราย</span>
+                    <span className="text-xs" style={{ color: 'var(--accent-amber)' }}>ยังไม่มี Job</span>
+                    <span className="text-sm font-bold" style={{ color: 'var(--accent-amber)' }}>{bookedNoJob.length} ราย</span>
                   </div>
                   {bookedNoJobValue > 0 && (
                     <div className="flex justify-between items-center pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
                       <span className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่ารอแปลง</span>
-                      <span className="text-xs font-semibold" style={{ color: '#f59e0b' }}>{fk(bookedNoJobValue)}</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--accent-amber)' }}>{fk(bookedNoJobValue)}</span>
                     </div>
                   )}
                   {bookedCustomers.length > 0 && (
                     <div className="h-1.5 rounded-full mt-1" style={{ background: 'var(--divider)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(bookedWithJob.length / bookedCustomers.length) * 100}%`, background: '#4ade80' }} />
+                      <div className="h-full rounded-full" style={{ width: `${(bookedWithJob.length / bookedCustomers.length) * 100}%`, background: 'var(--accent-green)' }} />
                     </div>
                   )}
                 </div>
@@ -552,44 +552,44 @@ export default function FinancePage() {
               <div className="rounded-[11px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งานที่กำลังทำ</p>
-                  <button onClick={() => setDrilldown('backlog')} className="text-[10px] hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
+                  <button onClick={() => setDrilldown('backlog')} className="text-micro hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
                 </div>
                 <div className="space-y-2.5">
                   {/* Reserve */}
                   <div className="rounded-[8px] px-3 py-2 space-y-1" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#f59e0b' }}>Reserve (จอง)</span>
-                      <span className="text-xs font-bold" style={{ color: '#f59e0b' }}>{reserveJobs.length} งาน</span>
+                      <span className="text-micro font-bold uppercase tracking-wide" style={{ color: 'var(--accent-amber)' }}>Reserve (จอง)</span>
+                      <span className="text-xs font-bold" style={{ color: 'var(--accent-amber)' }}>{reserveJobs.length} งาน</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</span>
+                      <span className="text-micro" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</span>
                       <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{fk(reserveValue)}</span>
                     </div>
                   </div>
                   {/* Backlog */}
                   <div className="rounded-[8px] px-3 py-2 space-y-1" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#60a5fa' }}>Backlog (ดำเนินการ)</span>
-                      <span className="text-xs font-bold" style={{ color: '#60a5fa' }}>{backlogJobs.length} งาน</span>
+                      <span className="text-micro font-bold uppercase tracking-wide" style={{ color: 'var(--accent-blue)' }}>Backlog (ดำเนินการ)</span>
+                      <span className="text-xs font-bold" style={{ color: 'var(--accent-blue)' }}>{backlogJobs.length} งาน</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</span>
+                      <span className="text-micro" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</span>
                       <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{fk(backlogValue)}</span>
                     </div>
                   </div>
                   {/* Collection status */}
                   <div className="pt-1 space-y-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px]" style={{ color: '#4ade80' }}>รับชำระแล้ว</span>
-                      <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>{fk(collectedFromActive)}</span>
+                      <span className="text-micro" style={{ color: 'var(--accent-green)' }}>รับชำระแล้ว</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--accent-green)' }}>{fk(collectedFromActive)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px]" style={{ color: '#f59e0b' }}>ค้างรับทั้งหมด</span>
-                      <span className="text-xs font-semibold" style={{ color: '#f59e0b' }}>{fk(pendingAll)}</span>
+                      <span className="text-micro" style={{ color: 'var(--accent-amber)' }}>ค้างรับทั้งหมด</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--accent-amber)' }}>{fk(pendingAll)}</span>
                     </div>
                     {activeJobValue > 0 && (
                       <div className="h-1.5 rounded-full mt-1" style={{ background: 'var(--divider)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${Math.min((collectedFromActive / activeJobValue) * 100, 100)}%`, background: '#4ade80' }} />
+                        <div className="h-full rounded-full" style={{ width: `${Math.min((collectedFromActive / activeJobValue) * 100, 100)}%`, background: 'var(--accent-green)' }} />
                       </div>
                     )}
                   </div>
@@ -601,8 +601,8 @@ export default function FinancePage() {
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งวดรอเก็บ</p>
                 <div className="space-y-2">
                   <button className="flex justify-between items-center w-full text-left hover:underline" onClick={() => setDrilldown('pending_final')}>
-                    <span className="text-xs" style={{ color: '#f87171' }}>งวดส่งมอบ (ค้าง) ↗</span>
-                    <span className="text-sm font-bold" style={{ color: '#f87171' }}>{fk(pendingFinal)}</span>
+                    <span className="text-xs" style={{ color: 'var(--accent-red)' }}>งวดส่งมอบ (ค้าง) ↗</span>
+                    <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(pendingFinal)}</span>
                   </button>
                   <div className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: 'var(--text-2)' }}>งวดอื่นๆ ค้าง</span>
@@ -610,7 +610,7 @@ export default function FinancePage() {
                   </div>
                   <div className="flex justify-between items-center pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>เกินกำหนด</span>
-                    <span className="text-xs font-semibold" style={{ color: '#ef4444' }}>
+                    <span className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>
                       {fk(activePayments.filter(p => p.status !== 'paid' && p.due_date && p.due_date < today).reduce((s, p) => s + (p.amount || 0), 0))}
                     </span>
                   </div>
@@ -644,7 +644,7 @@ export default function FinancePage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>รายรับรวม</p>
-                    <p className="text-kpi-number" style={{ color: '#60a5fa' }}>{f(periodPaidAmount)}</p>
+                    <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(periodPaidAmount)}</p>
                   </div>
                 </div>
 
@@ -668,7 +668,7 @@ export default function FinancePage() {
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-bold" style={{ color: '#60a5fa' }}>{f(groupTotal)}</span>
+                            <span className="text-sm font-bold" style={{ color: 'var(--accent-blue)' }}>{f(groupTotal)}</span>
                             <span className="text-xs ml-1.5" style={{ color: 'var(--text-3)' }}>{pct}%</span>
                           </div>
                         </div>
@@ -678,11 +678,11 @@ export default function FinancePage() {
                             <div key={p.id} className="flex items-center justify-between py-1.5 px-2 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
                               <div>
                                 <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
-                                <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                                <p className="text-label" style={{ color: 'var(--text-3)' }}>
                                   {(p as any).jobs?.room_no} · {p.installment_name || `งวด ${p.installment_no}`} · {dateStr(p.paid_date)}
                                 </p>
                               </div>
-                              <p className="text-sm font-bold ml-3 flex-shrink-0" style={{ color: '#60a5fa' }}>{f(p.paid_amount)}</p>
+                              <p className="text-sm font-bold ml-3 flex-shrink-0" style={{ color: 'var(--accent-blue)' }}>{f(p.paid_amount)}</p>
                             </div>
                           ))}
                         </div>
@@ -708,12 +708,15 @@ export default function FinancePage() {
         const seg = segmentJobs.filter(inPeriod)
         const all = segmentJobs // ทั้งหมด ไม่กรองช่วงเวลา (สำหรับ YTD/total)
 
+        const rev = (j: SegmentJob) => j.revenue_inc_vat ?? j.revenue_ex_vat ?? 0
+        const calcCount = (jobs: SegmentJob[], custType: string, rpt: boolean) =>
+          jobs.filter(j => j.customer_type === custType && isRpt(j.work_type) === rpt).length
         // คำนวณ segment แบ่งตามช่วงเวลาที่เลือก
         const calc = (jobs: SegmentJob[], custType: string, rpt: boolean) =>
           jobs.filter(j => j.customer_type === custType && isRpt(j.work_type) === rpt)
-              .reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+              .reduce((s, j) => s + rev(j), 0)
 
-        const totalPeriod = seg.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+        const totalPeriod = seg.reduce((s, j) => s + rev(j), 0)
         const b2cRpt = calc(seg, 'B2C', true)
         const b2cNrpt = calc(seg, 'B2C', false)
         const b2bRpt = calc(seg, 'B2B', true)
@@ -725,7 +728,7 @@ export default function FinancePage() {
         const workTypeBreakdown = (jobs: SegmentJob[], custType: string) => {
           const map: Record<string, number> = {}
           jobs.filter(j => j.customer_type === custType && !isRpt(j.work_type)).forEach(j => {
-            map[j.work_type || 'อื่นๆ'] = (map[j.work_type || 'อื่นๆ'] || 0) + (j.revenue_ex_vat || 0)
+            map[j.work_type || 'อื่นๆ'] = (map[j.work_type || 'อื่นๆ'] || 0) + rev(j)
           })
           return Object.entries(map).sort((a, b) => b[1] - a[1])
         }
@@ -733,9 +736,9 @@ export default function FinancePage() {
         // รายการงานดิบ (สำหรับ drill-down ภายหลัง)
         const pct2 = (v: number) => totalPeriod > 0 ? (v / totalPeriod * 100).toFixed(1) : '0'
 
-        const CUST_COLORS = { B2C: '#6366f1', B2B: '#ec4899' }
-        const RPT_COLOR = '#34d399'
-        const NRPT_COLOR = '#fbbf24'
+        const CUST_COLORS = { B2C: 'var(--accent)', B2B: '#ec4899' }
+        const RPT_COLOR = 'var(--accent-green)'
+        const NRPT_COLOR = 'var(--accent-amber)'
 
         return (
           <div className="space-y-6">
@@ -766,7 +769,7 @@ export default function FinancePage() {
             </div>
 
             {/* Total KPI */}
-            <div className="rounded-[18px] p-5" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.25)' }}>
+            <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
               <p className="text-label-upper mb-1" style={{ color: 'var(--accent)' }}>รายได้รวมทั้งบริษัท ({label})</p>
               <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fk(totalPeriod)}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ใช้ {segDateMode === 'order' ? 'วันที่สั่งงาน (order date)' : 'วันส่งมอบจริง (actual deliver)'} เป็นเกณฑ์</p>
@@ -790,7 +793,7 @@ export default function FinancePage() {
                           style={{ background: color }}>{ct}</div>
                         <div>
                           <p className="text-section-title" style={{ color: 'var(--text-1)' }}>{ct === 'B2C' ? 'ลูกค้าบุคคล' : 'ลูกค้าองค์กร/นิติบุคคล'}</p>
-                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{pct2(total)}% ของรายได้รวม</p>
+                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{pct2(total)}% · {calcCount(seg, ct, true) + calcCount(seg, ct, false)} งาน</p>
                         </div>
                       </div>
                       <p className="text-kpi-number" style={{ color }}>{fk(total)}</p>
@@ -812,14 +815,14 @@ export default function FinancePage() {
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: RPT_COLOR }} />
                           <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>RPT</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(52,211,153,0.15)', color: RPT_COLOR }}>Repeat</span>
+                          <span className="text-micro px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--accent-green) 15%, transparent)', color: RPT_COLOR }}>Repeat</span>
                         </div>
                         <span className="font-bold text-sm" style={{ color: RPT_COLOR }}>{fk(rpt)}</span>
                       </div>
                       {total > 0 && <div className="w-full h-1 rounded-full" style={{ background: 'var(--divider)' }}>
                         <div style={{ width: `${(rpt / total) * 100}%`, background: RPT_COLOR, height: '100%', borderRadius: 9999 }} />
                       </div>}
-                      <p className="text-[10px] text-right" style={{ color: RPT_COLOR }}>{total > 0 ? ((rpt / total) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-micro text-right" style={{ color: RPT_COLOR }}>{total > 0 ? ((rpt / total) * 100).toFixed(1) : 0}%</p>
                     </div>
 
                     {/* N-RPT */}
@@ -828,25 +831,25 @@ export default function FinancePage() {
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: NRPT_COLOR }} />
                           <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>N-RPT</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(251,191,36,0.15)', color: NRPT_COLOR }}>New</span>
+                          <span className="text-micro px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)', color: NRPT_COLOR }}>New</span>
                         </div>
                         <span className="font-bold text-sm" style={{ color: NRPT_COLOR }}>{fk(nrpt)}</span>
                       </div>
                       {total > 0 && <div className="w-full h-1 rounded-full" style={{ background: 'var(--divider)' }}>
                         <div style={{ width: `${(nrpt / total) * 100}%`, background: NRPT_COLOR, height: '100%', borderRadius: 9999 }} />
                       </div>}
-                      <p className="text-[10px] text-right" style={{ color: NRPT_COLOR }}>{total > 0 ? ((nrpt / total) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-micro text-right" style={{ color: NRPT_COLOR }}>{total > 0 ? ((nrpt / total) * 100).toFixed(1) : 0}%</p>
                       {/* N-RPT sub-types */}
                       {nrptDetails.length > 0 && (
                         <div className="pt-2 space-y-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
                           {nrptDetails.map(([wt, val]) => (
                             <div key={wt} className="flex items-center justify-between">
-                              <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{wt}</span>
+                              <span className="text-micro" style={{ color: 'var(--text-3)' }}>{wt}</span>
                               <div className="flex items-center gap-2">
                                 <div className="w-16 h-1 rounded-full" style={{ background: 'var(--divider)' }}>
                                   <div style={{ width: nrpt > 0 ? `${(val / nrpt) * 100}%` : '0%', background: NRPT_COLOR, height: '100%', borderRadius: 9999, opacity: 0.7 }} />
                                 </div>
-                                <span className="text-[10px] font-semibold" style={{ color: 'var(--text-2)' }}>{fk(val)}</span>
+                                <span className="text-micro font-semibold" style={{ color: 'var(--text-2)' }}>{fk(val)}</span>
                               </div>
                             </div>
                           ))}
@@ -920,14 +923,9 @@ export default function FinancePage() {
       {tab === 'expense' && (
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <input type="month" value={expenseMonth} onChange={e => setExpenseMonth(e.target.value)}
-              className="rounded-[8px] px-3 py-2 text-sm outline-none"
-              style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-            {expenseMonth && (
-              <button onClick={() => setExpenseMonth('')} className="text-xs px-3 py-2 rounded-[8px]" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>ล้าง</button>
-            )}
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>ช่วง: {label}</p>
             <div className="ml-auto ds-card px-4 py-2 text-sm">
-              รวม <span className="font-bold ml-1" style={{ color: '#f87171' }}>{f(filteredEntries.reduce((s, e) => s + e.amount, 0))}</span>
+              รวม <span className="font-bold ml-1" style={{ color: 'var(--accent-red)' }}>{f(filteredEntries.reduce((s, e) => s + e.amount, 0))}</span>
             </div>
           </div>
           <div className="ds-card tbl-scroll">
@@ -948,7 +946,7 @@ export default function FinancePage() {
                     <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>{e.category}</td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-1)' }}>{e.description || '—'}</td>
                     <td className="px-4 py-3 text-xs font-mono" style={{ color: 'var(--text-3)' }}>{e.ref_id || '—'}</td>
-                    <td className="px-4 py-3 font-semibold text-right" style={{ color: '#f87171' }}>{f(e.amount)}</td>
+                    <td className="px-4 py-3 font-semibold text-right" style={{ color: 'var(--accent-red)' }}>{f(e.amount)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button onClick={() => { setEditingEntry(e); setEntryForm({ type: e.type || 'expense', category: e.category, amount: e.amount, entry_date: e.entry_date, description: e.description || '', ref_id: e.ref_id || '' }); setSaveError(''); setEntryOpen(true) }}
@@ -969,7 +967,7 @@ export default function FinancePage() {
       {tab === 'payments' && (
         <div className="space-y-4">
           {overdue.length > 0 && (
-            <div className="flex items-center gap-3 p-3 rounded-[11px] text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
+            <div className="flex items-center gap-3 p-3 rounded-[11px] text-sm" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
               <AlertCircle size={15} />มี {overdue.length} งวดเกินกำหนด รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
             </div>
           )}
@@ -1018,13 +1016,13 @@ export default function FinancePage() {
                   const st = PAY_STATUS.find(s => s.value === p.status) || PAY_STATUS[0]
                   const isOD = p.status !== 'paid' && p.due_date && p.due_date < today
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid var(--divider)', background: isOD ? 'rgba(239,68,68,0.04)' : i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--divider)', background: isOD ? 'color-mix(in srgb, var(--accent-red) 4%, transparent)' : i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
                       <td className="px-4 py-3">
                         <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
                         <p className="text-xs" style={{ color: 'var(--accent)' }}>{(p as any).jobs?.room_no}</p>
                       </td>
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.installment_name || `งวด ${p.installment_no}`}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: isOD ? '#f87171' : 'var(--text-2)' }}>{dateStr(p.due_date)}</td>
+                      <td className="px-4 py-3 text-sm" style={{ color: isOD ? 'var(--accent-red)' : 'var(--text-2)' }}>{dateStr(p.due_date)}</td>
                       <td className="px-4 py-3 font-semibold text-right" style={{ color: 'var(--text-1)' }}>{f(p.amount)}</td>
                       <td className="px-4 py-3 text-right">
                         {p.paid_amount > 0 ? <span className="text-sm font-semibold text-green-400">{f(p.paid_amount)}</span> : <span style={{ color: 'var(--text-3)' }}>—</span>}
@@ -1057,7 +1055,7 @@ export default function FinancePage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[11px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[11px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}
@@ -1090,7 +1088,7 @@ export default function FinancePage() {
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{j.customer_name}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{j.room_no} · {(j.projects as any)?.name} · {j.working_status}</p>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: '#60a5fa' }}>{fk(j.revenue_ex_vat || 0)}</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--accent-blue)' }}>{fk(j.revenue_ex_vat || 0)}</span>
                 </div>
               ))}
               {drilldown === 'pending_final' && activePayments.filter(p => p.status !== 'paid' && (p as any).is_final).map(p => (
@@ -1099,16 +1097,16 @@ export default function FinancePage() {
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{(p as any).jobs?.room_no} · {p.due_date || 'ยังไม่กำหนดวัน'}</p>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: '#f87171' }}>{fk(p.amount || 0)}</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(p.amount || 0)}</span>
                 </div>
               ))}
               {drilldown === 'overdue' && activePayments.filter(p => p.status !== 'paid' && p.due_date && p.due_date < new Date().toISOString().slice(0, 10)).map(p => (
-                <div key={p.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'rgba(248,113,113,0.07)' }}>
+                <div key={p.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 7.0%, transparent)' }}>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
-                    <p className="text-xs" style={{ color: '#f87171' }}>{(p as any).jobs?.room_no} · เกินกำหนด {p.due_date}</p>
+                    <p className="text-xs" style={{ color: 'var(--accent-red)' }}>{(p as any).jobs?.room_no} · เกินกำหนด {p.due_date}</p>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: '#f87171' }}>{fk(p.amount || 0)}</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(p.amount || 0)}</span>
                 </div>
               ))}
             </div>

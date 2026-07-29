@@ -325,7 +325,12 @@ export default function FinancePage() {
   const chartMax = Math.max(...monthlyChart.map(m => Math.max(m.received, m.expense)), 1) * 1.2
 
   const filteredEntries = entries.filter(e => e.entry_date >= start && e.entry_date <= end)
-  const payBase = payTab === 'outstanding' ? outstanding : payTab === 'paid' ? paidPayments : payments
+  const payPeriodBase = payTab === 'outstanding'
+    ? outstanding.filter(p => p.due_date >= start && p.due_date <= end)
+    : payTab === 'paid'
+      ? paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end)
+      : payments.filter(p => (p.due_date >= start && p.due_date <= end) || (p.paid_date && p.paid_date >= start && p.paid_date <= end))
+  const payBase = payPeriodBase
 
   if (loading) return <div className="flex items-center justify-center h-full"><PageSpinner /></div>
   if (fetchError) return <PageError message={fetchError} onRetry={load} />
@@ -922,6 +927,21 @@ export default function FinancePage() {
       {/* ── Tab: Payments ─────────────────────────────────── */}
       {tab === 'payments' && (
         <div className="space-y-4">
+          {/* Period filter */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="tab-group">
+              {(['month','quarter','year'] as Period[]).map(p => (
+                <button key={p} onClick={() => setPeriod(p)}
+                  className={`tab-btn ${period === p ? 'active' : ''}`}>
+                  {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronLeft size={14} /></button>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</span>
+            <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronRight size={14} /></button>
+            {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
+          </div>
           {overdue.length > 0 && (
             <div className="flex items-center gap-3 p-3 rounded-[11px] text-sm" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
               <AlertCircle size={15} />มี {overdue.length} งวดเกินกำหนด รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
@@ -929,26 +949,26 @@ export default function FinancePage() {
           )}
           <div className="grid grid-cols-3 gap-3">
             <div className="ds-card p-3">
-              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับทั้งหมด</p>
-              <p className="text-kpi-number text-yellow-400">{f(outstanding.reduce((s, p) => s + p.amount, 0))}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.length} งวด</p>
+              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ ({label})</p>
+              <p className="text-kpi-number text-yellow-400">{f(outstanding.filter(p => p.due_date >= start && p.due_date <= end).reduce((s, p) => s + p.amount, 0))}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.filter(p => p.due_date >= start && p.due_date <= end).length} งวด</p>
             </div>
             <div className="ds-card p-3">
-              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
+              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด (ทั้งหมด)</p>
               <p className="text-kpi-number text-red-400">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
             </div>
             <div className="ds-card p-3">
-              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว</p>
-              <p className="text-kpi-number text-green-400">{f(paidPayments.reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{paidPayments.length} งวด</p>
+              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว ({label})</p>
+              <p className="text-kpi-number text-green-400">{f(paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).length} งวด</p>
             </div>
           </div>
           <div className="tab-group w-fit">
             {[
-              { key: 'outstanding', label: `ค้างชำระ (${outstanding.length})` },
-              { key: 'paid', label: `ชำระแล้ว (${paidPayments.length})` },
-              { key: 'all', label: 'ทั้งหมด' },
+              { key: 'outstanding', label: `ค้างชำระ (${outstanding.filter(p => p.due_date >= start && p.due_date <= end).length})` },
+              { key: 'paid', label: `ชำระแล้ว (${paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).length})` },
+              { key: 'all', label: `ทั้งหมด (${payPeriodBase.length})` },
             ].map(t => (
               <button key={t.key} onClick={() => setPayTab(t.key as any)}
                 className={`tab-btn ${payTab === t.key ? 'active' : ''}`}>

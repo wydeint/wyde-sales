@@ -1137,12 +1137,26 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
         <div className="ml-5 mt-0.5 text-micro" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</div>
       )}
 
-      {/* Paid: voucher summary */}
+      {/* Paid: voucher box */}
       {inst.status === 'paid' && inst.voucher_amount > 0 && (
-        <div className="ml-5 mt-1 flex gap-3 text-micro" style={{ color: 'var(--text-3)' }}>
-          <span>มูลค่า {fmtBaht(inst.amount)}</span>
-          <span style={{ color: 'var(--accent-orange)' }}>หัก Voucher -{fmtBaht(inst.voucher_amount)}</span>
-          <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>รับจริง {fmtBaht(Math.max(0, inst.amount - inst.voucher_amount))}</span>
+        <div className="ml-5 mt-1 text-micro rounded-[6px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="px-2 py-1 space-y-0.5" style={{ background: 'var(--hover-bg)' }}>
+            <div className="flex justify-between">
+              <span style={{ color: 'var(--text-3)' }}>ยอดงวด (Gross)</span>
+              <span style={{ color: 'var(--text-2)' }}>{fmtBaht(inst.amount)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span style={{ color: 'var(--text-3)' }}>หัก Voucher</span>
+              <span style={{ color: 'var(--accent-orange)' }}>-{fmtBaht(inst.voucher_amount)}</span>
+            </div>
+            {inst.voucher_code && (
+              <div style={{ color: 'var(--text-3)', paddingLeft: '8px' }}>No. {inst.voucher_code}</div>
+            )}
+          </div>
+          <div className="px-2 py-1 flex justify-between" style={{ borderTop: '1px solid var(--divider)' }}>
+            <span style={{ color: 'var(--text-3)' }}>รับจริง (Net)</span>
+            <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>{fmtBaht(inst.paid_amount ?? Math.max(0, inst.amount - inst.voucher_amount))}</span>
+          </div>
         </div>
       )}
 
@@ -1187,13 +1201,6 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
             <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, 'var(--accent-green)', 'color-mix(in srgb, var(--accent-green) 10%, transparent)'), opacity: savingReceipt ? 0.5 : 1 }}>
               {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จ
             </button>
-            <button onClick={deleteInst} disabled={deleting}
-              className="ml-auto flex items-center gap-1 px-2 py-1 rounded-[6px] active:scale-95 disabled:opacity-40"
-              style={{ background: 'transparent', border: '1px solid var(--divider)', color: 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent-red)'; (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--accent-red) 30%, transparent)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--divider)' }}>
-              {deleting ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
-            </button>
           </div>
           {/* Line 4 — แจ้งทีม */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -1226,6 +1233,16 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
               }}>
               {copied ? <CheckCircle2 size={10} /> : <Copy size={10} />}
               {copied ? 'Copied!' : 'Copy'}{!copied && <span className="text-[8.5px] opacity-50 ml-0.5">โพสต์เอง</span>}
+            </button>
+          </div>
+          {/* Trash — ล่างสุดคนเดียว มีเส้น divider คั่น */}
+          <div style={{ marginTop: '8px', borderTop: '1px solid var(--divider)', paddingTop: '8px' }}>
+            <button onClick={deleteInst} disabled={deleting}
+              className="flex items-center gap-1 px-2 py-1 rounded-[6px] active:scale-95 disabled:opacity-40"
+              style={{ background: 'transparent', border: '1px solid var(--divider)', color: 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent-red)'; (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--accent-red) 30%, transparent)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--divider)' }}>
+              {deleting ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
             </button>
           </div>
         </div>

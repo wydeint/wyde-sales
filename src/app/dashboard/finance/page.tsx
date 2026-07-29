@@ -19,7 +19,7 @@ interface Payment {
   paid_amount: number
   status: string
   notes: string
-  jobs?: { customer_name: string; room_no: string; projects?: { name: string }; sales?: { name: string } }
+  jobs?: { customer_name: string; room_no: string; customer_type: string; work_type: string | null; projects?: { name: string }; sales?: { name: string } }
 }
 
 interface DeliveredJob {
@@ -29,19 +29,6 @@ interface DeliveredJob {
   actual_deliver_date: string
   revenue_inc_vat: number
   revenue_ex_vat: number
-  projects?: { name: string }
-}
-
-interface SegmentJob {
-  id: string
-  customer_name: string
-  room_no: string
-  customer_type: string
-  work_type: string
-  revenue_inc_vat: number | null
-  revenue_ex_vat: number | null
-  order_date: string | null
-  actual_deliver_date: string | null
   projects?: { name: string }
 }
 
@@ -157,9 +144,6 @@ export default function FinancePage() {
   const [entryProjectFilter, setEntryProjectFilter] = useState('')
   const [entrySaving, setEntrySaving] = useState(false)
   const [entrySaveMsg, setEntrySaveMsg] = useState('')
-  const [segmentJobs, setSegmentJobs] = useState<SegmentJob[]>([])
-  const [segDateMode, setSegDateMode] = useState<'order' | 'deliver'>('order')
-
   const [payments, setPayments] = useState<Payment[]>([])
   const [deliveredJobs, setDeliveredJobs] = useState<DeliveredJob[]>([])
   const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([])
@@ -181,9 +165,9 @@ export default function FinancePage() {
 
   const load = useCallback(async () => {
     setLoading(true); setFetchError('')
-    const [{ data: p, error: e1 }, { data: j, error: e2 }, { data: e }, { data: aj }, { data: bc }, { data: sg }, { data: ej }] = await Promise.all([
+    const [{ data: p, error: e1 }, { data: j, error: e2 }, { data: e }, { data: aj }, { data: bc }, { data: ej }] = await Promise.all([
       supabase.from('payments')
-        .select('id,job_id,installment_no,installment_name,due_date,amount,paid_date,paid_amount,status,notes,jobs(customer_name,room_no,projects(name),sales:users!jobs_sales_id_fkey(name))')
+        .select('id,job_id,installment_no,installment_name,due_date,amount,paid_date,paid_amount,status,notes,jobs(customer_name,room_no,customer_type,work_type,projects(name),sales:users!jobs_sales_id_fkey(name))')
         .order('due_date'),
       supabase.from('jobs')
         .select('id,customer_name,room_no,actual_deliver_date,revenue_inc_vat,revenue_ex_vat,projects(name)')
@@ -197,10 +181,6 @@ export default function FinancePage() {
       supabase.from('customers')
         .select('id,customer_name,budget,booking_date,projects(name)')
         .eq('status', 'booked'),
-      // segment breakdown — ทุก job ที่ไม่ยกเลิก
-      supabase.from('jobs')
-        .select('id,customer_name,room_no,customer_type,work_type,revenue_inc_vat,revenue_ex_vat,order_date,actual_deliver_date,projects(name)')
-        .not('working_status', 'eq', 'ยกเลิก'),
       // data entry jobs
       supabase.from('jobs')
         .select('id,customer_name,room_no,project_id,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,working_status,projects(name)')
@@ -213,7 +193,6 @@ export default function FinancePage() {
     setActiveJobs((aj || []) as unknown as ActiveJob[])
     setBookedCustomers((bc || []) as unknown as BookedCustomer[])
     setEntries(((e as any) || []) as Entry[])
-    setSegmentJobs((sg || []) as unknown as SegmentJob[])
     const ejList = (ej || []) as unknown as EntryJob[]
     setEntryJobs(ejList)
     // init drafts from DB values
@@ -700,41 +679,31 @@ export default function FinancePage() {
 
       {/* ── Tab: Segment ─────────────────────────────────── */}
       {tab === 'segment' && (() => {
-        const isRpt = (wt: string) => wt === 'RPT'
-        const dateOf = (j: SegmentJob) => segDateMode === 'order' ? j.order_date : j.actual_deliver_date
-        const inPeriod = (j: SegmentJob) => {
-          const d = dateOf(j); return !!d && d >= start && d <= end
-        }
-        const seg = segmentJobs.filter(inPeriod)
-        const all = segmentJobs // ทั้งหมด ไม่กรองช่วงเวลา (สำหรับ YTD/total)
+        const isRpt = (wt: string | null | undefined) => wt === 'RPT'
+        const seg = periodPaid
+        const totalCash = seg.reduce((s, p) => s + (p.paid_amount || 0), 0)
 
-        const rev = (j: SegmentJob) => j.revenue_inc_vat ?? j.revenue_ex_vat ?? 0
-        const calcCount = (jobs: SegmentJob[], custType: string, rpt: boolean) =>
-          jobs.filter(j => j.customer_type === custType && isRpt(j.work_type) === rpt).length
-        // คำนวณ segment แบ่งตามช่วงเวลาที่เลือก
-        const calc = (jobs: SegmentJob[], custType: string, rpt: boolean) =>
-          jobs.filter(j => j.customer_type === custType && isRpt(j.work_type) === rpt)
-              .reduce((s, j) => s + rev(j), 0)
+        const calcCash = (payments: typeof periodPaid, custType: string, rpt: boolean) =>
+          payments.filter(p => p.jobs?.customer_type === custType && isRpt(p.jobs?.work_type) === rpt)
+                  .reduce((s, p) => s + (p.paid_amount || 0), 0)
+        const calcCount = (payments: typeof periodPaid, custType: string, rpt: boolean) =>
+          payments.filter(p => p.jobs?.customer_type === custType && isRpt(p.jobs?.work_type) === rpt).length
 
-        const totalPeriod = seg.reduce((s, j) => s + rev(j), 0)
-        const b2cRpt = calc(seg, 'B2C', true)
-        const b2cNrpt = calc(seg, 'B2C', false)
-        const b2bRpt = calc(seg, 'B2B', true)
-        const b2bNrpt = calc(seg, 'B2B', false)
+        const b2cRpt  = calcCash(seg, 'B2C', true)
+        const b2cNrpt = calcCash(seg, 'B2C', false)
+        const b2bRpt  = calcCash(seg, 'B2B', true)
+        const b2bNrpt = calcCash(seg, 'B2B', false)
         const b2cTotal = b2cRpt + b2cNrpt
         const b2bTotal = b2bRpt + b2bNrpt
 
-        // คำนวณ work_type ย่อย (N-RPT ต่างชนิด)
-        const workTypeBreakdown = (jobs: SegmentJob[], custType: string) => {
+        const workTypeBreakdown = (payments: typeof periodPaid, custType: string) => {
           const map: Record<string, number> = {}
-          jobs.filter(j => j.customer_type === custType && !isRpt(j.work_type)).forEach(j => {
-            map[j.work_type || 'อื่นๆ'] = (map[j.work_type || 'อื่นๆ'] || 0) + rev(j)
+          payments.filter(p => p.jobs?.customer_type === custType && !isRpt(p.jobs?.work_type)).forEach(p => {
+            const wt = p.jobs?.work_type || 'อื่นๆ'
+            map[wt] = (map[wt] || 0) + (p.paid_amount || 0)
           })
           return Object.entries(map).sort((a, b) => b[1] - a[1])
         }
-
-        // รายการงานดิบ (สำหรับ drill-down ภายหลัง)
-        const pct2 = (v: number) => totalPeriod > 0 ? (v / totalPeriod * 100).toFixed(1) : '0'
 
         const CUST_COLORS = { B2C: 'var(--accent)', B2B: '#ec4899' }
         const RPT_COLOR = 'var(--accent-green)'
@@ -742,7 +711,7 @@ export default function FinancePage() {
 
         return (
           <div className="space-y-6">
-            {/* Period filter + date mode toggle */}
+            {/* Period filter */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="tab-group">
                 {(['month','quarter','year'] as Period[]).map(p => (
@@ -756,23 +725,13 @@ export default function FinancePage() {
               <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</span>
               <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronRight size={14} /></button>
               {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
-              <div className="tab-group ml-auto">
-                <button onClick={() => setSegDateMode('order')}
-                  className={`tab-btn ${segDateMode === 'order' ? 'active' : ''}`}>
-                  วันที่สั่งงาน
-                </button>
-                <button onClick={() => setSegDateMode('deliver')}
-                  className={`tab-btn ${segDateMode === 'deliver' ? 'active' : ''}`}>
-                  วันส่งมอบ
-                </button>
-              </div>
             </div>
 
             {/* Total KPI */}
             <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
-              <p className="text-label-upper mb-1" style={{ color: 'var(--accent)' }}>รายได้รวมทั้งบริษัท ({label})</p>
-              <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fk(totalPeriod)}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ใช้ {segDateMode === 'order' ? 'วันที่สั่งงาน (order date)' : 'วันส่งมอบจริง (actual deliver)'} เป็นเกณฑ์</p>
+              <p className="text-label-upper mb-1" style={{ color: 'var(--accent)' }}>เงินสดรับรวมทั้งบริษัท ({label})</p>
+              <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fk(totalCash)}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ยอดรับจริง (paid_date) ในช่วงเวลานี้</p>
             </div>
 
             {/* B2C + B2B side-by-side */}
@@ -783,6 +742,8 @@ export default function FinancePage() {
                 const nrpt = ct === 'B2C' ? b2cNrpt : b2bNrpt
                 const color = CUST_COLORS[ct]
                 const nrptDetails = workTypeBreakdown(seg, ct)
+                const pct = totalCash > 0 ? (total / totalCash * 100).toFixed(1) : '0'
+                const count = calcCount(seg, ct, true) + calcCount(seg, ct, false)
                 return (
                   <div key={ct} className="rounded-[18px] p-5 space-y-4"
                     style={{ background: 'var(--card-bg)', border: `1px solid ${color}30` }}>
@@ -793,7 +754,7 @@ export default function FinancePage() {
                           style={{ background: color }}>{ct}</div>
                         <div>
                           <p className="text-section-title" style={{ color: 'var(--text-1)' }}>{ct === 'B2C' ? 'ลูกค้าบุคคล' : 'ลูกค้าองค์กร/นิติบุคคล'}</p>
-                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{pct2(total)}% · {calcCount(seg, ct, true) + calcCount(seg, ct, false)} งาน</p>
+                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{pct}% · {count} รายการ</p>
                         </div>
                       </div>
                       <p className="text-kpi-number" style={{ color }}>{fk(total)}</p>
@@ -801,11 +762,9 @@ export default function FinancePage() {
 
                     {/* Stacked bar */}
                     {total > 0 && (
-                      <div>
-                        <div className="flex h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
-                          <div style={{ width: `${(rpt / total) * 100}%`, background: RPT_COLOR, transition: 'width 0.4s' }} />
-                          <div style={{ width: `${(nrpt / total) * 100}%`, background: NRPT_COLOR, transition: 'width 0.4s' }} />
-                        </div>
+                      <div className="flex h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
+                        <div style={{ width: `${(rpt / total) * 100}%`, background: RPT_COLOR, transition: 'width 0.4s' }} />
+                        <div style={{ width: `${(nrpt / total) * 100}%`, background: NRPT_COLOR, transition: 'width 0.4s' }} />
                       </div>
                     )}
 
@@ -814,8 +773,7 @@ export default function FinancePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: RPT_COLOR }} />
-                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>RPT</span>
-                          <span className="text-micro px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--accent-green) 15%, transparent)', color: RPT_COLOR }}>Repeat</span>
+                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>RPT — งานซ้ำ</span>
                         </div>
                         <span className="font-bold text-sm" style={{ color: RPT_COLOR }}>{fk(rpt)}</span>
                       </div>
@@ -830,8 +788,7 @@ export default function FinancePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: NRPT_COLOR }} />
-                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>N-RPT</span>
-                          <span className="text-micro px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)', color: NRPT_COLOR }}>New</span>
+                          <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>N-RPT — งานใหม่</span>
                         </div>
                         <span className="font-bold text-sm" style={{ color: NRPT_COLOR }}>{fk(nrpt)}</span>
                       </div>
@@ -839,7 +796,6 @@ export default function FinancePage() {
                         <div style={{ width: `${(nrpt / total) * 100}%`, background: NRPT_COLOR, height: '100%', borderRadius: 9999 }} />
                       </div>}
                       <p className="text-micro text-right" style={{ color: NRPT_COLOR }}>{total > 0 ? ((nrpt / total) * 100).toFixed(1) : 0}%</p>
-                      {/* N-RPT sub-types */}
                       {nrptDetails.length > 0 && (
                         <div className="pt-2 space-y-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
                           {nrptDetails.map(([wt, val]) => (
@@ -864,7 +820,7 @@ export default function FinancePage() {
             {/* Summary table */}
             <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
               <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
-                <p className="text-section-title" style={{ color: 'var(--text-1)' }}>ตารางสรุปรายได้ ({label})</p>
+                <p className="text-section-title" style={{ color: 'var(--text-1)' }}>ตารางสรุปเงินสดรับ ({label})</p>
               </div>
               <table className="w-full text-sm">
                 <thead>
@@ -894,7 +850,7 @@ export default function FinancePage() {
                         <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: NRPT_COLOR }}>{fk(nrpt)}</td>
                         <td className="px-5 py-3 text-right text-sm font-bold" style={{ color: 'var(--text-1)' }}>{fk(total)}</td>
                         <td className="px-5 py-3 text-right text-xs font-semibold" style={{ color }}>
-                          {totalPeriod > 0 ? ((total / totalPeriod) * 100).toFixed(1) : 0}%
+                          {totalCash > 0 ? ((total / totalCash) * 100).toFixed(1) : 0}%
                         </td>
                       </tr>
                     )
@@ -905,7 +861,7 @@ export default function FinancePage() {
                     <td className="px-5 py-3 text-sm font-bold" style={{ color: 'var(--text-1)' }}>รวมทั้งหมด</td>
                     <td className="px-5 py-3 text-right text-sm font-bold" style={{ color: RPT_COLOR }}>{fk(b2cRpt + b2bRpt)}</td>
                     <td className="px-5 py-3 text-right text-sm font-bold" style={{ color: NRPT_COLOR }}>{fk(b2cNrpt + b2bNrpt)}</td>
-                    <td className="px-5 py-3 text-right text-sm font-bold" style={{ color: 'var(--text-1)' }}>{fk(totalPeriod)}</td>
+                    <td className="px-5 py-3 text-right text-sm font-bold" style={{ color: 'var(--text-1)' }}>{fk(totalCash)}</td>
                     <td className="px-5 py-3 text-right text-xs" style={{ color: 'var(--text-3)' }}>100%</td>
                   </tr>
                 </tfoot>

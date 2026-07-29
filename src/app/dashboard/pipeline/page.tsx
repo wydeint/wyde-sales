@@ -372,7 +372,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
   const [cancelConfirmed, setCancelConfirmed] = useState(false)
   const [docsExpanded, setDocsExpanded] = useState<Record<string, boolean>>({})
   const [bookedJob, setBookedJob] = useState<FullJob | null>(null)
-  const [loadingBookedJob, setLoadingBookedJob] = useState(customer.status === 'booked')
+  const [loadingBookedJob, setLoadingBookedJob] = useState(customer.status === 'booked' || focusJobWorkingStatus === 'จอง')
 
   useEffect(() => {
     let cancelled = false
@@ -434,7 +434,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
   }
 
   useEffect(() => {
-    if (customer.status === 'booked') { loadOrCreateBookedJob() }
+    if (customer.status === 'booked' || focusJobWorkingStatus === 'จอง') { loadOrCreateBookedJob() }
   }, [customer.id, customer.status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
@@ -452,7 +452,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
   }
 
   // ── Booked: render DealDrawer with stage-move topSlot ──────
-  if (customer.status === 'booked') {
+  if (customer.status === 'booked' || focusJobWorkingStatus === 'จอง') {
     const closedStage = stageMap['closed']
     const totalSettled = (bookedJob?.installments || [])
       .filter(i => i.status === 'paid')
@@ -509,7 +509,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
       </>
     )
     if (bookedJob) return (
-      <DealDrawer job={bookedJob} onClose={onClose} onRefresh={loadOrCreateBookedJob} topSlot={stagePills} />
+      <DealDrawer job={bookedJob} onClose={onClose} onRefresh={loadOrCreateBookedJob} topSlot={customer.status === 'booked' ? stagePills : undefined} />
     )
     return null
   }

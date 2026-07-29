@@ -2221,14 +2221,15 @@ export default function MyDealsPage() {
 
       {/* Summary strip */}
       {!loading && jobs.length > 0 && (() => {
-        const totalRevenue = jobs.reduce((s, j) => s + j.total_amount, 0)
-        const overdueCount = jobs.filter(j => j.has_overdue).length
-        const allPaidCount = jobs.filter(j => j.all_paid).length
+        const visibleJobs = grouped.flatMap(g => [...g.active, ...g.done])
+        const totalRevenue = visibleJobs.reduce((s, j) => s + j.total_amount, 0)
+        const overdueCount = visibleJobs.filter(j => j.has_overdue).length
+        const allPaidCount = visibleJobs.filter(j => j.all_paid).length
         return (
           <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>งานทั้งหมด</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{jobs.length}</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>งานที่แสดง</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{visibleJobs.length}</p>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>ห้อง</p>
             </div>
             <div className="ds-card-sm text-center">

@@ -716,22 +716,6 @@ export default function FinancePage() {
 
         return (
           <div className="space-y-6">
-            {/* Period filter */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="tab-group">
-                {(['month','quarter','year'] as Period[]).map(p => (
-                  <button key={p} onClick={() => setPeriod(p)}
-                    className={`tab-btn ${period === p ? 'active' : ''}`}>
-                    {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronLeft size={14} /></button>
-              <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</span>
-              <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronRight size={14} /></button>
-              {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
-            </div>
-
             {/* Total KPI */}
             <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
               <p className="text-label-upper mb-1" style={{ color: 'var(--accent)' }}>เงินสดรับรวมทั้งบริษัท ({label})</p>
@@ -927,21 +911,6 @@ export default function FinancePage() {
       {/* ── Tab: Payments ─────────────────────────────────── */}
       {tab === 'payments' && (
         <div className="space-y-4">
-          {/* Period filter */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="tab-group">
-              {(['month','quarter','year'] as Period[]).map(p => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  className={`tab-btn ${period === p ? 'active' : ''}`}>
-                  {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronLeft size={14} /></button>
-            <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{label}</span>
-            <button onClick={() => setOffset(o => o + 1)} className="p-2 rounded-lg transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}><ChevronRight size={14} /></button>
-            {offset !== 0 && <button onClick={() => setOffset(0)} className="text-xs px-3 py-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ปัจจุบัน</button>}
-          </div>
           {overdue.length > 0 && (
             <div className="flex items-center gap-3 p-3 rounded-[11px] text-sm" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
               <AlertCircle size={15} />มี {overdue.length} งวดเกินกำหนด รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}

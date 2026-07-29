@@ -1913,7 +1913,6 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
         </div>
       )}
       {/* Row 3: progress bar */}
-      <div style={{ height: '3px', background: 'red', width: '100%' }} />
       {payPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

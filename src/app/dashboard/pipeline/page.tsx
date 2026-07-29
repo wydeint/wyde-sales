@@ -354,13 +354,13 @@ async function createBookedJob(customer: Customer, supabase: ReturnType<typeof c
   return ''
 }
 
-function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpdate, onStartJob }: {
-  customer: Customer; focusJobId?: string | null; projects: Project[]; users: User[]
+function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects, users, onClose, onUpdate, onStartJob }: {
+  customer: Customer; focusJobId?: string | null; focusJobWorkingStatus?: string | null; projects: Project[]; users: User[]
   onClose: () => void; onUpdate: (c: Customer) => void
   onStartJob: (c: Customer) => void
 }) {
   const supabase = createClient()
-  const stage = stageMap[customer.status] || STAGES[0]
+  const stage = (focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : stageMap[customer.status]) || STAGES[0]
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ ...customer })
   const [saving, setSaving] = useState(false)
@@ -1212,6 +1212,7 @@ export default function ProspectsKanbanPage() {
   const [filterSales, setFilterSales] = useState('')
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+  const [selectedJobWorkingStatus, setSelectedJobWorkingStatus] = useState<string | null>(null)
   const [addModal, setAddModal] = useState(false)
   const [dupRoomCustomer, setDupRoomCustomer] = useState<{ id: string; customer_name: string; interested_room: string; jobCount: number } | null>(null)
   const [pendingAddForm, setPendingAddForm] = useState<typeof emptyForm | null>(null)
@@ -1622,7 +1623,7 @@ export default function ProspectsKanbanPage() {
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                         {cards.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, cardKey }) => (
-                          <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} />
+                          <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} />
                         ))}
                       </div>
                     </div>
@@ -1660,9 +1661,10 @@ export default function ProspectsKanbanPage() {
         <CustomerDrawer
           customer={selectedCustomer}
           focusJobId={selectedJobId}
+          focusJobWorkingStatus={selectedJobWorkingStatus}
           projects={projects}
           users={users}
-          onClose={() => { setSelectedCustomer(null); setSelectedJobId(null) }}
+          onClose={() => { setSelectedCustomer(null); setSelectedJobId(null); setSelectedJobWorkingStatus(null) }}
           onUpdate={updateCustomer}
           onStartJob={c => setStartJobCustomer(c)}
         />

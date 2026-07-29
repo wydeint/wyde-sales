@@ -44,13 +44,12 @@ interface DetailWarranty {
 
 // ─── Stage config ───────────────────────────────────────────
 const STAGES = [
-  { value: 'new',           label: 'ใหม่',              bg: 'rgba(59,130,246,0.08)',  border: '#3b82f680', text: '#60a5fa',  dot: '#60a5fa',  badge: 'rgba(59,130,246,0.15)',  chip: 'rgba(59,130,246,0.45)' },
+  { value: 'new',           label: 'ใหม่',              bg: 'color-mix(in srgb, var(--accent-blue) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-blue) 50%, transparent)', text: 'var(--accent-blue)',  dot: 'var(--accent-blue)',  badge: 'color-mix(in srgb, var(--accent-blue) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-blue) 45%, transparent)' },
   { value: 'interested',    label: 'สนใจ',               bg: 'rgba(6,182,212,0.08)',   border: '#06b6d480', text: '#22d3ee',  dot: '#22d3ee',  badge: 'rgba(6,182,212,0.15)',   chip: 'rgba(6,182,212,0.45)'  },
-  { value: 'quoted',        label: 'เสนอราคาแล้ว',       bg: 'rgba(234,179,8,0.08)',   border: '#eab30880', text: '#fbbf24',  dot: '#fbbf24',  badge: 'rgba(234,179,8,0.15)',   chip: 'rgba(234,179,8,0.45)'  },
-  { value: 'close_pending', label: 'รอปิด',              bg: 'rgba(168,85,247,0.08)',  border: '#a855f780', text: '#c084fc',  dot: '#c084fc',  badge: 'rgba(168,85,247,0.15)',  chip: 'rgba(168,85,247,0.45)' },
-  { value: 'booked',        label: 'จอง',                bg: 'rgba(249,115,22,0.08)',  border: '#f9731680', text: '#fb923c',  dot: '#fb923c',  badge: 'rgba(249,115,22,0.15)',  chip: 'rgba(249,115,22,0.45)' },
-  { value: 'lost',          label: 'หลุด',               bg: 'rgba(239,68,68,0.08)',   border: '#ef444480', text: '#f87171',  dot: '#f87171',  badge: 'rgba(239,68,68,0.15)',   chip: 'rgba(239,68,68,0.45)'  },
-  { value: 'closed',        label: 'ปิดแล้ว เริ่มงาน',  bg: 'rgba(34,197,94,0.08)',   border: '#22c55e80', text: '#4ade80',  dot: '#4ade80',  badge: 'rgba(34,197,94,0.15)',   chip: 'rgba(34,197,94,0.45)'  },
+  { value: 'quoted',        label: 'เสนอราคาแล้ว',       bg: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)',   border: 'color-mix(in srgb, var(--accent-amber) 50%, transparent)', text: 'var(--accent-amber)',  dot: 'var(--accent-amber)',  badge: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)',   chip: 'color-mix(in srgb, var(--accent-amber) 45%, transparent)'  },
+  { value: 'close_pending', label: 'รอปิด',              bg: 'color-mix(in srgb, var(--accent-purple) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-purple) 50%, transparent)', text: 'var(--accent-purple)',  dot: 'var(--accent-purple)',  badge: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-purple) 45%, transparent)' },
+  { value: 'booked',        label: 'จอง',                bg: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-orange) 50%, transparent)', text: 'var(--accent-orange)',  dot: 'var(--accent-orange)',  badge: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-orange) 45%, transparent)' },
+  { value: 'lost',          label: 'หลุด',               bg: 'color-mix(in srgb, var(--accent-red) 8%, transparent)',   border: 'color-mix(in srgb, var(--accent-red) 50%, transparent)', text: 'var(--accent-red)',  dot: 'var(--accent-red)',  badge: 'color-mix(in srgb, var(--accent-red) 15%, transparent)',   chip: 'color-mix(in srgb, var(--accent-red) 45%, transparent)'  },
 ]
 const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
 
@@ -99,15 +98,15 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
   const isClosed = c.status === 'closed'
   return (
     <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
-      style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? '#22c55e40' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = isClosed ? '#22c55e80' : 'var(--accent)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = isClosed ? '#22c55e40' : 'var(--card-border)')}
+      style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = isClosed ? 'color-mix(in srgb, var(--accent-green) 50%, transparent)' : 'var(--accent)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)')}
       onClick={onClick}
     >
       {isClosed && (
         <a href="/dashboard/my-deals" onClick={e => e.stopPropagation()}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-[10px] font-semibold"
-          style={{ background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)' }}>
+          className="flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-micro font-semibold"
+          style={{ background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', color: 'var(--accent-green)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
           <span>✓</span> อยู่ใน My Deals แล้ว →
         </a>
       )}
@@ -118,14 +117,14 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
             {c.interested_room || '—'}
           </p>
           {jobSeqNo != null && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
-              style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}>
+            <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+              style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
               งานที่ {jobSeqNo}
             </span>
           )}
         </div>
         {(() => { const s = stageMap[c.status] || stage; return (
-          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}
           </span>
@@ -135,18 +134,18 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
       <p className="text-xs truncate w-full" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
       {/* Row 3: type chips */}
       <div className="flex gap-1 flex-wrap">
-        <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
-          style={{ background: custType === 'B2B' ? 'rgba(234,179,8,0.15)' : 'rgba(59,130,246,0.12)', color: custType === 'B2B' ? '#fbbf24' : '#60a5fa' }}>
+        <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          style={{ background: custType === 'B2B' ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)' : 'color-mix(in srgb, var(--accent-blue) 12%, transparent)', color: custType === 'B2B' ? 'var(--accent-amber)' : 'var(--accent-blue)' }}>
           {custType}
         </span>
         {workType && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {workType}
           </span>
         )}
         {c.source && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {c.source}
           </span>
@@ -157,8 +156,8 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
         <div className="min-w-0 flex-1 overflow-hidden">
           {displayValue > 0
             ? <p className="text-xs font-bold truncate" style={{ color: 'var(--accent-green)' }}>{f(displayValue)}</p>
-            : <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ไม่ระบุมูลค่า</p>}
-          {(c as any).users?.name && <p className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>{(c as any).users.name}</p>}
+            : <p className="text-micro" style={{ color: 'var(--text-3)' }}>ไม่ระบุมูลค่า</p>}
+          {(c as any).users?.name && <p className="text-micro truncate" style={{ color: 'var(--text-3)' }}>{(c as any).users.name}</p>}
         </div>
         <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
@@ -178,6 +177,11 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev }: { c: Cu
 // ─── Card expand helper ─────────────────────────────────────
 type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number }
 type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; cardKey: string }
+interface BookedJob {
+  id: string; customer_name: string; room_no: string; revenue_inc_vat: number
+  sales_name: string | null; project_name: string | null; project_id: string | null
+  sales_id: string | null; settled: number; pct: number
+}
 function expandCards(customers: Customer[]): CardItem[] {
   const result: CardItem[] = []
   for (const c of customers) {
@@ -190,6 +194,49 @@ function expandCards(customers: Customer[]): CardItem[] {
     }
   }
   return result
+}
+
+// ─── BookedJobCard ───────────────────────────────────────────
+function BookedJobCard({ job, onClick }: { job: BookedJob; onClick: () => void }) {
+  const pctStr = job.revenue_inc_vat > 0 ? Math.round(job.pct * 100) + '%' : '—'
+  const barPct = job.revenue_inc_vat > 0 ? Math.min(100, Math.round(job.pct * 100)) : null
+  const barColor = barPct === null ? '' : barPct >= 50 ? 'var(--accent-blue)' : 'var(--accent-orange)'
+  return (
+    <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
+      onClick={onClick}>
+      <div className="flex items-start justify-between gap-1 min-w-0">
+        <p className="font-bold text-sm truncate min-w-0" style={{ color: 'var(--text-1)' }}>{job.room_no || '—'}</p>
+        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+          style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
+          {pctStr}
+        </span>
+      </div>
+      <p className="text-xs truncate w-full" style={{ color: 'var(--text-1)' }}>{job.customer_name}</p>
+      {barPct !== null && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: '10px', fontWeight: 700, color: barColor }}>{barPct}%</span>
+          </div>
+          <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
+            <div style={{ height: '100%', width: `${barPct}%`, borderRadius: '9999px', background: barColor }} />
+          </div>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-1 mt-auto min-w-0">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          {job.revenue_inc_vat > 0
+            ? <p className="text-xs font-bold truncate" style={{ color: 'var(--accent-green)' }}>{f(job.revenue_inc_vat)}</p>
+            : <p className="text-micro" style={{ color: 'var(--text-3)' }}>ไม่ระบุมูลค่า</p>}
+          {job.sales_name && <p className="text-micro truncate" style={{ color: 'var(--text-3)' }}>{job.sales_name}</p>}
+        </div>
+        <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+      </div>
+    </div>
+  )
 }
 
 // ─── ProspectDrawer ─────────────────────────────────────────
@@ -221,7 +268,7 @@ function CancelModal({ onClose, onConfirm }: {
             <button key={val} onClick={() => setCancelType(val)}
               className="flex-1 py-2 rounded-[8px] text-sm font-semibold transition-all"
               style={cancelType === val
-                ? { background: val === 'forfeit' ? '#f87171' : '#60a5fa', color: '#fff' }
+                ? { background: val === 'forfeit' ? 'var(--accent-red)' : 'var(--accent-blue)', color: '#fff' }
                 : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
               {label}
             </button>
@@ -260,7 +307,7 @@ function CancelModal({ onClose, onConfirm }: {
           </button>
           <button onClick={confirm} disabled={saving}
             className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white disabled:opacity-50"
-            style={{ background: cancelType === 'forfeit' ? '#f87171' : '#60a5fa' }}>
+            style={{ background: cancelType === 'forfeit' ? 'var(--accent-red)' : 'var(--accent-blue)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันยกเลิก'}
           </button>
         </div>
@@ -413,14 +460,14 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
 
     const stagePills = (
       <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
+        <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
         <div className="flex flex-wrap gap-1.5">
           {STAGES.filter(s => s.value !== 'booked' && s.value !== 'closed').map(s => (
             <button key={s.value} onClick={async () => {
               await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
               onUpdate({ ...customer, status: s.value })
             }}
-              className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold"
+              className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold"
               style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
               → {s.label}
             </button>
@@ -433,7 +480,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
               await supabase.from('customers').update({ status: 'closed' }).eq('id', customer.id)
               onUpdate({ ...customer, status: 'closed' })
             }}
-            className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-opacity"
+            className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-opacity"
             style={{
               background: canClose ? closedStage.chip : 'rgba(100,100,100,0.3)',
               color: '#fff',
@@ -445,7 +492,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
           </button>
         </div>
         {!canClose && bookedJob && (
-          <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+          <p className="text-micro" style={{ color: 'var(--text-3)' }}>
             ต้องชำระ ≥50% ก่อนเริ่มงาน · ชำระแล้ว {jobValue > 0 ? Math.round(totalSettled / jobValue * 100) : 0}% ({jobValue > 0 ? `฿${Math.round(totalSettled).toLocaleString('th-TH')} / ฿${Math.round(jobValue).toLocaleString('th-TH')}` : '—'})
           </p>
         )}
@@ -521,7 +568,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
               </p>
             </div>
             {customer.source && (
-              <span className="text-[11px] px-2 py-1 rounded-[6px] font-semibold"
+              <span className="text-label px-2 py-1 rounded-[6px] font-semibold"
                 style={{ background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
                 {customer.source}
               </span>
@@ -537,13 +584,13 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
             return jobs.filter(j => j.order_date || j.contract_date).map(j => (
             <div key={j.id} className="space-y-1.5">
               {jobs.length > 1 && (
-                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
+                <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>
                   งานงานที่ {seqIdx[j.id]} · {j.customer_type}
                 </p>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
-                  <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{j.customer_type === 'B2B' ? 'วันรับ PO / ยอด' : 'วันรับจอง'}</p>
+                  <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>{j.customer_type === 'B2B' ? 'วันรับ PO / ยอด' : 'วันรับจอง'}</p>
                   <input type="date" lang="th-TH" defaultValue={j.order_date || ''}
                     onBlur={async e => {
                       const v = e.target.value || null
@@ -554,7 +601,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                     style={{ background: 'transparent', color: j.order_date ? 'var(--text-1)' : 'var(--text-3)', border: 'none' }} />
                 </div>
                 <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
-                  <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>วันเซ็นสัญญา</p>
+                  <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>วันเซ็นสัญญา</p>
                   <input type="date" lang="th-TH" defaultValue={j.contract_date || ''}
                     onBlur={async e => {
                       const v = e.target.value || null
@@ -570,7 +617,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
 
           {/* ย้ายสถานะ — hidden for closed prospects (already in My Deals) */}
           {customer.status !== 'closed' && <div className="space-y-2">
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
+            <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
             <div className="flex flex-wrap gap-1.5">
               {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
                 <button key={s.value} onClick={async () => {
@@ -579,7 +626,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                   // For 'booked': let loadOrCreateBookedJob (triggered by useEffect) handle job creation
                   onUpdate({ ...customer, status: s.value })
                 }}
-                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
                   style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
                   → {s.label}
                 </button>
@@ -589,7 +636,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                   await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
                   onUpdate({ ...customer, status: 'lost' })
                 }}
-                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
                   style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
                   → หลุด
                 </button>
@@ -674,13 +721,13 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
           {!loadingDetail && warranties.length > 0 && (
             <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
               <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
-                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</span>
+                <span className="text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</span>
               </div>
               <div className="divide-y" style={{ borderColor: 'var(--divider)' }}>
                 {warranties.map(w => (
                   <div key={w.id} className="px-4 py-2.5 flex items-center justify-between text-xs">
                     <span style={{ color: 'var(--text-2)' }}>ห้อง {w.room} · {w.warranty_months} เดือน</span>
-                    <span style={{ color: w.status === 'active' ? '#4ade80' : 'var(--text-3)' }}>{fdate(w.warranty_end)}</span>
+                    <span style={{ color: w.status === 'active' ? 'var(--accent-green)' : 'var(--text-3)' }}>{fdate(w.warranty_end)}</span>
                   </div>
                 ))}
               </div>
@@ -702,7 +749,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
                   onClick={() => setDocsExpanded(e => ({ ...e, [j.id]: !e[j.id] }))}>
                   <span className="text-xs">เอกสาร{jobs.length > 1 ? ` งานงานที่ ${seqIdx2[j.id]}` : ''}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{docCount}/5</span>
+                    <span className="text-micro" style={{ color: 'var(--text-3)' }}>{docCount}/5</span>
                     {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                   </div>
                 </button>
@@ -738,22 +785,22 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
             <div>
               <button
                 onClick={() => { setShowCancelSection(s => !s); setCancelConfirmed(false) }}
-                className="flex items-center gap-1 text-[11px] transition-colors"
+                className="flex items-center gap-1 text-label transition-colors"
                 style={{ color: 'var(--text-3)' }}>
                 <ChevronRight size={12} style={{ transform: showCancelSection ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
                 สถานะพิเศษ / ลูกค้ายกเลิก
               </button>
               {showCancelSection && (
                 <div className="mt-2 rounded-[8px] p-3 space-y-3"
-                  style={{ background: 'color-mix(in srgb, #f87171 6%, transparent)', border: '1px solid color-mix(in srgb, #f87171 20%, transparent)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--accent-red) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input type="checkbox" checked={cancelConfirmed} onChange={e => setCancelConfirmed(e.target.checked)}
-                      className="w-4 h-4 rounded" style={{ accentColor: '#f87171' }} />
+                      className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-red)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-2)' }}>ยืนยันว่าต้องการยกเลิกสัญญา</span>
                   </label>
                   <button onClick={() => setShowCancel(true)} disabled={!cancelConfirmed}
                     className="w-full py-2 rounded-[8px] text-xs font-semibold transition-all disabled:opacity-30"
-                    style={{ background: 'color-mix(in srgb, #f87171 15%, transparent)', border: '1px solid color-mix(in srgb, #f87171 40%, transparent)', color: '#f87171' }}>
+                    style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 40%, transparent)', color: 'var(--accent-red)' }}>
                     ยกเลิกสัญญา
                   </button>
                 </div>
@@ -767,7 +814,7 @@ function CustomerDrawer({ customer, focusJobId, projects, users, onClose, onUpda
               <button
                 onClick={() => onStartJob(customer)}
                 className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
-                style={{ background: '#059669' }}>
+                style={{ background: 'var(--accent-green)' }}>
                 ⚡ เริ่มงาน
               </button>
             </div>
@@ -909,8 +956,8 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           {booking && booking.booking_value && (
             <div className="rounded-[8px] px-3 py-2.5 flex flex-col gap-1"
               style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
-              <p className="text-[11px] font-semibold" style={{ color: 'var(--accent-green)' }}>พบข้อมูล Booking</p>
-              <p className="text-[11px]" style={{ color: 'var(--text-2)' }}>
+              <p className="text-label font-semibold" style={{ color: 'var(--accent-green)' }}>พบข้อมูล Booking</p>
+              <p className="text-label" style={{ color: 'var(--text-2)' }}>
                 ฿{booking.booking_value.toLocaleString()} · {booking.customer_type || '—'} · {booking.job_type || '—'}
               </p>
             </div>
@@ -925,7 +972,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</label>
             <input type="number" value={revenue || ''} onChange={e => setRevenue(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
-            {revenue > 0 && <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
+            {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -966,7 +1013,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
-            style={{ background: saving ? '#666' : '#059669' }}>
+            style={{ background: saving ? '#666' : 'var(--accent-green)' }}>
             {saving ? 'กำลังสร้างงาน...' : '⚡ เริ่มงาน'}
           </button>
         </div>
@@ -1011,9 +1058,9 @@ function BookingCopyBtn({ lineMsg }: { lineMsg: string }) {
     <button onClick={copy}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
       style={{
-        background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(0,185,107,0.08)',
-        border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(0,185,107,0.25)'}`,
-        color: copied ? '#4ade80' : '#00b96b',
+        background: copied ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'rgba(0,185,107,0.08)',
+        border: `1px solid ${copied ? 'color-mix(in srgb, var(--accent-green) 40%, transparent)' : 'rgba(0,185,107,0.25)'}`,
+        color: copied ? 'var(--accent-green)' : '#00b96b',
       }}>
       {copied ? <Check size={10} /> : '💬'} {copied ? 'คัดลอก!' : 'LINE'}
     </button>
@@ -1057,7 +1104,7 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
     <div className="flex items-start gap-1.5 text-xs">
       <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{icon}</span>
       <div>
-        <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{label}</p>
+        <p className="text-micro" style={{ color: 'var(--text-3)' }}>{label}</p>
         <p style={{ color: 'var(--text-1)' }}>{value}</p>
       </div>
     </div>
@@ -1103,9 +1150,9 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
               onClick={() => setForm(p => ({ ...p, customer_type: t }))}
               className="flex-1 py-2 rounded-[8px] text-xs font-semibold border transition-all"
               style={{
-                background: form.customer_type === t ? (t === 'B2B' ? 'rgba(234,179,8,0.15)' : 'rgba(59,130,246,0.12)') : 'var(--hover-bg)',
-                color: form.customer_type === t ? (t === 'B2B' ? '#fbbf24' : '#60a5fa') : 'var(--text-3)',
-                borderColor: form.customer_type === t ? (t === 'B2B' ? '#eab30880' : '#3b82f680') : 'var(--divider)',
+                background: form.customer_type === t ? (t === 'B2B' ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)' : 'color-mix(in srgb, var(--accent-blue) 12%, transparent)') : 'var(--hover-bg)',
+                color: form.customer_type === t ? (t === 'B2B' ? 'var(--accent-amber)' : 'var(--accent-blue)') : 'var(--text-3)',
+                borderColor: form.customer_type === t ? (t === 'B2B' ? 'color-mix(in srgb, var(--accent-amber) 50%, transparent)' : 'color-mix(in srgb, var(--accent-blue) 50%, transparent)') : 'var(--divider)',
               }}>
               {t}
             </button>
@@ -1134,7 +1181,7 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
           onChange={v => setForm(p => ({ ...p, assigned_to: String(v) }))}
           options={[{ value: '', label: '— เลือก —' }, ...users.map(u => ({ value: u.id, label: u.name }))]} /></div>
       <TextArea label="หมายเหตุ" value={form.notes} onChange={s('notes')} rows={2} />
-      {errMsg && <p className="text-xs py-1 px-2 rounded-[8px]" style={{ color: '#ef4444', background: '#fee2e2' }}>{errMsg}</p>}
+      {errMsg && <p className="text-xs py-1 px-2 rounded-[8px]" style={{ color: 'var(--accent-red)', background: '#fee2e2' }}>{errMsg}</p>}
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-[8px] text-sm border" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
         <button type="submit" disabled={saving}
@@ -1151,6 +1198,9 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
 export default function ProspectsKanbanPage() {
   const supabase = createClient()
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [bookedJobs, setBookedJobs] = useState<BookedJob[]>([])
+  const [selectedBookedJobFull, setSelectedBookedJobFull] = useState<FullJob | null>(null)
+  const [loadingBookedJobFull, setLoadingBookedJobFull] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -1169,16 +1219,34 @@ export default function ProspectsKanbanPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: cData }, { data: pData }, { data: uData }] = await Promise.all([
+    const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
         .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
+      supabase.from('jobs')
+        .select('id, customer_name, room_no, revenue_inc_vat, sales_id, project_id, customer_type, projects(name), sales:users!jobs_sales_id_fkey(name), payments(status, paid_amount, amount, voucher_amount)')
+        .eq('working_status', 'จอง')
+        .neq('customer_type', 'B2B')
+        .order('room_no'),
     ])
     setCustomers((cData as any) || [])
     setProjects(pData || [])
     setUsers(uData || [])
+    const mapped: BookedJob[] = ((jData as any) || []).map((j: any) => {
+      const payments: any[] = j.payments || []
+      const settled = payments.filter((p: any) => p.status === 'paid').reduce((s: number, p: any) => s + (p.paid_amount ?? p.amount ?? 0) + (p.voucher_amount ?? 0), 0)
+      const rev = j.revenue_inc_vat || 0
+      return {
+        id: j.id, customer_name: j.customer_name, room_no: j.room_no,
+        revenue_inc_vat: rev, sales_id: j.sales_id, project_id: j.project_id,
+        sales_name: (j.sales as any)?.name || null,
+        project_name: (j.projects as any)?.name || null,
+        settled, pct: rev > 0 ? settled / rev : 0,
+      }
+    })
+    setBookedJobs(mapped)
     setLoading(false)
   }, [])
 
@@ -1359,7 +1427,9 @@ export default function ProspectsKanbanPage() {
         {/* Stage chips — single select */}
         <div className="flex gap-1.5 flex-wrap">
           {STAGES.map(s => {
-            const count = customers.filter(c => c.status === s.value).length
+            const count = s.value === 'booked'
+              ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
+              : customers.filter(c => c.status === s.value).length
             const active = activeStage === s.value && !search
             return (
               <button key={s.value} onClick={() => { setActiveStage(s.value); setSearch(''); setSelectedCustomer(null) }}
@@ -1378,8 +1448,8 @@ export default function ProspectsKanbanPage() {
           })}
           {search && (
             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-semibold"
-              style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.4)' }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#818cf8' }} />
+              style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
               ทั้งหมด
               <span className="font-bold ml-0.5">{list.length}</span>
             </span>
@@ -1420,29 +1490,57 @@ export default function ProspectsKanbanPage() {
             ล้าง
           </button>
         )}
-        <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>{list.length} ราย</span>
+        <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>
+          {activeStage === 'booked' && !search
+            ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length + ' งาน'
+            : list.length + ' ราย'}
+        </span>
       </div>
 
       {/* Summary strip */}
-      {list.length > 0 && (() => {
+      {(activeStage === 'booked' && !search ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length > 0 : list.length > 0) && (() => {
+        if (activeStage === 'booked' && !search) {
+          const filtered = bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales))
+          const totalRev = filtered.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+          const noSales = filtered.filter(j => !j.sales_id).length
+          return (
+            <div className="flex-shrink-0 px-6 pb-3 grid grid-cols-3 gap-2">
+              <div className="ds-card-sm text-center">
+                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>จองอยู่</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{filtered.length}</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>งาน</p>
+              </div>
+              <div className="ds-card-sm text-center">
+                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalRev > 0 ? '฿' + (totalRev / 1000000).toFixed(1) + 'M' : '—'}</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>บาท</p>
+              </div>
+              <div className="ds-card-sm text-center">
+                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>
+                <p className="text-lg font-bold" style={{ color: noSales > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{noSales}</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>งาน</p>
+              </div>
+            </div>
+          )
+        }
         const totalBudget = list.reduce((s, c) => s + (c.budget || 0), 0)
         const noSales = list.filter(c => !c.assigned_to).length
         return (
           <div className="flex-shrink-0 px-6 pb-3 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ในกลุ่มนี้</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ในกลุ่มนี้</p>
               <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{list.length}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ราย</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ราย</p>
             </div>
             <div className="ds-card-sm text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
               <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalBudget > 0 ? '฿' + (totalBudget / 1000000).toFixed(1) + 'M' : '—'}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>บาท</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>บาท</p>
             </div>
             <div className="ds-card-sm text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>
               <p className="text-lg font-bold" style={{ color: noSales > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{noSales}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ราย</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ราย</p>
             </div>
           </div>
         )
@@ -1450,44 +1548,110 @@ export default function ProspectsKanbanPage() {
 
       {/* Cards list */}
       <div className="flex-1 overflow-y-auto px-6 pb-6">
-        {list.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-20">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
-              <Search size={20} style={{ color: 'var(--text-3)' }} />
+        {activeStage === 'booked' && !search ? (() => {
+          const filtered = bookedJobs.filter(j =>
+            (!filterProject || j.project_id === filterProject) &&
+            (!filterSales || j.sales_id === filterSales)
+          )
+          if (filtered.length === 0) return (
+            <div className="flex flex-col items-center justify-center gap-3 py-20">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
+                <Search size={20} style={{ color: 'var(--text-3)' }} />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่มีงานในสถานะ จอง</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>งานที่จองแล้วและยังชำระ &lt;50% จะปรากฏที่นี่</p>
             </div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่พบ Prospect ใน {stage.label}</p>
-            <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองเลือกกลุ่มอื่น หรือเพิ่ม Prospect ใหม่</p>
-          </div>
-        ) : (() => {
-          const grouped = list.reduce<Record<string, { name: string; items: Customer[] }>>((acc, c) => {
-            const key = c.project_id || '__none__'
-            const name = (c as any).projects?.name || c.project_id || 'ไม่ระบุโครงการ'
+          )
+          const grouped = filtered.reduce<Record<string, { name: string; items: BookedJob[] }>>((acc, j) => {
+            const key = j.project_id || '__none__'
+            const name = j.project_name || j.project_id || 'ไม่ระบุโครงการ'
             if (!acc[key]) acc[key] = { name, items: [] }
-            acc[key].items.push(c)
+            acc[key].items.push(j)
             return acc
           }, {})
           const groups = Object.entries(grouped).sort(([, a], [, b]) => a.name.localeCompare(b.name, 'th'))
           return (
             <div className="space-y-5 pt-2">
-              {groups.map(([key, { name, items }]) => {
-                const cards = expandCards(items)
-                return (
+              {groups.map(([key, { name, items }]) => (
                 <div key={key}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
-                    {name} <span className="font-normal">({cards.length})</span>
+                  <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
+                    {name} <span className="font-normal">({items.length})</span>
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                    {cards.map(({ c, jobSeqNo, jobRev, jobId, cardKey }) => (
-                      <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} />
+                    {items.map(j => (
+                      <BookedJobCard key={j.id} job={j} onClick={async () => {
+                        setLoadingBookedJobFull(true)
+                        const full = await loadFullJob(j.id)
+                        setSelectedBookedJobFull(full)
+                        setLoadingBookedJobFull(false)
+                      }} />
                     ))}
                   </div>
                 </div>
-                )
-              })}
+              ))}
             </div>
           )
-        })()}
+        })() : (
+          list.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-20">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
+                <Search size={20} style={{ color: 'var(--text-3)' }} />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่พบ Prospect ใน {stage.label}</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองเลือกกลุ่มอื่น หรือเพิ่ม Prospect ใหม่</p>
+            </div>
+          ) : (() => {
+            const grouped = list.reduce<Record<string, { name: string; items: Customer[] }>>((acc, c) => {
+              const key = c.project_id || '__none__'
+              const name = (c as any).projects?.name || c.project_id || 'ไม่ระบุโครงการ'
+              if (!acc[key]) acc[key] = { name, items: [] }
+              acc[key].items.push(c)
+              return acc
+            }, {})
+            const groups = Object.entries(grouped).sort(([, a], [, b]) => a.name.localeCompare(b.name, 'th'))
+            return (
+              <div className="space-y-5 pt-2">
+                {groups.map(([key, { name, items }]) => {
+                  const cards = expandCards(items)
+                  return (
+                    <div key={key}>
+                      <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
+                        {name} <span className="font-normal">({cards.length})</span>
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                        {cards.map(({ c, jobSeqNo, jobRev, jobId, cardKey }) => (
+                          <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()
+        )}
       </div>
+
+      {/* Booked job drawer */}
+      {loadingBookedJobFull && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setLoadingBookedJobFull(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
+          </div>
+        </>
+      )}
+      {selectedBookedJobFull && !loadingBookedJobFull && (
+        <DealDrawer
+          job={selectedBookedJobFull}
+          onClose={() => setSelectedBookedJobFull(null)}
+          onRefresh={async () => {
+            const j = await loadFullJob(selectedBookedJobFull.id)
+            setSelectedBookedJobFull(j)
+            await load()
+          }}
+        />
+      )}
 
       {/* Detail Drawer */}
       {selectedCustomer && (
@@ -1563,7 +1727,7 @@ export default function ProspectsKanbanPage() {
               </button>
               <button onClick={confirmDelete} disabled={deleting}
                 className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
-                style={{ background: deleting ? '#666' : '#ef4444' }}>
+                style={{ background: deleting ? '#666' : 'var(--accent-red)' }}>
                 {deleting ? 'กำลังลบ...' : 'ลบ'}
               </button>
             </div>

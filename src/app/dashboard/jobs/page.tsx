@@ -951,24 +951,7 @@ export default function JobsPage() {
 
                 {editing.customer_type === 'B2C' ? (
                   <>
-                    {/* โครงการ — full-width */}
-                    <div className="col-span-2">
-                      <label className="field-label">โครงการ</label>
-                      {editing.id ? (
-                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
-                          {projects.find(p => p.id === editing.project_id)?.name || editing.project_id || '—'}
-                        </div>
-                      ) : (
-                        <select value={editing.project_id || ''}
-                          onChange={e => handleProjectSelect(e.target.value)}
-                          className="field-input w-full mt-1">
-                          <option value="">— เลือกโครงการ —</option>
-                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                      )}
-                    </div>
-
-                    {/* เลขห้อง */}
+                    {/* B2C: เลขห้อง ก่อน */}
                     <div className="col-span-2">
                       <label className="field-label">เลขห้อง</label>
                       {editing.id ? (
@@ -998,49 +981,50 @@ export default function JobsPage() {
                       )}
                     </div>
 
-                    {/* Auto-filled customer info */}
-                    {editing.customer_name && (
-                      <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
-                        style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+                    {/* B2C: combined info card (ชื่อ + โครงการ + เบอร์) */}
+                    <div className="col-span-2 rounded-[11px] overflow-hidden"
+                      style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+                      {/* ชื่อลูกค้า */}
+                      <div className="flex items-center gap-3 px-4 py-3"
+                        style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}>
                         <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                           style={{ background: 'var(--accent)' }}>
-                          {editing.customer_name[0]}
+                          {(editing.customer_name || '?')[0]}
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{editing.customer_name}</p>
-                          {editing.room_no && (
-                            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{editing.room_no}</p>
-                          )}
-                        </div>
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>
+                          {editing.customer_name || '— เลือกห้องก่อน'}
+                        </p>
                       </div>
-                    )}
-
-                    {/* เบอร์โทร — full-width */}
-                    <div className="col-span-2">
-                      <label className="field-label">เบอร์โทร</label>
-                      <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
-                        className="field-input w-full mt-1" placeholder="0XX-XXX-XXXX" />
+                      {/* โครงการ */}
+                      <div className="px-4 py-2 flex items-center justify-between gap-2"
+                        style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
+                        {editing.id ? (
+                          <p className="text-xs truncate" style={{ color: 'var(--text-2)' }}>
+                            {projects.find(p => p.id === editing.project_id)?.name || '—'}
+                          </p>
+                        ) : (
+                          <select value={editing.project_id || ''}
+                            onChange={e => handleProjectSelect(e.target.value)}
+                            className="text-xs flex-1 bg-transparent outline-none"
+                            style={{ color: 'var(--text-2)', border: 'none' }}>
+                            <option value="">— เลือกโครงการ —</option>
+                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                        )}
+                      </div>
+                      {/* เบอร์โทร */}
+                      <div className="px-4 py-2 flex items-center gap-2"
+                        style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
+                        <Phone size={12} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                        <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
+                          className="flex-1 bg-transparent text-xs outline-none"
+                          style={{ color: 'var(--text-1)' }} placeholder="0XX-XXX-XXXX" />
+                      </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* B2B: โครงการ */}
-                    <div className="col-span-2">
-                      <label className="field-label">โครงการ</label>
-                      {editing.id ? (
-                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
-                          {projects.find(p => p.id === editing.project_id)?.name || editing.project_id || '—'}
-                        </div>
-                      ) : (
-                        <select value={editing.project_id || ''}
-                          onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
-                          className="field-input w-full mt-1">
-                          <option value="">— เลือกโครงการ —</option>
-                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                      )}
-                    </div>
-                    {/* B2B: เลขห้อง */}
+                    {/* B2B: เลขห้อง ก่อน */}
                     <div className="col-span-2">
                       <label className="field-label">เลขห้อง / สถานที่</label>
                       {editing.id ? (
@@ -1059,26 +1043,46 @@ export default function JobsPage() {
                         <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
                       )}
                     </div>
-                    {/* B2B: company card (same position as B2C customer card) */}
-                    <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
-                      style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
-                      <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                        style={{ background: 'var(--accent)' }}>
-                        {(editing.company_name || 'B')[0].toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
+
+                    {/* B2B: combined card (ชื่อบริษัท + โครงการ + เบอร์) */}
+                    <div className="col-span-2 rounded-[11px] overflow-hidden"
+                      style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+                      {/* ชื่อบริษัท */}
+                      <div className="flex items-center gap-3 px-4 py-3"
+                        style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}>
+                        <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                          style={{ background: 'var(--accent)' }}>
+                          {(editing.company_name || 'B')[0].toUpperCase()}
+                        </div>
                         <input value={editing.company_name || ''} onChange={e => setEditing(e2 => ({ ...e2, company_name: e.target.value }))}
-                          className="w-full bg-transparent text-sm font-semibold outline-none truncate"
+                          className="flex-1 bg-transparent text-sm font-semibold outline-none truncate"
                           style={{ color: 'var(--text-1)' }} placeholder="ชื่อบริษัท / ลูกค้า B2B..." />
-                        {editing.room_no && (
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{editing.room_no}</p>
+                      </div>
+                      {/* โครงการ */}
+                      <div className="px-4 py-2"
+                        style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
+                        {editing.id ? (
+                          <p className="text-xs truncate" style={{ color: 'var(--text-2)' }}>
+                            {projects.find(p => p.id === editing.project_id)?.name || '—'}
+                          </p>
+                        ) : (
+                          <select value={editing.project_id || ''}
+                            onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
+                            className="text-xs w-full bg-transparent outline-none"
+                            style={{ color: 'var(--text-2)', border: 'none' }}>
+                            <option value="">— เลือกโครงการ —</option>
+                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
                         )}
                       </div>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="field-label">เบอร์โทร</label>
-                      <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
-                        className="field-input w-full mt-1" placeholder="0XX-XXX-XXXX" />
+                      {/* เบอร์โทร */}
+                      <div className="px-4 py-2 flex items-center gap-2"
+                        style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
+                        <Phone size={12} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                        <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
+                          className="flex-1 bg-transparent text-xs outline-none"
+                          style={{ color: 'var(--text-1)' }} placeholder="0XX-XXX-XXXX" />
+                      </div>
                     </div>
                   </>
                 )}
@@ -1141,43 +1145,55 @@ export default function JobsPage() {
             {/* ── 3 · สถานะ & ส่งมอบ ── */}
             <section>
               <SectionDivider label="3 · สถานะ & ส่งมอบ" color="var(--accent)" />
-              <div className="grid grid-cols-2 gap-3 mt-3">
+              <div className="mt-3 space-y-4">
+                {/* กลุ่ม: งานของเรา */}
                 <div>
-                  <label className="field-label">สถานะการทำงาน</label>
-                  <select value={editing.working_status || ''} onChange={e => setEditing(e2 => ({ ...e2, working_status: e.target.value }))}
-                    className="field-input w-full mt-1">
-                    {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-3)', letterSpacing: '.05em', textTransform: 'uppercase' }}>งานของเรา</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="field-label">สถานะการทำงาน</label>
+                      <select value={editing.working_status || ''} onChange={e => setEditing(e2 => ({ ...e2, working_status: e.target.value }))}
+                        className="field-input w-full mt-1">
+                        {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="field-label">วันเริ่มงาน</label>
+                      <input type="date" lang="th-TH" value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
+                        className="field-input w-full mt-1" />
+                    </div>
+                    <div>
+                      <label className="field-label">วันคาดส่งมอบ</label>
+                      <input type="date" lang="th-TH" value={editing.expected_finish_date || ''} onChange={e => setEditing(e2 => ({ ...e2, expected_finish_date: e.target.value }))}
+                        className="field-input w-full mt-1" />
+                    </div>
+                    <div>
+                      <label className="field-label">วันส่งมอบจริง</label>
+                      <input type="date" lang="th-TH" value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
+                        className="field-input w-full mt-1" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="field-label">หมายเหตุ</label>
+                      <input value={editing.notes || ''} onChange={e => setEditing(e2 => ({ ...e2, notes: e.target.value }))}
+                        className="field-input w-full mt-1" placeholder="..." />
+                    </div>
+                  </div>
                 </div>
+                {/* กลุ่ม: Origin / โครงการ */}
                 <div>
-                  <label className="field-label">สถานะห้อง</label>
-                  <input value={editing.room_status || ''} onChange={e => setEditing(e2 => ({ ...e2, room_status: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="เช่น ดำเนินการ / รอตรวจรับ" />
-                </div>
-                <div>
-                  <label className="field-label">วันเริ่มงานจริง</label>
-                  <input type="date" lang="th-TH" value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div>
-                  <label className="field-label">เดือน Transfer ห้อง (Origin)</label>
-                  <input type="month" value={(editing as any).plan_transfer_month || ''} onChange={e => setEditing(e2 => ({ ...e2, plan_transfer_month: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div>
-                  <label className="field-label">วันที่คาดส่งมอบ</label>
-                  <input type="date" lang="th-TH" value={editing.expected_finish_date || ''} onChange={e => setEditing(e2 => ({ ...e2, expected_finish_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div>
-                  <label className="field-label">วันที่ส่งมอบจริง</label>
-                  <input type="date" lang="th-TH" value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div className="col-span-2">
-                  <label className="field-label">หมายเหตุ</label>
-                  <input value={editing.notes || ''} onChange={e => setEditing(e2 => ({ ...e2, notes: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="..." />
+                  <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-3)', letterSpacing: '.05em', textTransform: 'uppercase' }}>Origin / โครงการ</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="field-label">สถานะห้อง</label>
+                      <input value={editing.room_status || ''} onChange={e => setEditing(e2 => ({ ...e2, room_status: e.target.value }))}
+                        className="field-input w-full mt-1" placeholder="เช่น รอตรวจรับ / โอนแล้ว" />
+                    </div>
+                    <div>
+                      <label className="field-label">เดือน Transfer ห้อง</label>
+                      <input type="month" value={(editing as any).plan_transfer_month || ''} onChange={e => setEditing(e2 => ({ ...e2, plan_transfer_month: e.target.value }))}
+                        className="field-input w-full mt-1" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>

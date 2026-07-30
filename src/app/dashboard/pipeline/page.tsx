@@ -102,11 +102,12 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
   const displayValue = jobRev ?? (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0)
   const ws = jobWorkingStatus ?? ''
   const isClosed = ws === 'ดำเนินการ' || ws === 'ส่งมอบแล้ว' || ws === 'รอส่งมอบ'
+  const [hovered, setHovered] = React.useState(false)
   return (
-    <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
-      style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = isClosed ? 'color-mix(in srgb, var(--accent-green) 50%, transparent)' : 'var(--accent)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)')}
+    <div className="relative w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+      style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? (hovered ? 'color-mix(in srgb, var(--accent-green) 50%, transparent)' : 'color-mix(in srgb, var(--accent-green) 25%, transparent)') : (hovered ? 'var(--accent)' : 'var(--card-border)')}`, opacity: isClosed ? 0.85 : 1 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onClick={onClick}
     >
       {isClosed && (
@@ -170,8 +171,8 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
       {/* Delete button */}
       <button
         onClick={e => { e.stopPropagation(); onDelete() }}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
-        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+        className="absolute top-2 right-2 z-10 p-1 rounded-[6px] transition-opacity"
+        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)', opacity: hovered ? 1 : 0 }}
         title="ลบ"
       >
         <Trash2 size={11} />

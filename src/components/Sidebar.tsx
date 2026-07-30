@@ -44,7 +44,8 @@ const NAV = [
     color: 'text-sky-400',
     dot: 'bg-sky-400',
     items: [
-      { href: '/dashboard/customers', icon: Users, label: 'ลูกค้า' },
+      { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs' },
+      { href: '/dashboard/customers', icon: Users, label: 'Customers' },
       { href: '/dashboard/handover', icon: ClipboardList, label: 'Handover' },
       { href: '/dashboard/payments', icon: Receipt, label: 'ชำระเงิน & เอกสาร' },
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
@@ -60,7 +61,6 @@ const NAV = [
       { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้' },
       { href: '/dashboard/project-summary', icon: BarChart3, label: 'สรุปรายโครงการ' },
       { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
-      { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
       { href: '/dashboard/finance', icon: Wallet, label: 'Finance & Ledger' },
     ],
   },

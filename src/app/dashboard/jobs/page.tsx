@@ -507,15 +507,13 @@ export default function JobsPage() {
       { data: tierData },
       { data: paymentsData },
       { data: refData },
-      { data: paidData },
     ] = await Promise.all([
-      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('room_no').range(0, 999),
+      supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name), job_payments:payments(status,paid_amount,amount,voucher_amount)').order('room_no').range(0, 999),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
       supabase.from('commission_referrals').select('job_id,referrer_name,referral_amount').order('created_at'),
-      supabase.from('payments').select('job_id, paid_amount, amount, voucher_amount').eq('status', 'paid'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setJobs((jobsData as Job[]) || [])
@@ -538,10 +536,13 @@ export default function JobsPage() {
     }
     setPaymentMap(map)
 
+    // Build progress map from nested job_payments (avoid separate query issues)
     const pmap: Record<string, ProgressSummary> = {}
-    for (const p of (paidData || []) as any[]) {
-      if (!pmap[p.job_id]) pmap[p.job_id] = { paid: 0 }
-      pmap[p.job_id].paid += Number(p.paid_amount ?? p.amount ?? 0) + Number(p.voucher_amount ?? 0)
+    for (const j of (jobsData || []) as any[]) {
+      const paid = ((j.job_payments || []) as any[])
+        .filter((p: any) => p.status === 'paid')
+        .reduce((s: number, p: any) => s + Number(p.paid_amount ?? p.amount ?? 0) + Number(p.voucher_amount ?? 0), 0)
+      if (paid > 0) pmap[j.id] = { paid }
     }
     setProgressMap(pmap)
 

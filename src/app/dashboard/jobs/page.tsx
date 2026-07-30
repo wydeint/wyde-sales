@@ -969,7 +969,7 @@ export default function JobsPage() {
                     </div>
 
                     {/* เลขห้อง */}
-                    <div>
+                    <div className="col-span-2">
                       <label className="field-label">เลขห้อง</label>
                       {editing.id ? (
                         <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
@@ -1024,12 +1024,7 @@ export default function JobsPage() {
                   </>
                 ) : (
                   <>
-                    {/* B2B: manual entry */}
-                    <div className="col-span-2">
-                      <label className="field-label">ชื่อบริษัท / ลูกค้า B2B</label>
-                      <input value={editing.company_name || ''} onChange={e => setEditing(e2 => ({ ...e2, company_name: e.target.value }))}
-                        className="field-input w-full mt-1" placeholder="บริษัท..." />
-                    </div>
+                    {/* B2B: โครงการ */}
                     <div className="col-span-2">
                       <label className="field-label">โครงการ</label>
                       {editing.id ? (
@@ -1045,6 +1040,7 @@ export default function JobsPage() {
                         </select>
                       )}
                     </div>
+                    {/* B2B: เลขห้อง */}
                     <div className="col-span-2">
                       <label className="field-label">เลขห้อง / สถานที่</label>
                       {editing.id ? (
@@ -1063,6 +1059,22 @@ export default function JobsPage() {
                         <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
                       )}
                     </div>
+                    {/* B2B: company card (same position as B2C customer card) */}
+                    <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
+                      style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+                      <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                        style={{ background: 'var(--accent)' }}>
+                        {(editing.company_name || 'B')[0].toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <input value={editing.company_name || ''} onChange={e => setEditing(e2 => ({ ...e2, company_name: e.target.value }))}
+                          className="w-full bg-transparent text-sm font-semibold outline-none truncate"
+                          style={{ color: 'var(--text-1)' }} placeholder="ชื่อบริษัท / ลูกค้า B2B..." />
+                        {editing.room_no && (
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{editing.room_no}</p>
+                        )}
+                      </div>
+                    </div>
                     <div className="col-span-2">
                       <label className="field-label">เบอร์โทร</label>
                       <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
@@ -1075,7 +1087,7 @@ export default function JobsPage() {
 
             {/* ── 2 · ข้อมูลงาน / PO-SO ── */}
             <section>
-              <SectionDivider label="2 · ข้อมูลงาน / PO-SO" color="var(--accent-blue)" />
+              <SectionDivider label="2 · ข้อมูลงาน / PO-SO" color="var(--accent)" />
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div className="col-span-2">
                   <label className="field-label">PO No. (Origin)</label>
@@ -1128,7 +1140,7 @@ export default function JobsPage() {
 
             {/* ── 3 · สถานะ & ส่งมอบ ── */}
             <section>
-              <SectionDivider label="3 · สถานะ & ส่งมอบ" color="var(--text-2)" />
+              <SectionDivider label="3 · สถานะ & ส่งมอบ" color="var(--accent)" />
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
                   <label className="field-label">สถานะการทำงาน</label>
@@ -1172,7 +1184,7 @@ export default function JobsPage() {
 
             {/* ── 4 · Revenue & Cost ── */}
             <section>
-              <SectionDivider label="4 · Revenue & Cost" color="var(--accent-green)" />
+              <SectionDivider label="4 · Revenue & Cost" color="var(--accent)" />
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
                   <label className="field-label">Revenue (Inc.VAT) ฿</label>
@@ -1211,7 +1223,7 @@ export default function JobsPage() {
 
             {/* ── 5 · Commission ── */}
             <section>
-              <SectionDivider label="5 · Commission" color="var(--accent-orange)" />
+              <SectionDivider label="5 · Commission" color="var(--accent)" />
               <div className="grid grid-cols-3 gap-3 mt-3">
                 <div>
                   <label className="field-label">Rate (อัตโนมัติจาก Revenue)</label>

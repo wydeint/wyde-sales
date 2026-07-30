@@ -13,10 +13,9 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 // ─────────────────────────────────────────
 const PAGE_SIZE = 50
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
-const PACKAGE_TYPES = [
-  'Starter set (S)', 'Combo (S)', 'Investor Pro (M)', 'Medium (M)',
-  'Premium (L)', 'Fully design (L)', 'Design & Turnkey',
-  'Built-in', 'Curtain', 'Wallcovering', 'Loose furniture', 'อื่นๆ',
+const PRODUCT_TYPES = [
+  'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
+  'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',
 ]
 const WORKING_STATUSES = ['ดำเนินการ', 'รอเอกสาร', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก']
 const COMMISSION_STATUSES = ['pending', 'approved', 'paid']
@@ -172,8 +171,8 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
               {job.room_no || '—'}
             </p>
             {seqNo && seqNo > 0 && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
-                style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
+              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+                style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                 งานที่ {seqNo}
               </span>
             )}
@@ -182,7 +181,7 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
             {displayName || '—'} · {projectName}
           </p>
         </div>
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 mt-0.5"
+        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 mt-0.5"
           style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
           {cfg.label}
         </span>
@@ -190,19 +189,19 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
       {/* work type + phone */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {job.work_type && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {job.work_type}
           </span>
         )}
         {job.package_type && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
             {job.package_type}
           </span>
         )}
         {phone && (
-          <span className="text-[10px] flex items-center gap-1" style={{ color: 'var(--text-3)' }}>
+          <span className="text-micro flex items-center gap-1" style={{ color: 'var(--text-3)' }}>
             <Phone size={9} /> {phone}
           </span>
         )}
@@ -213,18 +212,18 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
           {job.revenue_inc_vat ? (
             <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>฿<Money value={job.revenue_inc_vat} /></p>
           ) : (
-            <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายได้</p>
+            <p className="text-micro" style={{ color: 'var(--text-3)' }}>ยังไม่มีรายได้</p>
           )}
-          {salesName && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{salesName}</p>}
+          {salesName && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{salesName}</p>}
         </div>
         <div className="flex items-center gap-1.5">
           {payment && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
+            <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
               ค้าง {payment.installment_name}
             </span>
           )}
           {isOverdue && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
+            <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
               เกินกำหนด
             </span>
           )}
@@ -232,6 +231,17 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
         </div>
       </div>
     </button>
+  )
+}
+
+// ─────────────────────────────────────────
+function SectionDivider({ label, color }: { label: string; color: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-3 pb-1">
+      <div style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
+      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color, whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: '0.5px', background: 'var(--divider)' }} />
+    </div>
   )
 }
 
@@ -362,7 +372,7 @@ function AddJobModal({
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</label>
             <input type="number" value={revenue || ''} onChange={e => setRevenue(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
-            {revenue > 0 && <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
+            {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -448,6 +458,7 @@ export default function JobsPage() {
   const [page, setPage] = useState(1)
   const [roomNormalized, setRoomNormalized] = useState('')
   const [roomDupWarning, setRoomDupWarning] = useState<string | null>(null)
+  const [editPhone, setEditPhone] = useState('')
 
   // ─── Load leads by project ───
   const loadLeads = useCallback(async (projectId: string) => {
@@ -564,6 +575,7 @@ export default function JobsPage() {
     setLeads([])
     setRoomNormalized('')
     setRoomDupWarning(null)
+    setEditPhone('')
     setOpen(true)
   }
 
@@ -587,6 +599,7 @@ export default function JobsPage() {
     }
     setRoomNormalized('')
     setRoomDupWarning(null)
+    setEditPhone((j.condo_leads as any)?.phone || '')
     setOpen(true)
   }
 
@@ -640,6 +653,10 @@ export default function JobsPage() {
       await supabase.from('jobs').insert([payload])
     } else {
       await supabase.from('jobs').update(payload).eq('id', editing.id!)
+    }
+    // Update phone on condo_leads if lead is linked
+    if (editing.lead_id && editPhone !== undefined) {
+      await supabase.from('condo_leads').update({ phone: editPhone || null }).eq('id', editing.lead_id)
     }
     setSaving(false)
     setOpen(false)
@@ -784,21 +801,21 @@ export default function JobsPage() {
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
               <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
-              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
+              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% เฉลี่ย</p>
               <p className="text-lg font-bold" style={{ color: gpColor }}>
                 {gpPctAvg !== null ? gpPctAvg.toFixed(1) + '%' : '—'}
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>กำไร {f(profit)}</p>
+              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>กำไร {f(profit)}</p>
             </div>
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
               <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                 {overdueCount} งาน
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
+              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
             </div>
           </div>
         )
@@ -913,10 +930,10 @@ export default function JobsPage() {
               <button onClick={() => setOpen(false)} style={{ color: 'var(--text-3)' }}><X size={18} /></button>
             </div>
 
-            {/* ── Section: ลูกค้า & ห้อง ── */}
+            {/* ── 1 · ลูกค้า & ห้อง ── */}
             <section>
-              <p className="text-label-upper mb-3" style={{ color: 'var(--accent)' }}>ลูกค้า & ห้อง</p>
-              <div className="grid grid-cols-2 gap-3">
+              <SectionDivider label="1 · ลูกค้า & ห้อง" color="var(--accent)" />
+              <div className="grid grid-cols-2 gap-3 mt-3">
                 {/* B2C / B2B toggle */}
                 <div className="col-span-2">
                   <label className="field-label">ประเภทลูกค้า</label>
@@ -934,8 +951,8 @@ export default function JobsPage() {
 
                 {editing.customer_type === 'B2C' ? (
                   <>
-                    {/* Step 1: โครงการ */}
-                    <div>
+                    {/* โครงการ — full-width */}
+                    <div className="col-span-2">
                       <label className="field-label">โครงการ</label>
                       {editing.id ? (
                         <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
@@ -951,7 +968,7 @@ export default function JobsPage() {
                       )}
                     </div>
 
-                    {/* Step 2: เลขห้อง (from condo_leads or direct) */}
+                    {/* เลขห้อง */}
                     <div>
                       <label className="field-label">เลขห้อง</label>
                       {editing.id ? (
@@ -977,26 +994,30 @@ export default function JobsPage() {
                         <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
                       )}
                       {roomDupWarning && (
-                        <p className="text-xs mt-1 font-semibold" style={{ color: '#f87171' }}>⚠ {roomDupWarning}</p>
+                        <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
                       )}
                     </div>
 
                     {/* Auto-filled customer info */}
                     {editing.customer_name && (
-                      <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
-                        style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                      <div className="rounded-[11px] px-4 py-3 flex items-center gap-3"
+                        style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                         <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                           style={{ background: 'var(--accent)' }}>
                           {editing.customer_name[0]}
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{editing.customer_name}</p>
-                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                            {leads.find(l => l.id === editing.lead_id)?.phone || 'ไม่มีเบอร์'}
-                          </p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{editing.customer_name}</p>
                         </div>
                       </div>
                     )}
+
+                    {/* เบอร์โทร — full-width */}
+                    <div className="col-span-2">
+                      <label className="field-label">เบอร์โทร</label>
+                      <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
+                        className="field-input w-full mt-1" placeholder="0XX-XXX-XXXX" />
+                    </div>
                   </>
                 ) : (
                   <>
@@ -1006,7 +1027,7 @@ export default function JobsPage() {
                       <input value={editing.company_name || ''} onChange={e => setEditing(e2 => ({ ...e2, company_name: e.target.value }))}
                         className="field-input w-full mt-1" placeholder="บริษัท..." />
                     </div>
-                    <div>
+                    <div className="col-span-2">
                       <label className="field-label">โครงการ</label>
                       {editing.id ? (
                         <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
@@ -1021,7 +1042,7 @@ export default function JobsPage() {
                         </select>
                       )}
                     </div>
-                    <div>
+                    <div className="col-span-2">
                       <label className="field-label">เลขห้อง / สถานที่</label>
                       {editing.id ? (
                         <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
@@ -1036,24 +1057,29 @@ export default function JobsPage() {
                         <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
                       )}
                       {roomDupWarning && (
-                        <p className="text-xs mt-1 font-semibold" style={{ color: '#f87171' }}>⚠ {roomDupWarning}</p>
+                        <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
                       )}
+                    </div>
+                    <div className="col-span-2">
+                      <label className="field-label">เบอร์โทร</label>
+                      <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
+                        className="field-input w-full mt-1" placeholder="0XX-XXX-XXXX" />
                     </div>
                   </>
                 )}
               </div>
             </section>
 
-            {/* ── Section: Order ── */}
+            {/* ── 2 · ข้อมูลงาน / PO-SO ── */}
             <section>
-              <p className="text-label-upper mb-3" style={{ color: 'var(--accent)' }}>ข้อมูลงาน / PO-SO</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
+              <SectionDivider label="2 · ข้อมูลงาน / PO-SO" color="var(--accent-blue)" />
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="col-span-2">
                   <label className="field-label">PO No. (Origin)</label>
                   <input value={editing.po_no || ''} onChange={e => setEditing(e2 => ({ ...e2, po_no: e.target.value }))}
                     className="field-input w-full mt-1" placeholder="WAG-SONO25-000001" />
                 </div>
-                <div>
+                <div className="col-span-2">
                   <label className="field-label">SO No. (Wyde)</label>
                   <input value={editing.so_no || ''} onChange={e => setEditing(e2 => ({ ...e2, so_no: e.target.value }))}
                     className="field-input w-full mt-1" placeholder="SO-..." />
@@ -1067,11 +1093,11 @@ export default function JobsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="field-label">Package</label>
+                  <label className="field-label">Product</label>
                   <select value={editing.package_type || ''} onChange={e => setEditing(e2 => ({ ...e2, package_type: e.target.value }))}
                     className="field-input w-full mt-1">
                     <option value="">— เลือก —</option>
-                    {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {PRODUCT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
@@ -1097,10 +1123,54 @@ export default function JobsPage() {
               </div>
             </section>
 
-            {/* ── Section: Revenue & Cost ── */}
+            {/* ── 3 · สถานะ & ส่งมอบ ── */}
             <section>
-              <p className="text-label-upper mb-3" style={{ color: 'var(--accent-green)' }}>Revenue & Cost</p>
-              <div className="grid grid-cols-2 gap-3">
+              <SectionDivider label="3 · สถานะ & ส่งมอบ" color="var(--text-2)" />
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="field-label">สถานะการทำงาน</label>
+                  <select value={editing.working_status || ''} onChange={e => setEditing(e2 => ({ ...e2, working_status: e.target.value }))}
+                    className="field-input w-full mt-1">
+                    {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label">สถานะห้อง</label>
+                  <input value={editing.room_status || ''} onChange={e => setEditing(e2 => ({ ...e2, room_status: e.target.value }))}
+                    className="field-input w-full mt-1" placeholder="เช่น ดำเนินการ / รอตรวจรับ" />
+                </div>
+                <div>
+                  <label className="field-label">วันเริ่มงานจริง</label>
+                  <input type="date" lang="th-TH" value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
+                    className="field-input w-full mt-1" />
+                </div>
+                <div>
+                  <label className="field-label">เดือน Transfer ห้อง (Origin)</label>
+                  <input type="month" value={(editing as any).plan_transfer_month || ''} onChange={e => setEditing(e2 => ({ ...e2, plan_transfer_month: e.target.value }))}
+                    className="field-input w-full mt-1" />
+                </div>
+                <div>
+                  <label className="field-label">วันที่คาดส่งมอบ</label>
+                  <input type="date" lang="th-TH" value={editing.expected_finish_date || ''} onChange={e => setEditing(e2 => ({ ...e2, expected_finish_date: e.target.value }))}
+                    className="field-input w-full mt-1" />
+                </div>
+                <div>
+                  <label className="field-label">วันที่ส่งมอบจริง</label>
+                  <input type="date" lang="th-TH" value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
+                    className="field-input w-full mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <label className="field-label">หมายเหตุ</label>
+                  <input value={editing.notes || ''} onChange={e => setEditing(e2 => ({ ...e2, notes: e.target.value }))}
+                    className="field-input w-full mt-1" placeholder="..." />
+                </div>
+              </div>
+            </section>
+
+            {/* ── 4 · Revenue & Cost ── */}
+            <section>
+              <SectionDivider label="4 · Revenue & Cost" color="var(--accent-green)" />
+              <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
                   <label className="field-label">Revenue (Inc.VAT) ฿</label>
                   <input type="number" value={editing.revenue_inc_vat || ''} onChange={e => handleRevenueChange(+e.target.value)}
@@ -1124,7 +1194,6 @@ export default function JobsPage() {
                   <input type="number" value={editing.cost || ''} onChange={e => setEditing(e2 => ({ ...e2, cost: +e.target.value }))}
                     className="field-input w-full mt-1" placeholder="0" />
                 </div>
-                {/* Profit display */}
                 <div className="rounded-[11px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center gap-1 mb-1">
                     <Calculator size={12} style={{ color: 'var(--text-3)' }} />
@@ -1137,10 +1206,10 @@ export default function JobsPage() {
               </div>
             </section>
 
-            {/* ── Section: Commission ── */}
+            {/* ── 5 · Commission ── */}
             <section>
-              <p className="text-label-upper mb-3" style={{ color: 'var(--accent-orange)' }}>Commission</p>
-              <div className="grid grid-cols-3 gap-3">
+              <SectionDivider label="5 · Commission" color="var(--accent-orange)" />
+              <div className="grid grid-cols-3 gap-3 mt-3">
                 <div>
                   <label className="field-label">Rate (อัตโนมัติจาก Revenue)</label>
                   <div className="field-input mt-1 flex items-center gap-2" style={{ background: 'var(--hover-bg)' }}>
@@ -1178,66 +1247,13 @@ export default function JobsPage() {
               </div>
             </section>
 
-            {/* ── Section: Status & Delivery ── */}
-            <section>
-              <p className="text-label-upper mb-3" style={{ color: 'var(--text-3)' }}>สถานะ & ส่งมอบ</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="field-label">สถานะการทำงาน</label>
-                  <select value={editing.working_status || ''} onChange={e => setEditing(e2 => ({ ...e2, working_status: e.target.value }))}
-                    className="field-input w-full mt-1">
-                    {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">สถานะห้อง</label>
-                  <input value={editing.room_status || ''} onChange={e => setEditing(e2 => ({ ...e2, room_status: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="เช่น ดำเนินการ / รอตรวจรับ" />
-                </div>
-                <div>
-                  <label className="field-label">วันเริ่มงานจริง</label>
-                  <input type="date" lang="th-TH" value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div>
-                  <label className="field-label">เดือน Transfer ห้อง (Origin)</label>
-                  <input type="month" value={(editing as any).plan_transfer_month || ''} onChange={e => setEditing(e2 => ({ ...e2, plan_transfer_month: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div>
-                  <label className="field-label">วันที่คาดส่งมอบ</label>
-                  <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: editing.expected_finish_date ? 'var(--text-1)' : 'var(--text-3)' }}>
-                    {editing.expected_finish_date ? new Date(editing.expected_finish_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '— กรอกที่หน้า Prospect / My Deals'}
-                  </div>
-                </div>
-                <div>
-                  <label className="field-label">วันที่ส่งมอบจริง</label>
-                  <input type="date" lang="th-TH" value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
-                    className="field-input w-full mt-1" />
-                </div>
-                <div>
-                  <label className="field-label">QC</label>
-                  <select value={editing.qc_id || ''} onChange={e => setEditing(e2 => ({ ...e2, qc_id: e.target.value }))}
-                    className="field-input w-full mt-1">
-                    <option value="">— เลือก QC —</option>
-                    {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="field-label">หมายเหตุ</label>
-                  <input value={editing.notes || ''} onChange={e => setEditing(e2 => ({ ...e2, notes: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="..." />
-                </div>
-              </div>
-            </section>
-
             {/* Payment alert */}
             {editing.customer_id && paymentMap[editing.customer_id] && (
               <div className="rounded-[11px] p-3 flex items-center justify-between"
                 style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)' }}>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>มีงวดค้างชำระ</p>
-                  <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                  <p className="text-label" style={{ color: 'var(--text-3)' }}>
                     {paymentMap[editing.customer_id]!.installment_name} · {f(paymentMap[editing.customer_id]!.amount)}
                   </p>
                 </div>

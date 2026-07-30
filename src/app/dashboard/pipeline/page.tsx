@@ -203,7 +203,7 @@ function expandCards(customers: Customer[]): CardItem[] {
 }
 
 // ─── BookedJobCard ───────────────────────────────────────────
-function BookedJobCard({ job, onClick }: { job: BookedJob; onClick: () => void }) {
+function BookedJobCard({ job, onClick, onDelete }: { job: BookedJob; onClick: () => void; onDelete?: () => void }) {
   const pctStr = job.revenue_inc_vat > 0 ? Math.round(job.pct * 100) + '%' : '—'
   const barPct = job.revenue_inc_vat > 0 ? Math.min(100, Math.round(job.pct * 100)) : null
   const barColor = barPct === null ? '' : barPct >= 50 ? 'var(--accent-blue)' : 'var(--accent-orange)'
@@ -241,6 +241,16 @@ function BookedJobCard({ job, onClick }: { job: BookedJob; onClick: () => void }
         </div>
         <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
+      {onDelete && (
+        <button
+          onClick={e => { e.stopPropagation(); onDelete() }}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+          style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+          title="ลบ"
+        >
+          <Trash2 size={11} />
+        </button>
+      )}
     </div>
   )
 }
@@ -1669,6 +1679,9 @@ export default function ProspectsKanbanPage() {
                         const full = await loadFullJob(j.id)
                         setSelectedBookedJobFull(full)
                         setLoadingBookedJobFull(false)
+                      }} onDelete={() => {
+                        const mockCustomer = { id: j.id, customer_name: j.customer_name, jobs: [{ id: j.id }] } as any
+                        setDeleteTarget({ c: mockCustomer, jobId: j.id, hasMultipleJobs: false })
                       }} />
                     ))}
                   </div>

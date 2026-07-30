@@ -510,10 +510,43 @@ function StatusTab({
   const canApprove = ['admin', 'admin_sales'].includes(myRole)
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterSales, setFilterSales] = useState<string>('all')
+  const [periodMode, setPeriodMode] = useState<'month' | 'quarter' | 'year'>('month')
   const [saving, setSaving] = useState<string | null>(null)
   const supabase = createClient()
 
-  const curMonth = new Date().toISOString().slice(0, 7)
+  const now = new Date()
+  const curMonth = now.toISOString().slice(0, 7)
+  const curYear = now.getFullYear()
+  const curQ = Math.floor(now.getMonth() / 3) + 1
+
+  // Build period options
+  const monthOptions = useMemo(() => {
+    const opts: string[] = []
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(curYear, now.getMonth() - i, 1)
+      opts.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+    }
+    return opts
+  }, [curYear])
+  const quarterOptions = useMemo(() => {
+    const opts: { label: string; value: string }[] = []
+    for (let y = curYear; y >= curYear - 1; y--) {
+      for (let q = 4; q >= 1; q--) {
+        if (y === curYear && q > curQ) continue
+        opts.push({ label: `Q${q} ${y + 543}`, value: `${y}-Q${q}` })
+      }
+    }
+    return opts
+  }, [curYear, curQ])
+  const yearOptions = useMemo(() => {
+    const opts: number[] = []
+    for (let y = curYear; y >= curYear - 3; y--) opts.push(y)
+    return opts
+  }, [curYear])
+
+  const [selMonth, setSelMonth]     = useState(curMonth)
+  const [selQuarter, setSelQuarter] = useState(`${curYear}-Q${curQ}`)
+  const [selYear, setSelYear]       = useState(curYear)
 
   function getCommission(j: Job) { return calcTier(j.revenue_ex_vat || 0, tiers) }
   function getStatus(j: Job) {
@@ -523,23 +556,38 @@ function StatusTab({
   }
   function getMonth(j: Job) { return normalizeYM(j.commission_month || j.actual_deliver_date?.slice(0, 7) || '') }
 
+  function matchPeriod(j: Job): boolean {
+    const ym = getMonth(j)
+    if (!ym) return false
+    if (periodMode === 'month') return ym === selMonth
+    if (periodMode === 'quarter') {
+      const [y, q] = selQuarter.split('-Q')
+      const qNum = parseInt(q)
+      const [jy, jm] = ym.split('-').map(Number)
+      const jq = Math.floor((jm - 1) / 3) + 1
+      return jy === parseInt(y) && jq === qNum
+    }
+    return ym.startsWith(String(selYear))
+  }
+
+  const periodJobs = useMemo(() => jobs.filter(matchPeriod), [jobs, periodMode, selMonth, selQuarter, selYear])
+
   const filtered = useMemo(() => {
-    return jobs.filter(j => {
+    return periodJobs.filter(j => {
       const matchStatus = filterStatus === 'all' || getStatus(j) === filterStatus
       const matchSales  = filterSales === 'all' || j.sales_id === filterSales
       return matchStatus && matchSales
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobs, filterStatus, filterSales])
+  }, [periodJobs, filterStatus, filterSales])
 
-  const thisMonthJobs = jobs.filter(j => getMonth(j) === curMonth)
-  const thisMonthComm = thisMonthJobs.reduce((s, j) => s + getCommission(j).amount, 0)
-  const thisMonthRef  = referrals.filter(r => thisMonthJobs.some(j => j.id === r.job_id)).reduce((s, r) => s + r.referral_amount, 0)
+  const periodComm = periodJobs.reduce((s, j) => s + getCommission(j).amount, 0)
+  const periodRef  = referrals.filter(r => periodJobs.some(j => j.id === r.job_id)).reduce((s, r) => s + r.referral_amount, 0)
 
-  const pendingComm   = jobs.filter(j => getStatus(j) === 'pending').reduce((s, j) => s + getCommission(j).amount, 0)
-  const approvedComm  = jobs.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
-  const paidComm      = jobs.filter(j => getStatus(j) === 'paid').reduce((s, j) => s + getCommission(j).amount, 0)
-  const totalRef      = referrals.reduce((s, r) => s + r.referral_amount, 0)
+  const pendingComm   = periodJobs.filter(j => getStatus(j) === 'pending').reduce((s, j) => s + getCommission(j).amount, 0)
+  const approvedComm  = periodJobs.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
+  const paidComm      = periodJobs.filter(j => getStatus(j) === 'paid').reduce((s, j) => s + getCommission(j).amount, 0)
+  const totalRef      = referrals.filter(r => periodJobs.some(j => j.id === r.job_id)).reduce((s, r) => s + r.referral_amount, 0)
 
   async function updateStatus(jobId: string, newStatus: string) {
     setSaving(jobId)
@@ -551,24 +599,51 @@ function StatusTab({
 
   return (
     <div className="space-y-4">
+      {/* Period selector */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex gap-1 p-1 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          {(['month', 'quarter', 'year'] as const).map(m => (
+            <button key={m} onClick={() => setPeriodMode(m)}
+              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold"
+              style={{ background: periodMode === m ? 'var(--accent)' : 'transparent', color: periodMode === m ? '#fff' : 'var(--text-2)' }}>
+              {m === 'month' ? 'เดือน' : m === 'quarter' ? 'ไตรมาส' : 'ปี'}
+            </button>
+          ))}
+        </div>
+        {periodMode === 'month' && (
+          <select value={selMonth} onChange={e => setSelMonth(e.target.value)} className="field-input" style={{ width: 'auto' }}>
+            {monthOptions.map(ym => <option key={ym} value={ym}>{monthLabel(ym)}</option>)}
+          </select>
+        )}
+        {periodMode === 'quarter' && (
+          <select value={selQuarter} onChange={e => setSelQuarter(e.target.value)} className="field-input" style={{ width: 'auto' }}>
+            {quarterOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        )}
+        {periodMode === 'year' && (
+          <select value={selYear} onChange={e => setSelYear(Number(e.target.value))} className="field-input" style={{ width: 'auto' }}>
+            {yearOptions.map(y => <option key={y} value={y}>{y + 543}</option>)}
+          </select>
+        )}
+      </div>
+
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3">
-        {/* This month */}
+        {/* Period summary */}
         <div className="col-span-2 rounded-[11px] p-4" style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
-          <p className="text-xs font-semibold mb-2" style={{ color: 'var(--accent)' }}>เดือนนี้ · {monthLabel(curMonth)}</p>
           <div className="flex gap-6">
             <div>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>ค่าคอมเซลล์</p>
-              <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(thisMonthComm)}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{thisMonthJobs.length} งาน</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(periodComm)}</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{periodJobs.length} งาน</p>
             </div>
             <div>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>ค่าแนะนำ</p>
-              <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(thisMonthRef)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(periodRef)}</p>
             </div>
             <div>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>รวม</p>
-              <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(thisMonthComm + thisMonthRef)}</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(periodComm + periodRef)}</p>
             </div>
           </div>
         </div>
@@ -578,7 +653,7 @@ function StatusTab({
           const cfg = STATUS_CFG[s]
           const Icon = cfg.icon
           const commAmt = s === 'pending' ? pendingComm : s === 'approved' ? approvedComm : paidComm
-          const cnt = jobs.filter(j => getStatus(j) === s).length
+          const cnt = periodJobs.filter(j => getStatus(j) === s).length
           return (
             <div key={s} className="ds-card-sm p-4">
               <div className="flex items-center gap-1.5 mb-2">

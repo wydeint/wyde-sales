@@ -1220,6 +1220,10 @@ export default function ProspectsKanbanPage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [selectedJobWorkingStatus, setSelectedJobWorkingStatus] = useState<string | null>(null)
   const [addModal, setAddModal] = useState(false)
+  const [addStep, setAddStep] = useState<'search' | 'new'>('search')
+  const [addSearchQ, setAddSearchQ] = useState('')
+  const [repeatConfirm, setRepeatConfirm] = useState<Customer | null>(null)
+  const [repeatAdding, setRepeatAdding] = useState(false)
   const [dupRoomCustomer, setDupRoomCustomer] = useState<{ id: string; customer_name: string; interested_room: string; jobCount: number } | null>(null)
   const [pendingAddForm, setPendingAddForm] = useState<typeof emptyForm | null>(null)
   const [startJobCustomer, setStartJobCustomer] = useState<Customer | null>(null)
@@ -1358,6 +1362,24 @@ export default function ProspectsKanbanPage() {
     setPendingAddForm(null)
   }
 
+  async function confirmRepeatPurchase() {
+    if (!repeatConfirm) return
+    setRepeatAdding(true)
+    const c = repeatConfirm
+    const jobId = await createProspectJob(c.id, c.customer_name, c.project_id, c.interested_room || null, (c as any).customer_type || 'B2C', (c as any).work_type || null, c.assigned_to, 'new')
+    setRepeatAdding(false)
+    if (jobId) {
+      setCustomers(prev => prev.map(x => {
+        if (x.id !== c.id) return x
+        const prevJobs = ((x as any).jobs as JobMeta[] || [])
+        return { ...x, jobs: [...prevJobs, { id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: 'new' }] } as any
+      }))
+      setActiveStage('new')
+      setRepeatConfirm(null)
+      setAddModal(false)
+    }
+  }
+
   function updateCustomer(updated: Customer) {
     setCustomers(prev => prev.map(c => c.id === updated.id ? updated : c))
     setSelectedCustomer(updated)
@@ -1424,6 +1446,12 @@ export default function ProspectsKanbanPage() {
 
   const stage = STAGES.find(s => s.value === activeStage) || STAGES[0]
   const allCards = expandCards(customers)
+  const addSearchResults = addSearchQ.length >= 1
+    ? customers.filter(c => {
+        const q = addSearchQ.toLowerCase()
+        return c.customer_name.toLowerCase().includes(q) || (c.interested_room || '').toLowerCase().includes(q) || (c.phone || '').includes(q)
+      }).slice(0, 6)
+    : []
   const list = allCards.filter(card => {
     const cardStage = card.jobCrmStage ?? card.c.status
     if (!search && cardStage !== activeStage) return false
@@ -1447,7 +1475,7 @@ export default function ProspectsKanbanPage() {
             <h1 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>Prospects</h1>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{customers.length} ราย</p>
           </div>
-          <button onClick={() => setAddModal(true)}
+          <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null) }}
             className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> เพิ่ม Prospect
@@ -1707,9 +1735,69 @@ export default function ProspectsKanbanPage() {
         />
       )}
 
-      {/* Add modal */}
-      <Modal open={addModal} title="เพิ่ม Prospect" onClose={() => setAddModal(false)}>
-        <CustomerForm projects={projects} users={users} onSave={addCustomer} onClose={() => setAddModal(false)} />
+      {/* Add modal — step 1: search, step 2: new customer form */}
+      <Modal open={addModal} title={addStep === 'search' ? 'เพิ่ม Prospect / ซื้อซ้ำ' : 'ลูกค้าใหม่'} onClose={() => { setAddModal(false); setRepeatConfirm(null) }}>
+        {addStep === 'search' ? (
+          <div className="space-y-3">
+            <input value={addSearchQ} onChange={e => { setAddSearchQ(e.target.value); setRepeatConfirm(null) }}
+              placeholder="ค้นหาชื่อ, ห้อง, เบอร์..." autoFocus
+              className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+            {addSearchResults.length > 0 && !repeatConfirm && (
+              <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                {addSearchResults.map(c => {
+                  const cJobs = ((c as any).jobs as JobMeta[] | null) || []
+                  const cStage = stageMap[(cJobs[0]?.crm_stage ?? c.status) || c.status] || STAGES[0]
+                  return (
+                    <button key={c.id} onClick={() => setRepeatConfirm(c)}
+                      className="w-full flex items-center gap-3 p-3 rounded-[10px] text-left transition-all"
+                      style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--divider)')}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
+                        <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
+                          {(c as any).projects?.name || c.project_id || '—'} · ห้อง {c.interested_room || '—'}
+                          {cJobs.length > 1 ? ` · ${cJobs.length} งาน` : ''}
+                        </p>
+                      </div>
+                      <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0" style={{ background: cStage.badge, color: cStage.text }}>{cStage.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {repeatConfirm && (
+              <div className="p-4 rounded-[11px] space-y-3" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{repeatConfirm.customer_name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                    {(repeatConfirm as any).projects?.name || repeatConfirm.project_id} · ห้อง {repeatConfirm.interested_room || '—'}
+                    {' · '}มีงาน {(((repeatConfirm as any).jobs as JobMeta[] | null) || []).length} งาน
+                  </p>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--text-2)' }}>ต้องการสร้างงานซื้อซ้ำให้ลูกค้านี้ใช่ไหม?</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setRepeatConfirm(null)} className="flex-1 py-2 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
+                  <button onClick={confirmRepeatPurchase} disabled={repeatAdding}
+                    className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white"
+                    style={{ background: repeatAdding ? '#666' : 'var(--accent)' }}>
+                    {repeatAdding ? 'กำลังสร้าง...' : '+ งานซื้อซ้ำ'}
+                  </button>
+                </div>
+              </div>
+            )}
+            <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '12px' }}>
+              <button onClick={() => setAddStep('new')}
+                className="w-full py-2.5 rounded-[8px] text-sm font-semibold"
+                style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                + เพิ่มลูกค้าใหม่
+              </button>
+            </div>
+          </div>
+        ) : (
+          <CustomerForm projects={projects} users={users} onSave={addCustomer} onClose={() => setAddModal(false)} />
+        )}
       </Modal>
 
       {/* Dup room confirm modal */}

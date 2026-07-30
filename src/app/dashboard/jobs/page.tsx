@@ -657,6 +657,10 @@ export default function JobsPage() {
     payload.contract_date = payload.contract_date || null
     payload.work_start_date = payload.work_start_date || null
     payload.plan_transfer_month = payload.plan_transfer_month || null
+    // Auto-correct: if actual_deliver_date is set, status must not be lower than ส่งมอบแล้ว
+    if (payload.actual_deliver_date && payload.working_status === 'ดำเนินการ') {
+      payload.working_status = 'ส่งมอบแล้ว'
+    }
     const isNew = !jobs.find(j => j.id === editing.id)
     if (isNew) {
       // Auto-create customer record so job appears in Prospect/customers page

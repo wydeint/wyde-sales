@@ -640,20 +640,22 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
 
           {/* Product per job */}
           {!loadingDetail && jobs.map(j => (
-            <div key={`prod-${j.id}`} className="rounded-[11px] px-4 py-3" style={{ background: 'var(--hover-bg)' }}>
-              <p className="text-micro mb-1.5" style={{ color: 'var(--text-3)' }}>Product{jobs.length > 1 ? ` (งาน ${j.id})` : ''}</p>
-              <select
-                value={j.package_type || ''}
-                onChange={async e => {
-                  const v = e.target.value || null
-                  await supabase.from('jobs').update({ package_type: v }).eq('id', j.id)
-                  setJobs(prev => prev.map(x => x.id === j.id ? { ...x, package_type: v || '' } : x))
-                }}
-                className="w-full text-xs font-semibold focus:outline-none appearance-none"
-                style={{ background: 'transparent', color: j.package_type ? 'var(--text-1)' : 'var(--text-3)', border: 'none' }}>
-                <option value="">— เลือก Product —</option>
-                {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
+            <div key={`prod-${j.id}`} className="flex flex-col gap-1">
+              <p className="field-label">Product{jobs.length > 1 ? ` (งาน ${j.id})` : ''}</p>
+              <div className="relative">
+                <select
+                  value={j.package_type || ''}
+                  onChange={async e => {
+                    const v = e.target.value || null
+                    await supabase.from('jobs').update({ package_type: v }).eq('id', j.id)
+                    setJobs(prev => prev.map(x => x.id === j.id ? { ...x, package_type: v || '' } : x))
+                  }}
+                  className="field-input appearance-none pr-7">
+                  <option value="">— เลือก Product —</option>
+                  {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              </div>
             </div>
           ))}
 

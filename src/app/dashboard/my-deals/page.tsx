@@ -524,7 +524,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     const thisAmt = (useVoucher ? netAmount : paidAmount) + (useVoucher ? voucherAmount : 0)
     const alreadySettled = job.installments
       .filter(i => i.status === 'paid' && i.id !== selected.id)
-      .reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0) + (i.voucher_amount ?? 0), 0)
+      .reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0) + Number(i.voucher_amount ?? 0), 0)
     const newTotal = alreadySettled + thisAmt
     const jobValue = job.revenue_inc_vat || 0
     const newPct = jobValue > 0 ? newTotal / jobValue : 0
@@ -1495,8 +1495,8 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
   const jobValue = job.revenue_inc_vat || job.revenue_ex_vat || 0
   const totalPaidAmount = job.installments
     .filter(i => i.status === 'paid')
-    .reduce((s, i) => s + (i.paid_amount ?? i.amount) + (i.voucher_amount ?? 0), 0)
-  const totalPlannedAmount = job.installments.reduce((s, i) => s + i.amount, 0)
+    .reduce((s, i) => s + Number(i.paid_amount ?? i.amount) + Number(i.voucher_amount ?? 0), 0)
+  const totalPlannedAmount = job.installments.reduce((s, i) => s + Number(i.amount), 0)
   const paymentDiff = isB2C && jobValue > 0 ? totalPaidAmount - jobValue : null
   const plannedDiff = isB2C && jobValue > 0 ? totalPlannedAmount - jobValue : null
 
@@ -1544,20 +1544,22 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
 
           {/* Product */}
-          <div className="rounded-[11px] px-4 py-3" style={{ background: 'var(--hover-bg)' }}>
-            <p className="text-micro mb-1.5" style={{ color: 'var(--text-3)' }}>Product</p>
-            <select
-              value={job.package_type || ''}
-              onChange={async e => {
-                const v = e.target.value || null
-                await supabase.from('jobs').update({ package_type: v }).eq('id', job.id)
-                setJob(prev => ({ ...prev, package_type: v }))
-              }}
-              className="w-full text-xs font-semibold focus:outline-none appearance-none"
-              style={{ background: 'transparent', color: job.package_type ? 'var(--text-1)' : 'var(--text-3)', border: 'none' }}>
-              <option value="">— เลือก Product —</option>
-              {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
+          <div className="flex flex-col gap-1">
+            <p className="field-label">Product</p>
+            <div className="relative">
+              <select
+                value={job.package_type || ''}
+                onChange={async e => {
+                  const v = e.target.value || null
+                  await supabase.from('jobs').update({ package_type: v }).eq('id', job.id)
+                  setJob(prev => ({ ...prev, package_type: v }))
+                }}
+                className="field-input appearance-none pr-7">
+                <option value="">— เลือก Product —</option>
+                {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            </div>
           </div>
 
           {/* Dates */}
@@ -1655,7 +1657,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               </p>
               <div className="text-right">
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  เก็บแล้ว {fmtBaht(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))}
+                  เก็บแล้ว {fmtBaht(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0))}
                 </p>
                 {overdueCount > 0 && (
                   <p className="text-xs flex items-center justify-end gap-0.5 mt-0.5" style={{ color: 'var(--accent-red)' }}>
@@ -2037,9 +2039,9 @@ export default function MyDealsPage() {
         all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         paid_count: insts.filter(i => i.status === 'paid').length,
         total_count: insts.length,
-        total_amount: insts.reduce((s, i) => s + (i.amount || 0), 0),
-        total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0), 0),
-        total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount ?? i.amount ?? 0) + (i.voucher_amount ?? 0), 0),
+        total_amount: insts.reduce((s, i) => s + Number(i.amount || 0), 0),
+        total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0), 0),
+        total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0) + Number(i.voucher_amount ?? 0), 0),
         working_status: r.working_status || '',
       }
     }))

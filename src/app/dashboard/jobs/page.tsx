@@ -457,6 +457,7 @@ export default function JobsPage() {
 
   // Quick filter
   const [filterNoSO, setFilterNoSO] = useState(false)
+  const [filterNoPO, setFilterNoPO] = useState(false)
 
   // Filters
   const [search, setSearch] = useState('')
@@ -710,12 +711,14 @@ export default function JobsPage() {
     const matchWorkType = !filterWorkType || j.work_type === filterWorkType
     const matchCustomerType = !filterCustomerType || j.customer_type === filterCustomerType
     const matchNoSO = !filterNoSO || !j.so_no?.trim()
-    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType && matchNoSO
+    const matchNoPO = !filterNoPO || (j.customer_type === 'B2B' && !j.po_no?.trim())
+    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType && matchNoSO && matchNoPO
   })
 
   const noSOCount = jobs.filter(j => !j.so_no?.trim() && j.working_status !== 'ยกเลิก').length
+  const noPOCount = jobs.filter(j => j.customer_type === 'B2B' && !j.po_no?.trim() && j.working_status !== 'ยกเลิก').length
 
-  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO])
+  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO, filterNoPO])
 
   function sortRoomNo(a: string, b: string): number {
     const parse = (r: string) => {
@@ -871,6 +874,23 @@ export default function JobsPage() {
             <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
               style={{ background: filterNoSO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: filterNoSO ? '#fff' : 'var(--accent-red)' }}>
               {noSOCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setFilterNoPO(v => !v)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+          style={{
+            background: filterNoPO ? 'var(--accent)' : 'var(--card-bg)',
+            color: filterNoPO ? '#fff' : 'var(--text-2)',
+            border: `1px solid ${filterNoPO ? 'var(--accent)' : 'var(--card-border)'}`,
+          }}
+        >
+          ไม่มี PO
+          {noPOCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
+              style={{ background: filterNoPO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: filterNoPO ? '#fff' : 'var(--accent-red)' }}>
+              {noPOCount}
             </span>
           )}
         </button>

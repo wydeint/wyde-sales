@@ -60,11 +60,16 @@ export interface FullJob {
   satisfaction_url: string | null
   sale_slip_url: string | null
   sale_receipt_url: string | null
+  package_type: string | null
 }
 
 // ─── Constants ────────────────────────────────────────────
 export const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
+const PRODUCT_TYPES = [
+  'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
+  'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',
+]
 const B2C_PLANS = [
   { value: 'A', label: 'แบบ A — 100% ครั้งเดียว', desc: '1 งวด' },
   { value: 'B', label: 'แบบ B — 50% + 50%', desc: '2 งวด' },
@@ -1343,6 +1348,25 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             {/* Revenue */}
             <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
 
+            {/* Product */}
+            <div className="flex flex-col gap-1">
+              <p className="field-label">Product</p>
+              <div className="relative">
+                <select
+                  value={job.package_type || ''}
+                  onChange={async e => {
+                    const v = e.target.value || null
+                    await supabase.from('jobs').update({ package_type: v }).eq('id', job.id)
+                    setJob(prev => ({ ...prev, package_type: v }))
+                  }}
+                  className="field-input appearance-none pr-7">
+                  <option value="">— เลือก Product —</option>
+                  {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+              </div>
+            </div>
+
             {/* 3-column date row — same height, same Thai format */}
             <div className="grid grid-cols-3 gap-2">
               {/* วันรับจอง / รับ PO — read-only */}
@@ -1636,6 +1660,7 @@ export async function loadFullJob(jobId: string): Promise<FullJob | null> {
     satisfaction_url: raw.satisfaction_url || null,
     sale_slip_url: raw.sale_slip_url || null,
     sale_receipt_url: raw.sale_receipt_url || null,
+    package_type: raw.package_type || null,
     installments: ((raw as any).installments || []).map((p: any) => ({
       id: p.id,
       installment_no: p.installment_no,

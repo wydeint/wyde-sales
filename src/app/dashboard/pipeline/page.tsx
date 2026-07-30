@@ -92,7 +92,7 @@ function CardSkeleton() {
 }
 
 // ─── CustomerCard ───────────────────────────────────────────
-function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string }) {
+function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
   const custType = (c as any).customer_type || 'B2C'
   const workType = (c as any).work_type || ''
   const displayValue = jobRev ?? (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0)
@@ -125,7 +125,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
             </span>
           )}
         </div>
-        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : (stageMap[c.status] || stage); return (
+        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : (stageMap[jobCrmStage || c.status] || stage); return (
           <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}
@@ -177,8 +177,8 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
 }
 
 // ─── Card expand helper ─────────────────────────────────────
-type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string }
-type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; jobWorkingStatus: string | undefined; cardKey: string }
+type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null }
+type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; jobWorkingStatus: string | undefined; jobCrmStage: string | null | undefined; cardKey: string }
 interface BookedJob {
   id: string; customer_name: string; room_no: string; revenue_inc_vat: number
   sales_name: string | null; project_name: string | null; project_id: string | null
@@ -189,10 +189,10 @@ function expandCards(customers: Customer[]): CardItem[] {
   for (const c of customers) {
     const cJobs = ((c as any).jobs as JobMeta[] | null) || []
     if (cJobs.length <= 1) {
-      result.push({ c, jobSeqNo: undefined, jobRev: cJobs[0]?.revenue_inc_vat, jobId: cJobs[0]?.id, jobWorkingStatus: cJobs[0]?.working_status, cardKey: c.id })
+      result.push({ c, jobSeqNo: undefined, jobRev: cJobs[0]?.revenue_inc_vat, jobId: cJobs[0]?.id, jobWorkingStatus: cJobs[0]?.working_status, jobCrmStage: cJobs[0]?.crm_stage ?? null, cardKey: c.id })
     } else {
       const sorted = [...cJobs].sort((a, b) => ((a.order_date || a.id) < (b.order_date || b.id) ? -1 : 1))
-      sorted.forEach((j, i) => result.push({ c, jobSeqNo: i + 1, jobRev: j.revenue_inc_vat || 0, jobId: j.id, jobWorkingStatus: j.working_status, cardKey: `${c.id}-${j.id}` }))
+      sorted.forEach((j, i) => result.push({ c, jobSeqNo: i + 1, jobRev: j.revenue_inc_vat || 0, jobId: j.id, jobWorkingStatus: j.working_status, jobCrmStage: j.crm_stage ?? null, cardKey: `${c.id}-${j.id}` }))
     }
   }
   return result
@@ -466,8 +466,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
         <div className="flex flex-wrap gap-1.5">
           {STAGES.filter(s => s.value !== 'booked' && s.value !== 'closed').map(s => (
             <button key={s.value} onClick={async () => {
+              if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
               await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
-              onUpdate({ ...customer, status: s.value })
+              const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
+              onUpdate({ ...customer, status: s.value, jobs: updatedJobs as any })
             }}
               className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold"
               style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
@@ -479,8 +481,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
             disabled={!canClose}
             title={canClose ? undefined : `ต้องชำระอย่างน้อย 50% ก่อนเริ่มงาน (ชำระแล้ว ${jobValue > 0 ? Math.round(totalSettled / jobValue * 100) : 0}%)`}
             onClick={async () => {
+              if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'closed' }).eq('id', focusJobId)
               await supabase.from('customers').update({ status: 'closed' }).eq('id', customer.id)
-              onUpdate({ ...customer, status: 'closed' })
+              const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'closed' } : j) : (customer as any).jobs
+              onUpdate({ ...customer, status: 'closed', jobs: updatedJobs as any })
             }}
             className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-opacity"
             style={{
@@ -623,10 +627,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
             <div className="flex flex-wrap gap-1.5">
               {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
                 <button key={s.value} onClick={async () => {
-                  // Always update customer status in DB first
+                  if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
                   await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
-                  // For 'booked': let loadOrCreateBookedJob (triggered by useEffect) handle job creation
-                  onUpdate({ ...customer, status: s.value })
+                  const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
+                  onUpdate({ ...customer, status: s.value, jobs: updatedJobs as any })
                 }}
                   className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
                   style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
@@ -635,8 +639,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
               ))}
               {customer.status !== 'lost' && (
                 <button onClick={async () => {
+                  if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'lost' }).eq('id', focusJobId)
                   await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
-                  onUpdate({ ...customer, status: 'lost' })
+                  const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'lost' } : j) : (customer as any).jobs
+                  onUpdate({ ...customer, status: 'lost', jobs: updatedJobs as any })
                 }}
                   className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
                   style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
@@ -1220,11 +1226,27 @@ export default function ProspectsKanbanPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ c: Customer; jobId?: string; hasMultipleJobs: boolean } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  async function createProspectJob(customerId: string, custName: string, projectId: string | null, roomNo: string | null, custType: string, workType: string | null, salesId: string | null, crmStage: string): Promise<string> {
+    const { data: allJobIds } = await supabase.from('jobs').select('id').like('id', 'JOB-%')
+    let baseNum = 1
+    if (allJobIds && allJobIds.length > 0) {
+      const nums = (allJobIds as { id: string }[]).map(j => { const m = j.id.match(/JOB-(\d+)/); return m ? parseInt(m[1], 10) : 0 })
+      baseNum = Math.max(...nums) + 1
+    }
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const jobId = `JOB-${baseNum + attempt}`
+      const { error } = await supabase.from('jobs').insert({ id: jobId, customer_id: customerId, customer_name: custName, project_id: projectId, room_no: roomNo, customer_type: custType, work_type: workType, sales_id: salesId, crm_stage: crmStage, working_status: null })
+      if (!error) return jobId
+      if (!error.message.includes('duplicate key')) return ''
+    }
+    return ''
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1316,11 +1338,14 @@ export default function ProspectsKanbanPage() {
     const { data, error } = await supabase.from('customers').insert([{
       id: newId, ...form, project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
       customer_type: form.customer_type || 'B2C', work_type: form.work_type || null,
-    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(revenue_inc_vat)').single()
+    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)').single()
     if (error) return error.message
     if (data) {
-      setCustomers(prev => [data as any, ...prev])
-      setActiveStage((data as any).status || 'new')
+      const crmStage = form.status || 'new'
+      const jobId = await createProspectJob(newId, form.customer_name, form.project_id || null, form.interested_room || null, form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null, crmStage)
+      const customerWithJob = { ...data, jobs: jobId ? [{ id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: crmStage }] : [] }
+      setCustomers(prev => [customerWithJob as any, ...prev])
+      setActiveStage(crmStage)
       setAddModal(false)
     }
     return null
@@ -1398,17 +1423,19 @@ export default function ProspectsKanbanPage() {
   )
 
   const stage = STAGES.find(s => s.value === activeStage) || STAGES[0]
-  const list = customers.filter(c => {
-    if (!search && c.status !== activeStage) return false
-    if (filterProject && c.project_id !== filterProject) return false
-    if (filterSales && c.assigned_to !== filterSales) return false
+  const allCards = expandCards(customers)
+  const list = allCards.filter(card => {
+    const cardStage = card.jobCrmStage ?? card.c.status
+    if (!search && cardStage !== activeStage) return false
+    if (filterProject && card.c.project_id !== filterProject) return false
+    if (filterSales && card.c.assigned_to !== filterSales) return false
     if (search) {
       const q = search.toLowerCase().replace(/[-\s]/g, '')
-      const room = (c.interested_room || '').toLowerCase().replace(/[-\s]/g, '')
-      return room.includes(q) || c.customer_name.toLowerCase().includes(search.toLowerCase())
+      const room = (card.c.interested_room || '').toLowerCase().replace(/[-\s]/g, '')
+      return room.includes(q) || card.c.customer_name.toLowerCase().includes(search.toLowerCase())
     }
     return true
-  }).sort((a, b) => (a.interested_room || '').localeCompare(b.interested_room || '', 'th', { numeric: true, sensitivity: 'base' }))
+  }).sort((a, b) => (a.c.interested_room || '').localeCompare(b.c.interested_room || '', 'th', { numeric: true, sensitivity: 'base' }))
 
   return (
     <div className="h-screen flex flex-col" style={{ background: 'var(--bg-gradient)' }}>
@@ -1432,7 +1459,7 @@ export default function ProspectsKanbanPage() {
           {STAGES.map(s => {
             const count = s.value === 'booked'
               ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
-              : customers.filter(c => c.status === s.value).length
+              : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value).length
             const active = activeStage === s.value && !search
             return (
               <button key={s.value} onClick={() => { setActiveStage(s.value); setSearch(''); setSelectedCustomer(null) }}
@@ -1526,8 +1553,8 @@ export default function ProspectsKanbanPage() {
             </div>
           )
         }
-        const totalBudget = list.reduce((s, c) => s + (c.budget || 0), 0)
-        const noSales = list.filter(c => !c.assigned_to).length
+        const totalBudget = list.reduce((s, card) => s + (card.c.budget || 0), 0)
+        const noSales = list.filter(card => !card.c.assigned_to).length
         return (
           <div className="flex-shrink-0 px-6 pb-3 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">
@@ -1604,31 +1631,28 @@ export default function ProspectsKanbanPage() {
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองเลือกกลุ่มอื่น หรือเพิ่ม Prospect ใหม่</p>
             </div>
           ) : (() => {
-            const grouped = list.reduce<Record<string, { name: string; items: Customer[] }>>((acc, c) => {
-              const key = c.project_id || '__none__'
-              const name = (c as any).projects?.name || c.project_id || 'ไม่ระบุโครงการ'
+            const grouped = list.reduce<Record<string, { name: string; items: CardItem[] }>>((acc, card) => {
+              const key = card.c.project_id || '__none__'
+              const name = (card.c as any).projects?.name || card.c.project_id || 'ไม่ระบุโครงการ'
               if (!acc[key]) acc[key] = { name, items: [] }
-              acc[key].items.push(c)
+              acc[key].items.push(card)
               return acc
             }, {})
             const groups = Object.entries(grouped).sort(([, a], [, b]) => a.name.localeCompare(b.name, 'th'))
             return (
               <div className="space-y-5 pt-2">
-                {groups.map(([key, { name, items }]) => {
-                  const cards = expandCards(items)
-                  return (
-                    <div key={key}>
-                      <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
-                        {name} <span className="font-normal">({cards.length})</span>
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-                        {cards.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, cardKey }) => (
-                          <CustomerCard key={cardKey} c={c} stage={stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} />
-                        ))}
-                      </div>
+                {groups.map(([key, { name, items }]) => (
+                  <div key={key}>
+                    <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--text-3)' }}>
+                      {name} <span className="font-normal">({items.length})</span>
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                      {items.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, jobCrmStage, cardKey }) => (
+                        <CustomerCard key={cardKey} c={c} stage={stageMap[jobCrmStage || c.status] || stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
+                      ))}
                     </div>
-                  )
-                })}
+                  </div>
+                ))}
               </div>
             )
           })()

@@ -148,11 +148,11 @@ function IndividualTab({
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="ds-card-sm p-4">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าคอม {selectedName} · {filtered.length} งาน</p>
-          <p className="text-kpi-number" style={{ color: '#fbbf24' }}>{f(totalComm)}</p>
+          <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(totalComm)}</p>
         </div>
-        <div className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="ds-card-sm p-4">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวม</p>
           <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
         </div>
@@ -172,7 +172,7 @@ function IndividualTab({
           monthJobs.forEach(j => { const s = getStatus(j) as keyof typeof statusCounts; if (s in statusCounts) statusCounts[s]++ })
 
           return (
-            <div key={month} className="rounded-[18px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={month} className="ds-card overflow-hidden" style={{ padding: 0 }}>
               <button className="w-full flex items-center justify-between px-5 py-4 text-left"
                 style={{ background: isOpen ? 'var(--hover-bg)' : 'transparent' }}
                 onClick={() => toggleMonth(month)}>
@@ -180,21 +180,21 @@ function IndividualTab({
                   {isOpen ? <ChevronDown size={15} style={{ color: 'var(--accent)' }} /> : <ChevronRight size={15} style={{ color: 'var(--text-3)' }} />}
                   <div>
                     <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{monthLabel(month)}</p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>{monthJobs.length} งาน</p>
+                    <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>{monthJobs.length} งาน</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1.5">
                     {STATUSES.map(s => statusCounts[s] > 0 && (
-                      <span key={s} className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                      <span key={s} className="text-micro font-semibold px-2 py-0.5 rounded-full"
                         style={{ background: STATUS_CFG[s].bg, color: STATUS_CFG[s].color }}>
                         {statusCounts[s]}
                       </span>
                     ))}
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-sm" style={{ color: '#fbbf24' }}>{f(monthComm)}</p>
-                    {monthRef > 0 && <p className="text-[10px]" style={{ color: 'var(--accent-blue)' }}>+{f(monthRef)} แนะนำ</p>}
+                    <p className="font-bold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(monthComm)}</p>
+                    {monthRef > 0 && <p className="text-micro" style={{ color: 'var(--accent-blue)' }}>+{f(monthRef)} แนะนำ</p>}
                   </div>
                 </div>
               </button>
@@ -222,9 +222,9 @@ function IndividualTab({
                           <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                             <td className="px-4 py-3">
                               <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</p>
-                              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no}</p>
+                              <p className="text-label" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no}</p>
                               {refTotal > 0 && (
-                                <p className="text-[10px] mt-0.5" style={{ color: 'var(--accent-blue)' }}>
+                                <p className="text-micro mt-0.5" style={{ color: 'var(--accent-blue)' }}>
                                   แนะนำ {f(refTotal)}
                                 </p>
                               )}
@@ -235,7 +235,7 @@ function IndividualTab({
                             <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-3)' }}>
                               {rate ? (rate * 100).toFixed(2) + '%' : '—'}
                             </td>
-                            <td className="px-4 py-3 text-right font-bold text-sm" style={{ color: '#fbbf24' }}>{f(amount)}</td>
+                            <td className="px-4 py-3 text-right font-bold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(amount)}</td>
                             <td className="px-4 py-3">
                               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold w-fit"
                                 style={{ background: cfg.bg, color: cfg.color }}>
@@ -249,7 +249,7 @@ function IndividualTab({
                     <tfoot>
                       <tr style={{ borderTop: '2px solid var(--divider)', background: 'var(--hover-bg)' }}>
                         <td colSpan={isManager ? 5 : 4} className="px-4 py-2.5 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวม {monthLabel(month)}</td>
-                        <td className="px-4 py-2.5 text-right font-bold text-sm" style={{ color: '#fbbf24' }}>{f(monthComm)}</td>
+                        <td className="px-4 py-2.5 text-right font-bold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(monthComm)}</td>
                         <td />
                       </tr>
                     </tfoot>
@@ -336,7 +336,7 @@ function ReferralTab({
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="rounded-[11px] p-4 flex items-center justify-between" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="ds-card-sm p-4 flex items-center justify-between">
         <div>
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวมทั้งหมด</p>
           <p className="text-2xl font-bold mt-0.5" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
@@ -376,17 +376,17 @@ function ReferralTab({
           const editable = canEdit(j)
 
           return (
-            <div key={j.id} className="rounded-[11px] overflow-hidden" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={j.id} className="ds-card-sm overflow-hidden" style={{ padding: 0 }}>
               {/* Job header */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{j.customer_name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-[5px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+                    <span className="text-micro px-1.5 py-0.5 rounded-[5px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                       {j.room_no}
                     </span>
                   </div>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>
                     {(j.projects as any)?.name || '—'} · {(j.sales as any)?.name || '—'} · {j.working_status}
                     {j.actual_deliver_date ? ` · ส่งมอบ ${fDate(j.actual_deliver_date)}` : j.order_date ? ` · จอง ${fDate(j.order_date)}` : ''}
                   </p>
@@ -444,7 +444,7 @@ function ReferralTab({
 
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
-                      <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ชื่อผู้แนะนำ</p>
+                      <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ชื่อผู้แนะนำ</p>
                       <input value={newName} onChange={e => setNewName(e.target.value)}
                         placeholder="ชื่อผู้แนะนำ"
                         className="w-full rounded-[8px] px-3 py-2 text-xs focus:outline-none"
@@ -453,7 +453,7 @@ function ReferralTab({
 
                     {inputMode === 'amount' ? (
                       <div className="w-32">
-                        <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ยอดเงิน (฿)</p>
+                        <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ยอดเงิน (฿)</p>
                         <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)}
                           placeholder="0"
                           className="w-full rounded-[8px] px-3 py-2 text-xs focus:outline-none"
@@ -461,7 +461,7 @@ function ReferralTab({
                       </div>
                     ) : (
                       <div>
-                        <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>% ของ Package</p>
+                        <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>% ของ Package</p>
                         <div className="flex gap-1">
                           {([1, 2, 3] as const).map(p => (
                             <button key={p} onClick={() => setNewPct(p)}
@@ -548,7 +548,6 @@ function StatusTab({
     setSaving(null)
   }
 
-  const nextStatus: Record<string, string> = { pending: 'approved', approved: 'paid', paid: 'pending' }
 
   return (
     <div className="space-y-4">
@@ -559,16 +558,16 @@ function StatusTab({
           <p className="text-xs font-semibold mb-2" style={{ color: 'var(--accent)' }}>เดือนนี้ · {monthLabel(curMonth)}</p>
           <div className="flex gap-6">
             <div>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ค่าคอมเซลล์</p>
-              <p className="text-kpi-number" style={{ color: '#fbbf24' }}>{f(thisMonthComm)}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{thisMonthJobs.length} งาน</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ค่าคอมเซลล์</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(thisMonthComm)}</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{thisMonthJobs.length} งาน</p>
             </div>
             <div>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ค่าแนะนำ</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ค่าแนะนำ</p>
               <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(thisMonthRef)}</p>
             </div>
             <div>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>รวม</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>รวม</p>
               <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(thisMonthComm + thisMonthRef)}</p>
             </div>
           </div>
@@ -581,25 +580,25 @@ function StatusTab({
           const commAmt = s === 'pending' ? pendingComm : s === 'approved' ? approvedComm : paidComm
           const cnt = jobs.filter(j => getStatus(j) === s).length
           return (
-            <div key={s} className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+            <div key={s} className="ds-card-sm p-4">
               <div className="flex items-center gap-1.5 mb-2">
                 <Icon size={13} style={{ color: cfg.color }} />
                 <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
               </div>
               <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(commAmt)}</p>
-              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{cnt} งาน</p>
+              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{cnt} งาน</p>
             </div>
           )
         })}
 
         {/* Referral total */}
-        <div className="rounded-[11px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="ds-card-sm p-4">
           <div className="flex items-center gap-1.5 mb-2">
             <Users size={13} style={{ color: 'var(--accent-blue)' }} />
             <p className="text-xs font-semibold" style={{ color: 'var(--accent-blue)' }}>ค่าแนะนำรวม</p>
           </div>
           <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(totalRef)}</p>
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>{referrals.length} รายการ</p>
+          <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{referrals.length} รายการ</p>
         </div>
       </div>
 
@@ -660,23 +659,27 @@ function StatusTab({
                   <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                     <td className="px-4 py-3">
                       <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{j.customer_name}</p>
-                      <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no} · {(j.projects as any)?.name || '—'}</p>
+                      <p className="text-label" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no} · {(j.projects as any)?.name || '—'}</p>
                     </td>
                     {isManager && <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>}
                     <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-3)' }}>{monthLabel(getMonth(j))}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-sm" style={{ color: '#fbbf24' }}>{f(amount)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(amount)}</td>
                     <td className="px-4 py-3 text-right text-xs" style={{ color: jobRefTotal > 0 ? 'var(--accent-blue)' : 'var(--text-3)' }}>
                       {jobRefTotal > 0 ? f(jobRefTotal) : '—'}
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{f(amount + jobRefTotal)}</td>
                     <td className="px-4 py-3">
                       {canApprove ? (
-                        <button disabled={isSaving}
-                          onClick={() => updateStatus(j.id, nextStatus[status] || 'pending')}
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold disabled:opacity-50"
+                        <select
+                          disabled={isSaving}
+                          value={status}
+                          onChange={e => updateStatus(j.id, e.target.value)}
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg border-0 outline-none disabled:opacity-50 cursor-pointer"
                           style={{ background: cfg.bg, color: cfg.color }}>
-                          <Icon size={11} />{isSaving ? '...' : cfg.label}
-                        </button>
+                          {STATUSES.map(s => (
+                            <option key={s} value={s}>{STATUS_CFG[s].label}</option>
+                          ))}
+                        </select>
                       ) : (
                         <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold w-fit"
                           style={{ background: cfg.bg, color: cfg.color }}>

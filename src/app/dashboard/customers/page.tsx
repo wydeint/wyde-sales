@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useId } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -10,7 +10,6 @@ import {
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
-import SearchableSelect from '@/components/ui/SearchableSelect'
 
 interface Customer {
   id: string
@@ -178,14 +177,12 @@ function CustomerDetail({
   const projectName = projects.find(p => p.id === customer.project_id)?.name
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4"
+    <div className="modal-backdrop"
       onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Panel */}
       <div
-        className="relative flex flex-col max-h-[90vh] overflow-y-auto w-full max-w-xl rounded-[20px] shadow-2xl"
-        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+        className="modal-panel modal-panel-wide flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -285,12 +282,12 @@ function CustomerDetail({
                     const st = statusInfo(customer.status)
                     return (
                       <div className="relative mb-3 flex items-start gap-3">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isBooked ? '#f97316' : 'var(--divider)', borderColor: isBooked ? '#f97316' : 'var(--text-3)' }} />
+                        <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isBooked ? 'var(--accent-orange)' : 'var(--divider)', borderColor: isBooked ? 'var(--accent-orange)' : 'var(--text-3)' }} />
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: isBooked ? '#f97316' : 'var(--text-3)' }}>
+                          <p className="text-xs font-semibold" style={{ color: isBooked ? 'var(--accent-orange)' : 'var(--text-3)' }}>
                             {isBooked ? '★ Booked' : `สถานะ: ${st.label}`}
                           </p>
-                          {customer.status === 'lost' && <p className="text-[10px]" style={{ color: '#f87171' }}>หลุดแล้ว</p>}
+                          {customer.status === 'lost' && <p className="text-micro" style={{ color: 'var(--accent-red)' }}>หลุดแล้ว</p>}
                         </div>
                       </div>
                     )
@@ -313,10 +310,10 @@ function CustomerDetail({
                       <div key={job.id}>
                         {/* สั่งงาน */}
                         <div className="relative mb-3 flex items-start gap-3">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: '#6366f1' }} />
+                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: 'var(--accent)' }} />
                           <div>
-                            <p className="text-xs font-semibold" style={{ color: '#a78bfa' }}>📋 สั่งงาน</p>
-                            <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                            <p className="text-xs font-semibold" style={{ color: 'var(--accent-purple)' }}>📋 สั่งงาน</p>
+                            <p className="text-micro" style={{ color: 'var(--text-3)' }}>
                               {job.room_no && <span className="font-mono mr-1" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</span>}
                               {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
                             </p>
@@ -326,12 +323,12 @@ function CustomerDetail({
                         {/* งวดชำระ */}
                         {totalCount > 0 && (
                           <div className="relative mb-3 flex items-start gap-3">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: paidCount === totalCount ? '#4ade80' : '#fbbf24' }} />
+                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-amber)' }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: paidCount === totalCount ? '#4ade80' : '#fbbf24' }}>
+                              <p className="text-xs font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-amber)' }}>
                                 💰 ชำระ {paidCount}/{totalCount} งวด
                               </p>
-                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>
                                 {fmt(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))} / {fmt(job.installments.reduce((s, i) => s + i.amount, 0))} บ.
                               </p>
                             </div>
@@ -340,13 +337,13 @@ function CustomerDetail({
 
                         {/* ส่งมอบ */}
                         <div className="relative mb-3 flex items-start gap-3">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isDelivered ? '#34d399' : 'var(--divider)', borderColor: isDelivered ? '#34d399' : 'var(--text-3)' }} />
+                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isDelivered ? 'var(--accent-green)' : 'var(--divider)', borderColor: isDelivered ? 'var(--accent-green)' : 'var(--text-3)' }} />
                           <div>
-                            <p className="text-xs font-semibold" style={{ color: isDelivered ? '#34d399' : 'var(--text-3)' }}>
+                            <p className="text-xs font-semibold" style={{ color: isDelivered ? 'var(--accent-green)' : 'var(--text-3)' }}>
                               {isDelivered ? '✅ ส่งมอบแล้ว' : '○ รอส่งมอบ'}
                             </p>
                             {isDelivered && job.handover?.delivery_date && (
-                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{job.handover.delivery_date.slice(0, 10)}</p>
+                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{job.handover.delivery_date.slice(0, 10)}</p>
                             )}
                           </div>
                         </div>
@@ -354,12 +351,12 @@ function CustomerDetail({
                         {/* ประกัน */}
                         {warranty && (
                           <div className="relative mb-3 flex items-start gap-3">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? '#fbbf24' : '#60a5fa' }} />
+                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? 'var(--accent-amber)' : 'var(--accent-blue)' }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : '#60a5fa' }}>
+                              <p className="text-xs font-semibold" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : 'var(--accent-blue)' }}>
                                 🛡️ ประกัน {warranty.warranty_months || ''} เดือน
                               </p>
-                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>
                                 {warranty.warranty_end?.slice(0, 10)} · {warrantDaysLeft !== null ? (warrantDaysLeft <= 0 ? 'หมดแล้ว' : `เหลือ ${warrantDaysLeft} วัน`) : ''}
                               </p>
                             </div>
@@ -407,7 +404,7 @@ function CustomerDetail({
                           { label: 'Voucher', value: job.voucher ? fmt(job.voucher) + ' บ.' : '—' },
                         ].map(f => (
                           <div key={f.label} className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--hover-bg)' }}>
-                            <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
+                            <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
                             <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
                           </div>
                         ))}
@@ -426,7 +423,7 @@ function CustomerDetail({
                             <span style={{ color: 'var(--text-3)' }}>
                               <FileText size={10} className="inline mr-1" />การชำระเงิน ({job.installments.filter(i => i.status === 'paid').length}/{job.installments.length} งวด)
                             </span>
-                            <span style={{ color: pct === 100 ? '#34d399' : 'var(--text-2)' }}>{pct}%</span>
+                            <span style={{ color: pct === 100 ? 'var(--accent-green)' : 'var(--text-2)' }}>{pct}%</span>
                           </div>
                           <div className="h-1.5 rounded-full mb-2" style={{ background: 'var(--divider)' }}>
                             <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--accent-green)' : 'var(--accent)' }} />
@@ -608,7 +605,6 @@ export default function CustomersPage() {
   const projectOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
   const userOptions = [{ value: '', label: '— เลือก Sales —' }, ...users.map(u => ({ value: u.id, label: u.name }))]
 
-  const projectFilterOptions = [{ value: '', label: 'ทุกโครงการ' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
 
   // Reset to page 1 whenever filters change
   useEffect(() => { setPage(1) }, [search, filterStatus, filterProject])
@@ -649,14 +645,28 @@ export default function CustomersPage() {
             className="field-input pl-9"
             style={{ paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
           />
+          {search && (
+            <button className="absolute right-2.5 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
+              <X size={12} style={{ color: 'var(--text-3)' }} />
+            </button>
+          )}
         </div>
-        <SearchableSelect
+        <select
           value={filterProject}
-          onChange={v => setFilterProject(v)}
-          options={projectFilterOptions}
-          placeholder="ทุกโครงการ"
-          alignRight
-        />
+          onChange={e => setFilterProject(e.target.value)}
+          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
+          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)', maxWidth: '12rem' }}
+        >
+          <option value="">โครงการ</option>
+          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        {(search || filterProject) && (
+          <button onClick={() => { setSearch(''); setFilterProject('') }}
+            className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
+            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            ล้าง
+          </button>
+        )}
       </div>
 
       {/* Status filter pills */}

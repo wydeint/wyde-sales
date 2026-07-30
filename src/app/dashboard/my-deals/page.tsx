@@ -102,6 +102,7 @@ interface FullJob {
   work_start_date: string | null
   warranty_end: string | null
   installments: Installment[]
+  package_type: string | null
   // job-level docs
   quotation1_url: string | null
   quotation2_url: string | null
@@ -1417,6 +1418,11 @@ function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo, onAdd
   )
 }
 
+const PRODUCT_TYPES = [
+  'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
+  'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',
+]
+
 function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onClose: () => void; onRefresh: () => void }) {
   const supabase = createClient()
   const [job, setJob] = useState(initialJob)
@@ -1536,6 +1542,23 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Revenue */}
           <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
+
+          {/* Product */}
+          <div className="rounded-[11px] px-4 py-3" style={{ background: 'var(--hover-bg)' }}>
+            <p className="text-micro mb-1.5" style={{ color: 'var(--text-3)' }}>Product</p>
+            <select
+              value={job.package_type || ''}
+              onChange={async e => {
+                const v = e.target.value || null
+                await supabase.from('jobs').update({ package_type: v }).eq('id', job.id)
+                setJob(prev => ({ ...prev, package_type: v }))
+              }}
+              className="w-full text-xs font-semibold focus:outline-none appearance-none"
+              style={{ background: 'transparent', color: job.package_type ? 'var(--text-1)' : 'var(--text-3)', border: 'none' }}>
+              <option value="">— เลือก Product —</option>
+              {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
 
           {/* Dates */}
           <div className="grid grid-cols-3 gap-2">
@@ -2075,6 +2098,7 @@ export default function MyDealsPage() {
       expected_finish_date: raw.expected_finish_date || null,
       work_start_date: raw.work_start_date || null,
       warranty_end: war?.warranty_end || null,
+      package_type: raw.package_type || null,
       quotation1_url: raw.quotation1_url || null,
       quotation2_url: raw.quotation2_url || null,
       id_card_url: raw.id_card_url || null,

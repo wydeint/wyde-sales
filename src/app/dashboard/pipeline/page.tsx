@@ -15,6 +15,10 @@ import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
+const PRODUCT_TYPES = [
+  'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
+  'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',
+]
 const todayStr = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -623,6 +627,25 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               </div>
             </div>
           ))})()}
+
+          {/* Product per job */}
+          {!loadingDetail && jobs.map(j => (
+            <div key={`prod-${j.id}`} className="rounded-[11px] px-4 py-3" style={{ background: 'var(--hover-bg)' }}>
+              <p className="text-micro mb-1.5" style={{ color: 'var(--text-3)' }}>Product{jobs.length > 1 ? ` (งาน ${j.id})` : ''}</p>
+              <select
+                value={j.package_type || ''}
+                onChange={async e => {
+                  const v = e.target.value || null
+                  await supabase.from('jobs').update({ package_type: v }).eq('id', j.id)
+                  setJobs(prev => prev.map(x => x.id === j.id ? { ...x, package_type: v || '' } : x))
+                }}
+                className="w-full text-xs font-semibold focus:outline-none appearance-none"
+                style={{ background: 'transparent', color: j.package_type ? 'var(--text-1)' : 'var(--text-3)', border: 'none' }}>
+                <option value="">— เลือก Product —</option>
+                {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          ))}
 
           {/* ย้ายสถานะ — hidden for closed prospects (already in My Deals) */}
           {effectiveStage !== 'closed' && <div className="space-y-2">

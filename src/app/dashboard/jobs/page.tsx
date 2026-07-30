@@ -42,6 +42,8 @@ type PaymentSummary = {
   due_date: string | null
 }
 
+type ProgressSummary = { paid: number }
+
 type Job = {
   id: string
   lead_id: number | null
@@ -136,9 +138,10 @@ function buildSequenceMap(jobs: Job[]): Record<string, number> {
   return map
 }
 
-function JobCard({ job, paymentMap, onClick, seqNo }: {
+function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
   job: Job
   paymentMap: Record<string, PaymentSummary | null>
+  progressMap: Record<string, ProgressSummary>
   onClick: () => void
   seqNo?: number
 }) {
@@ -149,6 +152,10 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
   const cfg = STATUS_CFG[job.working_status] || DEFAULT_STATUS_CFG
   const payment = job.customer_id ? paymentMap[job.customer_id] : null
   const today = new Date().toISOString().slice(0, 10)
+  const paid = progressMap[job.id]?.paid ?? 0
+  const rev = job.revenue_inc_vat || 0
+  const payPct = rev > 0 ? Math.min(100, Math.round(paid / rev * 100)) : null
+  const barColor = payPct === null ? '' : payPct >= 100 ? 'var(--accent-green)' : payPct >= 50 ? 'var(--accent-blue)' : 'var(--accent-orange)'
   const isOverdue = !!job.expected_finish_date && job.expected_finish_date < today
     && job.working_status !== 'ส่งมอบแล้ว' && job.working_status !== 'ยกเลิก'
 
@@ -206,6 +213,18 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
           </span>
         )}
       </div>
+      {/* payment progress bar */}
+      {payPct !== null && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: '10px', fontWeight: 700, color: barColor }}>{payPct}%</span>
+          </div>
+          <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
+            <div style={{ height: '100%', width: `${payPct}%`, borderRadius: '9999px', background: barColor }} />
+          </div>
+        </div>
+      )}
       {/* revenue + badges + chevron */}
       <div className="flex items-center justify-between gap-2">
         <div>
@@ -431,6 +450,7 @@ export default function JobsPage() {
   const [referrals, setReferrals] = useState<{ job_id: string; referrer_name: string; referral_amount: number }[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [paymentMap, setPaymentMap] = useState<Record<string, PaymentSummary | null>>({})
+  const [progressMap, setProgressMap] = useState<Record<string, ProgressSummary>>({})
   const [myRole, setMyRole] = useState('')
   const [myId, setMyId] = useState('')
   const [loading, setLoading] = useState(true)
@@ -487,6 +507,7 @@ export default function JobsPage() {
       { data: tierData },
       { data: paymentsData },
       { data: refData },
+      { data: paidData },
     ] = await Promise.all([
       supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name)').order('room_no').range(0, 999),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
@@ -494,6 +515,7 @@ export default function JobsPage() {
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
       supabase.from('commission_referrals').select('job_id,referrer_name,referral_amount').order('created_at'),
+      supabase.from('payments').select('job_id, paid_amount, amount, voucher_amount').eq('status', 'paid'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setJobs((jobsData as Job[]) || [])
@@ -515,6 +537,13 @@ export default function JobsPage() {
       }
     }
     setPaymentMap(map)
+
+    const pmap: Record<string, ProgressSummary> = {}
+    for (const p of (paidData || []) as any[]) {
+      if (!pmap[p.job_id]) pmap[p.job_id] = { paid: 0 }
+      pmap[p.job_id].paid += (p.paid_amount ?? p.amount ?? 0) + (p.voucher_amount ?? 0)
+    }
+    setProgressMap(pmap)
 
     const ids = (jobsData || []).map((j: Job) => parseInt(j.id.replace('JOB-', '')) || 0)
     const maxId = ids.length ? Math.max(...ids) : 0
@@ -901,7 +930,7 @@ export default function JobsPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                   {groupJobs.map(j => (
-                    <JobCard key={j.id} job={j} paymentMap={paymentMap} onClick={() => openEdit(j)} seqNo={seqMap[j.id]} />
+                    <JobCard key={j.id} job={j} paymentMap={paymentMap} progressMap={progressMap} onClick={() => openEdit(j)} seqNo={seqMap[j.id]} />
                   ))}
                 </div>
               </div>

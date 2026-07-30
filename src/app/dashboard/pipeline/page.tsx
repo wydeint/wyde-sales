@@ -354,13 +354,14 @@ async function createBookedJob(customer: Customer, supabase: ReturnType<typeof c
   return ''
 }
 
-function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects, users, onClose, onUpdate, onStartJob }: {
-  customer: Customer; focusJobId?: string | null; focusJobWorkingStatus?: string | null; projects: Project[]; users: User[]
+function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobCrmStage, projects, users, onClose, onUpdate, onStartJob }: {
+  customer: Customer; focusJobId?: string | null; focusJobWorkingStatus?: string | null; focusJobCrmStage?: string | null; projects: Project[]; users: User[]
   onClose: () => void; onUpdate: (c: Customer) => void
   onStartJob: (c: Customer) => void
 }) {
   const supabase = createClient()
-  const stage = (focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : stageMap[customer.status]) || STAGES[0]
+  const effectiveStage = focusJobCrmStage || customer.status
+  const stage = (focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : stageMap[effectiveStage]) || STAGES[0]
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ ...customer })
   const [saving, setSaving] = useState(false)
@@ -372,7 +373,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
   const [cancelConfirmed, setCancelConfirmed] = useState(false)
   const [docsExpanded, setDocsExpanded] = useState<Record<string, boolean>>({})
   const [bookedJob, setBookedJob] = useState<FullJob | null>(null)
-  const [loadingBookedJob, setLoadingBookedJob] = useState(customer.status === 'booked' || focusJobWorkingStatus === 'จอง')
+  const [loadingBookedJob, setLoadingBookedJob] = useState(effectiveStage === 'booked' || focusJobWorkingStatus === 'จอง')
 
   useEffect(() => {
     let cancelled = false
@@ -434,7 +435,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
   }
 
   useEffect(() => {
-    if (customer.status === 'booked' || focusJobWorkingStatus === 'จอง') { loadOrCreateBookedJob() }
+    if (effectiveStage === 'booked' || focusJobWorkingStatus === 'จอง') { loadOrCreateBookedJob() }
   }, [customer.id, customer.status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
@@ -452,7 +453,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
   }
 
   // ── Booked: render DealDrawer with stage-move topSlot ──────
-  if (customer.status === 'booked' || focusJobWorkingStatus === 'จอง') {
+  if (effectiveStage === 'booked' || focusJobWorkingStatus === 'จอง') {
     const closedStage = stageMap['closed']
     const totalSettled = (bookedJob?.installments || [])
       .filter(i => i.status === 'paid')
@@ -513,7 +514,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
       </>
     )
     if (bookedJob) return (
-      <DealDrawer job={bookedJob} onClose={onClose} onRefresh={loadOrCreateBookedJob} topSlot={customer.status === 'booked' ? stagePills : undefined} />
+      <DealDrawer job={bookedJob} onClose={onClose} onRefresh={loadOrCreateBookedJob} topSlot={effectiveStage === 'booked' ? stagePills : undefined} />
     )
     return null
   }
@@ -546,7 +547,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
             </p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            {customer.status !== 'closed' && (
+            {effectiveStage !== 'closed' && (
               <button onClick={() => setEditing(e => !e)}
                 className="p-2 rounded-[8px]" style={{ background: editing ? 'var(--accent)' : 'var(--hover-bg)', color: editing ? '#fff' : 'var(--text-2)' }}>
                 <Pencil size={14} />
@@ -622,10 +623,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
           ))})()}
 
           {/* ย้ายสถานะ — hidden for closed prospects (already in My Deals) */}
-          {customer.status !== 'closed' && <div className="space-y-2">
+          {effectiveStage !== 'closed' && <div className="space-y-2">
             <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ย้ายสถานะ</p>
             <div className="flex flex-wrap gap-1.5">
-              {STAGES.filter(s => s.value !== customer.status && s.value !== 'closed' && s.value !== 'lost').map(s => (
+              {STAGES.filter(s => s.value !== effectiveStage && s.value !== 'closed' && s.value !== 'lost').map(s => (
                 <button key={s.value} onClick={async () => {
                   if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
                   await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
@@ -637,7 +638,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
                   → {s.label}
                 </button>
               ))}
-              {customer.status !== 'lost' && (
+              {effectiveStage !== 'lost' && (
                 <button onClick={async () => {
                   if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'lost' }).eq('id', focusJobId)
                   await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
@@ -789,7 +790,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
           </div>
 
           {/* Cancel — hidden behind toggle (booked only) */}
-          {customer.status === 'booked' && (
+          {effectiveStage === 'booked' && (
             <div>
               <button
                 onClick={() => { setShowCancelSection(s => !s); setCancelConfirmed(false) }}
@@ -817,7 +818,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
           )}
 
           {/* Action — เริ่มงาน for booked */}
-          {customer.status === 'booked' && (
+          {effectiveStage === 'booked' && (
             <div className="pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
               <button
                 onClick={() => onStartJob(customer)}
@@ -1219,6 +1220,7 @@ export default function ProspectsKanbanPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [selectedJobWorkingStatus, setSelectedJobWorkingStatus] = useState<string | null>(null)
+  const [selectedJobCrmStage, setSelectedJobCrmStage] = useState<string | null>(null)
   const [addModal, setAddModal] = useState(false)
   const [addStep, setAddStep] = useState<'search' | 'new'>('search')
   const [addSearchQ, setAddSearchQ] = useState('')
@@ -1676,7 +1678,7 @@ export default function ProspectsKanbanPage() {
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                       {items.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, jobCrmStage, cardKey }) => (
-                        <CustomerCard key={cardKey} c={c} stage={stageMap[jobCrmStage || c.status] || stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
+                        <CustomerCard key={cardKey} c={c} stage={stageMap[jobCrmStage || c.status] || stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null); setSelectedJobCrmStage(jobCrmStage || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
                       ))}
                     </div>
                   </div>
@@ -1714,9 +1716,10 @@ export default function ProspectsKanbanPage() {
           customer={selectedCustomer}
           focusJobId={selectedJobId}
           focusJobWorkingStatus={selectedJobWorkingStatus}
+          focusJobCrmStage={selectedJobCrmStage}
           projects={projects}
           users={users}
-          onClose={() => { setSelectedCustomer(null); setSelectedJobId(null); setSelectedJobWorkingStatus(null) }}
+          onClose={() => { setSelectedCustomer(null); setSelectedJobId(null); setSelectedJobWorkingStatus(null); setSelectedJobCrmStage(null) }}
           onUpdate={updateCustomer}
           onStartJob={c => setStartJobCustomer(c)}
         />

@@ -31,7 +31,7 @@ interface Job {
   customer_name: string
   room_no: string | null
   project_id: string | null
-  projects?: { name: string }
+  projects?: { name: string }[]
 }
 
 interface Project { id: string; name: string }

@@ -541,7 +541,7 @@ export default function JobsPage() {
     const pmap: Record<string, ProgressSummary> = {}
     for (const p of (paidData || []) as any[]) {
       if (!pmap[p.job_id]) pmap[p.job_id] = { paid: 0 }
-      pmap[p.job_id].paid += (p.paid_amount ?? p.amount ?? 0) + (p.voucher_amount ?? 0)
+      pmap[p.job_id].paid += Number(p.paid_amount ?? p.amount ?? 0) + Number(p.voucher_amount ?? 0)
     }
     setProgressMap(pmap)
 

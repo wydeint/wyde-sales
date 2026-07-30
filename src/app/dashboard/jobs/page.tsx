@@ -238,9 +238,9 @@ function JobCard({ job, paymentMap, onClick, seqNo }: {
 function SectionDivider({ label, color }: { label: string; color: string }) {
   return (
     <div className="flex items-center gap-2 pt-3 pb-1">
-      <div style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
-      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color, whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{ flex: 1, height: '0.5px', background: 'var(--divider)' }} />
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+      <span className="text-sm font-semibold" style={{ color, whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: '1px', background: 'var(--card-border)' }} />
     </div>
   )
 }
@@ -1000,7 +1000,7 @@ export default function JobsPage() {
 
                     {/* Auto-filled customer info */}
                     {editing.customer_name && (
-                      <div className="rounded-[11px] px-4 py-3 flex items-center gap-3"
+                      <div className="col-span-2 rounded-[11px] px-4 py-3 flex items-center gap-3"
                         style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                         <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                           style={{ background: 'var(--accent)' }}>
@@ -1008,6 +1008,9 @@ export default function JobsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{editing.customer_name}</p>
+                          {editing.room_no && (
+                            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{editing.room_no}</p>
+                          )}
                         </div>
                       </div>
                     )}

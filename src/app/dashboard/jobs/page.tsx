@@ -995,9 +995,13 @@ export default function JobsPage() {
                           {editing.customer_name || '— เลือกห้องก่อน'}
                         </p>
                       </div>
-                      {/* โครงการ */}
-                      <div className="px-4 py-2 flex items-center justify-between gap-2"
+                      {/* เลขห้อง + โครงการ */}
+                      <div className="px-4 py-2 flex items-center gap-2"
                         style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
+                        <span className="text-xs font-semibold flex-shrink-0 rounded-[5px] px-2 py-0.5"
+                          style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+                          {editing.room_no || '—'}
+                        </span>
                         {editing.id ? (
                           <p className="text-xs truncate" style={{ color: 'var(--text-2)' }}>
                             {projects.find(p => p.id === editing.project_id)?.name || '—'}
@@ -1058,9 +1062,13 @@ export default function JobsPage() {
                           className="flex-1 bg-transparent text-sm font-semibold outline-none truncate"
                           style={{ color: 'var(--text-1)' }} placeholder="ชื่อบริษัท / ลูกค้า B2B..." />
                       </div>
-                      {/* โครงการ */}
-                      <div className="px-4 py-2"
+                      {/* เลขห้อง + โครงการ */}
+                      <div className="px-4 py-2 flex items-center gap-2"
                         style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
+                        <span className="text-xs font-semibold flex-shrink-0 rounded-[5px] px-2 py-0.5"
+                          style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+                          {editing.room_no || '—'}
+                        </span>
                         {editing.id ? (
                           <p className="text-xs truncate" style={{ color: 'var(--text-2)' }}>
                             {projects.find(p => p.id === editing.project_id)?.name || '—'}
@@ -1068,7 +1076,7 @@ export default function JobsPage() {
                         ) : (
                           <select value={editing.project_id || ''}
                             onChange={e => setEditing(e2 => ({ ...e2, project_id: e.target.value }))}
-                            className="text-xs w-full bg-transparent outline-none"
+                            className="text-xs flex-1 bg-transparent outline-none"
                             style={{ color: 'var(--text-2)', border: 'none' }}>
                             <option value="">— เลือกโครงการ —</option>
                             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}

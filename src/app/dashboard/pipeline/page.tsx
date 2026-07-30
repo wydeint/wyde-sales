@@ -484,7 +484,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'closed' }).eq('id', focusJobId)
               await supabase.from('customers').update({ status: 'closed' }).eq('id', customer.id)
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'closed' } : j) : (customer as any).jobs
-              onUpdate({ ...customer, status: 'closed', jobs: updatedJobs as any })
+              onUpdate({ ...customer, status: 'closed', jobs: updatedJobs } as any)
             }}
             className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-opacity"
             style={{
@@ -642,7 +642,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, projects,
                   if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'lost' }).eq('id', focusJobId)
                   await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
                   const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'lost' } : j) : (customer as any).jobs
-                  onUpdate({ ...customer, status: 'lost', jobs: updatedJobs as any })
+                  onUpdate({ ...customer, status: 'lost', jobs: updatedJobs } as any)
                 }}
                   className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
                   style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>

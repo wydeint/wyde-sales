@@ -951,35 +951,33 @@ export default function JobsPage() {
 
                 {editing.customer_type === 'B2C' ? (
                   <>
-                    {/* B2C: เลขห้อง ก่อน */}
-                    <div className="col-span-2">
-                      <label className="field-label">เลขห้อง</label>
-                      {editing.id ? (
-                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
-                          {editing.room_no || '—'}
-                        </div>
-                      ) : leads.length > 0 && (editing.lead_id || !editing.room_no) ? (
-                        <select value={editing.lead_id ? String(editing.lead_id) : ''}
-                          onChange={e => handleLeadSelect(e.target.value)}
-                          className="field-input w-full mt-1"
-                          disabled={!editing.project_id}>
-                          <option value="">— เลือกห้อง —</option>
-                          {leads.map(l => (
-                            <option key={l.id} value={String(l.id)}>{l.room_no}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input value={editing.room_no || ''}
-                          onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
-                          className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
-                      )}
-                      {roomNormalized && !roomDupWarning && (
-                        <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
-                      )}
-                      {roomDupWarning && (
-                        <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
-                      )}
-                    </div>
+                    {/* B2C: เลขห้อง — แสดงเฉพาะตอน new job (edit mode อยู่ใน card แล้ว) */}
+                    {!editing.id && (
+                      <div className="col-span-2">
+                        <label className="field-label">เลขห้อง</label>
+                        {leads.length > 0 && (editing.lead_id || !editing.room_no) ? (
+                          <select value={editing.lead_id ? String(editing.lead_id) : ''}
+                            onChange={e => handleLeadSelect(e.target.value)}
+                            className="field-input w-full mt-1"
+                            disabled={!editing.project_id}>
+                            <option value="">— เลือกห้อง —</option>
+                            {leads.map(l => (
+                              <option key={l.id} value={String(l.id)}>{l.room_no}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input value={editing.room_no || ''}
+                            onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
+                            className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
+                        )}
+                        {roomNormalized && !roomDupWarning && (
+                          <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
+                        )}
+                        {roomDupWarning && (
+                          <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
+                        )}
+                      </div>
+                    )}
 
                     {/* B2C: combined info card (ชื่อ + โครงการ + เบอร์) */}
                     <div className="col-span-2 rounded-[11px] overflow-hidden"
@@ -1028,25 +1026,21 @@ export default function JobsPage() {
                   </>
                 ) : (
                   <>
-                    {/* B2B: เลขห้อง ก่อน */}
-                    <div className="col-span-2">
-                      <label className="field-label">เลขห้อง / สถานที่</label>
-                      {editing.id ? (
-                        <div className="field-input mt-1" style={{ background: 'var(--hover-bg)', color: 'var(--text-1)' }}>
-                          {editing.room_no || '—'}
-                        </div>
-                      ) : (
+                    {/* B2B: เลขห้อง — แสดงเฉพาะตอน new job (edit mode อยู่ใน card แล้ว) */}
+                    {!editing.id && (
+                      <div className="col-span-2">
+                        <label className="field-label">เลขห้อง / สถานที่</label>
                         <input value={editing.room_no || ''}
                           onChange={e => handleRoomNoChange(e.target.value, editing.project_id || '', editing.id)}
                           className="field-input w-full mt-1" placeholder="เช่น 123 หรือ A123" />
-                      )}
-                      {roomNormalized && !roomDupWarning && (
-                        <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
-                      )}
-                      {roomDupWarning && (
-                        <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
-                      )}
-                    </div>
+                        {roomNormalized && !roomDupWarning && (
+                          <p className="text-xs mt-1" style={{ color: 'var(--accent)' }}>→ จะบันทึกเป็น <strong>{roomNormalized}</strong></p>
+                        )}
+                        {roomDupWarning && (
+                          <p className="text-xs mt-1 font-semibold" style={{ color: 'var(--accent-red)' }}>⚠ {roomDupWarning}</p>
+                        )}
+                      </div>
+                    )}
 
                     {/* B2B: combined card (ชื่อบริษัท + โครงการ + เบอร์) */}
                     <div className="col-span-2 rounded-[11px] overflow-hidden"

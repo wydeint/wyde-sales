@@ -360,7 +360,9 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   onStartJob: (c: Customer) => void
 }) {
   const supabase = createClient()
-  const effectiveStage = focusJobCrmStage || customer.status
+  const jobsArr = ((customer as any).jobs as JobMeta[]) || []
+  const focusJobMeta = focusJobId ? jobsArr.find((j: JobMeta) => j.id === focusJobId) : null
+  const effectiveStage = focusJobMeta?.crm_stage || focusJobCrmStage || customer.status
   const stage = (focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : stageMap[effectiveStage]) || STAGES[0]
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ ...customer })

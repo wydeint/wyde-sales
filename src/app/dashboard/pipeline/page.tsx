@@ -129,22 +129,12 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
             </span>
           )}
         </div>
-        <div className="flex-shrink-0 relative">
-          {(() => { const s = ws === 'จอง' ? stageMap['booked'] : (stageMap[jobCrmStage || c.status] || stage); return (
-            <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap group-hover:opacity-0 transition-opacity block"
-              style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
-              {s.label}
-            </span>
-          ) })()}
-          <button
-            onClick={e => { e.stopPropagation(); onDelete() }}
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-1 rounded-[6px]"
-            style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
-            title="ลบ"
-          >
-            <Trash2 size={11} />
-          </button>
-        </div>
+        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : (stageMap[jobCrmStage || c.status] || stage); return (
+          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+            style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
+            {s.label}
+          </span>
+        ) })()}
       </div>
       {/* Row 2: customer name */}
       <p className="text-xs truncate w-full" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
@@ -177,6 +167,15 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
         </div>
         <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
+      {/* Delete button */}
+      <button
+        onClick={e => { e.stopPropagation(); onDelete() }}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+        style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
+        title="ลบ"
+      >
+        <Trash2 size={11} />
+      </button>
     </div>
   )
 }

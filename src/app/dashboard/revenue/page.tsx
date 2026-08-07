@@ -6,6 +6,7 @@ import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, Lis
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import { WORKING_STATUSES } from '@/lib/status'
+import StatusChip from '@/components/ui/StatusChip'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -551,7 +552,6 @@ export default function RevenuePage() {
                               <tbody>
                                 {salesJobs.map(j => {
                                   const d = mainTab === 'sales' ? (j.order_date || j.work_start_date) : j.actual_deliver_date
-                                  const wsCfg = WORKING_STATUS_COLORS[j.working_status] || { bg: 'var(--hover-bg)', color: 'var(--text-3)' }
                                   return (
                                     <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                                       <td className="px-3 py-2 font-semibold" style={{ color: 'var(--accent)' }}>{j.room_no || '—'}</td>
@@ -561,9 +561,7 @@ export default function RevenuePage() {
                                       <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{j.work_type || '—'}</td>
                                       {mainTab === 'sales' && (
                                         <td className="px-3 py-2">
-                                          <span className="px-1.5 py-0.5 rounded-full text-micro font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
-                                            {j.working_status}
-                                          </span>
+                                          <StatusChip kind="working" status={j.working_status} variant="outline" />
                                         </td>
                                       )}
                                       <td className="px-3 py-2 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
@@ -646,7 +644,6 @@ export default function RevenuePage() {
                         {p.jobs.sort((a, b) => (a.room_no || '').localeCompare(b.room_no || '')).map(j => {
                           const d = mainTab === 'sales' ? (j.order_date || j.work_start_date) : j.actual_deliver_date
                           const gp = j.revenue_ex_vat > 0 ? ((j.revenue_ex_vat - j.cost) / j.revenue_ex_vat * 100) : null
-                          const wsCfg = WORKING_STATUS_COLORS[j.working_status] || { bg: 'var(--hover-bg)', color: 'var(--text-3)' }
                           return (
                             <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                               <td className="px-4 py-2 font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
@@ -658,9 +655,7 @@ export default function RevenuePage() {
                               <td className="px-4 py-2" style={{ color: 'var(--text-3)' }}>{(j.sales as any)?.name || '—'}</td>
                               {mainTab === 'sales' && (
                                 <td className="px-4 py-2">
-                                  <span className="px-1.5 py-0.5 rounded-full text-micro font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
-                                    {j.working_status}
-                                  </span>
+                                  <StatusChip kind="working" status={j.working_status} variant="outline" />
                                 </td>
                               )}
                               <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
@@ -713,7 +708,6 @@ export default function RevenuePage() {
                 const d = mainTab === 'sales' ? (j.order_date || j.work_start_date) : j.actual_deliver_date
                 const profit = (j.revenue_ex_vat || 0) - (j.cost || 0)
                 const gp = j.revenue_ex_vat > 0 ? (profit / j.revenue_ex_vat * 100).toFixed(0) : '—'
-                const wsCfg = WORKING_STATUS_COLORS[j.working_status] || { bg: 'var(--hover-bg)', color: 'var(--text-3)' }
                 return (
                   <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
                     <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
@@ -737,9 +731,7 @@ export default function RevenuePage() {
                       <td className="px-3 py-2.5 text-right" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
                     </>}
                     <td className="px-3 py-2.5">
-                      <span className="px-1.5 py-0.5 rounded-full text-xs font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
-                        {j.working_status || '—'}
-                      </span>
+                      <StatusChip kind="working" status={j.working_status} variant="outline" />
                     </td>
                     <td className="px-3 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
                   </tr>

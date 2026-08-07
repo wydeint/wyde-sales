@@ -8,6 +8,7 @@ import Money from '@/components/ui/Money'
 import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
+import StatusChip from '@/components/ui/StatusChip'
 
 // ─────────────────────────────────────────
 // Constants
@@ -83,15 +84,10 @@ type Job = {
   condo_leads?: { customer_name: string; room_no: string; phone: string | null }
 }
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string; border: string }> = {
-  'ดำเนินการ':       { label: 'ดำเนินการ',     color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
-  'กำลังดำเนินการ': { label: 'กำลังดำเนินการ', color: 'var(--accent-orange)',  bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)',  dot: 'var(--accent-orange)',  border: 'color-mix(in srgb, var(--accent-orange) 35%, transparent)' },
-  'รอเอกสาร':       { label: 'รอเอกสาร',        color: 'var(--accent-blue)',    bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)',  dot: 'var(--accent-blue)',    border: 'color-mix(in srgb, var(--accent-blue)   35%, transparent)' },
-  'รอส่งมอบ':       { label: 'รอส่งมอบ',         color: 'var(--accent-purple)',  bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)',  dot: 'var(--accent-purple)',  border: 'color-mix(in srgb, var(--accent-purple) 35%, transparent)' },
-  'ส่งมอบแล้ว':     { label: 'ส่งมอบแล้ว',       color: 'var(--accent-green)',   bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)',  dot: 'var(--accent-green)',   border: 'color-mix(in srgb, var(--accent-green)  35%, transparent)' },
-  'ยกเลิก':         { label: 'ยกเลิก',           color: 'var(--accent-red)',     bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)',  dot: 'var(--accent-red)',     border: 'color-mix(in srgb, var(--accent-red)    35%, transparent)' },
-}
-const DEFAULT_STATUS_CFG = STATUS_CFG['ดำเนินการ']
+// Status chips come from the shared vocabulary. The map that used to live here
+// had no 'จอง' key, so every booked job — 183 of them — fell through to a
+// default whose label read 'ดำเนินการ' and displayed as in-progress. It also
+// carried 'กำลังดำเนินการ' and 'รอเอกสาร', neither of which occurs in the data.
 
 // ─────────────────────────────────────────
 // Room number helpers
@@ -150,7 +146,6 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
   const projectName = (job.projects as any)?.name || '—'
   const salesName = (job.sales as any)?.name || ''
   const phone = (job.condo_leads as any)?.phone || null
-  const cfg = STATUS_CFG[job.working_status] || DEFAULT_STATUS_CFG
   const payment = paymentMap[job.id] ?? null
   const today = new Date().toISOString().slice(0, 10)
   const paid = progressMap[job.id]?.paid ?? 0
@@ -189,10 +184,7 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
             {displayName || '—'} · {projectName}
           </p>
         </div>
-        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 mt-0.5"
-          style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
-          {cfg.label}
-        </span>
+        <StatusChip kind="working" status={job.working_status} variant="outline" className="flex-shrink-0 mt-0.5" />
       </div>
       {/* work type + phone */}
       <div className="flex items-center gap-1.5 flex-wrap">

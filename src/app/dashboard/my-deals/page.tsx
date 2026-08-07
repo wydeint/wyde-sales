@@ -130,6 +130,16 @@ function getChipStage(j: RoomJob): ChipStage {
   return 'collect'
 }
 
+/**
+ * My Deals' own operational stages — derived from instalments and delivery
+ * date, NOT a column in the database. Deliberately kept out of lib/status.ts,
+ * which holds the three vocabularies that are stored and shared across pages.
+ *
+ * These keep one colour per stage rather than collapsing onto the semantic
+ * scale: this chip is how the card grid is scanned, so distinguishable stages
+ * carry more information here than strict red/orange/green semantics would.
+ * Every value is still a token, so both themes stay correct.
+ */
 const STAGE_META: Record<ChipStage, { label: string; bg: string; color: string; border: string; dot: string }> = {
   wait:    { label: 'รอเปิดงาน',        bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', color: 'var(--accent-purple)', border: 'color-mix(in srgb, var(--accent-purple) 30%, transparent)', dot: 'var(--accent-purple)' },
   collect: { label: 'กำลังเก็บเงิน',    bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },

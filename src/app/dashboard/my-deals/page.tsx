@@ -1539,7 +1539,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           <button onClick={onClose} className="p-1 rounded-lg" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
           {/* Revenue */}
           <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
 

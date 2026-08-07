@@ -200,8 +200,8 @@ function IndividualTab({
               </button>
 
               {isOpen && (
-                <div style={{ borderTop: '1px solid var(--divider)' }}>
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto" style={{ borderTop: '1px solid var(--divider)', WebkitOverflowScrolling: 'touch' as any }}>
+                  <table className="w-full text-sm" style={{ minWidth: 560 }}>
                     <thead>
                       <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                         {['ลูกค้า / ห้อง', 'โครงการ', ...(isManager ? ['Sales'] : []), 'Revenue', 'Rate', 'Commission', 'สถานะ'].map(h => (

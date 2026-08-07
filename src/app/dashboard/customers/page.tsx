@@ -739,7 +739,7 @@ export default function CustomersPage() {
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
                   {(() => {
                     const cJobs: any[] = (c as any).jobs || []
-                    const totalRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0)
+                    const totalRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0
                     const totalPaid = cJobs.reduce((s: number, j: any) =>
                       s + ((j.payments || []) as any[]).filter((p: any) => p.status === 'paid').reduce((ps: number, p: any) => ps + (p.paid_amount ?? p.amount ?? 0), 0), 0)
                     return (

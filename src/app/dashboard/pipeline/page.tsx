@@ -1273,6 +1273,7 @@ export default function ProspectsKanbanPage() {
   const [addSearchQ, setAddSearchQ] = useState('')
   const [repeatConfirm, setRepeatConfirm] = useState<Customer | null>(null)
   const [repeatAdding, setRepeatAdding] = useState(false)
+  const [repeatJobForm, setRepeatJobForm] = useState({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' })
   const [dupRoomCustomer, setDupRoomCustomer] = useState<{ id: string; customer_name: string; interested_room: string; jobCount: number } | null>(null)
   const [pendingAddForm, setPendingAddForm] = useState<typeof emptyForm | null>(null)
   const [startJobCustomer, setStartJobCustomer] = useState<Customer | null>(null)
@@ -1413,18 +1414,35 @@ export default function ProspectsKanbanPage() {
 
   async function confirmRepeatPurchase() {
     if (!repeatConfirm) return
+    if (!repeatJobForm.project_id || !repeatJobForm.room.trim() || !repeatJobForm.work_type) return
     setRepeatAdding(true)
     const c = repeatConfirm
-    const jobId = await createProspectJob(c.id, c.customer_name, c.project_id, c.interested_room || null, (c as any).customer_type || 'B2C', (c as any).work_type || null, c.assigned_to, 'new')
+    const salesId = repeatJobForm.assigned_to || c.assigned_to
+    const jobId = await createProspectJob(c.id, c.customer_name, repeatJobForm.project_id, repeatJobForm.room.trim(), (c as any).customer_type || 'B2C', repeatJobForm.work_type, salesId, 'new')
+    // update customer's assigned_to if sales changed
+    if (repeatJobForm.assigned_to && repeatJobForm.assigned_to !== c.assigned_to) {
+      await supabase.from('customers').update({ assigned_to: repeatJobForm.assigned_to }).eq('id', c.id)
+    }
+    // update customer's budget if entered
+    const newBudget = Number(repeatJobForm.budget) || 0
+    if (newBudget > 0) {
+      await supabase.from('customers').update({ budget: newBudget }).eq('id', c.id)
+    }
     setRepeatAdding(false)
     if (jobId) {
       setCustomers(prev => prev.map(x => {
         if (x.id !== c.id) return x
         const prevJobs = ((x as any).jobs as JobMeta[] || [])
-        return { ...x, jobs: [...prevJobs, { id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: 'new' }] } as any
+        return {
+          ...x,
+          budget: newBudget > 0 ? newBudget : x.budget,
+          assigned_to: repeatJobForm.assigned_to || x.assigned_to,
+          jobs: [...prevJobs, { id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: 'new' }]
+        } as any
       }))
       setActiveStage('new')
       setRepeatConfirm(null)
+      setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' })
       setAddModal(false)
     }
   }
@@ -1524,7 +1542,7 @@ export default function ProspectsKanbanPage() {
             <h1 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>Prospects</h1>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{customers.length} ราย</p>
           </div>
-          <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null) }}
+          <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
             className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> เพิ่ม Prospect
@@ -1789,7 +1807,7 @@ export default function ProspectsKanbanPage() {
       )}
 
       {/* Add modal — step 1: search, step 2: new customer form */}
-      <Modal open={addModal} title={addStep === 'search' ? 'เพิ่ม Prospect / ซื้อซ้ำ' : 'ลูกค้าใหม่'} onClose={() => { setAddModal(false); setRepeatConfirm(null) }}>
+      <Modal open={addModal} title={addStep === 'search' ? 'เพิ่ม Prospect / ซื้อซ้ำ' : 'ลูกค้าใหม่'} onClose={() => { setAddModal(false); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}>
         {addStep === 'search' ? (
           <div className="space-y-3">
             <input value={addSearchQ} onChange={e => { setAddSearchQ(e.target.value); setRepeatConfirm(null) }}
@@ -1820,26 +1838,91 @@ export default function ProspectsKanbanPage() {
                 })}
               </div>
             )}
-            {repeatConfirm && (
-              <div className="p-4 rounded-[11px] space-y-3" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{repeatConfirm.customer_name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                    {(repeatConfirm as any).projects?.name || repeatConfirm.project_id} · ห้อง {repeatConfirm.interested_room || '—'}
-                    {' · '}มีงาน {(((repeatConfirm as any).jobs as JobMeta[] | null) || []).length} งาน
-                  </p>
+            {repeatConfirm && (() => {
+              const jobCount = (((repeatConfirm as any).jobs as JobMeta[] | null) || []).length
+              const canSubmit = repeatJobForm.project_id && repeatJobForm.room.trim() && repeatJobForm.work_type
+              const projectNotFound = repeatJobForm.project_id === '__not_found__'
+              return (
+                <div className="p-4 rounded-[11px] space-y-3" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
+                  {/* Header */}
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
+                      {repeatConfirm.customer_name}
+                      <span className="ml-2 text-xs font-normal px-1.5 py-0.5 rounded-[5px]"
+                        style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+                        งานที่ {jobCount + 1}
+                      </span>
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>มีงานอยู่แล้ว {jobCount} งาน</p>
+                  </div>
+
+                  {/* Project */}
+                  <div>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>โครงการ <span style={{ color: 'var(--accent-red)' }}>*</span></p>
+                    <SearchableSelect
+                      value={repeatJobForm.project_id === '__not_found__' ? '' : repeatJobForm.project_id}
+                      onChange={v => setRepeatJobForm(f => ({ ...f, project_id: String(v) }))}
+                      options={[{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
+                    />
+                    {!repeatJobForm.project_id && (
+                      <button onClick={() => setRepeatJobForm(f => ({ ...f, project_id: '__not_found__' }))}
+                        className="mt-1 text-[11px]" style={{ color: 'var(--accent-orange)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        ไม่มีโครงการนี้ในระบบ? →
+                      </button>
+                    )}
+                    {projectNotFound && (
+                      <p className="mt-1 text-[11px] px-2 py-1 rounded-[6px]"
+                        style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)', color: 'var(--accent-orange)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
+                        ⚠️ กรุณาสร้างโครงการใหม่ใน Settings ก่อน แล้วกลับมาเพิ่มงานซ้ำอีกครั้ง
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Room */}
+                  <Input label="ห้อง / สถานที่ *" value={repeatJobForm.room}
+                    onChange={e => setRepeatJobForm(f => ({ ...f, room: e.target.value }))} />
+
+                  {/* Work type */}
+                  <div>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>ประเภทงาน <span style={{ color: 'var(--accent-red)' }}>*</span></p>
+                    <select value={repeatJobForm.work_type}
+                      onChange={e => setRepeatJobForm(f => ({ ...f, work_type: e.target.value }))}
+                      className="field-input w-full">
+                      <option value="">— เลือกประเภทงาน —</option>
+                      {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Budget (optional) */}
+                  <Input label="งบประมาณ (optional)" type="number" value={repeatJobForm.budget}
+                    onChange={e => setRepeatJobForm(f => ({ ...f, budget: e.target.value }))} />
+
+                  {/* Sales */}
+                  <div>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Sales ที่ดูแล</p>
+                    <SearchableSelect
+                      value={repeatJobForm.assigned_to || repeatConfirm.assigned_to || ''}
+                      onChange={v => setRepeatJobForm(f => ({ ...f, assigned_to: String(v) }))}
+                      options={[{ value: '', label: '— ไม่ระบุ —' }, ...users.map(u => ({ value: u.id, label: u.name }))]}
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => { setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
+                      className="flex-1 py-2 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
+                      ยกเลิก
+                    </button>
+                    <button onClick={confirmRepeatPurchase}
+                      disabled={repeatAdding || !canSubmit || projectNotFound}
+                      className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white"
+                      style={{ background: (repeatAdding || !canSubmit || projectNotFound) ? 'var(--text-3)' : 'var(--accent)' }}>
+                      {repeatAdding ? 'กำลังสร้าง...' : '+ สร้างงานซื้อซ้ำ'}
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs" style={{ color: 'var(--text-2)' }}>ต้องการสร้างงานซื้อซ้ำให้ลูกค้านี้ใช่ไหม?</p>
-                <div className="flex gap-2">
-                  <button onClick={() => setRepeatConfirm(null)} className="flex-1 py-2 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
-                  <button onClick={confirmRepeatPurchase} disabled={repeatAdding}
-                    className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white"
-                    style={{ background: repeatAdding ? '#666' : 'var(--accent)' }}>
-                    {repeatAdding ? 'กำลังสร้าง...' : '+ งานซื้อซ้ำ'}
-                  </button>
-                </div>
-              </div>
-            )}
+              )
+            })()}
             <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '12px' }}>
               <button onClick={() => setAddStep('new')}
                 className="w-full py-2.5 rounded-[8px] text-sm font-semibold"

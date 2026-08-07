@@ -5,15 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Users, TrendingUp, Target, Award, Package, X, ChevronRight, Wallet } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
-
-const STATUS_LABEL: Record<string, string> = {
-  new: 'ใหม่', interested: 'สนใจ', quoted: 'เสนอราคา',
-  booked: 'จอง', close_pending: 'รอปิด', closed: 'ปิดแล้ว', lost: 'หลุด'
-}
-const STATUS_COLOR: Record<string, string> = {
-  new: 'var(--accent-blue)', interested: 'var(--accent-green)', quoted: 'var(--accent-amber)',
-  booked: 'var(--accent-orange)', close_pending: 'var(--accent-purple)', closed: 'var(--accent-green)', lost: 'var(--accent-red)'
-}
+import { crmStage, FUNNEL_ORDER } from '@/lib/status'
 
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 const fn = (v: number) => (v || 0).toLocaleString()
@@ -130,7 +122,7 @@ export default function DashboardPage() {
   const newLeadsThisMonth = condoLeads.filter(l => l.created_at >= monthStart).length
   const newLeadsInPipeline = condoLeads.filter(l => l.created_at >= monthStart && l.customer_id).length
 
-  const pipelineOrder = ['new', 'interested', 'quoted', 'booked', 'close_pending', 'closed']
+  const pipelineOrder = FUNNEL_ORDER
   const pipeline = useMemo(() =>
     pipelineOrder.map(s => ({
       status: s,
@@ -362,7 +354,7 @@ export default function DashboardPage() {
             {pipeline.map(s => (
               <div key={s.status}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs" style={{ color: 'var(--text-2)' }}>{STATUS_LABEL[s.status]}</span>
+                  <span className="text-xs" style={{ color: 'var(--text-2)' }}>{crmStage(s.status).label}</span>
                   <div className="flex items-center gap-3">
                     {s.value > 0 && (
                       <span className="text-xs" style={{ color: 'var(--text-3)' }}>{f(s.value)}</span>
@@ -375,7 +367,7 @@ export default function DashboardPage() {
                     className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: s.count > 0 ? Math.max(s.count / pipelineMax * 100, 6) + '%' : '0%',
-                      background: STATUS_COLOR[s.status] || 'var(--accent)',
+                      background: crmStage(s.status).color,
                       opacity: 0.85,
                     }}
                   />

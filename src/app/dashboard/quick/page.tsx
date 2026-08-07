@@ -4,6 +4,7 @@ import FileAttach from '@/components/ui/FileAttach'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { crmStage } from '@/lib/status'
+import { Spinner, EmptyState } from '@/components/ui/StateUI'
 import { useRouter } from 'next/navigation'
 import {
   Search, X, CheckCircle2, ChevronRight, AlertTriangle,
@@ -179,7 +180,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
               {r.phone && <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}><Phone size={11} strokeWidth={1.75} />{r.phone}</p>}
             </div>
           ))}
-          {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+          {!loading && search && results.length === 0 && <EmptyState message="ไม่พบข้อมูล" />}
           {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อหรือเบอร์โทรเพื่อค้นหา</p>}
         </div>
       </div>
@@ -268,7 +269,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
               </div>
             )
           })}
-          {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+          {!loading && search && results.length === 0 && <EmptyState message="ไม่พบข้อมูล" />}
           {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
         </div>
       </div>
@@ -336,7 +337,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
               </div>
             )
           })}
-          {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+          {!loading && search && results.length === 0 && <EmptyState message="ไม่พบข้อมูล" />}
           {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อลูกค้าเพื่อค้นหา</p>}
         </div>
       </div>
@@ -475,7 +476,7 @@ function EventAddSheet({ open, onClose, events }: {
               </button>
             ))}
             {!loading && search && leads.length === 0 && (
-              <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูลใน Origin Pool</p>
+              <EmptyState message="ไม่พบข้อมูลใน Origin Pool" />
             )}
           </div>
         </div>
@@ -1275,7 +1276,7 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <Sheet open={open} onClose={onClose} title="งานเกินกำหนด" icon={AlertTriangle}>
       <div className="p-4">
-        {loading ? <p className="text-center py-8 text-sm" style={t2}>กำลังโหลด...</p>
+        {loading ? <div className="py-8 flex justify-center"><Spinner /></div>
           : items.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle2 size={32} className="mx-auto mb-3" style={{ color: 'color-mix(in srgb, var(--accent-green) 50%, transparent)' }} />
@@ -1337,7 +1338,7 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
   return (
     <Sheet open={open} onClose={onClose} title="Commission ของฉัน" icon={DollarSign}>
       <div className="p-4">
-        {loading ? <p className="text-center py-8 text-sm" style={t2}>กำลังโหลด...</p> : (
+        {loading ? <div className="py-8 flex justify-center"><Spinner /></div> : (
           <>
             <div className="grid grid-cols-3 gap-2 mb-5">
               <div className="rounded-2xl p-3 text-center" style={sheetCard}>
@@ -1368,7 +1369,7 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                   </div>
                 </div>
               ))}
-              {items.length === 0 && <p className="text-center py-6 text-sm" style={t3}>ยังไม่มีข้อมูล commission</p>}
+              {items.length === 0 && <EmptyState message="ยังไม่มีข้อมูล commission" />}
             </div>
           </>
         )}
@@ -1459,7 +1460,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 </div>
               </button>
             ))}
-            {!loading && search && results.length === 0 && <p className="text-center py-6 text-sm" style={t2}>ไม่พบข้อมูล</p>}
+            {!loading && search && results.length === 0 && <EmptyState message="ไม่พบข้อมูล" />}
             {!search && <p className="text-center py-8 text-sm" style={t3}>พิมพ์ชื่อหรือเลขห้องเพื่อค้นหา</p>}
           </div>
         </div>

@@ -13,7 +13,7 @@ import { PageSpinner } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
-import { crmStage } from '@/lib/status'
+import { CRM_STAGES, crmStage, PROSPECT_STAGES } from '@/lib/status'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
@@ -51,8 +51,7 @@ interface DetailWarranty {
 // Derived from the shared vocabulary so a stage cannot end up a different
 // colour here than on Customers or Sales Performance. Column order is this
 // board's own concern and stays as listed.
-const STAGE_ORDER = ['new', 'interested', 'quoted', 'close_pending', 'booked', 'closed', 'lost']
-const STAGES = STAGE_ORDER.map(v => {
+const STAGES = CRM_STAGES.map(({ value: v }) => {
   const { label, color } = crmStage(v)
   const mix = (pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`
   return { value: v, label, text: color, dot: color, bg: mix(8), border: mix(50), badge: mix(15), chip: mix(45) }
@@ -100,7 +99,7 @@ function CardSkeleton() {
 function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
   const custType = (c as any).customer_type || 'B2C'
   const workType = (c as any).work_type || ''
-  const prospectCrmStages = ['new', 'interested', 'quoted', 'close_pending']
+  const prospectCrmStages: string[] = PROSPECT_STAGES
   // multi-job: show this job's revenue; for prospect jobs with no revenue yet, fall back to customer budget
   const displayValue = jobSeqNo != null
     ? (jobRev || (prospectCrmStages.includes(jobCrmStage || '') ? c.budget || 0 : 0))

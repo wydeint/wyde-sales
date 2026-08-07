@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List, ChevronDown, FileDown, ShoppingCart } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import { WORKING_STATUSES } from '@/lib/status'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -122,14 +123,12 @@ const STATUS_COLORS: Record<string, string> = {
   'New Sale 2025': 'var(--accent-amber)', 'New Sale 2026': 'var(--accent-orange)',
 }
 
-const WORKING_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  'จอง': { bg: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)', color: 'var(--accent-amber)' },
-  'กำลังดำเนินการ': { bg: 'color-mix(in srgb, var(--accent-blue) 15%, transparent)', color: 'var(--accent-blue)' },
-  'ดำเนินการ': { bg: 'color-mix(in srgb, var(--accent-blue) 15%, transparent)', color: 'var(--accent-blue)' },
-  'รอส่งมอบ': { bg: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)' },
-  'ส่งมอบแล้ว': { bg: 'color-mix(in srgb, var(--accent-green) 15%, transparent)', color: 'var(--accent-green)' },
-  'ยกเลิก': { bg: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' },
-}
+// Derived from the shared vocabulary — this map used to colour จอง amber and
+// รอส่งมอบ purple, disagreeing with every other page, and carried a
+// 'กำลังดำเนินการ' key that does not occur in the data.
+const WORKING_STATUS_COLORS: Record<string, { bg: string; color: string }> = Object.fromEntries(
+  WORKING_STATUSES.map(s => [s.value, { bg: `color-mix(in srgb, ${s.color} 15%, transparent)`, color: s.color }])
+)
 
 // ─────────────────────────────────────────
 // Main page
@@ -481,7 +480,7 @@ export default function RevenuePage() {
               return (
                 <div key={s.status} className="flex items-center gap-3 mb-3">
                   <span className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ background: wsCfg?.color || STATUS_COLORS[s.status] || '#888' }} />
+                    style={{ background: wsCfg?.color || STATUS_COLORS[s.status] || 'var(--text-3)' }} />
                   <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{s.status}</span>
                   <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{fk(s.revenue)}</span>
                   <span className="text-xs" style={{ color: 'var(--text-3)' }}>

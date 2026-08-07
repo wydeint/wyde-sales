@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
-import { crmStage } from '@/lib/status'
+import { crmStage, FUNNEL_ORDER } from '@/lib/status'
 
 type Customer = {
   id: string; status: string; budget: number; customer_type: string
@@ -174,7 +174,7 @@ export default function ExecutivePage() {
   const lostCount = customers.filter(c => c.status === 'lost').length
 
   // Pipeline funnel
-  const pipelineOrder = ['new', 'interested', 'quoted', 'booked', 'close_pending', 'closed']
+  const pipelineOrder = FUNNEL_ORDER
   const funnelData = useMemo(() => {
     const max = Math.max(...pipelineOrder.map(s => customers.filter(c => c.status === s).length), 1)
     return pipelineOrder.map(s => ({

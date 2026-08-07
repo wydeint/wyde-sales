@@ -20,7 +20,7 @@
  */
 
 export type CrmStage =
-  | 'new' | 'interested' | 'quoted' | 'booked' | 'close_pending' | 'closed' | 'lost'
+  | 'new' | 'interested' | 'quoted' | 'close_pending' | 'booked' | 'closed' | 'lost'
 
 export interface StatusEntry<T extends string = string> {
   value: T
@@ -30,16 +30,38 @@ export interface StatusEntry<T extends string = string> {
   color: string
 }
 
-/** Ordered by funnel position — safe to render as a stage list or filter row. */
+/**
+ * Ordered by funnel position — safe to render as a stage list, filter row, or
+ * funnel chart.
+ *
+ * `booked` sits AFTER `close_pending`. Two places in the app defined the
+ * prospect set as new/interested/quoted/close_pending, excluding `booked` —
+ * that set decides whether a customer appears under Prospects or My Deals, so
+ * it is the behavioural source of truth. The Dashboard and Sales Performance
+ * funnels had `booked` before `close_pending`, which drew a customer counted
+ * as a prospect further along the funnel than one who is not. Fixed here.
+ */
 export const CRM_STAGES: StatusEntry<CrmStage>[] = [
   { value: 'new',           label: 'ใหม่',         icon: '●', badge: 'badge badge-blue',   color: 'var(--accent-blue)' },
   { value: 'interested',    label: 'สนใจ',         icon: '◉', badge: 'badge badge-blue',   color: 'var(--accent-blue)' },
   { value: 'quoted',        label: 'เสนอราคาแล้ว', icon: '◈', badge: 'badge badge-orange', color: 'var(--accent-orange)' },
-  { value: 'booked',        label: 'จอง',          icon: '★', badge: 'badge badge-orange', color: 'var(--accent-orange)' },
   { value: 'close_pending', label: 'รอปิด',        icon: '◷', badge: 'badge badge-purple', color: 'var(--accent-purple)' },
+  { value: 'booked',        label: 'จอง',          icon: '★', badge: 'badge badge-orange', color: 'var(--accent-orange)' },
   { value: 'closed',        label: 'ปิดแล้ว',      icon: '✓', badge: 'badge badge-green',  color: 'var(--accent-green)' },
   { value: 'lost',          label: 'หลุด',         icon: '✕', badge: 'badge badge-red',    color: 'var(--accent-red)' },
 ]
+
+/**
+ * Stages that still count as a prospect — a customer here has not committed.
+ * Drives the Prospects / My Deals split and the "budget vs revenue" display.
+ */
+export const PROSPECT_STAGES: CrmStage[] = ['new', 'interested', 'quoted', 'close_pending']
+
+export const isProspectStage = (s: string | null | undefined): boolean =>
+  PROSPECT_STAGES.includes(s as CrmStage)
+
+/** Funnel order excluding `lost`, which is an exit, not a step. */
+export const FUNNEL_ORDER: CrmStage[] = CRM_STAGES.filter(s => s.value !== 'lost').map(s => s.value)
 
 const UNKNOWN: StatusEntry = {
   value: '', label: '—', icon: '·', badge: 'badge badge-gray', color: 'var(--text-3)',

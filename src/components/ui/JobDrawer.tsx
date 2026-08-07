@@ -714,7 +714,7 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
     else { await supabase.from('handovers').insert(handoverData) }
     await supabase.from('warranties').upsert({
       id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
-      room: job.room_no, handover_date: deliverDate, warranty_start: deliverDate,
+      room: job.room_no, job_id: job.id, handover_date: deliverDate, warranty_start: deliverDate,
       warranty_end: wEndStr, warranty_months: warrantyMonths, status: 'active',
     }, { onConflict: 'id' })
     setSaving(false); onSaved(); onClose()
@@ -1631,8 +1631,12 @@ export async function loadFullJob(jobId: string): Promise<FullJob | null> {
     .eq('id', jobId)
     .single()
   if (!raw) return null
-  const { data: war } = await supabase.from('warranties').select('warranty_end')
-    .eq('project_id', raw.project_id).eq('room', raw.room_no).maybeSingle()
+  let { data: war } = await supabase.from('warranties').select('warranty_end').eq('job_id', jobId).maybeSingle()
+  if (!war) {
+    const fallback = await supabase.from('warranties').select('warranty_end')
+      .eq('project_id', raw.project_id).eq('room', raw.room_no).is('job_id', null).maybeSingle()
+    war = fallback.data
+  }
   return {
     id: raw.id,
     customer_id: raw.customer_id,

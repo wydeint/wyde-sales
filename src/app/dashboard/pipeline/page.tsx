@@ -195,7 +195,14 @@ function expandCards(customers: Customer[]): CardItem[] {
     if (cJobs.length <= 1) {
       result.push({ c, jobSeqNo: undefined, jobRev: cJobs[0]?.revenue_inc_vat, jobId: cJobs[0]?.id, jobWorkingStatus: cJobs[0]?.working_status, jobCrmStage: cJobs[0]?.crm_stage ?? null, cardKey: c.id })
     } else {
-      const sorted = [...cJobs].sort((a, b) => ((a.order_date || a.id) < (b.order_date || b.id) ? -1 : 1))
+      const sorted = [...cJobs].sort((a, b) => {
+        if (a.order_date && b.order_date) return a.order_date < b.order_date ? -1 : 1
+        if (a.order_date) return -1
+        if (b.order_date) return 1
+        const na = parseInt(a.id.match(/\d+/)?.[0] || '0', 10)
+        const nb = parseInt(b.id.match(/\d+/)?.[0] || '0', 10)
+        return na - nb
+      })
       sorted.forEach((j, i) => result.push({ c, jobSeqNo: i + 1, jobRev: j.revenue_inc_vat || 0, jobId: j.id, jobWorkingStatus: j.working_status, jobCrmStage: j.crm_stage ?? null, cardKey: `${c.id}-${j.id}` }))
     }
   }
@@ -439,7 +446,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
       // Search by customer.id AND by project-room format (jobs may link via either)
       const altId = customer.project_id && customer.interested_room
         ? `${customer.project_id}-${customer.interested_room}` : null
-      const baseQuery = supabase.from('jobs').select('id').not('working_status', 'eq', 'ยกเลิก').order('id').limit(1)
+      const baseQuery = supabase.from('jobs').select('id').not('working_status', 'eq', 'ยกเลิก').order('id', { ascending: false }).limit(1)
       const { data: existing } = altId && altId !== customer.id
         ? await baseQuery.or(`customer_id.eq.${customer.id},customer_id.eq.${altId}`)
         : await baseQuery.eq('customer_id', customer.id)
@@ -1278,7 +1285,7 @@ export default function ProspectsKanbanPage() {
     }
     for (let attempt = 0; attempt < 5; attempt++) {
       const jobId = `JOB-${baseNum + attempt}`
-      const { error } = await supabase.from('jobs').insert({ id: jobId, customer_id: customerId, customer_name: custName, project_id: projectId, room_no: roomNo, customer_type: custType, work_type: workType, sales_id: salesId, crm_stage: crmStage, working_status: null })
+      const { error } = await supabase.from('jobs').insert({ id: jobId, customer_id: customerId, customer_name: custName, project_id: projectId, room_no: roomNo, customer_type: custType, work_type: workType, sales_id: salesId, crm_stage: crmStage, working_status: null, order_date: todayStr() })
       if (!error) return jobId
       if (!error.message.includes('duplicate key')) return ''
     }

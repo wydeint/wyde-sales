@@ -374,7 +374,7 @@ function CellInput({ col, value, onChange }: {
 
 function CellDisplay({ col, value }: { col: ColDef; value: unknown }) {
   if (value === null || value === undefined || value === '') return <span style={{ color: 'var(--text-3)' }}>—</span>
-  if (col.type === 'boolean') return <span style={{ color: value ? '#4ade80' : 'var(--text-3)' }}>{value ? 'Yes' : 'No'}</span>
+  if (col.type === 'boolean') return <span style={{ color: value ? 'var(--accent-green)' : 'var(--text-3)' }}>{value ? 'Yes' : 'No'}</span>
   if (col.type === 'number') return <span>{Number(value).toLocaleString('th-TH')}</span>
   if (col.type === 'date') {
     try { return <span>{new Date(String(value)).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}</span> }
@@ -397,10 +397,8 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
   const selectedCol = editableCols.find(c => c.key === col)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-sm rounded-[16px] shadow-2xl"
-        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-panel"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -582,11 +580,11 @@ function ReconcileCheck() {
         {/* Summary badge */}
         {ran && !loading && (
           <div className="px-4 py-3 rounded-[11px] flex items-center gap-3"
-            style={{ background: passCount === checks.length ? 'rgba(74,222,128,0.08)' : 'rgba(251,146,60,0.08)', border: `1px solid ${passCount === checks.length ? 'rgba(74,222,128,0.3)' : 'rgba(251,146,60,0.3)'}` }}>
+            style={{ background: passCount === checks.length ? 'color-mix(in srgb, var(--accent-green) 8%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: `1px solid ${passCount === checks.length ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 30%, transparent)'}` }}>
             {passCount === checks.length
               ? <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
               : <AlertTriangle size={16} className="text-orange-400 flex-shrink-0" />}
-            <span className="text-sm font-semibold" style={{ color: passCount === checks.length ? '#4ade80' : '#fb923c' }}>
+            <span className="text-sm font-semibold" style={{ color: passCount === checks.length ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
               {passCount === checks.length ? 'ข้อมูลสอดคล้องทั้งหมด ✓' : `ผ่าน ${passCount}/${checks.length} — พบความไม่สอดคล้อง ${checks.length - passCount} รายการ`}
             </span>
           </div>
@@ -595,7 +593,7 @@ function ReconcileCheck() {
         {/* Check items */}
         {ran && !loading && checks.map((item, i) => (
           <div key={i} className="rounded-[11px] p-4 space-y-3"
-            style={{ background: 'var(--card-bg)', border: `1px solid ${item.pass ? 'var(--card-border)' : 'rgba(251,146,60,0.4)'}` }}>
+            style={{ background: 'var(--card-bg)', border: `1px solid ${item.pass ? 'var(--card-border)' : 'color-mix(in srgb, var(--accent-orange) 40%, transparent)'}` }}>
             <div className="flex items-start gap-2.5">
               {item.pass
                 ? <CheckCircle2 size={15} className="text-green-400 mt-0.5 flex-shrink-0" />
@@ -603,8 +601,8 @@ function ReconcileCheck() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{item.label}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
-                    style={{ background: item.pass ? 'rgba(74,222,128,0.12)' : 'rgba(251,146,60,0.12)', color: item.pass ? '#4ade80' : '#fb923c' }}>
+                  <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+                    style={{ background: item.pass ? 'color-mix(in srgb, var(--accent-green) 12%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: item.pass ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                     {item.pass ? 'PASS' : 'FAIL'}
                   </span>
                 </div>
@@ -613,20 +611,20 @@ function ReconcileCheck() {
             </div>
             <div className="grid grid-cols-2 gap-3 ml-6">
               <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
-                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.lhs.label}</p>
+                <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>{item.lhs.label}</p>
                 <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
                   {item.lhs.value > 9999 ? fmtB(item.lhs.value) : fmtN(item.lhs.value)}
                 </p>
               </div>
               <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
-                <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.rhs.label}</p>
+                <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>{item.rhs.label}</p>
                 <p className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>
                   {item.rhs.value > 9999 ? fmtB(item.rhs.value) : fmtN(item.rhs.value)}
                 </p>
               </div>
             </div>
             {item.detail && (
-              <p className="ml-6 text-xs px-3 py-2 rounded-[8px]" style={{ background: 'rgba(251,146,60,0.08)', color: '#fb923c' }}>
+              <p className="ml-6 text-xs px-3 py-2 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', color: 'var(--accent-orange)' }}>
                 ⚠ {item.detail}
               </p>
             )}
@@ -666,7 +664,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           placeholder="รหัสผ่าน"
           autoFocus
           className="w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
+          style={{ background: 'var(--input-bg)', border: `1px solid ${err ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
         {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง</p>}
         <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
@@ -810,7 +808,7 @@ export default function AdminDataPage() {
       {/* Header */}
       <div className="flex-shrink-0 px-5 pt-5 pb-3">
         <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-lg font-bold flex-1" style={{ color: 'var(--text-1)' }}>{isReconcile ? 'Reconcile Check' : 'Data Entry'}</h1>
+          <h1 className="text-page-title flex-1" style={{ color: 'var(--text-1)' }}>{isReconcile ? 'Reconcile Check' : 'Data Entry'}</h1>
           {!isReconcile && (<>
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
@@ -878,7 +876,7 @@ export default function AdminDataPage() {
       {/* Bulk action bar */}
       {!isReconcile && selectedIds.size > 0 && (
         <div className="flex-shrink-0 mx-5 mb-2 px-4 py-2.5 rounded-[8px] flex items-center gap-3"
-          style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)' }}>
+          style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
           <Layers size={14} className="text-indigo-400" />
           <span className="text-sm font-semibold text-indigo-400">{selectedIds.size} แถวที่เลือก</span>
           <div className="flex-1" />
@@ -932,7 +930,7 @@ export default function AdminDataPage() {
                 const isEditing = editingRow === id
                 const isSelected = selectedIds.has(id)
                 const wasSaved = savedRows.has(id)
-                const rowBg = wasSaved ? 'rgba(74,222,128,0.06)' : isEditing ? 'rgba(99,102,241,0.05)' : isSelected ? 'rgba(99,102,241,0.04)' : ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)'
+                const rowBg = wasSaved ? 'color-mix(in srgb, var(--accent-green) 6%, transparent)' : isEditing ? 'color-mix(in srgb, var(--accent) 5%, transparent)' : isSelected ? 'color-mix(in srgb, var(--accent) 4%, transparent)' : ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)'
 
                 return (
                   <tr key={id} style={{ background: rowBg, borderBottom: '1px solid var(--divider)' }}>
@@ -945,19 +943,19 @@ export default function AdminDataPage() {
                       {isEditing ? (
                         <div className="flex gap-1">
                           <button onClick={saveRow} disabled={saving}
-                            className="flex items-center gap-0.5 px-2 py-1 rounded text-white text-[10px] font-semibold"
-                            style={{ background: saving ? '#999' : '#059669' }}>
+                            className="flex items-center gap-0.5 px-2 py-1 rounded text-white text-micro font-semibold"
+                            style={{ background: saving ? '#999' : 'var(--accent-green)' }}>
                             <Save size={10} /> {saving ? '...' : 'บันทึก'}
                           </button>
                           <button onClick={cancelEdit}
-                            className="px-1.5 py-1 rounded text-[10px]"
+                            className="px-1.5 py-1 rounded text-micro"
                             style={{ border: '1px solid var(--divider)', color: 'var(--text-3)' }}>
                             <X size={10} />
                           </button>
                         </div>
                       ) : (
                         <button onClick={() => startEdit(row)}
-                          className="flex items-center gap-0.5 px-2 py-1 rounded text-[10px]"
+                          className="flex items-center gap-0.5 px-2 py-1 rounded text-micro"
                           style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                           {wasSaved ? <span className="text-green-400">✓ Saved</span> : <><Edit2 size={10} /> แก้ไข</>}
                         </button>

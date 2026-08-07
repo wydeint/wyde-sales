@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import PageHeader from '@/components/ui/PageHeader'
 
 interface Lead {
   id: number
@@ -31,9 +32,9 @@ interface Lead {
 const LEAD_STATUSES = [
   { value: 'new',          label: 'ยังไม่ได้ติดต่อ', color: 'var(--accent-orange)' },
   { value: 'contacted',    label: 'ติดต่อแล้ว',       color: 'var(--accent-blue)'   },
-  { value: 'interested',   label: 'สนใจ',             color: '#a78bfa'               },
+  { value: 'interested',   label: 'สนใจ',             color: 'var(--accent-purple)'               },
   { value: 'not_interest', label: 'ไม่สนใจ',          color: 'var(--text-3)'         },
-  { value: 'follow_up',    label: 'ติดตามต่อ',        color: '#fbbf24'               },
+  { value: 'follow_up',    label: 'ติดตามต่อ',        color: 'var(--accent-amber)'               },
 ] as const
 
 interface Project { id: string; name: string }
@@ -444,24 +445,23 @@ export default function LeadsPage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Condo Leads Pool</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>
-            ข้อมูลลูกค้าจาก Origin CRM — ดึงเข้า Pipeline เมื่อพร้อมขาย
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => load()} className="p-2 rounded-[11px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-            <RefreshCw size={15} />
-          </button>
-          <button onClick={() => { setShowImport(!showImport); setImportResult(null); setImportRows([]) }}
-            className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold transition-colors"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
-            <Upload size={15} />นำเข้า xlsx
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Origin Pool"
+        subtitle="ข้อมูลลูกค้าจาก Origin CRM — ดึงเข้า Pipeline เมื่อพร้อมขาย"
+        className="mb-5"
+        actions={
+          <>
+            <button onClick={() => load()} className="p-2 rounded-[11px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+              <RefreshCw size={15} />
+            </button>
+            <button onClick={() => { setShowImport(!showImport); setImportResult(null); setImportRows([]) }}
+              className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold transition-colors"
+              style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
+              <Upload size={15} />นำเข้า xlsx
+            </button>
+          </>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
@@ -546,7 +546,7 @@ export default function LeadsPage() {
                   </thead>
                   <tbody>
                     {importRows.slice(0, 100).map((r, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--divider)', background: r._dup ? 'rgba(245,158,11,0.05)' : !r._valid ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
+                      <tr key={i} style={{ borderBottom: '1px solid var(--divider)', background: r._dup ? 'rgba(245,158,11,0.05)' : !r._valid ? 'color-mix(in srgb, var(--accent-red) 5%, transparent)' : 'transparent' }}>
                         <td className="px-3 py-1.5">
                           {r._valid
                             ? <CheckCircle size={11} className="text-green-400" />
@@ -562,7 +562,7 @@ export default function LeadsPage() {
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.phone}</td>
                         <td className="px-3 py-1.5 text-right" style={{ color: 'var(--text-2)' }}>{fmtBaht(r.contract_price)}</td>
-                        <td className="px-3 py-1.5 text-right font-semibold" style={{ color: r.s00_budget ? '#34d399' : 'var(--text-3)' }}>{fmtBaht(r.s00_budget)}</td>
+                        <td className="px-3 py-1.5 text-right font-semibold" style={{ color: r.s00_budget ? 'var(--accent-green)' : 'var(--text-3)' }}>{fmtBaht(r.s00_budget)}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-3)' }}>{r.transfer_date || '—'}</td>
                       </tr>
                     ))}
@@ -627,7 +627,7 @@ export default function LeadsPage() {
       </div>
 
       {addError && (
-        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
           <AlertCircle size={14} />{addError}
         </div>
       )}
@@ -664,7 +664,7 @@ export default function LeadsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
                   <td className="px-4 py-3 text-sm text-right whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{fmtBaht(l.contract_price)}</td>
-                  <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap" style={{ color: l.s00_budget ? '#34d399' : 'var(--text-3)' }}>
+                  <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap" style={{ color: l.s00_budget ? 'var(--accent-green)' : 'var(--text-3)' }}>
                     {fmtBaht(l.s00_budget)}
                   </td>
                   <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>

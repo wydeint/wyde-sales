@@ -44,10 +44,10 @@ const NAV = [
     color: 'text-sky-400',
     dot: 'bg-sky-400',
     items: [
-      { href: '/dashboard/jobs', icon: Briefcase, label: 'Jobs' },
+      { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
       { href: '/dashboard/customers', icon: Users, label: 'Customers' },
       { href: '/dashboard/handover', icon: ClipboardList, label: 'Handover' },
-      { href: '/dashboard/payments', icon: Receipt, label: 'ชำระเงิน & เอกสาร' },
+      { href: '/dashboard/payments', icon: Receipt, label: 'Payments' },
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
       { href: '/dashboard/targets', icon: Target, label: 'Sales Targets' },
       { href: '/dashboard/settings', icon: Settings2, label: 'Commission Tiers' },
@@ -58,10 +58,10 @@ const NAV = [
     color: 'text-amber-400',
     dot: 'bg-amber-400',
     items: [
-      { href: '/dashboard/revenue', icon: TrendingDown, label: 'รายได้' },
-      { href: '/dashboard/project-summary', icon: BarChart3, label: 'สรุปรายโครงการ' },
-      { href: '/dashboard/executive', icon: BarChart3, label: 'Executive Report' },
-      { href: '/dashboard/finance', icon: Wallet, label: 'Finance & Ledger' },
+      { href: '/dashboard/revenue', icon: TrendingDown, label: 'Revenue' },
+      { href: '/dashboard/project-summary', icon: BarChart3, label: 'Project Summary' },
+      { href: '/dashboard/executive', icon: BarChart3, label: 'Sales Performance' },
+      { href: '/dashboard/finance', icon: Wallet, label: 'Finance' },
     ],
   },
   {

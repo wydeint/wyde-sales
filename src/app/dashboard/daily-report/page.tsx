@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ClipboardList, Plus, CheckCircle } from 'lucide-react'
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import { Input, TextArea } from '@/components/ui/Input'
+import PageHeader from '@/components/ui/PageHeader'
 
 interface DailyReport {
   id: string; date: string; sales_person_id: string
@@ -84,11 +85,11 @@ export default function DailyReportPage() {
 
   return (
     <div className="page-content">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Daily Report</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>รายงานการทำงานประจำวัน</p>
-        </div>
+      <PageHeader
+        title="Daily Report"
+        subtitle="รายงานการทำงานประจำวัน"
+        actions={
+          <>
         {!todayDone && (
           <button onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
@@ -96,15 +97,17 @@ export default function DailyReportPage() {
           </button>
         )}
         {todayDone && (
-          <div className="flex items-center gap-2 text-green-400 text-sm">
+          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--accent-green)' }}>
             <CheckCircle size={16} />บันทึกแล้ววันนี้
           </div>
         )}
-      </div>
+          </>
+        }
+      />
 
       {/* Form */}
       {showForm && (
-        <div className="rounded-[18px] p-5 mb-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div className="ds-card p-5 mb-6">
           <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>บันทึกรายงานวันที่ {new Date(form.date).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <Input label="โทรหาลูกค้า (ครั้ง)" type="number" value={form.calls} onChange={e => setForm({ ...form, calls: Number(e.target.value) })} />
@@ -129,7 +132,7 @@ export default function DailyReportPage() {
       )}
 
       {/* History */}
-      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
           <p className="text-card-title" style={{ color: 'var(--text-2)' }}>ประวัติรายงาน 30 วันล่าสุด</p>
         </div>

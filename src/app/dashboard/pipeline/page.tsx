@@ -1539,9 +1539,9 @@ export default function ProspectsKanbanPage() {
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-3">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1">
-            <h1 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>Prospects</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{customers.length} ราย</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Prospects</h1>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>{customers.length} ราย</p>
           </div>
           <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
             className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"

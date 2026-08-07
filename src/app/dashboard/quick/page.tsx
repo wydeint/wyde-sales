@@ -263,7 +263,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
                     </p>
                   </div>
                 </div>
-                <p className="text-[10px] mt-2" style={t3}>Sales: {(j.sales as any)?.name || '—'}</p>
+                <p className="text-micro mt-2" style={t3}>Sales: {(j.sales as any)?.name || '—'}</p>
               </div>
             )
           })}
@@ -1461,7 +1461,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   <p className="text-xs mt-0.5" style={t2}>{r.room} · {r.projectName}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                  <span className="text-micro px-2 py-0.5 rounded-full font-semibold"
                     style={{ background: r.kind === 'job' ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: r.kind === 'job' ? 'var(--accent)' : 'var(--accent-orange)' }}>
                     {r.kind === 'job' ? 'งาน' : 'Prospect'}
                   </span>
@@ -1585,7 +1585,7 @@ export default function QuickPage() {
             <img src="/logo.svg" alt="WydE" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
             <div>
               <p className="text-white text-xs font-semibold leading-tight">Super Sales</p>
-              <p className="text-indigo-400 text-[10px] font-bold tracking-widest uppercase leading-tight">Quick Mode</p>
+              <p className="text-indigo-400 text-micro font-bold tracking-widest uppercase leading-tight">Quick Mode</p>
             </div>
           </div>
           <button onClick={() => router.push('/dashboard')} aria-label="กลับหน้าหลัก"
@@ -1603,7 +1603,7 @@ export default function QuickPage() {
 
       {/* ── Overview ── */}
       <div className="px-5 mb-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>Overview</p>
+        <p className="text-micro font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>Overview</p>
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-[18px] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />)}
@@ -1633,7 +1633,7 @@ export default function QuickPage() {
       {/* ── Quick Menu — flat 3×4 grid ── */}
       <div className="px-5 pb-8">
         <div className="flex items-center gap-3 mb-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest flex-shrink-0" style={{ color: 'var(--text-3)' }}>Quick Menu</p>
+          <p className="text-micro font-bold uppercase tracking-widest flex-shrink-0" style={{ color: 'var(--text-3)' }}>Quick Menu</p>
           <div style={{ flex: 1, height: 1, background: 'var(--divider)' }} />
         </div>
         <div className="grid grid-cols-4 gap-2.5">
@@ -1645,12 +1645,12 @@ export default function QuickPage() {
               style={{ minHeight: 80, ...btn.btnStyle }}
             >
               {btn.badge !== undefined && btn.badge > 0 && (
-                <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-black z-10" style={{ background: '#ef4444', color: '#ffffff', boxShadow: '0 0 0 2px var(--card-bg)' }}>
+                <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center text-micro font-black z-10" style={{ background: 'var(--accent-red)', color: '#ffffff', boxShadow: '0 0 0 2px var(--card-bg)' }}>
                   {btn.badge > 9 ? '9+' : btn.badge}
                 </div>
               )}
               <btn.icon size={24} color={btn.iconColor} strokeWidth={1.75} />
-              <span className="text-[11px] font-bold text-center leading-tight" style={{ whiteSpace: 'pre-line', color: 'var(--text-1)' }}>{btn.label}</span>
+              <span className="text-label font-bold text-center leading-tight" style={{ whiteSpace: 'pre-line', color: 'var(--text-1)' }}>{btn.label}</span>
             </button>
           ))}
         </div>

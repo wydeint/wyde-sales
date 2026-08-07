@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PageSpinner } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -43,9 +44,9 @@ function FunnelBar({ delivered, total }: { delivered: number; total: number }) {
     <div className="flex items-center gap-2 min-w-[80px]">
       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
         <div className="h-full rounded-full transition-all"
-          style={{ width: `${p}%`, background: p >= 80 ? '#4ade80' : p >= 40 ? 'var(--accent)' : '#f59e0b' }} />
+          style={{ width: `${p}%`, background: p >= 80 ? 'var(--accent-green)' : p >= 40 ? 'var(--accent)' : 'var(--accent-amber)' }} />
       </div>
-      <span className="text-[10px] tabular-nums w-8 text-right" style={{ color: 'var(--text-3)' }}>{p}%</span>
+      <span className="text-micro tabular-nums w-8 text-right" style={{ color: 'var(--text-3)' }}>{p}%</span>
     </div>
   )
 }
@@ -59,7 +60,7 @@ function Th({ label, sortKey, current, dir, onSort, right = true }: {
   return (
     <th className={`px-3 py-2.5 cursor-pointer select-none whitespace-nowrap ${right ? 'text-right' : 'text-left'}`}
       onClick={() => onSort(sortKey)}>
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider"
+      <span className="inline-flex items-center gap-1 text-micro font-semibold uppercase tracking-wider"
         style={{ color: active ? 'var(--accent)' : 'var(--text-3)' }}>
         {label}
         {active ? (dir === 'asc' ? <ChevronUp size={10} /> : <ChevronDown size={10} />) : null}
@@ -202,21 +203,20 @@ export default function ProjectSummaryPage() {
       <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
 
         {/* Title */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>สรุปรายโครงการ</h1>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ภาพรวมห้อง ยอด Wyde Clients และรายได้ แยกตามโครงการ</p>
-          </div>
-          <span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>
-        </div>
+        <PageHeader
+          title="Project Summary"
+          subtitle="ภาพรวมห้อง ยอด Wyde Clients และรายได้ แยกตามโครงการ"
+          className="mb-4"
+          actions={<span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>}
+        />
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           {[
             { icon: Building2, label: 'โครงการที่มีงาน', value: `${filtered.length}`, sub: `จากทั้งหมด ${rows.length}`, color: 'var(--accent)' },
-            { icon: TrendingUp, label: 'ห้องทั้งหมด', value: totals.units.toLocaleString(), sub: 'ตามที่บันทึก', color: '#60a5fa' },
-            { icon: CheckCircle2, label: 'Wyde Clients', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: '#4ade80' },
-            { icon: DollarSign, label: 'รายได้รวม', value: fM(totals.rev), sub: `ส่งมอบแล้ว ${fM(totals.revDel)}`, color: '#fbbf24' },
+            { icon: TrendingUp, label: 'ห้องทั้งหมด', value: totals.units.toLocaleString(), sub: 'ตามที่บันทึก', color: 'var(--accent-blue)' },
+            { icon: CheckCircle2, label: 'Wyde Clients', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: 'var(--accent-green)' },
+            { icon: DollarSign, label: 'รายได้รวม', value: fM(totals.rev), sub: `ส่งมอบแล้ว ${fM(totals.revDel)}`, color: 'var(--accent-amber)' },
           ].map(k => {
             const Icon = k.icon
             return (
@@ -278,21 +278,21 @@ export default function ProjectSummaryPage() {
               <Th label="Wyde Clients" sortKey="jobs_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               {/* Breakdown columns */}
               <th className="px-3 py-2.5 text-center">
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#4ade80' }}>B2C</span>
+                <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--accent-green)' }}>B2C</span>
               </th>
               <th className="px-3 py-2.5 text-center">
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#60a5fa' }}>B2B</span>
+                <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--accent-blue)' }}>B2B</span>
               </th>
               <th className="px-3 py-2.5 text-center">
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#22c55e' }}>RPT</span>
+                <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--accent-green)' }}>RPT</span>
               </th>
               <th className="px-3 py-2.5 text-center">
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#818cf8' }}>N-RPT</span>
+                <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>N-RPT</span>
               </th>
               <Th label="กำลังดำเนินการ" sortKey="jobs_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="ส่งมอบแล้ว" sortKey="jobs_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 text-left">
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>% ส่งมอบ</span>
+                <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>% ส่งมอบ</span>
               </th>
               <Th label="รายได้รวม" sortKey="revenue_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="รายได้ส่งมอบ" sortKey="revenue_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -312,7 +312,7 @@ export default function ProjectSummaryPage() {
                 >
                   <td className="px-3 py-2.5">
                     <p className="font-semibold text-xs leading-tight" style={{ color: 'var(--text-1)' }}>{r.name}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{r.id}</p>
+                    <p className="text-micro" style={{ color: 'var(--text-3)' }}>{r.id}</p>
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <span className="text-xs tabular-nums" style={{ color: 'var(--text-2)' }}>
@@ -321,7 +321,7 @@ export default function ProjectSummaryPage() {
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     {r.booked > 0
-                      ? <span className="text-xs font-semibold tabular-nums" style={{ color: '#60a5fa' }}>{r.booked}</span>
+                      ? <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{r.booked}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
@@ -332,35 +332,35 @@ export default function ProjectSummaryPage() {
                   {/* B2C */}
                   <td className="px-3 py-2.5 text-center">
                     {b2c > 0
-                      ? <span className="text-xs font-semibold tabular-nums" style={{ color: '#4ade80' }}>{b2c}</span>
+                      ? <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-green)' }}>{b2c}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   {/* B2B */}
                   <td className="px-3 py-2.5 text-center">
                     {b2b > 0
-                      ? <span className="text-xs font-semibold tabular-nums" style={{ color: '#60a5fa' }}>{b2b}</span>
+                      ? <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{b2b}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   {/* RPT */}
                   <td className="px-3 py-2.5 text-center">
                     {rpt > 0
-                      ? <span className="text-xs tabular-nums" style={{ color: '#22c55e' }}>{rpt}</span>
+                      ? <span className="text-xs tabular-nums" style={{ color: 'var(--accent-green)' }}>{rpt}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   {/* N-RPT */}
                   <td className="px-3 py-2.5 text-center">
                     {nrpt > 0
-                      ? <span className="text-xs tabular-nums" style={{ color: '#818cf8' }}>{nrpt}</span>
+                      ? <span className="text-xs tabular-nums" style={{ color: 'var(--accent)' }}>{nrpt}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     {r.jobs_active > 0
-                      ? <span className="text-xs tabular-nums" style={{ color: '#fbbf24' }}>{r.jobs_active}</span>
+                      ? <span className="text-xs tabular-nums" style={{ color: 'var(--accent-amber)' }}>{r.jobs_active}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     {r.jobs_delivered > 0
-                      ? <span className="text-xs tabular-nums font-semibold" style={{ color: '#4ade80' }}>{r.jobs_delivered}</span>
+                      ? <span className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{r.jobs_delivered}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   <td className="px-3 py-2.5">
@@ -374,7 +374,7 @@ export default function ProjectSummaryPage() {
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-right">
-                    <span className="text-xs tabular-nums" style={{ color: '#4ade80' }}>
+                    <span className="text-xs tabular-nums" style={{ color: 'var(--accent-green)' }}>
                       {r.revenue_delivered > 0 ? fK(r.revenue_delivered) : '–'}
                     </span>
                   </td>
@@ -386,17 +386,17 @@ export default function ProjectSummaryPage() {
             <tr style={{ background: 'var(--card-bg)', borderTop: '2px solid var(--divider)' }}>
               <td className="px-3 py-2.5 text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวม {filtered.length} โครงการ</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.units.toLocaleString()}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: '#60a5fa' }}>{totals.booked || '–'}</td>
+              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{totals.booked || '–'}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.jobs}</td>
-              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: '#4ade80' }}>{totalB2C || '–'}</td>
-              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: '#60a5fa' }}>{totalB2B || '–'}</td>
-              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: '#22c55e' }}>{totalRPT || '–'}</td>
-              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: '#818cf8' }}>{totalNRPT || '–'}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: '#fbbf24' }}>{totals.jobs - totals.delivered || '–'}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: '#4ade80' }}>{totals.delivered}</td>
+              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totalB2C || '–'}</td>
+              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{totalB2B || '–'}</td>
+              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totalRPT || '–'}</td>
+              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{totalNRPT || '–'}</td>
+              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-amber)' }}>{totals.jobs - totals.delivered || '–'}</td>
+              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totals.delivered}</td>
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{fM(totals.rev)}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: '#4ade80' }}>{fM(totals.revDel)}</td>
+              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{fM(totals.revDel)}</td>
             </tr>
           </tbody>
         </table>

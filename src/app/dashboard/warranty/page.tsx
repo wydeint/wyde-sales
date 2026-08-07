@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, ShieldCheck, Pencil, AlertTriangle, Search } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Warranty {
@@ -198,16 +199,16 @@ export default function WarrantyPage() {
 
   return (
     <div className="page-content">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Warranty</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>ติดตามระยะเวลาประกันผลงาน</p>
-        </div>
-        <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-          className="flex items-center gap-2 btn-purple text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-          <Plus size={16} />เพิ่มประกัน
-        </button>
-      </div>
+      <PageHeader
+        title="Warranty"
+        subtitle="ติดตามระยะเวลาประกันผลงาน"
+        actions={
+          <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
+            className="flex items-center gap-2 btn-purple text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+            <Plus size={16} />เพิ่มประกัน
+          </button>
+        }
+      />
 
       {/* Alert Banner — expiring soon */}
       {expiringSoon.length > 0 && (

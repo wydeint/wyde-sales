@@ -1,10 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Target, Pencil, Building2, Users } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select } from '@/components/ui/Input'
 
 interface OrgTarget {
@@ -58,7 +59,7 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
   )
 }
 
-function Sparkline({ points, color = '#6366f1', width = 64, height = 24 }: { points: number[]; color?: string; width?: number; height?: number }) {
+function Sparkline({ points, color = 'var(--accent)', width = 64, height = 24 }: { points: number[]; color?: string; width?: number; height?: number }) {
   if (points.length < 2) return null
   const max = Math.max(...points, 1)
   const step = width / (points.length - 1)
@@ -265,12 +266,11 @@ export default function TargetsPage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Sales Targets</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>กำหนดและติดตามเป้าหมายการขาย</p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title="Sales Targets"
+        subtitle="กำหนดและติดตามเป้าหมายการขาย"
+        actions={
+          <>
           {tab === 'org' && (
             <button onClick={() => { setEditingOrg(null); setOrgForm({ ...emptyOrgForm, year: filterYear }); setOrgModalOpen(true) }}
               className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
@@ -283,8 +283,9 @@ export default function TargetsPage() {
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Tab + Period row */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
@@ -292,12 +293,12 @@ export default function TargetsPage() {
         <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
           <button onClick={() => setTab('org')}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'org' ? '#f97316' : 'transparent', color: tab === 'org' ? '#fff' : 'var(--text-2)' }}>
+            style={{ background: tab === 'org' ? 'var(--accent-orange)' : 'transparent', color: tab === 'org' ? '#fff' : 'var(--text-2)' }}>
             <Building2 size={12} />เป้าองค์กร
           </button>
           <button onClick={() => setTab('sales')}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'sales' ? '#6366f1' : 'transparent', color: tab === 'sales' ? '#fff' : 'var(--text-2)' }}>
+            style={{ background: tab === 'sales' ? 'var(--accent)' : 'transparent', color: tab === 'sales' ? '#fff' : 'var(--text-2)' }}>
             <Users size={12} />เป้า Sales
           </button>
         </div>
@@ -307,7 +308,7 @@ export default function TargetsPage() {
           {(['month','quarter','year'] as ViewPeriod[]).map(p => (
             <button key={p} onClick={() => setViewPeriod(p)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-              style={{ background: viewPeriod === p ? (tab === 'org' ? '#f97316' : '#6366f1') : 'transparent', color: viewPeriod === p ? '#fff' : 'var(--text-2)' }}>
+              style={{ background: viewPeriod === p ? (tab === 'org' ? 'var(--accent-orange)' : 'var(--accent)') : 'transparent', color: viewPeriod === p ? '#fff' : 'var(--text-2)' }}>
               {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
             </button>
           ))}
@@ -325,7 +326,7 @@ export default function TargetsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#f97316', borderTopColor: 'transparent' }} />
+          <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent-orange)', borderTopColor: 'transparent' }} />
         </div>
       ) : fetchError ? (
         <PageError message={fetchError} onRetry={load} />
@@ -335,7 +336,7 @@ export default function TargetsPage() {
           {tab === 'org' && (
             <div className="space-y-6">
               {/* Annual Summary Card */}
-              <div className="rounded-[18px] p-5" style={{ background: 'rgba(249,115,22,0.07)', border: '1px solid rgba(249,115,22,0.25)' }}>
+              <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent-orange) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 size={16} className="text-orange-400" />
                   <h2 className="text-orange-400 font-bold text-sm uppercase tracking-wider">สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
@@ -360,16 +361,16 @@ export default function TargetsPage() {
                         <span style={{ color: 'var(--text-2)' }}>เป้า{periodLabel}</span>
                         <span className="text-emerald-400">{pct(orgActualSales, orgTotalSales)}%</span>
                       </div>
-                      <ProgressBar value={orgActualSales} max={orgTotalSales} color="#34d399" />
-                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalSales)}</p>
+                      <ProgressBar value={orgActualSales} max={orgTotalSales} color="var(--accent-green)" />
+                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalSales)}</p>
                     </div>
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span style={{ color: 'var(--text-2)' }}>ส่งมอบ{periodLabel}</span>
                         <span className="text-blue-400">{pct(orgActualDeliv, orgTotalDeliv)}%</span>
                       </div>
-                      <ProgressBar value={orgActualDeliv} max={orgTotalDeliv} color="#60a5fa" />
-                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalDeliv)}</p>
+                      <ProgressBar value={orgActualDeliv} max={orgTotalDeliv} color="var(--accent-blue)" />
+                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalDeliv)}</p>
                     </div>
                   </div>
                 )}
@@ -377,11 +378,11 @@ export default function TargetsPage() {
 
               {/* Sales team vs Org gap */}
               {orgTotalSales > 0 && salesTeamSalesTarget > 0 && (
-                <div className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                <div className="ds-card p-4">
                   <p className="text-card-title mb-3" style={{ color: 'var(--text-2)' }}>เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ยอดขาย</p>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>ยอดขาย</p>
                       <div className="flex items-end gap-2">
                         <span className="text-orange-400 text-sm font-bold">{f(orgTotalSales)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
@@ -391,11 +392,11 @@ export default function TargetsPage() {
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamSalesTarget < orgTotalSales && (
-                        <p className="text-red-400 text-[10px] mt-1">ขาด {f(orgTotalSales - salesTeamSalesTarget)}</p>
+                        <p className="text-red-400 text-micro mt-1">ขาด {f(orgTotalSales - salesTeamSalesTarget)}</p>
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
                       <div className="flex items-end gap-2">
                         <span className="text-orange-400 text-sm font-bold">{f(orgTotalDeliv)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
@@ -405,7 +406,7 @@ export default function TargetsPage() {
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamDelivTarget < orgTotalDeliv && (
-                        <p className="text-red-400 text-[10px] mt-1">ขาด {f(orgTotalDeliv - salesTeamDelivTarget)}</p>
+                        <p className="text-red-400 text-micro mt-1">ขาด {f(orgTotalDeliv - salesTeamDelivTarget)}</p>
                       )}
                     </div>
                   </div>
@@ -413,7 +414,7 @@ export default function TargetsPage() {
               )}
 
               {/* Monthly breakdown table */}
-              <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+              <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
                 <div className="px-5 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--divider)' }}>
                   <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
                 </div>
@@ -499,7 +500,7 @@ export default function TargetsPage() {
 
           {/* ══ SALES TARGETS TAB ═══════════════════════════ (placeholder removed) */}
           {false && (() => {
-            const TEAM_COLORS = ['#6366f1', '#ec4899']
+            const TEAM_COLORS = ['var(--accent)', '#ec4899']
             const managerIds = [...new Set(users.filter(u => u.manager_id).map(u => u.manager_id!))]
             const teamData = managerIds.map((mgrId, idx) => {
               const manager = users.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId }
@@ -535,28 +536,28 @@ export default function TargetsPage() {
                       {/* Team totals */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
-                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ยอดขายทีม</p>
-                          <p className="font-bold text-base" style={{ color: '#4ade80' }}>{f(team.teamActualSales)}</p>
+                          <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ยอดขายทีม</p>
+                          <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{f(team.teamActualSales)}</p>
                           {team.teamTargetSales > 0 && <>
-                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(team.teamTargetSales)}</p>
-                            <ProgressBar value={team.teamActualSales} max={team.teamTargetSales} color="#4ade80" />
-                            <p className="text-[10px] mt-0.5 text-right" style={{ color: '#4ade80' }}>{pct(team.teamActualSales, team.teamTargetSales)}%</p>
+                            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(team.teamTargetSales)}</p>
+                            <ProgressBar value={team.teamActualSales} max={team.teamTargetSales} color="var(--accent-green)" />
+                            <p className="text-micro mt-0.5 text-right" style={{ color: 'var(--accent-green)' }}>{pct(team.teamActualSales, team.teamTargetSales)}%</p>
                           </>}
                         </div>
                         <div className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
-                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบทีม</p>
-                          <p className="font-bold text-base" style={{ color: '#60a5fa' }}>{f(team.teamActualDeliv)}</p>
+                          <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบทีม</p>
+                          <p className="font-bold text-base" style={{ color: 'var(--accent-blue)' }}>{f(team.teamActualDeliv)}</p>
                           {team.teamTargetDeliv > 0 && <>
-                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(team.teamTargetDeliv)}</p>
-                            <ProgressBar value={team.teamActualDeliv} max={team.teamTargetDeliv} color="#60a5fa" />
-                            <p className="text-[10px] mt-0.5 text-right" style={{ color: '#60a5fa' }}>{pct(team.teamActualDeliv, team.teamTargetDeliv)}%</p>
+                            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(team.teamTargetDeliv)}</p>
+                            <ProgressBar value={team.teamActualDeliv} max={team.teamTargetDeliv} color="var(--accent-blue)" />
+                            <p className="text-micro mt-0.5 text-right" style={{ color: 'var(--accent-blue)' }}>{pct(team.teamActualDeliv, team.teamTargetDeliv)}%</p>
                           </>}
                         </div>
                       </div>
 
                       {/* Member breakdown */}
                       <div className="space-y-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
+                        <p className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
                         {team.members.map(u => {
                           const actS = getUserActual(u.id, 'sales')
                           const actD = getUserActual(u.id, 'deliv')
@@ -566,28 +567,28 @@ export default function TargetsPage() {
                             <div key={u.id} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-micro font-bold text-white"
                                     style={{ background: team.color + '99' }}>{u.name[0]}</div>
                                   <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</span>
                                 </div>
                                 {tgtS > 0 && (
-                                  <span className="text-[10px] font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? '#4ade80' : 'var(--text-3)' }}>
+                                  <span className="text-micro font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? 'var(--accent-green)' : 'var(--text-3)' }}>
                                     {pct(actS, tgtS)}%
                                   </span>
                                 )}
                               </div>
-                              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                              <div className="grid grid-cols-2 gap-2 text-micro">
                                 <div>
                                   <span style={{ color: 'var(--text-3)' }}>ขาย </span>
-                                  <span style={{ color: '#4ade80' }}>{f(actS)}</span>
+                                  <span style={{ color: 'var(--accent-green)' }}>{f(actS)}</span>
                                   {tgtS > 0 && <span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span>}
-                                  {tgtS > 0 && <ProgressBar value={actS} max={tgtS} color="#4ade80" />}
+                                  {tgtS > 0 && <ProgressBar value={actS} max={tgtS} color="var(--accent-green)" />}
                                 </div>
                                 <div>
                                   <span style={{ color: 'var(--text-3)' }}>ส่งมอบ </span>
-                                  <span style={{ color: '#60a5fa' }}>{f(actD)}</span>
+                                  <span style={{ color: 'var(--accent-blue)' }}>{f(actD)}</span>
                                   {tgtD > 0 && <span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span>}
-                                  {tgtD > 0 && <ProgressBar value={actD} max={tgtD} color="#60a5fa" />}
+                                  {tgtD > 0 && <ProgressBar value={actD} max={tgtD} color="var(--accent-blue)" />}
                                 </div>
                               </div>
                             </div>
@@ -616,11 +617,11 @@ export default function TargetsPage() {
                             ))}
                           </tr>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                            <th className="text-left px-4 py-1.5 text-[10px]" style={{ color: 'var(--text-3)' }}></th>
+                            <th className="text-left px-4 py-1.5 text-micro" style={{ color: 'var(--text-3)' }}></th>
                             {teamData.map(t => (
                               <>
-                                <th key={t.manager.id + 's'} className="text-right px-3 py-1.5 text-[10px]" style={{ color: 'var(--text-3)' }}>ยอดขาย</th>
-                                <th key={t.manager.id + 'd'} className="text-right px-3 py-1.5 text-[10px]" style={{ color: 'var(--text-3)' }}>ส่งมอบ</th>
+                                <th key={t.manager.id + 's'} className="text-right px-3 py-1.5 text-micro" style={{ color: 'var(--text-3)' }}>ยอดขาย</th>
+                                <th key={t.manager.id + 'd'} className="text-right px-3 py-1.5 text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบ</th>
                               </>
                             ))}
                           </tr>
@@ -637,10 +638,10 @@ export default function TargetsPage() {
                                   <>
                                     <td key={t.manager.id + 's'} className="px-3 py-2">
                                       <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</p>
-                                      <p className="text-[10px]" style={{ color: '#4ade80' }}>{f(getUserActual(u.id, 'sales'))}</p>
+                                      <p className="text-micro" style={{ color: 'var(--accent-green)' }}>{f(getUserActual(u.id, 'sales'))}</p>
                                     </td>
                                     <td key={t.manager.id + 'd'} className="px-3 py-2 text-right">
-                                      <p className="text-[10px]" style={{ color: '#60a5fa' }}>{f(getUserActual(u.id, 'deliv'))}</p>
+                                      <p className="text-micro" style={{ color: 'var(--accent-blue)' }}>{f(getUserActual(u.id, 'deliv'))}</p>
                                     </td>
                                   </>
                                 )
@@ -653,12 +654,12 @@ export default function TargetsPage() {
                             {teamData.map(t => (
                               <>
                                 <td key={t.manager.id + 'ts'} className="px-3 py-2">
-                                  <p className="text-xs font-bold" style={{ color: '#4ade80' }}>{f(t.teamActualSales)}</p>
-                                  {t.teamTargetSales > 0 && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualSales, t.teamTargetSales)}%</p>}
+                                  <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{f(t.teamActualSales)}</p>
+                                  {t.teamTargetSales > 0 && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualSales, t.teamTargetSales)}%</p>}
                                 </td>
                                 <td key={t.manager.id + 'td'} className="px-3 py-2 text-right">
-                                  <p className="text-xs font-bold" style={{ color: '#60a5fa' }}>{f(t.teamActualDeliv)}</p>
-                                  {t.teamTargetDeliv > 0 && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualDeliv, t.teamTargetDeliv)}%</p>}
+                                  <p className="text-xs font-bold" style={{ color: 'var(--accent-blue)' }}>{f(t.teamActualDeliv)}</p>
+                                  {t.teamTargetDeliv > 0 && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualDeliv, t.teamTargetDeliv)}%</p>}
                                 </td>
                               </>
                             ))}
@@ -676,7 +677,7 @@ export default function TargetsPage() {
           {tab === 'sales' && (
             <div className="space-y-4">
               {grouped.length === 0 ? (
-                <div className="text-center py-16 rounded-[18px]" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                <div className="text-center py-16 ds-card">
                   <Target size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
                   <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีเป้าหมายสำหรับช่วงนี้</p>
                 </div>
@@ -690,9 +691,9 @@ export default function TargetsPage() {
                     const sparkSales = sparkMonths.map(m => (actualSalesByUser[t.user_id]?.[m] || 0))
                     const sparkDeliv = sparkMonths.map(m => (actualDelivByUser[t.user_id]?.[m] || 0))
                     const trend = sparkSales[2] > sparkSales[0] ? '↑' : sparkSales[2] < sparkSales[0] ? '↓' : '→'
-                    const trendColor = trend === '↑' ? '#4ade80' : trend === '↓' ? '#f87171' : 'var(--text-3)'
+                    const trendColor = trend === '↑' ? 'var(--accent-green)' : trend === '↓' ? 'var(--accent-red)' : 'var(--text-3)'
                     return (
-                      <div key={t.user_id} className="rounded-[18px] p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                      <div key={t.user_id} className="ds-card p-4">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
@@ -719,38 +720,38 @@ export default function TargetsPage() {
 
                         <div className="grid grid-cols-2 gap-2 mb-3">
                           <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
-                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
+                            <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
                             <p className="text-emerald-400 font-bold text-base">{f(t.target_sales_value)}</p>
-                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actS)}</span></p>
-                            <ProgressBar value={actS} max={t.target_sales_value} color="#34d399" />
-                            <p className="text-emerald-400 text-[10px] mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
+                            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actS)}</span></p>
+                            <ProgressBar value={actS} max={t.target_sales_value} color="var(--accent-green)" />
+                            <p className="text-emerald-400 text-micro mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
                           </div>
                           <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
-                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
+                            <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
                             <p className="text-blue-400 font-bold text-base">{f(t.target_delivery_value)}</p>
-                            <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>
-                            <ProgressBar value={actD} max={t.target_delivery_value} color="#60a5fa" />
-                            <p className="text-blue-400 text-[10px] mt-0.5 text-right">{pct(actD, t.target_delivery_value)}%</p>
+                            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>
+                            <ProgressBar value={actD} max={t.target_delivery_value} color="var(--accent-blue)" />
+                            <p className="text-blue-400 text-micro mt-0.5 text-right">{pct(actD, t.target_delivery_value)}%</p>
                           </div>
                         </div>
 
                         {/* Trend sparkline */}
                         <div className="rounded-lg p-3 flex items-center gap-4" style={{ background: 'var(--hover-bg)' }}>
                           <div>
-                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>
+                            <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>
                               trend 3 เดือน <span style={{ color: trendColor }}>{trend}</span>
                             </p>
-                            <Sparkline points={sparkSales} color="#4ade80" />
+                            <Sparkline points={sparkSales} color="var(--accent-green)" />
                           </div>
                           <div>
-                            <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
-                            <Sparkline points={sparkDeliv} color="#60a5fa" />
+                            <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
+                            <Sparkline points={sparkDeliv} color="var(--accent-blue)" />
                           </div>
-                          <div className="text-[10px] space-y-0.5 ml-auto">
+                          <div className="text-micro space-y-0.5 ml-auto">
                             {sparkMonths.map((m, i) => (
                               <div key={m} className="flex gap-2 justify-between" style={{ color: 'var(--text-3)' }}>
                                 <span>{MONTHS[m - 1]}</span>
-                                <span style={{ color: '#4ade80' }}>{sparkSales[i] > 0 ? `฿${(sparkSales[i] / 1e6).toFixed(1)}M` : '—'}</span>
+                                <span style={{ color: 'var(--accent-green)' }}>{sparkSales[i] > 0 ? `฿${(sparkSales[i] / 1e6).toFixed(1)}M` : '—'}</span>
                               </div>
                             ))}
                           </div>
@@ -758,15 +759,15 @@ export default function TargetsPage() {
 
                         <div className="grid grid-cols-3 gap-2">
                           {[
-                            { label: 'โทร', v: t.target_calls, c: '#fbbf24' },
-                            { label: 'เยี่ยม', v: t.target_visits, c: '#fbbf24' },
-                            { label: 'Lead', v: t.target_leads, c: '#a78bfa' },
+                            { label: 'โทร', v: t.target_calls, c: 'var(--accent-amber)' },
+                            { label: 'เยี่ยม', v: t.target_visits, c: 'var(--accent-amber)' },
+                            { label: 'Lead', v: t.target_leads, c: 'var(--accent-purple)' },
                             { label: 'Booking', v: t.target_bookings, c: '#f472b6' },
-                            { label: 'ปิดขาย', v: t.target_closed, c: '#34d399' },
-                            { label: 'BK Value', v: null, d: f(t.target_booking_value), c: '#fb923c' },
+                            { label: 'ปิดขาย', v: t.target_closed, c: 'var(--accent-green)' },
+                            { label: 'BK Value', v: null, d: f(t.target_booking_value), c: 'var(--accent-orange)' },
                           ].map(item => (
                             <div key={item.label} className="rounded-lg p-2" style={{ background: 'var(--card-bg)' }}>
-                              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{item.label}</p>
+                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{item.label}</p>
                               <p className="text-xs font-semibold mt-0.5" style={{ color: item.c }}>{item.d ?? item.v}</p>
                             </div>
                           ))}
@@ -806,7 +807,7 @@ export default function TargetsPage() {
           {[1, 2].map(s => (
             <div key={s} className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{ background: salesModalStep >= s ? '#6366f1' : 'var(--hover-bg)', color: salesModalStep >= s ? '#fff' : 'var(--text-3)' }}>
+                style={{ background: salesModalStep >= s ? 'var(--accent)' : 'var(--hover-bg)', color: salesModalStep >= s ? '#fff' : 'var(--text-3)' }}>
                 {s}
               </div>
               <span className="text-xs" style={{ color: salesModalStep === s ? 'var(--text-1)' : 'var(--text-3)' }}>
@@ -838,7 +839,7 @@ export default function TargetsPage() {
                 <div className="col-span-2">
                   <button onClick={() => setSalesForm(f => ({ ...f, target_sales_value: prevTarget.target_sales_value || 0, target_delivery_value: prevTarget.target_delivery_value || 0, target_booking_value: prevTarget.target_booking_value || 0, target_calls: prevTarget.target_calls, target_visits: prevTarget.target_visits, target_leads: prevTarget.target_leads, target_bookings: prevTarget.target_bookings, target_closed: prevTarget.target_closed }))}
                     className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
-                    style={{ color: '#6366f1', borderColor: '#6366f1', background: 'transparent' }}>
+                    style={{ color: 'var(--accent)', borderColor: 'var(--accent)', background: 'transparent' }}>
                     ใช้เป้าเดิม ({MONTHS[prevMonth - 1]})
                   </button>
                 </div>
@@ -867,7 +868,7 @@ export default function TargetsPage() {
           {salesModalStep === 1 ? (
             <button onClick={() => setSalesModalStep(2)} disabled={!salesForm.user_id}
               className="px-4 py-2 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
-              style={{ background: '#6366f1' }}>
+              style={{ background: 'var(--accent)' }}>
               ถัดไป →
             </button>
           ) : (

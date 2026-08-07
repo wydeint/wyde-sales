@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DollarSign, ChevronDown, ChevronRight, CheckCircle, Clock, Banknote, Plus, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -837,10 +838,7 @@ export default function CommissionPage() {
 
   return (
     <div className="page-content space-y-5">
-      <div>
-        <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Commission</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>ค่าคอมมิชชั่น · ค่าแนะนำ · สถานะการเบิก</p>
-      </div>
+      <PageHeader title="Commission" subtitle="ค่าคอมมิชชั่น · ค่าแนะนำ · สถานะการเบิก" className="" />
 
       {/* Tab bar */}
       <div className="tab-group w-fit">

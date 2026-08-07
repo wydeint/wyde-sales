@@ -1,9 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 
 type Customer = {
   id: string; status: string; budget: number; customer_type: string
@@ -35,8 +36,8 @@ const STATUS_LABEL: Record<string, string> = {
   booked: 'จอง', close_pending: 'รอปิด', closed: 'ปิดแล้ว', lost: 'หลุด'
 }
 const STATUS_COLOR: Record<string, string> = {
-  new: '#60a5fa', interested: '#34d399', quoted: '#fbbf24',
-  booked: '#f97316', close_pending: '#a78bfa', closed: '#4ade80', lost: '#f87171'
+  new: 'var(--accent-blue)', interested: 'var(--accent-green)', quoted: 'var(--accent-amber)',
+  booked: 'var(--accent-orange)', close_pending: 'var(--accent-purple)', closed: 'var(--accent-green)', lost: 'var(--accent-red)'
 }
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
@@ -253,12 +254,11 @@ export default function ExecutivePage() {
     <div className="page-content space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Sales Performance</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>ยอดขายนับจาก order_date · ยอดส่งมอบจาก actual_deliver_date</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Sales Performance"
+        subtitle="ยอดขายนับจาก order_date · ยอดส่งมอบจาก actual_deliver_date"
+        className="mb-5"
+      />
 
       {/* Tab bar — same style as Finance */}
       <div className="flex gap-1 rounded-[11px] p-1 mb-5 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
@@ -310,27 +310,27 @@ export default function ExecutivePage() {
 
       {/* Org Target Banner */}
       {orgTarget && offset === 0 && (
-        <div className="rounded-[18px] p-4 flex gap-6 flex-wrap" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)' }}>
+        <div className="rounded-[18px] p-4 flex gap-6 flex-wrap" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
           <div className="flex items-center gap-2">
             <Target size={13} style={{ color: 'var(--accent-orange)' }} />
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--accent-orange)' }}>เป้าองค์กร {label}</span>
           </div>
           <div className="flex gap-8 flex-wrap">
             <div>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
               <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{f(orgTarget.sales)}</p>
               <div className="mt-1 h-1.5 w-36 rounded-full" style={{ background: 'var(--divider)' }}>
                 <div className="h-1.5 rounded-full transition-all" style={{ background: 'var(--accent-green)', width: `${Math.min(pct(salesRevenue, orgTarget.sales), 100)}%` }} />
               </div>
-              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(salesRevenue)} ({pct(salesRevenue, orgTarget.sales)}%)</p>
+              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(salesRevenue)} ({pct(salesRevenue, orgTarget.sales)}%)</p>
             </div>
             <div>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
               <p className="font-bold text-sm" style={{ color: 'var(--accent-blue)' }}>{f(orgTarget.delivery)}</p>
               <div className="mt-1 h-1.5 w-36 rounded-full" style={{ background: 'var(--divider)' }}>
                 <div className="h-1.5 rounded-full transition-all" style={{ background: 'var(--accent-blue)', width: `${Math.min(pct(deliveryRevenue, orgTarget.delivery), 100)}%` }} />
               </div>
-              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(deliveryRevenue)} ({pct(deliveryRevenue, orgTarget.delivery)}%)</p>
+              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(deliveryRevenue)} ({pct(deliveryRevenue, orgTarget.delivery)}%)</p>
             </div>
           </div>
         </div>
@@ -339,10 +339,10 @@ export default function ExecutivePage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: TrendingUp, label: 'ยอดขาย (Order Date)', value: fk(salesRevenue), sub: `${periodJobs.length} งาน`, color: '#4ade80' },
-          { icon: Package, label: 'ยอดส่งมอบ', value: fk(deliveryRevenue), sub: `${deliveredJobs.length} งาน`, color: '#60a5fa' },
-          { icon: Users, label: 'Win Rate (ช่วงนี้)', value: winRate + '%', sub: `ปิด ${periodClosed} · หลุด ${periodLost} (เข้า pipeline ${start.slice(0,7)})`, color: winRate >= 50 ? '#4ade80' : '#f97316' },
-          { icon: DollarSign, label: 'Revenue เฉลี่ย/งาน', value: fk(avgRevenue), sub: `จาก ${periodJobs.length} งาน`, color: '#fbbf24' },
+          { icon: TrendingUp, label: 'ยอดขาย (Order Date)', value: fk(salesRevenue), sub: `${periodJobs.length} งาน`, color: 'var(--accent-green)' },
+          { icon: Package, label: 'ยอดส่งมอบ', value: fk(deliveryRevenue), sub: `${deliveredJobs.length} งาน`, color: 'var(--accent-blue)' },
+          { icon: Users, label: 'Win Rate (ช่วงนี้)', value: winRate + '%', sub: `ปิด ${periodClosed} · หลุด ${periodLost} (เข้า pipeline ${start.slice(0,7)})`, color: winRate >= 50 ? 'var(--accent-green)' : 'var(--accent-orange)' },
+          { icon: DollarSign, label: 'Revenue เฉลี่ย/งาน', value: fk(avgRevenue), sub: `จาก ${periodJobs.length} งาน`, color: 'var(--accent-amber)' },
         ].map(({ icon: Icon, label: lbl, value, sub, color }) => (
           <div key={lbl} className="ds-card-sm">
             <div className="flex items-center gap-2 mb-2">
@@ -358,9 +358,9 @@ export default function ExecutivePage() {
       {/* B2C / B2B / RPT split */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'B2C', revenue: b2cRevenue, count: periodJobs.filter(j => j.customer_type === 'B2C').length, color: '#60a5fa' },
-          { label: 'B2B', revenue: b2bRevenue, count: periodJobs.filter(j => j.customer_type === 'B2B').length, color: '#a78bfa' },
-          { label: 'RPT', revenue: rptRevenue, count: periodJobs.filter(j => j.work_type === 'RPT').length, color: '#34d399' },
+          { label: 'B2C', revenue: b2cRevenue, count: periodJobs.filter(j => j.customer_type === 'B2C').length, color: 'var(--accent-blue)' },
+          { label: 'B2B', revenue: b2bRevenue, count: periodJobs.filter(j => j.customer_type === 'B2B').length, color: 'var(--accent-purple)' },
+          { label: 'RPT', revenue: rptRevenue, count: periodJobs.filter(j => j.work_type === 'RPT').length, color: 'var(--accent-green)' },
         ].map(s => (
           <div key={s.label} className="ds-card-sm">
             <div className="flex items-center justify-between mb-1">
@@ -441,7 +441,7 @@ export default function ExecutivePage() {
             {monthlyTrend.map(m => (
               <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full rounded-t-lg relative group"
-                  style={{ height: m.revenue > 0 ? Math.max(m.revenue / trendMax * 100, 4) + 'px' : '4px', background: m.revenue > 0 ? 'linear-gradient(180deg,var(--accent),rgba(99,102,241,0.4))' : 'var(--divider)', minHeight: '4px' }}>
+                  style={{ height: m.revenue > 0 ? Math.max(m.revenue / trendMax * 100, 4) + 'px' : '4px', background: m.revenue > 0 ? 'linear-gradient(180deg,var(--accent),color-mix(in srgb, var(--accent) 40%, transparent))' : 'var(--divider)', minHeight: '4px' }}>
                   {m.revenue > 0 && (
                     <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs whitespace-nowrap px-1.5 py-0.5 rounded-lg z-10"
                       style={{ background: 'var(--active-bg)', color: 'var(--text-1)' }}>
@@ -449,7 +449,7 @@ export default function ExecutivePage() {
                     </div>
                   )}
                 </div>
-                <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{m.label}</span>
+                <span className="text-micro" style={{ color: 'var(--text-3)' }}>{m.label}</span>
               </div>
             ))}
           </div>
@@ -459,7 +459,7 @@ export default function ExecutivePage() {
       {/* Sales Ranking */}
       <div className="ds-card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Award size={13} style={{ color: '#fbbf24' }} />
+          <Award size={13} style={{ color: 'var(--accent-amber)' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales Ranking — {label}</h2>
         </div>
         {salesRanking.length === 0 ? (
@@ -495,7 +495,7 @@ export default function ExecutivePage() {
       {/* ══ TEAM TAB ══════════════════════════════════════════ */}
       {mainTab === 'team' && (() => {
         const now = new Date(); const thisMonth = now.getMonth() + 1
-        const TEAM_COLORS = ['#6366f1', '#ec4899']
+        const TEAM_COLORS = ['var(--accent)', '#ec4899']
         const managerIds = [...new Set(teamUsers.filter(u => u.manager_id).map(u => u.manager_id!))]
         const teamData = managerIds.map((mgrId, idx) => {
           const manager = teamUsers.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId, manager_id: null }
@@ -543,22 +543,22 @@ export default function ExecutivePage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    {[{ label: 'ยอดขายทีม', val: team.teamActualSales, tgt: team.teamTargetSales, color: '#4ade80' },
-                      { label: 'รายรับทีม', val: team.teamActualReceived, tgt: 0, color: '#34d399' },
-                      { label: 'ส่งมอบทีม', val: team.teamActualDeliv, tgt: team.teamTargetDeliv, color: '#60a5fa' }].map(item => (
+                    {[{ label: 'ยอดขายทีม', val: team.teamActualSales, tgt: team.teamTargetSales, color: 'var(--accent-green)' },
+                      { label: 'รายรับทีม', val: team.teamActualReceived, tgt: 0, color: 'var(--accent-green)' },
+                      { label: 'ส่งมอบทีม', val: team.teamActualDeliv, tgt: team.teamTargetDeliv, color: 'var(--accent-blue)' }].map(item => (
                       <div key={item.label} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
-                        <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>{item.label}</p>
+                        <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>{item.label}</p>
                         <p className="font-bold text-base" style={{ color: item.color }}>{f(item.val)}</p>
                         {item.tgt > 0 && <>
-                          <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(item.tgt)}</p>
+                          <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(item.tgt)}</p>
                           <ProgressBar value={item.val} max={item.tgt} color={item.color} />
-                          <p className="text-[10px] mt-0.5 text-right" style={{ color: item.color }}>{pct(item.val, item.tgt)}%</p>
+                          <p className="text-micro mt-0.5 text-right" style={{ color: item.color }}>{pct(item.val, item.tgt)}%</p>
                         </>}
                       </div>
                     ))}
                   </div>
                   <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
+                    <p className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>รายคน</p>
                     {team.members.map(u => {
                       const actS = team.getActual(u.id, 'sales')
                       const actD = team.getActual(u.id, 'deliv')
@@ -569,26 +569,26 @@ export default function ExecutivePage() {
                         <div key={u.id} className="rounded-lg p-3" style={{ background: 'var(--hover-bg)' }}>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-micro font-bold text-white"
                                 style={{ background: team.color + '99' }}>{u.name[0]}</div>
                               <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</span>
                             </div>
-                            {tgtS > 0 && <span className="text-[10px] font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? '#4ade80' : 'var(--text-3)' }}>{pct(actS, tgtS)}%</span>}
+                            {tgtS > 0 && <span className="text-micro font-semibold" style={{ color: pct(actS, tgtS) >= 100 ? 'var(--accent-green)' : 'var(--text-3)' }}>{pct(actS, tgtS)}%</span>}
                           </div>
-                          <div className="grid grid-cols-3 gap-2 text-[10px]">
+                          <div className="grid grid-cols-3 gap-2 text-micro">
                             <div>
                               <span style={{ color: 'var(--text-3)' }}>ขาย </span>
-                              <span style={{ color: '#4ade80' }}>{f(actS)}</span>
-                              {tgtS > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span><ProgressBar value={actS} max={tgtS} color="#4ade80" /></>}
+                              <span style={{ color: 'var(--accent-green)' }}>{f(actS)}</span>
+                              {tgtS > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtS)}</span><ProgressBar value={actS} max={tgtS} color="var(--accent-green)" /></>}
                             </div>
                             <div>
                               <span style={{ color: 'var(--text-3)' }}>รายรับ </span>
-                              <span style={{ color: '#34d399' }}>{f(actR)}</span>
+                              <span style={{ color: 'var(--accent-green)' }}>{f(actR)}</span>
                             </div>
                             <div>
                               <span style={{ color: 'var(--text-3)' }}>ส่งมอบ </span>
-                              <span style={{ color: '#60a5fa' }}>{f(actD)}</span>
-                              {tgtD > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span><ProgressBar value={actD} max={tgtD} color="#60a5fa" /></>}
+                              <span style={{ color: 'var(--accent-blue)' }}>{f(actD)}</span>
+                              {tgtD > 0 && <><span style={{ color: 'var(--text-3)' }}> / {f(tgtD)}</span><ProgressBar value={actD} max={tgtD} color="var(--accent-blue)" /></>}
                             </div>
                           </div>
                         </div>

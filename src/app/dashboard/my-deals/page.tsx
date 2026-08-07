@@ -2183,11 +2183,11 @@ export default function MyDealsPage() {
   const totalActive = useMemo(() => jobs.filter(j => !j.actual_deliver_date).length, [jobs])
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
+    <div className="page-content">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex-1">
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>My Deals</h1>
+          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>My Deals</h1>
           {!loading && (
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
               {totalActive} งานที่กำลังดำเนินการ · {grouped.length} โครงการ

@@ -178,10 +178,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-panel"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -221,7 +219,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                       <button key={p.value} onClick={() => setPlan(p.value)}
                         className="w-full text-left px-4 py-3 rounded-[11px] border transition-all"
                         style={plan === p.value
-                          ? { background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.4)', color: 'var(--text-1)' }
+                          ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                           : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                         <p className="text-sm font-semibold">{p.label}</p>
                         <p className="text-xs opacity-60 mt-0.5">{p.desc}</p>
@@ -294,8 +292,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                       style={{ background: 'var(--hover-bg)' }}>
                       <div>
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
-                        {p.trigger && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">เริ่มงาน</span>}
-                        {p.final && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">สุดท้าย</span>}
+                        {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">เริ่มงาน</span>}
+                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">สุดท้าย</span>}
                       </div>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(p.amount)}</span>
                     </div>
@@ -328,7 +326,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                     style={{ color: useVoucher ? 'var(--accent)' : 'var(--text-2)' }}>
                     <div className="w-4 h-4 rounded border flex items-center justify-center"
                       style={{ background: useVoucher ? 'var(--accent)' : 'transparent', borderColor: useVoucher ? 'var(--accent)' : 'var(--divider)' }}>
-                      {useVoucher && <span className="text-white text-[10px] font-bold">✓</span>}
+                      {useVoucher && <span className="text-white text-micro font-bold">✓</span>}
                     </div>
                     ใช้ Voucher
                   </button>
@@ -418,10 +416,8 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
-        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-panel"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -438,18 +434,18 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                 <button key={inst.id} onClick={() => selectInst(inst)}
                   className="w-full text-left px-4 py-3 rounded-[11px] border transition-all"
                   style={selected?.id === inst.id
-                    ? { background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.4)', color: 'var(--text-1)' }
+                    ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                     : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                   <div className="flex justify-between">
                     <span className="text-sm font-semibold">{inst.installment_name}</span>
                     <span className="text-sm font-bold">{fmtBaht(inst.paid_amount ?? inst.amount)}</span>
                   </div>
                   <div className="flex gap-2 mt-0.5">
-                    {inst.status === 'paid' && <span className="text-[10px] text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
-                    {inst.is_work_trigger && <span className="text-[10px] text-indigo-400">เริ่มงาน</span>}
-                    {inst.is_final && <span className="text-[10px] text-amber-400">งวดสุดท้าย</span>}
-                    {inst.voucher_amount > 0 && <span className="text-[10px] text-pink-400">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
-                    {inst.status !== 'paid' && inst.due_date && <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
+                    {inst.status === 'paid' && <span className="text-micro text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
+                    {inst.is_work_trigger && <span className="text-micro text-indigo-400">เริ่มงาน</span>}
+                    {inst.is_final && <span className="text-micro text-amber-400">งวดสุดท้าย</span>}
+                    {inst.voucher_amount > 0 && <span className="text-micro text-pink-400">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
+                    {inst.status !== 'paid' && inst.due_date && <span className="text-micro" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                   </div>
                 </button>
               ))}
@@ -586,10 +582,8 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ padding: '1rem', paddingTop: '3.5rem' }} onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-sm rounded-[18px] shadow-2xl"
-        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-panel"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
@@ -632,14 +626,14 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
               </label>
             </div>
           )}
-          <div className="rounded-[11px] p-3" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid var(--divider)' }}>
+          <div className="rounded-[11px] p-3" style={{ background: 'color-mix(in srgb, var(--accent) 5%, transparent)', border: '1px solid var(--divider)' }}>
             <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ประกันรันอัตโนมัติ {warrantyMonths} เดือน</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
           </div>
-          {error && <p className="text-xs text-red-400 rounded-[8px] px-3 py-2" style={{ background: 'rgba(239,68,68,0.08)' }}>{error}</p>}
+          {error && <p className="text-xs text-red-400 rounded-[8px] px-3 py-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)' }}>{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
-            style={{ background: saving ? '#999' : '#059669' }}>
+            style={{ background: saving ? '#999' : 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
           </button>
         </div>
@@ -668,17 +662,17 @@ function InstallmentRows({ installments }: { installments: Installment[] }) {
           <div className="text-right flex-shrink-0">
             {inst.voucher_amount > 0 && inst.status === 'paid' ? (
               <>
-                <span className="text-[10px] line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
-                <p className="text-[10px] text-pink-400">-{fmtBaht(inst.voucher_amount)}</p>
+                <span className="text-micro line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
+                <p className="text-micro text-pink-400">-{fmtBaht(inst.voucher_amount)}</p>
                 <span className="text-xs font-semibold text-green-400">{fmtBaht(inst.paid_amount ?? 0)}</span>
               </>
             ) : (
-              <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? '#4ade80' : 'var(--text-1)' }}>
+              <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-1)' }}>
                 {fmtBaht(inst.status === 'paid' && inst.paid_amount != null ? inst.paid_amount : inst.amount)}
               </span>
             )}
-            {inst.paid_date && <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{fmtDate(inst.paid_date)}</p>}
-            {inst.voucher_code && <p className="text-[10px] text-pink-400">{inst.voucher_code}</p>}
+            {inst.paid_date && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{fmtDate(inst.paid_date)}</p>}
+            {inst.voucher_code && <p className="text-micro text-pink-400">{inst.voucher_code}</p>}
           </div>
         </div>
       ))}
@@ -780,7 +774,7 @@ export default function JobDetailPage() {
   const revenue = job.revenue_inc_vat || job.revenue_ex_vat || 0
   const overdueCount = job.installments.filter(i => i.status === 'overdue').length
 
-  const stageColor = ['', '#6366f1', '#6366f1', '#f59e0b', '#059669']
+  const stageColor = ['', 'var(--accent)', 'var(--accent)', 'var(--accent-amber)', 'var(--accent-green)']
   const stages = [
     { label: 'ขาย', icon: ShoppingCart, done: true },
     { label: 'เปิดงาน', icon: Wrench, done: hasPlan },
@@ -789,7 +783,7 @@ export default function JobDetailPage() {
   ]
 
   return (
-    <div className="min-h-screen p-4 md:p-6" style={{ background: 'var(--page-bg)' }}>
+    <div className="page-content">
       {/* Back */}
       <button onClick={() => router.push('/dashboard/my-deals')}
         className="flex items-center gap-2 text-sm mb-5 -ml-1"
@@ -805,7 +799,7 @@ export default function JobDetailPage() {
               style={{ background: stageColor[activeStage] }}>
               {job.room_no}
             </span>
-            <h1 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{job.project_name}</h1>
+            <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>{job.project_name}</h1>
           </div>
           <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-3)' }}>
             <span>{job.customer_name}</span>
@@ -826,7 +820,7 @@ export default function JobDetailPage() {
             <div className="text-right">
               {hasPlan && totalCount > 0 && (
                 <>
-                  <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? '#4ade80' : '#f59e0b' }}>
+                  <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-amber)' }}>
                     {paidCount}/{totalCount} งวด
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
@@ -853,21 +847,21 @@ export default function JobDetailPage() {
                     <div className="flex flex-col items-center gap-1">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{
-                          background: s.done ? '#059669' : isActive ? 'rgba(99,102,241,0.15)' : 'var(--hover-bg)',
-                          border: s.done ? '1.5px solid #059669' : isActive ? '1.5px solid #6366f1' : '1.5px solid var(--divider)',
+                          background: s.done ? 'var(--accent-green)' : isActive ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--hover-bg)',
+                          border: s.done ? '1.5px solid var(--accent-green)' : isActive ? '1.5px solid var(--accent)' : '1.5px solid var(--divider)',
                         }}>
                         {s.done
                           ? <CheckCircle2 size={14} className="text-white" />
                           : <Icon size={13} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)' }} />}
                       </div>
-                      <span className="text-[10px] font-semibold whitespace-nowrap"
+                      <span className="text-micro font-semibold whitespace-nowrap"
                         style={{ color: s.done ? 'var(--accent-green)' : isActive ? 'var(--accent)' : 'var(--text-3)' }}>
                         {s.label}
                       </span>
                     </div>
                     {idx < stages.length - 1 && (
                       <div className="flex-1 h-[1.5px] mx-1 mb-4"
-                        style={{ background: s.done ? '#059669' : 'var(--divider)' }} />
+                        style={{ background: s.done ? 'var(--accent-green)' : 'var(--divider)' }} />
                     )}
                   </div>
                 )
@@ -908,7 +902,7 @@ export default function JobDetailPage() {
                 {(finalPaid || job.customer_type === 'B2B') && (
                   <button onClick={() => setModal('handover')}
                     className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
-                    style={{ background: '#059669' }}>
+                    style={{ background: 'var(--accent-green)' }}>
                     บันทึกส่งมอบ
                   </button>
                 )}
@@ -916,7 +910,7 @@ export default function JobDetailPage() {
             ) : (
               <button onClick={() => setModal('handover')}
                 className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
-                style={{ background: '#059669' }}>
+                style={{ background: 'var(--accent-green)' }}>
                 + บันทึกส่งมอบ
               </button>
             )}
@@ -924,7 +918,7 @@ export default function JobDetailPage() {
         ) : (
           <div className="space-y-2">
             <div className="rounded-[12px] p-4 text-center"
-              style={{ background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.2)' }}>
+              style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 20%, transparent)' }}>
               <p className="text-sm font-semibold text-green-400">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
               {job.warranty_end && (
                 <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
@@ -954,7 +948,7 @@ export default function JobDetailPage() {
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] px-4 py-3 rounded-[12px] text-sm font-semibold text-white shadow-xl"
-          style={{ background: 'rgba(239,68,68,0.95)', backdropFilter: 'blur(8px)' }}>
+          style={{ background: 'color-mix(in srgb, var(--accent-red) 95%, transparent)', backdropFilter: 'blur(8px)' }}>
           ⚠️ {toast}
         </div>
       )}

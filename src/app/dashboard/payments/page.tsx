@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, ExternalLink, FileText, X } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Installment {
@@ -65,33 +66,33 @@ function DocIcon({ url, label, short, auto }: { url: string | null; label: strin
       style={{ opacity: has ? 1 : 0.25, cursor: url ? 'pointer' : 'default', textDecoration: 'none' }}>
       <div className="w-7 h-7 rounded flex items-center justify-center"
         style={{
-          background: has ? (isAuto ? 'rgba(52,211,153,0.12)' : 'rgba(99,102,241,0.15)') : 'var(--hover-bg)',
-          color: has ? (isAuto ? '#34d399' : 'var(--accent)') : 'var(--text-3)',
-          border: `1px solid ${has ? (isAuto ? 'rgba(52,211,153,0.3)' : 'rgba(99,102,241,0.3)') : 'var(--divider)'}`,
+          background: has ? (isAuto ? 'color-mix(in srgb, var(--accent-green) 12%, transparent)' : 'color-mix(in srgb, var(--accent) 15%, transparent)') : 'var(--hover-bg)',
+          color: has ? (isAuto ? 'var(--accent-green)' : 'var(--accent)') : 'var(--text-3)',
+          border: `1px solid ${has ? (isAuto ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'color-mix(in srgb, var(--accent) 30%, transparent)') : 'var(--divider)'}`,
         }}>
         {has ? <FileText size={12} /> : <span className="text-[9px] font-bold">{short}</span>}
       </div>
-      <span className="text-[9px]" style={{ color: has ? (isAuto ? '#34d399' : 'var(--accent)') : 'var(--text-3)' }}>{short}</span>
+      <span className="text-[9px]" style={{ color: has ? (isAuto ? 'var(--accent-green)' : 'var(--accent)') : 'var(--text-3)' }}>{short}</span>
     </a>
   )
 }
 
 function InstallmentBadge({ inst }: { inst: Installment }) {
   const color = inst.status === 'paid'
-    ? { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.4)', text: '#4ade80' }
+    ? { bg: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', border: 'color-mix(in srgb, var(--accent-green) 40%, transparent)', text: 'var(--accent-green)' }
     : inst.status === 'overdue'
-    ? { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.4)', text: '#f87171' }
+    ? { bg: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', border: 'color-mix(in srgb, var(--accent-red) 40%, transparent)', text: 'var(--accent-red)' }
     : { bg: 'var(--hover-bg)', border: 'var(--divider)', text: 'var(--text-3)' }
 
   return (
     <div className="flex flex-col items-center gap-0.5">
       <div className="relative group">
-        <div className="w-7 h-7 rounded flex items-center justify-center text-[10px] font-bold cursor-default"
+        <div className="w-7 h-7 rounded flex items-center justify-center text-micro font-bold cursor-default"
           style={{ background: color.bg, border: `1px solid ${color.border}`, color: color.text }}>
           {inst.installment_no}
         </div>
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 hidden group-hover:block pointer-events-none">
-          <div className="bg-gray-900 text-white text-[10px] rounded-[6px] px-2 py-1.5 whitespace-nowrap shadow-lg">
+          <div className="bg-gray-900 text-white text-micro rounded-[6px] px-2 py-1.5 whitespace-nowrap shadow-lg">
             <p className="font-semibold">{inst.installment_name}</p>
             <p>{f(inst.amount)}</p>
             {(inst.slip_url || inst.receipt_url) && (
@@ -101,8 +102,8 @@ function InstallmentBadge({ inst }: { inst: Installment }) {
         </div>
       </div>
       <div className="flex gap-0.5">
-        <span style={{ width: 4, height: 4, borderRadius: '50%', background: inst.slip_url ? '#60a5fa' : 'var(--divider)', display: 'block' }} />
-        <span style={{ width: 4, height: 4, borderRadius: '50%', background: inst.receipt_url ? '#4ade80' : 'var(--divider)', display: 'block' }} />
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: inst.slip_url ? 'var(--accent-blue)' : 'var(--divider)', display: 'block' }} />
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: inst.receipt_url ? 'var(--accent-green)' : 'var(--divider)', display: 'block' }} />
       </div>
     </div>
   )
@@ -121,7 +122,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
         data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1">
-            <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
+            <p className="text-micro uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
             <p className="font-bold text-lg" style={{ color: 'var(--text-1)' }}>ห้อง {job.room_no}</p>
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>{job.customer_name}</p>
           </div>
@@ -133,19 +134,19 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Summary */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-[8px]" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
-              <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
+            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' }}>
+              <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
               <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
             </div>
             <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
-              <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
+              <p className="text-micro font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
               <p className="font-bold text-base" style={{ color: 'var(--accent-red)' }}>{f(job.unpaid_total)}</p>
             </div>
           </div>
 
           {/* Installments */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest mb-2 font-semibold" style={{ color: 'var(--text-3)' }}>
+            <p className="text-micro uppercase tracking-widest mb-2 font-semibold" style={{ color: 'var(--text-3)' }}>
               งวดชำระ ({paidCount}/{total})
             </p>
             <div className="space-y-2">
@@ -154,31 +155,31 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
                 return (
                   <div key={inst.id} className="flex items-center gap-3 p-3 rounded-[8px]"
                     style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                    <div className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                    <div className="w-6 h-6 rounded-[6px] flex items-center justify-center text-micro font-bold flex-shrink-0"
                       style={{ background: inst.status === 'paid' ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : inst.status === 'overdue' ? 'color-mix(in srgb, var(--accent-red) 20%, transparent)' : 'var(--card-bg)', color: txtColor }}>
                       {inst.installment_no}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs truncate" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</p>
-                      <p className="text-[10px]" style={{ color: 'var(--text-2)' }}>{f(inst.amount)}</p>
+                      <p className="text-micro" style={{ color: 'var(--text-2)' }}>{f(inst.amount)}</p>
                     </div>
                     <div className="flex gap-1.5">
                       {inst.slip_url && (
                         <a href={inst.slip_url} target="_blank" rel="noopener noreferrer"
-                          className="text-[10px] px-2 py-1 rounded flex items-center gap-1"
-                          style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>
+                          className="text-micro px-2 py-1 rounded flex items-center gap-1"
+                          style={{ background: 'color-mix(in srgb, var(--accent-blue) 10%, transparent)', color: 'var(--accent-blue)', border: '1px solid color-mix(in srgb, var(--accent-blue) 30%, transparent)' }}>
                           <ExternalLink size={9} /> Slip
                         </a>
                       )}
                       {inst.receipt_url && (
                         <a href={inst.receipt_url} target="_blank" rel="noopener noreferrer"
-                          className="text-[10px] px-2 py-1 rounded flex items-center gap-1"
-                          style={{ background: 'rgba(34,197,94,0.1)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}>
+                          className="text-micro px-2 py-1 rounded flex items-center gap-1"
+                          style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', color: 'var(--accent-green)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' }}>
                           <ExternalLink size={9} /> ใบเสร็จ
                         </a>
                       )}
                       {!inst.slip_url && !inst.receipt_url && (
-                        <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>ไม่มีไฟล์</span>
+                        <span className="text-micro" style={{ color: 'var(--text-3)' }}>ไม่มีไฟล์</span>
                       )}
                     </div>
                   </div>
@@ -190,7 +191,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
 
           {/* Docs */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest mb-3 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
+            <p className="text-micro uppercase tracking-widest mb-3 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
             <div className="space-y-2">
               {[
                 { url: job.quotation1_url, label: 'ใบเสนอราคา 1', short: 'Q1', auto: autoCheckedSale(job) },
@@ -206,13 +207,13 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
                 return (
                   <div key={d.short} className="flex items-center gap-2.5 p-2.5 rounded-[8px]"
                     style={{
-                      background: checked ? (isAuto ? 'rgba(52,211,153,0.06)' : 'rgba(99,102,241,0.06)') : 'var(--hover-bg)',
-                      border: `1px solid ${checked ? (isAuto ? 'rgba(52,211,153,0.2)' : 'rgba(99,102,241,0.2)') : 'var(--divider)'}`,
+                      background: checked ? (isAuto ? 'color-mix(in srgb, var(--accent-green) 6%, transparent)' : 'color-mix(in srgb, var(--accent) 6%, transparent)') : 'var(--hover-bg)',
+                      border: `1px solid ${checked ? (isAuto ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : 'color-mix(in srgb, var(--accent) 20%, transparent)') : 'var(--divider)'}`,
                     }}>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded w-9 text-center flex-shrink-0"
+                    <span className="text-micro font-bold px-1.5 py-0.5 rounded w-9 text-center flex-shrink-0"
                       style={{
-                        background: checked ? (isAuto ? 'rgba(52,211,153,0.15)' : 'rgba(99,102,241,0.15)') : 'var(--card-bg)',
-                        color: checked ? (isAuto ? '#34d399' : 'var(--accent)') : 'var(--text-3)',
+                        background: checked ? (isAuto ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'color-mix(in srgb, var(--accent) 15%, transparent)') : 'var(--card-bg)',
+                        color: checked ? (isAuto ? 'var(--accent-green)' : 'var(--accent)') : 'var(--text-3)',
                       }}>
                       {d.short}
                     </span>
@@ -220,8 +221,8 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
                     {d.url
                       ? <a href={d.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={12} style={{ color: 'var(--accent)' }} /></a>
                       : isAuto
-                        ? <span className="text-[10px]" style={{ color: '#34d399' }}>อัตโนมัติ</span>
-                        : <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>—</span>
+                        ? <span className="text-micro" style={{ color: 'var(--accent-green)' }}>อัตโนมัติ</span>
+                        : <span className="text-micro" style={{ color: 'var(--text-3)' }}>—</span>
                     }
                   </div>
                 )
@@ -320,10 +321,12 @@ export default function PaymentsPage() {
 
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-3">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-page-title flex-1" style={{ color: 'var(--text-1)' }}>สถานะชำระเงิน & เอกสาร</h1>
-          <button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]" style={inputStyle}>รีเฟรช</button>
-        </div>
+        <PageHeader
+          title="Payments"
+          subtitle="สถานะชำระเงินและเอกสารรายห้อง"
+          className="mb-4"
+          actions={<button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]" style={inputStyle}>รีเฟรช</button>}
+        />
 
         {/* Filters */}
         <div className="flex gap-2 mb-3 flex-wrap">
@@ -349,12 +352,12 @@ export default function PaymentsPage() {
         <div className="flex gap-3 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
             style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' }}>
-            <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
+            <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
             <p className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
             style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
-            <p className="text-[10px] font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
+            <p className="text-micro font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
             <p className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{f(totalUnpaid)}</p>
           </div>
           <p className="text-xs self-center" style={{ color: 'var(--text-3)' }}>{filtered.length} รายการ</p>
@@ -386,12 +389,12 @@ export default function PaymentsPage() {
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-bold" style={{ color: 'var(--text-1)' }}>{job.room_no}</p>
-                    <p className="text-[10px] mt-0.5 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
+                    <p className="text-micro mt-0.5 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
                   </td>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p style={{ color: 'var(--text-1)' }}>{job.customer_name}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{job.sales_name}</p>
+                    <p className="text-micro" style={{ color: 'var(--text-3)' }}>{job.sales_name}</p>
                   </td>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
@@ -401,7 +404,7 @@ export default function PaymentsPage() {
                         : job.installments.map(inst => <InstallmentBadge key={inst.id} inst={inst} />)}
                     </div>
                     {job.installments.length > 0 && (
-                      <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
                         {paidCount}/{job.installments.length} งวด · เหลือ {job.installments.length - paidCount}
                       </p>
                     )}
@@ -427,7 +430,7 @@ export default function PaymentsPage() {
                       <DocIcon url={job.delivery_doc_url} label="ใบส่งมอบ" short="HO" auto={autoCheckedDelivery(job)} />
                       <DocIcon url={job.satisfaction_url} label="แบบประเมิน" short="SAT" auto={autoCheckedDelivery(job)} />
                     </div>
-                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-3)' }}>
+                    <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
                       {[job.quotation1_url, job.id_card_url, job.sale_slip_url, job.sale_receipt_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length}/6 เอกสาร
                     </p>
                   </td>

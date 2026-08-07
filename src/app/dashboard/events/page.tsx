@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, CalendarDays, Pencil, Users, ChevronDown, ChevronUp, TrendingUp, UserPlus, CheckCircle2, Smartphone, Save } from 'lucide-react'
 import { PageError, EmptyState } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Project { id: string; name: string }
@@ -483,16 +484,16 @@ export default function EventsPage() {
 
   return (
     <div className="page-content">
-      <div className="flex items-center justify-between mb-6 gap-3">
-        <div className="min-w-0">
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Events</h1>
-          <p className="text-sm mt-0.5 hidden sm:block" style={{ color: 'var(--text-2)' }}>จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance</p>
-        </div>
-        <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
-          className="flex items-center gap-2 btn-green text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
-          <Plus size={16} /><span className="hidden sm:inline">เพิ่ม Event</span><span className="sm:hidden">เพิ่ม</span>
-        </button>
-      </div>
+      <PageHeader
+        title="Events"
+        subtitle="จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance"
+        actions={
+          <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
+            className="flex items-center gap-2 btn-green text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
+            <Plus size={16} /><span className="hidden sm:inline">เพิ่ม Event</span><span className="sm:hidden">เพิ่ม</span>
+          </button>
+        }
+      />
 
       <div className="space-y-3">
         {loading && <div className="flex justify-center py-12"><div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} role="status" aria-label="กำลังโหลด" /></div>}
@@ -582,19 +583,19 @@ export default function EventsPage() {
                       {/* Revenue row */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
-                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานรวม (Booked Value)</p>
+                          <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานรวม (Booked Value)</p>
                           <p className="text-emerald-400 font-bold">{fmtBaht(perf.revenue)}</p>
-                          <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้อง booked</p>
+                          <p className="text-micro" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้อง booked</p>
                         </div>
                         <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
-                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>เฉลี่ย / ห้อง</p>
+                          <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เฉลี่ย / ห้อง</p>
                           <p className="text-blue-400 font-bold">{fmtBaht(perf.booked > 0 ? Math.round(perf.revenue / perf.booked) : 0)}</p>
-                          <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>avg booked value</p>
+                          <p className="text-micro" style={{ color: 'var(--text-3)' }}>avg booked value</p>
                         </div>
                         <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
-                          <p className="text-[10px] mb-1" style={{ color: 'var(--text-3)' }}>มัดจำ (เงินสด)</p>
+                          <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มัดจำ (เงินสด)</p>
                           <p className="text-purple-400 font-bold">{fmtBaht(perf.totalDeposit)}</p>
-                          <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้องที่เก็บมัดจำ</p>
+                          <p className="text-micro" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้องที่เก็บมัดจำ</p>
                         </div>
                       </div>
                     </div>

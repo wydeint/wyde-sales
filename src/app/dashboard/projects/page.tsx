@@ -1,10 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Building2, Pencil, ToggleLeft, ToggleRight, AlertCircle } from 'lucide-react'
 import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, TextArea } from '@/components/ui/Input'
 
 interface Project {
@@ -110,18 +111,18 @@ export default function ProjectsPage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Projects</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการข้อมูลโครงการ</p>
-        </div>
-        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-          <Plus size={16} />เพิ่มโครงการ
-        </button>
-      </div>
+      <PageHeader
+        title="Projects"
+        subtitle="จัดการข้อมูลโครงการ"
+        actions={
+          <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+            <Plus size={16} />เพิ่มโครงการ
+          </button>
+        }
+      />
 
       {/* Table */}
-      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -188,8 +189,8 @@ export default function ProjectsPage() {
           <div className="col-span-2">
             <Input label="ชื่อโครงการ *" value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="เช่น Origin Place Phetkasem" />
             {similarWarning.length > 0 && (
-              <div className="mt-2 p-3 rounded-[8px] text-xs" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--text-2)' }}>
-                <p className="font-semibold mb-1.5" style={{ color: '#fbbf24' }}>⚠ พบโครงการที่ชื่อคล้ายกัน — ตรวจสอบก่อนสร้างใหม่</p>
+              <div className="mt-2 p-3 rounded-[8px] text-xs" style={{ background: 'color-mix(in srgb, var(--accent-amber) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)', color: 'var(--text-2)' }}>
+                <p className="font-semibold mb-1.5" style={{ color: 'var(--accent-amber)' }}>⚠ พบโครงการที่ชื่อคล้ายกัน — ตรวจสอบก่อนสร้างใหม่</p>
                 <ul className="space-y-0.5">
                   {similarWarning.map(p => (
                     <li key={p.id} className="flex items-center gap-2">
@@ -210,7 +211,7 @@ export default function ProjectsPage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

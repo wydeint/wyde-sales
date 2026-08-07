@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Customer {
@@ -624,13 +625,7 @@ export default function CustomersPage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>ลูกค้าใน Pipeline</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>รายชื่อลูกค้าและ Pipeline การขาย</p>
-        </div>
-        <div />
-      </div>
+      <PageHeader title="Customers" subtitle="รายชื่อลูกค้าและ Pipeline การขาย" />
 
       {/* Filters */}
       <div className="filter-row mb-4 items-center">

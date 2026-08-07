@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, UserCog, Pencil, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select } from '@/components/ui/Input'
 
 interface User {
@@ -107,17 +108,17 @@ export default function UsersPage() {
 
   return (
     <div className="page-content">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Users</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>จัดการผู้ใช้และสิทธิ์การเข้าถึง</p>
-        </div>
-        <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-          <Plus size={16} />เพิ่มผู้ใช้
-        </button>
-      </div>
+      <PageHeader
+        title="Users"
+        subtitle="จัดการผู้ใช้และสิทธิ์การเข้าถึง"
+        actions={
+          <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+            <Plus size={16} />เพิ่มผู้ใช้
+          </button>
+        }
+      />
 
-      <div className="rounded-[18px] overflow-hidden tbl-scroll" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -191,7 +192,7 @@ export default function UsersPage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'rgba(239,68,68,0.1)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

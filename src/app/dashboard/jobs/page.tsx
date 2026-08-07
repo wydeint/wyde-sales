@@ -7,6 +7,7 @@ import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import Money from '@/components/ui/Money'
 import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import PageHeader from '@/components/ui/PageHeader'
 
 // ─────────────────────────────────────────
 // Constants
@@ -809,19 +810,18 @@ export default function JobsPage() {
   return (
     <div className="page-content space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Wyde Clients</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>บันทึก PO/SO ต่องาน · ติดตามงวดการเก็บเงิน</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <PageHeader
+        title="Wyde Clients"
+        subtitle="บันทึก PO/SO ต่องาน · ติดตามงวดการเก็บเงิน"
+        className=""
+        actions={
           <button onClick={exportCSV}
             className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
             <FileDown size={13} /> Export CSV
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary KPI */}
       {(() => {

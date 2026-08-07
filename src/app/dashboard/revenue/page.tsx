@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, ChevronLeft, ChevronRight, BarChart3, Users, Building2, List, ChevronDown, FileDown, ShoppingCart } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -308,19 +309,18 @@ export default function RevenuePage() {
     <div className="page-content space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>รายได้</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-            {mainTab === 'sales' ? 'ยอดขาย — นับตามวันจอง / เริ่มงาน' : 'Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว'}
-          </p>
-        </div>
-        <button onClick={exportCSV}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
-          style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
-          <FileDown size={13} /> Export CSV
-        </button>
-      </div>
+      <PageHeader
+        title="Revenue"
+        subtitle={mainTab === 'sales' ? 'ยอดขาย — นับตามวันจอง / เริ่มงาน' : 'Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว'}
+        className=""
+        actions={
+          <button onClick={exportCSV}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
+            <FileDown size={13} /> Export CSV
+          </button>
+        }
+      />
 
       {/* Main tab: ยอดขาย / ยอดส่งมอบ */}
       <div className="tab-group w-fit">

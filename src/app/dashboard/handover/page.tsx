@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, ChevronRight, CheckCircle2, X, Save } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Job {
@@ -70,7 +71,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   if (entry.no_start_date) {
     return (
       <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
-        style={{ background: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: '1px solid color-mix(in srgb, #f59e0b 30%, transparent)', color: '#f59e0b' }}
+        style={{ background: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)', color: 'var(--accent-amber)' }}
         title="ยังไม่มีวันเริ่มงาน — คลิกเพื่อแก้ไข">
         {entry.room_no}
       </button>
@@ -90,7 +91,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
       <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
         {entry.room_no}
-        <span className="text-[10px] font-normal opacity-60">+{entry.days_overdue}d</span>
+        <span className="text-micro font-normal opacity-60">+{entry.days_overdue}d</span>
       </button>
     )
   }
@@ -126,13 +127,11 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+    <div className="modal-backdrop" onClick={onClose}>
 
       {/* Panel */}
       <div onClick={e => e.stopPropagation()}
-        className="relative flex flex-col shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[20px]"
-        data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+        className="modal-panel flex flex-col">
 
         {/* Drag handle (mobile only) */}
         {/* Header */}
@@ -316,13 +315,17 @@ export default function HandoverPage() {
 
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
-        <div className="flex items-center gap-4 mb-4">
-          <h1 className="text-page-title flex-1" style={{ color: 'var(--text-1)' }}>Handover</h1>
-          <button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
-            รีเฟรช
-          </button>
-        </div>
+        <PageHeader
+          title="Handover"
+          subtitle="ตารางส่งมอบงานรายเดือน"
+          className="mb-4"
+          actions={
+            <button onClick={load} className="text-xs px-3 py-1.5 rounded-[8px]"
+              style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+              รีเฟรช
+            </button>
+          }
+        />
 
         {/* Month navigator */}
         <div className="flex items-center gap-3 mb-4">
@@ -334,8 +337,8 @@ export default function HandoverPage() {
           <div className="flex items-center gap-2">
             <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>{monthLabel(selectedMonth)}</h2>
             {isThisMonth && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] font-semibold"
-                style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: 'var(--accent)' }}>เดือนนี้</span>
+              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+                style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', color: 'var(--accent)' }}>เดือนนี้</span>
             )}
           </div>
           <button onClick={() => nearestNext && setSelectedMonth(nearestNext)} disabled={!nearestNext}
@@ -355,20 +358,20 @@ export default function HandoverPage() {
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <div>
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
+              <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
               <p className="text-kpi-number leading-tight" style={{ color: 'var(--text-1)' }}>
                 {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
               </p>
-              {deliveredRooms > 0 && <p className="text-[10px]" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
+              {deliveredRooms > 0 && <p className="text-micro" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
             </div>
           </div>
           {/* Value */}
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
             style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             <div>
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
+              <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
               <p className="text-base font-bold leading-tight" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
             </div>
           </div>
           {/* Overdue */}
@@ -376,7 +379,7 @@ export default function HandoverPage() {
             <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
-                <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
+                <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
                 <p className="text-kpi-number leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
               </div>
             </div>
@@ -386,8 +389,8 @@ export default function HandoverPage() {
             <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
               style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
               <div>
-                <p className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
-                <p className="text-kpi-number leading-tight" style={{ color: '#f59e0b' }}>{noStartRooms} ห้อง</p>
+                <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
+                <p className="text-kpi-number leading-tight" style={{ color: 'var(--accent-amber)' }}>{noStartRooms} ห้อง</p>
               </div>
             </div>
           )}
@@ -414,7 +417,7 @@ export default function HandoverPage() {
                     <p className="font-semibold text-sm flex-1" style={{ color: 'var(--text-1)' }}>{name}</p>
                     <div className="flex items-center gap-3">
                       {projOverdue > 0 && (
-                        <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-[4px]"
+                        <span className="text-label font-semibold px-1.5 py-0.5 rounded-[4px]"
                           style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
                           {projOverdue} หลุด
                         </span>

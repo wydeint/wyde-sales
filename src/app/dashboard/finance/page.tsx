@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Wallet, Pencil, AlertCircle, TrendingUp, TrendingDown, DollarSign, Trash2, ChevronLeft, ChevronRight, Package, Save, RotateCcw } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
+import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 
@@ -338,19 +339,17 @@ export default function FinancePage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Finance</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>รายรับ = งวดชำระที่รับจริง · รายจ่าย = บันทึกเอง</p>
-        </div>
-        {tab === 'expense' && (
+      <PageHeader
+        title="Finance"
+        subtitle="รายรับ = งวดชำระที่รับจริง · รายจ่าย = บันทึกเอง"
+        actions={tab === 'expense' && (
           <button onClick={() => { setEditingEntry(null); setEntryForm(emptyEntry); setSaveError(''); setEntryOpen(true) }}
             className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}>
             <Plus size={15} />เพิ่มรายจ่าย
           </button>
         )}
-      </div>
+      />
 
       {/* Tabs */}
       <div className="overflow-x-auto mb-5">

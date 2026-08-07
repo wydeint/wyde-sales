@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Settings2, Save, RefreshCw, AlertTriangle } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
 
 function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
@@ -28,7 +29,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           autoComplete="current-password"
           autoFocus
           className={`w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none ${shake ? 'animate-shake' : ''}`}
-          style={{ background: 'var(--input-bg)', border: `1px solid ${err ? '#f87171' : 'var(--divider)'}`, color: 'var(--text-1)' }}
+          style={{ background: 'var(--input-bg)', border: `1px solid ${err ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
         {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>}
         <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
@@ -106,19 +107,18 @@ export default function SettingsPage() {
 
   return (
     <div className="page-content space-y-6 max-w-2xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>ตั้งค่าระบบ</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>Commission tiers ปรับได้โดย Admin</p>
-        </div>
-        {isAdmin && (
+      <PageHeader
+        title="Commission Tiers"
+        subtitle="ขั้นค่าคอมมิชชั่น ปรับได้โดย Admin"
+        className=""
+        actions={isAdmin && (
           <button onClick={save} disabled={saving}
             className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold text-white"
-            style={{ background: saved ? 'rgba(74,222,128,0.8)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', opacity: saving ? 0.7 : 1 }}>
+            style={{ background: saved ? 'color-mix(in srgb, var(--accent-green) 80%, transparent)' : 'linear-gradient(135deg, var(--accent), var(--accent-purple))', opacity: saving ? 0.7 : 1 }}>
             {saved ? <><RefreshCw size={14} /> บันทึกแล้ว!</> : <><Save size={14} /> บันทึก</>}
           </button>
         )}
-      </div>
+      />
 
       {/* Commission Tiers */}
       <div className="ds-card p-5">
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                       className="field-input w-full text-xs" />
                   </div>
                 ) : (
-                  <span className="font-bold text-sm" style={{ color: '#fbbf24' }}>{(t.rate * 100).toFixed(2)}%</span>
+                  <span className="font-bold text-sm" style={{ color: 'var(--accent-amber)' }}>{(t.rate * 100).toFixed(2)}%</span>
                 )}
               </div>
               <div className="col-span-1 flex justify-center">
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                   <input type="checkbox" checked={t.active} onChange={e => updateTier(t.id, 'active', e.target.checked)}
                     className="w-4 h-4 accent-indigo-500" />
                 ) : (
-                  <span style={{ color: t.active ? '#4ade80' : '#f87171' }}>{t.active ? '✓' : '✗'}</span>
+                  <span style={{ color: t.active ? 'var(--accent-green)' : 'var(--accent-red)' }}>{t.active ? '✓' : '✗'}</span>
                 )}
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function SettingsPage() {
               return (
                 <div key={rev} className="text-xs">
                   <span style={{ color: 'var(--text-3)' }}>{f(rev)}: </span>
-                  <span className="font-semibold" style={{ color: '#fbbf24' }}>
+                  <span className="font-semibold" style={{ color: 'var(--accent-amber)' }}>
                     {tier ? f(Math.round(rev * tier.rate)) + ' (' + (tier.rate * 100).toFixed(2) + '%)' : '—'}
                   </span>
                 </div>

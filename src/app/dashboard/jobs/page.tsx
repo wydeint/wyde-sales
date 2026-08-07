@@ -150,7 +150,7 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
   const salesName = (job.sales as any)?.name || ''
   const phone = (job.condo_leads as any)?.phone || null
   const cfg = STATUS_CFG[job.working_status] || DEFAULT_STATUS_CFG
-  const payment = job.customer_id ? paymentMap[job.customer_id] : null
+  const payment = paymentMap[job.id] ?? null
   const today = new Date().toISOString().slice(0, 10)
   const paid = progressMap[job.id]?.paid ?? 0
   const rev = job.revenue_inc_vat || 0
@@ -513,7 +513,7 @@ export default function JobsPage() {
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
-      supabase.from('payments').select('customer_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
+      supabase.from('payments').select('job_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
       supabase.from('commission_referrals').select('job_id,referrer_name,referral_amount').order('created_at'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
@@ -526,8 +526,8 @@ export default function JobsPage() {
     // Build payment map by customer_id (first pending/overdue installment per customer)
     const map: Record<string, PaymentSummary | null> = {}
     for (const p of (paymentsData || []) as any[]) {
-      if (!map[p.customer_id]) {
-        map[p.customer_id] = {
+      if (p.job_id && !map[p.job_id]) {
+        map[p.job_id] = {
           installment_name: p.installment_name,
           status: p.status,
           amount: p.amount,
@@ -1335,13 +1335,13 @@ export default function JobsPage() {
             </section>
 
             {/* Payment alert */}
-            {editing.customer_id && paymentMap[editing.customer_id] && (
+            {editing.customer_id && paymentMap[editing.id] && (
               <div className="rounded-[11px] p-3 flex items-center justify-between"
                 style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)' }}>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>มีงวดค้างชำระ</p>
                   <p className="text-label" style={{ color: 'var(--text-3)' }}>
-                    {paymentMap[editing.customer_id]!.installment_name} · {f(paymentMap[editing.customer_id]!.amount)}
+                    {paymentMap[editing.id]!.installment_name} · {f(paymentMap[editing.id]!.amount)}
                   </p>
                 </div>
                 <Link href="/dashboard/payments"

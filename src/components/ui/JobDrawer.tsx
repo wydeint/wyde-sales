@@ -239,6 +239,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       work_days: workDays,
       work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
       working_status: isSingleB2B || firstInst?.trigger ? 'ดำเนินการ' : job.working_status,
+      ...(!job.order_date ? { order_date: isSingleB2B ? b2bPoDate : paidDate } : {}),
     }).eq('id', job.id)
     if ((isSingleB2B || firstInst?.trigger) && job.customer_id) {
       await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
@@ -544,10 +545,15 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
     if (!selected) return
     setSaving(true)
     if (selected.is_work_trigger && !job.work_start_date) {
-      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ' }).eq('id', job.id)
+      await supabase.from('jobs').update({
+        work_start_date: paidDate, working_status: 'ดำเนินการ',
+        ...(!job.order_date ? { order_date: paidDate } : {}),
+      }).eq('id', job.id)
       if (job.customer_id) {
         await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
       }
+    } else if (!job.order_date && selected.installment_no === 1) {
+      await supabase.from('jobs').update({ order_date: paidDate }).eq('id', job.id)
     }
     const vcCode = useVoucher && voucherCode ? voucherCode : null
     const vcAmt = useVoucher && voucherAmount > 0 ? voucherAmount : 0

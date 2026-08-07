@@ -292,7 +292,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div data-panel className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[88vh] overflow-y-auto"
+      <div data-panel className="relative w-full max-w-md rounded-[18px] shadow-2xl max-h-[88vh] overflow-y-auto overflow-x-hidden"
         style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -579,7 +579,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div data-panel className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto"
+      <div data-panel className="relative w-full max-w-sm rounded-[18px] shadow-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden"
         style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -1350,7 +1350,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
             <button onClick={onClose} className="p-1 rounded-lg" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
             {/* Revenue */}
             <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
 

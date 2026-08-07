@@ -452,10 +452,11 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 }
 .modal-panel-wide { max-width: 720px; }
 
-/* All drawer panels — prevent iOS bounce propagation */
+/* All drawer panels — prevent iOS bounce + horizontal drift */
 [data-panel] {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
 }
 .modal-header {
   display: flex;

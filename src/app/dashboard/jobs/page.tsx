@@ -1335,7 +1335,7 @@ export default function JobsPage() {
             </section>
 
             {/* Payment alert */}
-            {editing.customer_id && paymentMap[editing.id] && (
+            {editing.id && paymentMap[editing.id] && (
               <div className="rounded-[11px] p-3 flex items-center justify-between"
                 style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)' }}>
                 <div>

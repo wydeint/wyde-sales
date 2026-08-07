@@ -229,11 +229,18 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
           {salesName && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{salesName}</p>}
         </div>
         <div className="flex items-center gap-1.5">
-          {payment && (
-            <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
-              ค้าง {payment.installment_name}
-            </span>
-          )}
+          {payment && (() => {
+            // An instalment that is merely awaiting payment is not an error —
+            // orange. Red is kept for one whose due date has actually passed,
+            // so this chip stays distinguishable from the เกินกำหนด chip beside it.
+            const tone = payment.due_date && payment.due_date < today ? 'var(--accent-red)' : 'var(--accent-orange)'
+            return (
+              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+                style={{ background: `color-mix(in srgb, ${tone} 12%, transparent)`, color: tone }}>
+                ค้าง {payment.installment_name}
+              </span>
+            )
+          })()}
           {isOverdue && (
             <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
               เกินกำหนด
@@ -817,8 +824,16 @@ export default function JobsPage() {
 
       {/* Summary KPI */}
       {(() => {
-        const profit = totalRevenue - totalCost
-        const gpPctAvg = totalRevenue > 0 ? (profit / totalRevenue * 100) : null
+        // GP% is computed over jobs that actually have a cost recorded. Dividing
+        // by total revenue counted every job with no cost as pure profit, which
+        // put the headline at 99.3% when only 6.7% of jobs carry cost data —
+        // the real margin across those is about 31%.
+        const costedJobs = filtered.filter(j => (j.cost || 0) > 0)
+        const costedRevenue = costedJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+        const costedCost = costedJobs.reduce((s, j) => s + (j.cost || 0), 0)
+        const profit = costedRevenue - costedCost
+        const gpPctAvg = costedRevenue > 0 ? (profit / costedRevenue * 100) : null
+        const costCoverage = filtered.length > 0 ? costedJobs.length / filtered.length * 100 : 0
         const gpColor = gpPctAvg === null ? 'var(--text-3)' : gpPctAvg >= 20 ? 'var(--accent-green)' : gpPctAvg >= 10 ? 'var(--accent-orange)' : 'var(--accent-red)'
         const overdueCount = filtered.filter(j => {
           if (j.working_status === 'ส่งมอบแล้ว' || j.working_status === 'ยกเลิก') return false
@@ -833,11 +848,13 @@ export default function JobsPage() {
               <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
             <div className="ds-card p-4">
-              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% เฉลี่ย</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
               <p className="text-lg font-bold" style={{ color: gpColor }}>
                 {gpPctAvg !== null ? gpPctAvg.toFixed(1) + '%' : '—'}
               </p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>กำไร {f(profit)}</p>
+              <p className="text-label mt-0.5" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
+                กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
+              </p>
             </div>
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
@@ -864,7 +881,7 @@ export default function JobsPage() {
           ไม่มี SO
           {noSOCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
-              style={{ background: filterNoSO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: filterNoSO ? '#fff' : 'var(--accent-red)' }}>
+              style={{ background: filterNoSO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: filterNoSO ? '#fff' : 'var(--accent-orange)' }}>
               {noSOCount}
             </span>
           )}
@@ -881,7 +898,7 @@ export default function JobsPage() {
           ไม่มี PO
           {noPOCount > 0 && (
             <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
-              style={{ background: filterNoPO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: filterNoPO ? '#fff' : 'var(--accent-red)' }}>
+              style={{ background: filterNoPO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: filterNoPO ? '#fff' : 'var(--accent-orange)' }}>
               {noPOCount}
             </span>
           )}
@@ -1329,9 +1346,9 @@ export default function JobsPage() {
             {/* Payment alert */}
             {editing.id && paymentMap[editing.id] && (
               <div className="rounded-[11px] p-3 flex items-center justify-between"
-                style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)' }}>
+                style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
                 <div>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--accent-red)' }}>มีงวดค้างชำระ</p>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--accent-orange)' }}>มีงวดค้างชำระ</p>
                   <p className="text-label" style={{ color: 'var(--text-3)' }}>
                     {paymentMap[editing.id]!.installment_name} · {f(paymentMap[editing.id]!.amount)}
                   </p>

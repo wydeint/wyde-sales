@@ -740,7 +740,8 @@ export default function CustomersPage() {
                   {(() => {
                     const cJobs: any[] = (c as any).jobs || []
                     const jobRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0)
-                    const isBudget = jobRev === 0 && (c.budget || 0) > 0
+                    const prospectStages = ['new', 'interested', 'quoted', 'close_pending']
+                    const isBudget = jobRev === 0 && (c.budget || 0) > 0 && prospectStages.includes(c.status)
                     const totalRev = jobRev || c.budget || 0
                     const totalPaid = cJobs.reduce((s: number, j: any) =>
                       s + ((j.payments || []) as any[]).filter((p: any) => p.status === 'paid').reduce((ps: number, p: any) => ps + (p.paid_amount ?? p.amount ?? 0), 0), 0)

@@ -1638,7 +1638,8 @@ export async function loadFullJob(jobId: string): Promise<FullJob | null> {
     .single()
   if (!raw) return null
   let { data: war } = await supabase.from('warranties').select('warranty_end').eq('job_id', jobId).maybeSingle()
-  if (!war) {
+  // fallback to project+room only for delivered jobs — prevents new repeat-purchase jobs from inheriting old warranty
+  if (!war && raw.working_status === 'ส่งมอบแล้ว') {
     const fallback = await supabase.from('warranties').select('warranty_end')
       .eq('project_id', raw.project_id).eq('room', raw.room_no).is('job_id', null).maybeSingle()
     war = fallback.data

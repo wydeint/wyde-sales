@@ -1501,7 +1501,7 @@ export default function ProspectsKanbanPage() {
   }
 
   if (loading) return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--bg-gradient)' }}>
+    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
       <div className="flex-shrink-0 px-6 pt-5 pb-3">
         <div className="h-6 w-28 rounded-lg mb-1 animate-pulse" style={{ background: 'var(--hover-bg)' }} />
         <div className="h-3 w-16 rounded-lg animate-pulse" style={{ background: 'var(--hover-bg)' }} />
@@ -1534,7 +1534,7 @@ export default function ProspectsKanbanPage() {
   }).sort((a, b) => (a.c.interested_room || '').localeCompare(b.c.interested_room || '', 'th', { numeric: true, sensitivity: 'base' }))
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--bg-gradient)' }}>
+    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
 
       {/* Header */}
       <div className="flex-shrink-0 px-6 pt-5 pb-3">

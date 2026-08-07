@@ -67,6 +67,9 @@
 :root {
   color-scheme: light;
   --bg-gradient: linear-gradient(135deg, #dde4ff 0%, #eafaf4 45%, #f5e8ff 100%);
+  /* Full-height page wrappers paint nothing — body's fixed gradient shows through.
+     Declared so `var(--page-bg)` resolves instead of silently falling back. */
+  --page-bg: transparent;
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-border: rgba(255, 255, 255, 0.85);
   --glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -606,34 +609,6 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
     --ls-label:       0.012em; /* 11px needs slight openness to stay readable */
   }
 
-/* ══════════════════════════════════════════
-   Large screen — external monitor / 15"+ MacBook
-   Restores full-size tokens above the 1440px threshold
-══════════════════════════════════════════ */
-@media (min-width: 1440px) {
-  :root {
-    --fs-page-title: 20px;
-    --fs-section:    15px;
-    --fs-card-title: 13px;
-    --fs-body:       13px;
-    --fs-caption:    12px;
-    --fs-label:      11px;
-    --fs-kpi:        28px;
-    --fs-micro:      10px;
-
-    --lh-page-title: 1.25;
-    --lh-section:    1.30;
-    --lh-body:       1.38;
-    --lh-caption:    1.33;
-    --lh-kpi:        1.10;
-
-    --ls-page-title: -0.018em;
-    --ls-section:    -0.008em;
-    --ls-body:       -0.008em;
-    --ls-label:       0.04em;
-  }
-}
-
   /* ── Form elements (CRITICAL: prevents iOS Safari auto-zoom on focus) ──
      iOS zooms in when focused input font-size < 16px.
      --fs-body = 14px on mobile which is still < 16px, so must hardcode 16px. */
@@ -665,6 +640,36 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
   .tab-btn {
     padding: 8px 16px;
     font-size: var(--fs-caption);
+  }
+}
+
+/* ══════════════════════════════════════════
+   Large screen — external monitor / 15"+ MacBook
+   Restores full-size tokens above the 1440px threshold.
+   Must stay OUTSIDE the max-width:1023px block above — nesting it there
+   makes the query unsatisfiable (no viewport is both ≤1023 and ≥1440).
+══════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  :root {
+    --fs-page-title: 20px;
+    --fs-section:    15px;
+    --fs-card-title: 13px;
+    --fs-body:       13px;
+    --fs-caption:    12px;
+    --fs-label:      11px;
+    --fs-kpi:        28px;
+    --fs-micro:      10px;
+
+    --lh-page-title: 1.25;
+    --lh-section:    1.30;
+    --lh-body:       1.38;
+    --lh-caption:    1.33;
+    --lh-kpi:        1.10;
+
+    --ls-page-title: -0.018em;
+    --ls-section:    -0.008em;
+    --ls-body:       -0.008em;
+    --ls-label:       0.04em;
   }
 }
 

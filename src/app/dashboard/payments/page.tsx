@@ -70,9 +70,9 @@ function DocIcon({ url, label, short, auto }: { url: string | null; label: strin
           color: has ? (isAuto ? 'var(--accent-green)' : 'var(--accent)') : 'var(--text-3)',
           border: `1px solid ${has ? (isAuto ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'color-mix(in srgb, var(--accent) 30%, transparent)') : 'var(--divider)'}`,
         }}>
-        {has ? <FileText size={12} /> : <span className="text-[9px] font-bold">{short}</span>}
+        {has ? <FileText size={12} /> : <span className="text-micro font-bold">{short}</span>}
       </div>
-      <span className="text-[9px]" style={{ color: has ? (isAuto ? 'var(--accent-green)' : 'var(--accent)') : 'var(--text-3)' }}>{short}</span>
+      <span className="text-micro" style={{ color: has ? (isAuto ? 'var(--accent-green)' : 'var(--accent)') : 'var(--text-3)' }}>{short}</span>
     </a>
   )
 }
@@ -96,7 +96,7 @@ function InstallmentBadge({ inst }: { inst: Installment }) {
             <p className="font-semibold">{inst.installment_name}</p>
             <p>{f(inst.amount)}</p>
             {(inst.slip_url || inst.receipt_url) && (
-              <p className="text-green-300 mt-0.5">{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
+              <p className="text-success mt-0.5">{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
             )}
           </div>
         </div>
@@ -138,9 +138,11 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
               <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
               <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
             </div>
-            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
-              <p className="text-micro font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
-              <p className="font-bold text-base" style={{ color: 'var(--accent-red)' }}>{f(job.unpaid_total)}</p>
+            {/* Outstanding balance is a normal state, not an error — orange, not red.
+                Red stays reserved for instalments that are actually overdue. */}
+            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
+              <p className="text-micro font-semibold" style={{ color: 'var(--accent-orange)' }}>คงเหลือ</p>
+              <p className="font-bold text-base" style={{ color: 'var(--accent-orange)' }}>{f(job.unpaid_total)}</p>
             </div>
           </div>
 

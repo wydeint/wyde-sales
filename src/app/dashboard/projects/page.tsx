@@ -156,7 +156,7 @@ export default function ProjectsPage() {
                 <td className="px-4 py-3 text-center">
                   <button onClick={() => toggleActive(p)}>
                     {p.active
-                      ? <span className="inline-flex items-center gap-1 text-green-400 text-xs"><ToggleRight size={16} />เปิด</span>
+                      ? <span className="inline-flex items-center gap-1 text-success text-xs"><ToggleRight size={16} />เปิด</span>
                       : <span className="inline-flex items-center gap-1 text-xs" style={{ color: 'var(--text-3)' }}><ToggleLeft size={16} />ปิด</span>
                     }
                   </button>
@@ -211,7 +211,7 @@ export default function ProjectsPage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

@@ -485,9 +485,9 @@ export default function LeadsPage() {
           {importResult ? (
             <div className="text-center py-4">
               {importResult.error ? (
-                <XCircle size={32} className="mx-auto mb-2 text-red-400" />
+                <XCircle size={32} className="mx-auto mb-2 text-danger" />
               ) : (
-                <CheckCircle size={32} className="mx-auto mb-2 text-green-400" />
+                <CheckCircle size={32} className="mx-auto mb-2 text-success" />
               )}
               <p className="font-semibold" style={{ color: 'var(--text-1)' }}>
                 {importResult.error ? 'เกิดข้อผิดพลาด' : 'นำเข้าสำเร็จ'}
@@ -496,7 +496,7 @@ export default function LeadsPage() {
                 <p className="text-sm mt-1" style={{ color: 'var(--accent-red)' }}>{importResult.error}</p>
               ) : (
                 <div className="flex justify-center gap-4 mt-2 text-sm">
-                  {importResult.inserted > 0 && <span className="text-green-400">✅ เพิ่มใหม่ {importResult.inserted} ราย</span>}
+                  {importResult.inserted > 0 && <span className="text-success">✅ เพิ่มใหม่ {importResult.inserted} ราย</span>}
                   {importResult.updated > 0 && <span style={{ color: 'var(--accent-orange)' }}>🔄 อัปเดต {importResult.updated} ราย</span>}
                   {importResult.skipped > 0 && <span style={{ color: 'var(--text-3)' }}>⏭ ข้าม {importResult.skipped} ราย</span>}
                 </div>
@@ -525,11 +525,11 @@ export default function LeadsPage() {
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                   พบ {importRows.length} แถว &nbsp;·&nbsp;
-                  <span className="text-green-400">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
+                  <span className="text-success">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
                   <span style={{ color: 'var(--accent-orange)' }}>🔄 {importRows.filter(r => r._dup && r._dupUpdate).length} อัปเดต</span> &nbsp;·&nbsp;
-                  <span className="text-amber-400">⏭ {importRows.filter(r => r._dup && !r._dupUpdate).length} ซ้ำใน Pool</span> &nbsp;·&nbsp;
+                  <span className="text-value">⏭ {importRows.filter(r => r._dup && !r._dupUpdate).length} ซ้ำใน Pool</span> &nbsp;·&nbsp;
                   <span style={{ color: 'var(--accent-blue)' }}>🔵 {importRows.filter(r => r._dupSystem).length} มีในระบบแล้ว</span> &nbsp;·&nbsp;
-                  <span className="text-red-400">❌ {importRows.filter(r => !r._valid && !r._dup && !r._dupSystem).length} error</span>
+                  <span className="text-danger">❌ {importRows.filter(r => !r._valid && !r._dup && !r._dupSystem).length} error</span>
                 </p>
                 <button onClick={() => setImportRows([])} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
                   เลือกใหม่
@@ -549,14 +549,14 @@ export default function LeadsPage() {
                       <tr key={i} style={{ borderBottom: '1px solid var(--divider)', background: r._dup ? 'rgba(245,158,11,0.05)' : !r._valid ? 'color-mix(in srgb, var(--accent-red) 5%, transparent)' : 'transparent' }}>
                         <td className="px-3 py-1.5">
                           {r._valid
-                            ? <CheckCircle size={11} className="text-green-400" />
+                            ? <CheckCircle size={11} className="text-success" />
                             : r._dup && r._dupUpdate
                               ? <span title={r._error} className="text-xs font-bold" style={{ color: 'var(--accent-orange)' }}>🔄</span>
                               : r._dup
                                 ? <span title={r._error} className="text-xs" style={{ color: 'var(--text-3)' }}>⏭</span>
                                 : r._dupSystem
                                   ? <span title={r._error} className="text-xs font-bold" style={{ color: 'var(--accent-blue)' }}>🔵</span>
-                                  : <span title={r._error}><XCircle size={11} className="text-red-400" /></span>}
+                                  : <span title={r._error}><XCircle size={11} className="text-danger" /></span>}
                         </td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.room_no}</td>
                         <td className="px-3 py-1.5" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
@@ -627,7 +627,7 @@ export default function LeadsPage() {
       </div>
 
       {addError && (
-        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
+        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
           <AlertCircle size={14} />{addError}
         </div>
       )}

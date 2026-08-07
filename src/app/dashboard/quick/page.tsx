@@ -3,6 +3,7 @@
 import FileAttach from '@/components/ui/FileAttach'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { crmStage } from '@/lib/status'
 import { useRouter } from 'next/navigation'
 import {
   Search, X, CheckCircle2, ChevronRight, AlertTriangle,
@@ -249,15 +250,15 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
-                    <p className="text-[9px] mb-0.5" style={t3}>สถานะ</p>
+                    <p className="text-micro mb-0.5" style={t3}>สถานะ</p>
                     <p className="text-xs font-semibold truncate" style={{ color: 'var(--accent-orange)' }}>{j.working_status || '—'}</p>
                   </div>
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
-                    <p className="text-[9px] mb-0.5" style={t3}>เริ่มงาน</p>
+                    <p className="text-micro mb-0.5" style={t3}>เริ่มงาน</p>
                     <p className="text-xs" style={t1}>{fmtDate(j.work_start_date)}</p>
                   </div>
                   <div className="rounded-xl p-2 text-center" style={over > 0 ? { ...sheetCardDark, background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-red) 30%, transparent)' } : sheetCardDark}>
-                    <p className="text-[9px] mb-0.5" style={t3}>ครบสัญญา</p>
+                    <p className="text-micro mb-0.5" style={t3}>ครบสัญญา</p>
                     <p className={`text-xs font-semibold`} style={{ color: over > 0 ? 'var(--accent-red)' : 'var(--text-1)' }}>
                       {over > 0 ? `เกิน ${over}ว` : fmtDate(end)}
                     </p>
@@ -310,16 +311,6 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     timerRef.current = setTimeout(() => doSearch(v), 300)
   }
 
-  const STATUS_LABEL: Record<string, string> = {
-    new: 'ใหม่', following: 'ติดตาม', interested: 'สนใจ',
-    not_interested: 'ไม่สนใจ', booked: 'จอง',
-  }
-
-  const STATUS_COLOR: Record<string, string> = {
-    new: 'var(--accent-blue)', following: 'var(--accent-orange)', interested: 'var(--accent-green)',
-    not_interested: 'var(--accent-red)', booked: 'var(--accent-purple)',
-  }
-
   return (
     <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="Prospects" icon={Users}>
       <div className="p-4">
@@ -332,13 +323,12 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
         {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
         <div className="space-y-2">
           {results.map((c: any) => {
-            const sLabel = STATUS_LABEL[c.status] || c.status || '—'
-            const sColor = STATUS_COLOR[c.status] || 'var(--text-2)'
+            const st = crmStage(c.status)
             return (
               <div key={c.id} style={sheetCard}>
-                <div className="flex justify-between items-start mb-1">
+                <div className="flex justify-between items-start gap-2 mb-1">
                   <p className="font-semibold" style={t1}>{c.customer_name}</p>
-                  <span className="text-xs font-semibold" style={{ color: sColor }}>{sLabel}</span>
+                  <span className={`${st.badge} flex-shrink-0`}>{st.label}</span>
                 </div>
                 <p className="text-xs" style={t2}>{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}><Phone size={11} strokeWidth={1.75} />{c.phone}</p>}
@@ -678,7 +668,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
 
       {step === 'no_plan' && selectedJob && (
         <div className="p-6 text-center">
-          <AlertCircle size={40} className="mx-auto text-amber-400 mb-4" />
+          <AlertCircle size={40} className="mx-auto text-value mb-4" />
           <h4 className="font-semibold text-lg mb-2" style={t1}>ยังไม่ได้ตั้งแผนชำระ</h4>
           <p className="text-sm mb-2" style={t2}>{selectedJob.customerName}</p>
           <p className="text-sm mb-6" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
@@ -1351,15 +1341,15 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
           <>
             <div className="grid grid-cols-3 gap-2 mb-5">
               <div className="rounded-2xl p-3 text-center" style={sheetCard}>
-                <p className="text-[9px] mb-1" style={t3}>รวมทั้งหมด</p>
+                <p className="text-micro mb-1" style={t3}>รวมทั้งหมด</p>
                 <p className="font-bold text-sm" style={t1}>{fmtBaht(summary.total)}</p>
               </div>
               <div className="rounded-[18px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)' }}>
-                <p className="text-[9px] mb-1" style={t3}>รอยืนยัน</p>
+                <p className="text-micro mb-1" style={t3}>รอยืนยัน</p>
                 <p className="font-bold text-sm" style={{ color: 'var(--accent-orange)' }}>{fmtBaht(summary.pending)}</p>
               </div>
               <div className="rounded-[18px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)' }}>
-                <p className="text-[9px] mb-1" style={t3}>อนุมัติแล้ว</p>
+                <p className="text-micro mb-1" style={t3}>อนุมัติแล้ว</p>
                 <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(summary.approved)}</p>
               </div>
             </div>

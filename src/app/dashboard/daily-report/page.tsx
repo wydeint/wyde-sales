@@ -168,7 +168,7 @@ export default function DailyReportPage() {
                 <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.quotations_sent}</td>
                 <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.leads_created}</td>
                 <td className="px-4 py-2.5 text-sm text-right" style={{ color: 'var(--text-2)' }}>{f(r.quotation_value)}</td>
-                <td className="px-4 py-2.5 text-green-400 text-sm text-right font-semibold">{f(r.booking_value)}</td>
+                <td className="px-4 py-2.5 text-success text-sm text-right font-semibold">{f(r.booking_value)}</td>
               </tr>
             ))}
           </tbody>

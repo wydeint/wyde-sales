@@ -161,7 +161,7 @@ export default function UsersPage() {
                 <td className="px-4 py-3 text-center">
                   <button onClick={() => toggleActive(u)}>
                     {u.active
-                      ? <CheckCircle size={16} className="text-green-400 mx-auto" />
+                      ? <CheckCircle size={16} className="text-success mx-auto" />
                       : <XCircle size={16} className="mx-auto" style={{ color: 'var(--text-3)' }} />
                     }
                   </button>
@@ -192,7 +192,7 @@ export default function UsersPage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

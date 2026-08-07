@@ -572,7 +572,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
                   <span className="text-sm font-bold">{fmtBaht(inst.paid_amount ?? inst.amount)}</span>
                 </div>
                 <div className="flex gap-2 mt-0.5">
-                  {inst.status === 'paid' && <span className="text-micro text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
+                  {inst.status === 'paid' && <span className="text-micro text-success">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                   {inst.is_work_trigger && <span className="text-micro" style={{ color: 'var(--accent)' }}>เริ่มงาน</span>}
                   {inst.is_final && <span className="text-micro" style={{ color: 'var(--accent-orange)' }}>งวดสุดท้าย</span>}
                   {inst.status !== 'paid' && inst.due_date && <span className="text-micro" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
@@ -634,7 +634,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
                       <span>ส่วนลด Voucher</span><span>-{fmtBaht(voucherAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm font-bold pt-1" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-1)' }}>
-                      <span>รับจริง (Net)</span><span className="text-green-400">{fmtBaht(netAmount)}</span>
+                      <span>รับจริง (Net)</span><span className="text-success">{fmtBaht(netAmount)}</span>
                     </div>
                   </div>
                 )}
@@ -735,10 +735,10 @@ function QuickDeliverModal({ job, onClose, onSaved }: { job: FullJob; onClose: (
             </div>
           </div>
           <div className="rounded-[11px] p-3" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
-            <p className="text-xs font-semibold text-orange-400">ยังไม่รับเงิน</p>
+            <p className="text-xs font-semibold text-warning">ยังไม่รับเงิน</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>สถานะจะแสดง "ส่งมอบแล้ว/ค้างรับเงิน" จนกว่าจะรับเงินครบ</p>
           </div>
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving || !deliverDate}
             className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white disabled:opacity-50"
             style={{ background: 'var(--accent-green)' }}>
@@ -1101,10 +1101,10 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           งวด {inst.installment_no} · {inst.installment_name}
         </span>
         {inst.is_final && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>
+          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>
         )}
         {inst.is_work_trigger && inst.status !== 'paid' && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>
+          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>
         )}
         <div className="flex-1" />
         {/* Amount chip */}
@@ -1123,7 +1123,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
             className="group flex items-center gap-1 rounded-[6px] px-1.5 py-0.5 transition-colors"
             style={{ background: 'none', border: 'none', cursor: inst.status === 'paid' ? 'pointer' : 'default' }}
             title={inst.status === 'paid' ? 'คลิกเพื่อแก้ไขยอด' : undefined}>
-            <span className="text-[13px] font-bold tabular-nums" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-2)' }}>
+            <span className="text-sm font-bold tabular-nums" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-2)' }}>
               {fmtBaht(inst.voucher_amount > 0 && inst.status === 'paid' ? (inst.paid_amount ?? 0) : (inst.paid_amount ?? inst.amount))}
             </span>
             {inst.status === 'paid' && <Pencil size={9} className="opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: 'var(--accent-green)' }} />}
@@ -1203,10 +1203,10 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           {/* Line 3 — เอกสาร */}
           <div className="flex items-center gap-2 flex-wrap">
             <span style={fieldLabelStyle}>เอกสาร</span>
-            <button onClick={toggleSlip} disabled={savingSlip} style={{ ...docBtnStyle(!!slipUrl, '#60a5fa'), opacity: savingSlip ? 0.5 : 1 }}>
+            <button onClick={toggleSlip} disabled={savingSlip} style={{ ...docBtnStyle(!!slipUrl, 'var(--accent-blue)'), opacity: savingSlip ? 0.5 : 1 }}>
               {slipUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} Slip
             </button>
-            <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, '#4ade80'), opacity: savingReceipt ? 0.5 : 1 }}>
+            <button onClick={toggleReceipt} disabled={savingReceipt} style={{ ...docBtnStyle(!!receiptUrl, 'var(--accent-green)'), opacity: savingReceipt ? 0.5 : 1 }}>
               {receiptUrl ? <CheckCircle2 size={10} /> : <Circle size={10} />} ใบเสร็จรับเงิน
             </button>
           </div>
@@ -1685,7 +1685,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                         ? <CheckCircle2 size={14} style={{ color: 'var(--accent-green)' }} />
                         : <Icon size={13} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)' }} />}
                     </div>
-                    <span className="text-[9px] font-semibold whitespace-nowrap"
+                    <span className="text-micro font-semibold whitespace-nowrap"
                       style={{ color: s.done ? 'var(--accent-green)' : isActive ? 'var(--accent)' : 'var(--text-3)' }}>
                       {s.label}
                     </span>

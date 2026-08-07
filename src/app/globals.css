@@ -316,6 +316,20 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 /* Accent-blue text — replaces text-[#58a6ff] */
 .text-accent-blue { color: var(--accent-blue); }
 
+/* ══════════════════════════════════════════
+   Semantic text colours
+   Replace Tailwind's fixed-shade utilities (text-red-400, text-green-400,
+   text-emerald-400 …). Those resolve to one hex in both themes, so a -400
+   shade tuned for the dark UI loses contrast on the light glass background.
+   These follow the token, so both themes stay correct.
+══════════════════════════════════════════ */
+.text-danger  { color: var(--accent-red); }
+.text-success { color: var(--accent-green); }
+.text-warning { color: var(--accent-orange); }
+.text-info    { color: var(--accent-blue); }
+.text-value   { color: var(--accent-amber); }
+.text-premium { color: var(--accent-purple); }
+
 /* Responsive table wrapper */
 .tbl-scroll {
   overflow-x: auto !important;   /* override overflow:hidden from co-applied Tailwind class */

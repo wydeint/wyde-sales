@@ -558,23 +558,23 @@ export default function EventsPage() {
                   {perf && (
                     <div className="px-4 py-4" style={{ background: 'var(--hover-bg)' }}>
                       <div className="flex items-center gap-2 mb-3">
-                        <TrendingUp size={13} className="text-emerald-400" />
-                        <p className="text-label-upper text-emerald-400">Performance</p>
+                        <TrendingUp size={13} className="text-success" />
+                        <p className="text-label-upper text-success">Performance</p>
                       </div>
 
                       {/* KPI row */}
                       <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-4">
                         {[
                           { label: 'ลูกค้ามา', value: ev.total_attendees, color: 'var(--text-1)' },
-                          { label: 'ปิดการขาย', value: perf.booked, colorClass: 'text-green-400' },
-                          { label: 'สนใจ ติดตามต่อ', value: perf.interested, colorClass: 'text-yellow-400' },
-                          { label: 'ไม่สนใจ', value: perf.notInterested, colorClass: 'text-red-400' },
+                          { label: 'ปิดการขาย', value: perf.booked, colorClass: 'text-success' },
+                          { label: 'สนใจ ติดตามต่อ', value: perf.interested, colorClass: 'text-value' },
+                          { label: 'ไม่สนใจ', value: perf.notInterested, colorClass: 'text-danger' },
                           { label: 'ไม่ได้พบ', value: perf.notMet, color: 'var(--text-3)' },
-                          { label: 'Add LINE', value: perf.lineAdds, colorClass: 'text-green-600 dark:text-green-300' },
-                          { label: 'Conv%', value: perf.conv + '%', colorClass: perf.conv >= 20 ? 'text-green-400' : 'text-yellow-400' },
+                          { label: 'Add LINE', value: perf.lineAdds, colorClass: 'text-success' },
+                          { label: 'Conv%', value: perf.conv + '%', colorClass: perf.conv >= 20 ? 'text-success' : 'text-value' },
                         ].map(k => (
                           <div key={k.label} className="rounded-[18px] p-3 text-center" style={{ background: 'var(--card-bg)' }}>
-                            <p className="text-[9px] mb-1 leading-tight" style={{ color: 'var(--text-3)' }}>{k.label}</p>
+                            <p className="text-micro mb-1 leading-tight" style={{ color: 'var(--text-3)' }}>{k.label}</p>
                             <p className={`text-lg font-bold ${'colorClass' in k ? k.colorClass : ''}`} style={'color' in k && k.color ? { color: k.color } : undefined}>{k.value}</p>
                           </div>
                         ))}
@@ -584,17 +584,17 @@ export default function EventsPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานรวม (Booked Value)</p>
-                          <p className="text-emerald-400 font-bold">{fmtBaht(perf.revenue)}</p>
+                          <p className="text-success font-bold">{fmtBaht(perf.revenue)}</p>
                           <p className="text-micro" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้อง booked</p>
                         </div>
                         <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เฉลี่ย / ห้อง</p>
-                          <p className="text-blue-400 font-bold">{fmtBaht(perf.booked > 0 ? Math.round(perf.revenue / perf.booked) : 0)}</p>
+                          <p className="text-info font-bold">{fmtBaht(perf.booked > 0 ? Math.round(perf.revenue / perf.booked) : 0)}</p>
                           <p className="text-micro" style={{ color: 'var(--text-3)' }}>avg booked value</p>
                         </div>
                         <div className="rounded-[18px] p-3" style={{ background: 'var(--card-bg)' }}>
                           <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มัดจำ (เงินสด)</p>
-                          <p className="text-purple-400 font-bold">{fmtBaht(perf.totalDeposit)}</p>
+                          <p className="text-premium font-bold">{fmtBaht(perf.totalDeposit)}</p>
                           <p className="text-micro" style={{ color: 'var(--text-3)' }}>{perf.booked} ห้องที่เก็บมัดจำ</p>
                         </div>
                       </div>
@@ -663,7 +663,7 @@ export default function EventsPage() {
                                 <td className="px-3 py-2 text-center">
                                   <button
                                     onClick={() => toggleLineAdded(c.id, c.line_added)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors text-sm ${c.line_added ? 'bg-green-500/20 text-green-400' : ''}`}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors text-sm ${c.line_added ? 'bg-green-500/20 text-success' : ''}`}
                                     style={!c.line_added ? { background: 'var(--hover-bg)', color: 'var(--text-3)' } : undefined}
                                     title={c.line_added ? 'Add LINE แล้ว' : 'ยังไม่ได้ Add LINE'}
                                   >
@@ -671,8 +671,8 @@ export default function EventsPage() {
                                   </button>
                                 </td>
                                 <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{dateStr(c.booked_date)}</td>
-                                <td className="px-3 py-2 text-right text-emerald-400 text-sm font-semibold">{fmtBaht(c.booked_value)}</td>
-                                <td className="px-3 py-2 text-right text-purple-400 text-sm">{fmtBaht(c.deposit_amount)}</td>
+                                <td className="px-3 py-2 text-right text-success text-sm font-semibold">{fmtBaht(c.booked_value)}</td>
+                                <td className="px-3 py-2 text-right text-premium text-sm">{fmtBaht(c.deposit_amount)}</td>
                                 <td className="px-3 py-2">
                                   <button
                                     onClick={() => {
@@ -704,7 +704,7 @@ export default function EventsPage() {
                                   {normStatus(c.status) === 'not_interested' ? (
                                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>ไม่โปรโมท</span>
                                   ) : promoted ? (
-                                    <span className="flex items-center gap-1 text-xs text-emerald-400">
+                                    <span className="flex items-center gap-1 text-xs text-success">
                                       <CheckCircle2 size={12} />
                                       {systemStatus.get(c.id) ? `อยู่ใน ${systemStatus.get(c.id)}` : 'เพิ่มแล้ว'}
                                     </span>
@@ -713,8 +713,8 @@ export default function EventsPage() {
                                       onClick={() => promoteCustomer(c)}
                                       className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${
                                         c.status === 'booked'
-                                          ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-500/30'
-                                          : 'bg-[#1d6fa5]/20 text-accent-blue hover:bg-[#1d6fa5]/40'
+                                          ? 'text-premium hover:brightness-110'
+                                          : 'bg-[var(--accent-blue)]/20 text-accent-blue hover:bg-[var(--accent-blue)]/40'
                                       }`}
                                     >
                                       <UserPlus size={11} /> {promoteLabel}

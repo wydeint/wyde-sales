@@ -255,7 +255,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs" style={{ color: 'var(--text-2)' }}>
-                      % แต่ละงวด <span className={pctValid ? 'text-green-400' : 'text-red-400'}>(รวม {pctSum}%)</span>
+                      % แต่ละงวด <span className={pctValid ? 'text-success' : 'text-danger'}>(รวม {pctSum}%)</span>
                     </p>
                     {b2bPcts.slice(0, b2bCount).map((pct, i) => (
                       <div key={i} className="flex items-center gap-2">
@@ -293,7 +293,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                       <div>
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
                         {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">เริ่มงาน</span>}
-                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">สุดท้าย</span>}
+                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-green-500/15 text-success">สุดท้าย</span>}
                       </div>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(p.amount)}</span>
                     </div>
@@ -441,9 +441,9 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     <span className="text-sm font-bold">{fmtBaht(inst.paid_amount ?? inst.amount)}</span>
                   </div>
                   <div className="flex gap-2 mt-0.5">
-                    {inst.status === 'paid' && <span className="text-micro text-green-400">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
+                    {inst.status === 'paid' && <span className="text-micro text-success">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                     {inst.is_work_trigger && <span className="text-micro text-indigo-400">เริ่มงาน</span>}
-                    {inst.is_final && <span className="text-micro text-amber-400">งวดสุดท้าย</span>}
+                    {inst.is_final && <span className="text-micro text-value">งวดสุดท้าย</span>}
                     {inst.voucher_amount > 0 && <span className="text-micro text-pink-400">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
                     {inst.status !== 'paid' && inst.due_date && <span className="text-micro" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                   </div>
@@ -501,7 +501,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                       <span>ส่วนลด Voucher</span><span>-{fmtBaht(voucherAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm font-bold pt-1" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-1)' }}>
-                      <span>รับจริง (Net)</span><span className="text-green-400">{fmtBaht(netAmount)}</span>
+                      <span>รับจริง (Net)</span><span className="text-success">{fmtBaht(netAmount)}</span>
                     </div>
                   </div>
                 )}
@@ -509,7 +509,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
             )}
           </div>
 
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving || !selected}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
@@ -630,7 +630,7 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
             <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ประกันรันอัตโนมัติ {warrantyMonths} เดือน</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
           </div>
-          {error && <p className="text-xs text-red-400 rounded-[8px] px-3 py-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)' }}>{error}</p>}
+          {error && <p className="text-xs rounded-[8px] px-3 py-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', color: 'var(--accent-red)' }}>{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent-green)' }}>
@@ -651,20 +651,20 @@ function InstallmentRows({ installments }: { installments: Installment[] }) {
           style={{ background: 'var(--hover-bg)' }}>
           <div className="flex-shrink-0">
             {inst.status === 'paid'
-              ? <CheckCircle2 size={14} className="text-green-400" />
+              ? <CheckCircle2 size={14} className="text-success" />
               : <Circle size={14} style={{ color: 'var(--text-3)' }} />}
           </div>
           <div className="flex-1 min-w-0">
             <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{inst.installment_name}</span>
-            {inst.is_work_trigger && <span className="ml-1.5 text-[9px] px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>}
-            {inst.is_final && <span className="ml-1.5 text-[9px] px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
+            {inst.is_work_trigger && <span className="ml-1.5 text-micro px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>}
+            {inst.is_final && <span className="ml-1.5 text-micro px-1 rounded" style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>}
           </div>
           <div className="text-right flex-shrink-0">
             {inst.voucher_amount > 0 && inst.status === 'paid' ? (
               <>
                 <span className="text-micro line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
                 <p className="text-micro text-pink-400">-{fmtBaht(inst.voucher_amount)}</p>
-                <span className="text-xs font-semibold text-green-400">{fmtBaht(inst.paid_amount ?? 0)}</span>
+                <span className="text-xs font-semibold text-success">{fmtBaht(inst.paid_amount ?? 0)}</span>
               </>
             ) : (
               <span className="text-xs font-semibold" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-1)' }}>
@@ -829,7 +829,7 @@ export default function JobDetailPage() {
                 </>
               )}
               {overdueCount > 0 && (
-                <p className="text-xs text-red-400 flex items-center justify-end gap-0.5 mt-1">
+                <p className="text-xs text-danger flex items-center justify-end gap-0.5 mt-1">
                   <AlertTriangle size={10} /> {overdueCount} งวดเกินกำหนด
                 </p>
               )}
@@ -919,7 +919,7 @@ export default function JobDetailPage() {
           <div className="space-y-2">
             <div className="rounded-[12px] p-4 text-center"
               style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 20%, transparent)' }}>
-              <p className="text-sm font-semibold text-green-400">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
+              <p className="text-sm font-semibold text-success">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
               {job.warranty_end && (
                 <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                   ประกันหมด {fmtDate(job.warranty_end)}

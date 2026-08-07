@@ -28,7 +28,7 @@ const NAV = [
   },
   {
     label: 'SALES',
-    color: 'text-emerald-400',
+    color: 'text-success',
     dot: 'bg-emerald-400',
     items: [
       { href: '/dashboard/leads', icon: Database, label: 'Origin Pool' },
@@ -55,7 +55,7 @@ const NAV = [
   },
   {
     label: 'REPORTS',
-    color: 'text-amber-400',
+    color: 'text-value',
     dot: 'bg-amber-400',
     items: [
       { href: '/dashboard/revenue', icon: TrendingDown, label: 'Revenue' },
@@ -138,7 +138,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         </div>
         <div>
           <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-1)' }}>Super Sales</p>
-          <p className="text-[10px] leading-tight" style={{ color: 'var(--text-3)' }}>WydEInt Interior</p>
+          <p className="text-micro leading-tight" style={{ color: 'var(--text-3)' }}>WydEInt Interior</p>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
           <Search size={13} aria-hidden="true" />
           <span className="flex-1 text-left text-xs">ค้นหา...</span>
-          <kbd className="text-[10px] px-1 rounded" style={{ background: 'var(--card-bg)', color: 'var(--text-3)' }}>⌘K</kbd>
+          <kbd className="text-micro px-1 rounded" style={{ background: 'var(--card-bg)', color: 'var(--text-3)' }}>⌘K</kbd>
         </button>
       </div>
 
@@ -159,7 +159,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           <div key={section.label} className="mb-4">
             <div className="flex items-center gap-1.5 px-2 mb-1">
               {section.dot && <span className={`w-1.5 h-1.5 rounded-full ${section.dot}`} />}
-              <span className={`text-[10px] font-bold tracking-widest uppercase ${section.color || ''}`}
+              <span className={`text-micro font-bold tracking-widest uppercase ${section.color || ''}`}
                 style={!section.color ? { color: 'var(--text-3)' } : undefined}>
                 {section.label}
               </span>
@@ -199,11 +199,11 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       {/* ── Bottom bar ── */}
       <div className="flex-shrink-0 px-3 pb-3 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
         <div className="flex items-center gap-1.5">
-          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
+          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-micro font-bold"
             style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-purple))' }}>
             {userInitial}
           </div>
-          <span className="text-[11px] font-semibold truncate flex-1" style={{ color: 'var(--text-3)' }}>
+          <span className="text-label font-semibold truncate flex-1" style={{ color: 'var(--text-3)' }}>
             {userName || '...'}
           </span>
           <NotificationBell />

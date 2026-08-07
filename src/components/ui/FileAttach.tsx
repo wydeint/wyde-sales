@@ -138,7 +138,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
 
       {error && (
         <p className="text-xs mb-2 px-2 py-1.5 rounded-[6px]"
-          style={{ color: '#f87171', background: 'rgba(248,113,113,0.1)' }}>
+          style={{ color: 'var(--accent-red)', background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
           {error}
         </p>
       )}
@@ -173,7 +173,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
                 disabled={deletingId === f.id}
                 className="flex-shrink-0 p-1 rounded transition-colors disabled:opacity-40"
                 style={{ color: 'var(--text-3)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent-red)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}>
                 {deletingId === f.id
                   ? <Loader2 size={11} className="animate-spin" />

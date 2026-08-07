@@ -82,7 +82,7 @@ export default function NotificationBell() {
     return (
       <div className="px-4 py-2 flex items-center gap-1.5" style={{ borderBottom: '1px solid var(--divider)', background: bg }}>
         <span style={{ color }}>{icon}</span>
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{label} ({count})</span>
+        <span className="text-micro font-bold uppercase tracking-wider" style={{ color }}>{label} ({count})</span>
       </div>
     )
   }
@@ -96,9 +96,9 @@ export default function NotificationBell() {
         <div className="flex justify-between items-start gap-2">
           <div className="min-w-0">
             <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-1)' }}>{name}</p>
-            <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>{sub}</p>
+            <p className="text-micro" style={{ color: 'var(--text-3)' }}>{sub}</p>
           </div>
-          <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: rightColor || 'var(--text-3)' }}>{right}</span>
+          <span className="text-micro font-semibold flex-shrink-0" style={{ color: rightColor || 'var(--text-3)' }}>{right}</span>
         </div>
       </button>
     )
@@ -166,12 +166,12 @@ export default function NotificationBell() {
                   <div>
                     <SectionHeader icon={<Banknote size={11} />}
                       label={paidToday.some(p => p.isToday) ? 'รายรับวันนี้' : 'รายรับล่าสุด'}
-                      count={paidToday.length} color="#3b82f6" bg="color-mix(in srgb, #3b82f6 5%, transparent)" />
+                      count={paidToday.length} color="var(--accent-blue)" bg="color-mix(in srgb, var(--accent-blue) 5%, transparent)" />
                     {paidToday.slice(0, 8).map(p => (
                       <ItemRow key={p.id} onClick={() => { router.push('/dashboard/payments'); setOpen(false) }}
                         name={p.customer_name}
                         sub={`${p.room_no} · ${p.installment_name} · ${p.isToday ? 'วันนี้' : fmtDate(p.paid_date)}`}
-                        right={fmtBaht(p.paid_amount)} rightColor="#3b82f6" />
+                        right={fmtBaht(p.paid_amount)} rightColor="var(--accent-blue)" />
                     ))}
                   </div>
                 )}
@@ -181,12 +181,12 @@ export default function NotificationBell() {
                   <div>
                     <SectionHeader icon={<Home size={11} />}
                       label={handovers.some(h => h.isToday) ? 'ส่งมอบวันนี้' : 'ส่งมอบล่าสุด'}
-                      count={handovers.length} color="#f59e0b" bg="color-mix(in srgb, #f59e0b 5%, transparent)" />
+                      count={handovers.length} color="var(--accent-orange)" bg="color-mix(in srgb, var(--accent-orange) 5%, transparent)" />
                     {handovers.slice(0, 5).map(h => (
                       <ItemRow key={h.id} onClick={() => { router.push('/dashboard/handover'); setOpen(false) }}
                         name={h.customer_name}
                         sub={`${h.room_no} · ${h.isToday ? 'วันนี้' : fmtDate(h.handover_date)}`}
-                        right={h.isToday ? '📅 วันนี้' : fmtDate(h.handover_date)} rightColor="#f59e0b" />
+                        right={h.isToday ? '📅 วันนี้' : fmtDate(h.handover_date)} rightColor="var(--accent-orange)" />
                     ))}
                   </div>
                 )}

@@ -582,8 +582,8 @@ function ReconcileCheck() {
           <div className="px-4 py-3 rounded-[11px] flex items-center gap-3"
             style={{ background: passCount === checks.length ? 'color-mix(in srgb, var(--accent-green) 8%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: `1px solid ${passCount === checks.length ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 30%, transparent)'}` }}>
             {passCount === checks.length
-              ? <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
-              : <AlertTriangle size={16} className="text-orange-400 flex-shrink-0" />}
+              ? <CheckCircle2 size={16} className="text-success flex-shrink-0" />
+              : <AlertTriangle size={16} className="text-warning flex-shrink-0" />}
             <span className="text-sm font-semibold" style={{ color: passCount === checks.length ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
               {passCount === checks.length ? 'ข้อมูลสอดคล้องทั้งหมด ✓' : `ผ่าน ${passCount}/${checks.length} — พบความไม่สอดคล้อง ${checks.length - passCount} รายการ`}
             </span>
@@ -596,8 +596,8 @@ function ReconcileCheck() {
             style={{ background: 'var(--card-bg)', border: `1px solid ${item.pass ? 'var(--card-border)' : 'color-mix(in srgb, var(--accent-orange) 40%, transparent)'}` }}>
             <div className="flex items-start gap-2.5">
               {item.pass
-                ? <CheckCircle2 size={15} className="text-green-400 mt-0.5 flex-shrink-0" />
-                : <XCircle size={15} className="text-orange-400 mt-0.5 flex-shrink-0" />}
+                ? <CheckCircle2 size={15} className="text-success mt-0.5 flex-shrink-0" />
+                : <XCircle size={15} className="text-warning mt-0.5 flex-shrink-0" />}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{item.label}</span>
@@ -654,7 +654,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
     <div className="h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
       <div className="w-80 rounded-[16px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-center gap-2 mb-6">
-          <AlertTriangle size={18} className="text-amber-400" />
+          <AlertTriangle size={18} className="text-value" />
           <h2 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>Admin Data Entry</h2>
         </div>
         <p className="text-xs mb-5" style={{ color: 'var(--text-2)' }}>หน้านี้ต้องใช้รหัสผ่านเพื่อเข้าถึง</p>
@@ -666,7 +666,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           className="w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none"
           style={{ background: 'var(--input-bg)', border: `1px solid ${err ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
-        {err && <p className="text-xs text-red-400 mb-3">รหัสผ่านไม่ถูกต้อง</p>}
+        {err && <p className="text-xs text-danger mb-3">รหัสผ่านไม่ถูกต้อง</p>}
         <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
           เข้าสู่ระบบ
         </button>
@@ -957,7 +957,7 @@ export default function AdminDataPage() {
                         <button onClick={() => startEdit(row)}
                           className="flex items-center gap-0.5 px-2 py-1 rounded text-micro"
                           style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                          {wasSaved ? <span className="text-green-400">✓ Saved</span> : <><Edit2 size={10} /> แก้ไข</>}
+                          {wasSaved ? <span className="text-success">✓ Saved</span> : <><Edit2 size={10} /> แก้ไข</>}
                         </button>
                       )}
                     </td>

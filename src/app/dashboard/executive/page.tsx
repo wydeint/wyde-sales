@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import { crmStage } from '@/lib/status'
 
 type Customer = {
   id: string; status: string; budget: number; customer_type: string
@@ -31,14 +32,6 @@ const fk = (v: number) => {
 }
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 
-const STATUS_LABEL: Record<string, string> = {
-  new: 'ใหม่', interested: 'สนใจ', quoted: 'เสนอราคา',
-  booked: 'จอง', close_pending: 'รอปิด', closed: 'ปิดแล้ว', lost: 'หลุด'
-}
-const STATUS_COLOR: Record<string, string> = {
-  new: 'var(--accent-blue)', interested: 'var(--accent-green)', quoted: 'var(--accent-amber)',
-  booked: 'var(--accent-orange)', close_pending: 'var(--accent-purple)', closed: 'var(--accent-green)', lost: 'var(--accent-red)'
-}
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
@@ -269,7 +262,7 @@ export default function ExecutivePage() {
         </button>
         <button onClick={() => setMainTab('team')}
           className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
-          style={{ background: mainTab === 'team' ? '#ec4899' : 'transparent', color: mainTab === 'team' ? '#fff' : 'var(--text-2)' }}>
+          style={{ background: mainTab === 'team' ? 'var(--accent-purple)' : 'transparent', color: mainTab === 'team' ? '#fff' : 'var(--text-2)' }}>
           <Users size={14} />ทีม Sales
         </button>
       </div>
@@ -388,7 +381,7 @@ export default function ExecutivePage() {
             {funnelData.map(s => (
               <div key={s.status}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs" style={{ color: 'var(--text-2)' }}>{STATUS_LABEL[s.status]}</span>
+                  <span className="text-xs" style={{ color: 'var(--text-2)' }}>{crmStage(s.status).label}</span>
                   <div className="flex items-center gap-3">
                     {s.value > 0 && <span className="text-xs" style={{ color: 'var(--text-3)' }}>{f(s.value)}</span>}
                     <span className="text-xs font-semibold w-5 text-right" style={{ color: 'var(--text-1)' }}>{s.count}</span>
@@ -396,7 +389,7 @@ export default function ExecutivePage() {
                 </div>
                 <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
                   <div className="h-full rounded-full transition-all duration-700"
-                    style={{ width: s.count > 0 ? Math.max(s.count / s.max * 100, 4) + '%' : '0%', background: STATUS_COLOR[s.status], opacity: 0.85 }} />
+                    style={{ width: s.count > 0 ? Math.max(s.count / s.max * 100, 4) + '%' : '0%', background: crmStage(s.status).color, opacity: 0.85 }} />
                 </div>
               </div>
             ))}
@@ -495,7 +488,7 @@ export default function ExecutivePage() {
       {/* ══ TEAM TAB ══════════════════════════════════════════ */}
       {mainTab === 'team' && (() => {
         const now = new Date(); const thisMonth = now.getMonth() + 1
-        const TEAM_COLORS = ['var(--accent)', '#ec4899']
+        const TEAM_COLORS = ['var(--accent)', 'var(--accent-purple)']
         const managerIds = [...new Set(teamUsers.filter(u => u.manager_id).map(u => u.manager_id!))]
         const teamData = managerIds.map((mgrId, idx) => {
           const manager = teamUsers.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId, manager_id: null }

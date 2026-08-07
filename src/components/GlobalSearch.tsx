@@ -98,7 +98,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           {query && (
             <button onClick={() => setQuery('')} style={{ color: 'var(--text-3)' }}><X size={14} /></button>
           )}
-          <kbd className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ESC</kbd>
+          <kbd className="text-micro px-1.5 py-0.5 rounded" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>ESC</kbd>
         </div>
 
         {/* Results */}
@@ -119,7 +119,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                 return (
                   <div key={type}>
                     <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--divider)', background: 'var(--hover-bg)' }}>
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{label}</span>
+                      <span className="text-micro font-bold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{label}</span>
                     </div>
                     {section.map(r => (
                       <button key={r.id} onClick={() => { router.push(r.href); onClose() }}

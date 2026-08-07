@@ -10,6 +10,7 @@ import {
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
+import { CRM_STAGES, crmStage } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Customer {
@@ -73,15 +74,7 @@ interface DetailWarranty {
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 
-const STATUS_LIST = [
-  { value: 'new', label: 'ใหม่', icon: '●', color: 'badge badge-blue' },
-  { value: 'interested', label: 'สนใจ', icon: '◉', color: 'badge badge-blue' },
-  { value: 'quoted', label: 'เสนอราคาแล้ว', icon: '◈', color: 'badge badge-orange' },
-  { value: 'booked', label: 'จอง', icon: '★', color: 'badge badge-orange' },
-  { value: 'close_pending', label: 'รอปิด', icon: '◷', color: 'badge badge-purple' },
-  { value: 'closed', label: 'ปิดแล้ว', icon: '✓', color: 'badge badge-green' },
-  { value: 'lost', label: 'หลุด', icon: '✕', color: 'badge badge-red' },
-]
+const STATUS_LIST = CRM_STAGES
 
 const SOURCE_OPTIONS = [
   { value: '', label: '— เลือกช่องทาง —' },
@@ -100,9 +93,7 @@ const emptyForm = {
   customer_type: 'B2C', work_type: '',
 }
 
-function statusInfo(s: string) {
-  return STATUS_LIST.find(x => x.value === s) || STATUS_LIST[0]
-}
+const statusInfo = crmStage
 
 function fmt(n: number) {
   return n ? n.toLocaleString('th-TH') : '—'
@@ -199,7 +190,7 @@ function CustomerDetail({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${st.color}`}>
+            <span className={st.badge}>
               {st.icon} {st.label}
             </span>
             <button onClick={onEdit} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }} title="แก้ไขข้อมูล">
@@ -352,9 +343,9 @@ function CustomerDetail({
                         {/* ประกัน */}
                         {warranty && (
                           <div className="relative mb-3 flex items-start gap-3">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? 'var(--accent-amber)' : 'var(--accent-blue)' }} />
+                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? 'var(--text-3)' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? 'var(--accent-amber)' : 'var(--accent-blue)' }} />
                             <div>
-                              <p className="text-xs font-semibold" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? '#64748b' : 'var(--accent-blue)' }}>
+                              <p className="text-xs font-semibold" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? 'var(--text-3)' : 'var(--accent-blue)' }}>
                                 🛡️ ประกัน {warranty.warranty_months || ''} เดือน
                               </p>
                               <p className="text-micro" style={{ color: 'var(--text-3)' }}>
@@ -746,7 +737,7 @@ export default function CustomersPage() {
                           {totalRev > 0 ? (
                             <div className="flex items-center justify-end gap-1.5">
                               {isBudget && (
-                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px]"
+                                <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px]"
                                   style={{ background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)', color: 'var(--accent-amber)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' }}>
                                   งบ
                                 </span>
@@ -762,7 +753,7 @@ export default function CustomersPage() {
                     )
                   })()}
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${st.color}`}>
+                    <span className={st.badge}>
                       <span aria-hidden="true">{st.icon}</span>{st.label}
                     </span>
                   </td>

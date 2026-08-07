@@ -584,8 +584,8 @@ export default function FinancePage() {
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งวดรอเก็บ</p>
                 <div className="space-y-2">
                   <button className="flex justify-between items-center w-full text-left hover:underline" onClick={() => setDrilldown('pending_final')}>
-                    <span className="text-xs" style={{ color: 'var(--accent-red)' }}>งวดส่งมอบ (ค้าง) ↗</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(pendingFinal)}</span>
+                    <span className="text-xs" style={{ color: 'var(--accent-orange)' }}>งวดส่งมอบ (ค้าง) ↗</span>
+                    <span className="text-sm font-bold" style={{ color: 'var(--accent-orange)' }}>{fk(pendingFinal)}</span>
                   </button>
                   <div className="flex justify-between items-center">
                     <span className="text-xs" style={{ color: 'var(--text-2)' }}>งวดอื่นๆ ค้าง</span>
@@ -709,7 +709,7 @@ export default function FinancePage() {
           return Object.entries(map).sort((a, b) => b[1] - a[1])
         }
 
-        const CUST_COLORS = { B2C: 'var(--accent)', B2B: '#ec4899' }
+        const CUST_COLORS = { B2C: 'var(--accent)', B2B: 'var(--accent-purple)' }
         const RPT_COLOR = 'var(--accent-green)'
         const NRPT_COLOR = 'var(--accent-amber)'
 
@@ -895,7 +895,7 @@ export default function FinancePage() {
                       <div className="flex items-center gap-2">
                         <button onClick={() => { setEditingEntry(e); setEntryForm({ type: e.type || 'expense', category: e.category, amount: e.amount, entry_date: e.entry_date, description: e.description || '', ref_id: e.ref_id || '' }); setSaveError(''); setEntryOpen(true) }}
                           style={{ color: 'var(--text-3)' }}><Pencil size={13} /></button>
-                        <button onClick={() => deleteEntry(e.id)} className="text-red-400/50 hover:text-red-400 transition-colors">
+                        <button onClick={() => deleteEntry(e.id)} className="text-danger opacity-50 hover:opacity-100 transition-opacity">
                           <Trash2 size={13} /></button>
                       </div>
                     </td>
@@ -918,17 +918,17 @@ export default function FinancePage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ ({label})</p>
-              <p className="text-kpi-number text-yellow-400">{f(outstanding.filter(p => p.due_date >= start && p.due_date <= end).reduce((s, p) => s + p.amount, 0))}</p>
+              <p className="text-kpi-number text-value">{f(outstanding.filter(p => p.due_date >= start && p.due_date <= end).reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.filter(p => p.due_date >= start && p.due_date <= end).length} งวด</p>
             </div>
             <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด (ทั้งหมด)</p>
-              <p className="text-kpi-number text-red-400">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
+              <p className="text-kpi-number text-danger">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
             </div>
             <div className="ds-card p-3">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว ({label})</p>
-              <p className="text-kpi-number text-green-400">{f(paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
+              <p className="text-kpi-number text-success">{f(paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).length} งวด</p>
             </div>
           </div>
@@ -969,7 +969,7 @@ export default function FinancePage() {
                       <td className="px-4 py-3 text-sm" style={{ color: isOD ? 'var(--accent-red)' : 'var(--text-2)' }}>{dateStr(p.due_date)}</td>
                       <td className="px-4 py-3 font-semibold text-right" style={{ color: 'var(--text-1)' }}>{f(p.amount)}</td>
                       <td className="px-4 py-3 text-right">
-                        {p.paid_amount > 0 ? <span className="text-sm font-semibold text-green-400">{f(p.paid_amount)}</span> : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                        {p.paid_amount > 0 ? <span className="text-sm font-semibold text-success">{f(p.paid_amount)}</span> : <span style={{ color: 'var(--text-3)' }}>—</span>}
                       </td>
                       <td className="px-4 py-3"><span className={`inline-block px-2 py-0.5 rounded text-xs ${st.color}`}>{st.label}</span></td>
                     </tr>
@@ -999,7 +999,7 @@ export default function FinancePage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[11px] text-xs text-red-400" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[11px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}

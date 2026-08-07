@@ -290,7 +290,7 @@ export default function TargetsPage() {
       {/* Tab + Period row */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         {/* Tabs */}
-        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
+        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
           <button onClick={() => setTab('org')}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
             style={{ background: tab === 'org' ? 'var(--accent-orange)' : 'transparent', color: tab === 'org' ? '#fff' : 'var(--text-2)' }}>
@@ -304,7 +304,7 @@ export default function TargetsPage() {
         </div>
 
         {/* Period pills */}
-        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--divider)' }}>
+        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
           {(['month','quarter','year'] as ViewPeriod[]).map(p => (
             <button key={p} onClick={() => setViewPeriod(p)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
@@ -338,18 +338,18 @@ export default function TargetsPage() {
               {/* Annual Summary Card */}
               <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent-orange) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Building2 size={16} className="text-orange-400" />
-                  <h2 className="text-orange-400 font-bold text-sm uppercase tracking-wider">สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
+                  <Building2 size={16} className="text-warning" />
+                  <h2 className="text-warning font-bold text-sm uppercase tracking-wider">สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>เป้ายอดขายรวมทั้งปี</p>
-                    <p className="text-emerald-400 font-bold text-xl">{f(orgAllSales)}</p>
+                    <p className="text-success font-bold text-xl">{f(orgAllSales)}</p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>จริง ({periodLabel}): <span style={{ color: 'var(--text-1)' }}>{f(orgActualSales)}</span></p>
                   </div>
                   <div>
                     <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>เป้าส่งมอบรวมทั้งปี</p>
-                    <p className="text-blue-400 font-bold text-xl">{f(orgAllDeliv)}</p>
+                    <p className="text-info font-bold text-xl">{f(orgAllDeliv)}</p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>จริง ({periodLabel}): <span style={{ color: 'var(--text-1)' }}>{f(orgActualDeliv)}</span></p>
                   </div>
                 </div>
@@ -359,7 +359,7 @@ export default function TargetsPage() {
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span style={{ color: 'var(--text-2)' }}>เป้า{periodLabel}</span>
-                        <span className="text-emerald-400">{pct(orgActualSales, orgTotalSales)}%</span>
+                        <span className="text-success">{pct(orgActualSales, orgTotalSales)}%</span>
                       </div>
                       <ProgressBar value={orgActualSales} max={orgTotalSales} color="var(--accent-green)" />
                       <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalSales)}</p>
@@ -367,7 +367,7 @@ export default function TargetsPage() {
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span style={{ color: 'var(--text-2)' }}>ส่งมอบ{periodLabel}</span>
-                        <span className="text-blue-400">{pct(orgActualDeliv, orgTotalDeliv)}%</span>
+                        <span className="text-info">{pct(orgActualDeliv, orgTotalDeliv)}%</span>
                       </div>
                       <ProgressBar value={orgActualDeliv} max={orgTotalDeliv} color="var(--accent-blue)" />
                       <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTotalDeliv)}</p>
@@ -384,7 +384,7 @@ export default function TargetsPage() {
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>ยอดขาย</p>
                       <div className="flex items-end gap-2">
-                        <span className="text-orange-400 text-sm font-bold">{f(orgTotalSales)}</span>
+                        <span className="text-warning text-sm font-bold">{f(orgTotalSales)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
                       </div>
                       <div className="flex items-end gap-2 mt-0.5">
@@ -392,13 +392,13 @@ export default function TargetsPage() {
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamSalesTarget < orgTotalSales && (
-                        <p className="text-red-400 text-micro mt-1">ขาด {f(orgTotalSales - salesTeamSalesTarget)}</p>
+                        <p className="text-danger text-micro mt-1">ขาด {f(orgTotalSales - salesTeamSalesTarget)}</p>
                       )}
                     </div>
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
                       <div className="flex items-end gap-2">
-                        <span className="text-orange-400 text-sm font-bold">{f(orgTotalDeliv)}</span>
+                        <span className="text-warning text-sm font-bold">{f(orgTotalDeliv)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
                       </div>
                       <div className="flex items-end gap-2 mt-0.5">
@@ -406,7 +406,7 @@ export default function TargetsPage() {
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamDelivTarget < orgTotalDeliv && (
-                        <p className="text-red-400 text-micro mt-1">ขาด {f(orgTotalDeliv - salesTeamDelivTarget)}</p>
+                        <p className="text-danger text-micro mt-1">ขาด {f(orgTotalDeliv - salesTeamDelivTarget)}</p>
                       )}
                     </div>
                   </div>
@@ -439,24 +439,24 @@ export default function TargetsPage() {
                             onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
                             onMouseLeave={e => (e.currentTarget.style.background = isCurrentMonth ? 'var(--hover-bg)' : 'transparent')}>
                             <td className="py-2.5 px-4 text-sm">
-                              <span className={isCurrentMonth ? 'text-orange-400 font-bold' : ''} style={isCurrentMonth ? {} : { color: 'var(--text-2)' }}>
+                              <span className={isCurrentMonth ? 'text-warning font-bold' : ''} style={isCurrentMonth ? {} : { color: 'var(--text-2)' }}>
                                 {MONTHS_FULL[m - 1]}
                               </span>
                             </td>
-                            <td className="py-2.5 px-4 text-right text-sm text-emerald-400">{ot ? f(ot.target_sales_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
+                            <td className="py-2.5 px-4 text-right text-sm text-success">{ot ? f(ot.target_sales_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                             <td className="py-2.5 px-4 text-right text-sm" style={{ color: 'var(--text-1)' }}>{actS > 0 ? f(actS) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                             <td className="py-2.5 px-4 text-right text-xs">
                               {ot && ot.target_sales_value > 0 ? (
-                                <span className={pct(actS, ot.target_sales_value) >= 100 ? 'text-emerald-400' : ''} style={pct(actS, ot.target_sales_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
+                                <span className={pct(actS, ot.target_sales_value) >= 100 ? 'text-success' : ''} style={pct(actS, ot.target_sales_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
                                   {pct(actS, ot.target_sales_value)}%
                                 </span>
                               ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                             </td>
-                            <td className="py-2.5 px-4 text-right text-sm text-blue-400">{ot ? f(ot.target_delivery_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
+                            <td className="py-2.5 px-4 text-right text-sm text-info">{ot ? f(ot.target_delivery_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                             <td className="py-2.5 px-4 text-right text-sm" style={{ color: 'var(--text-1)' }}>{actD > 0 ? f(actD) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
                             <td className="py-2.5 px-4 text-right text-xs">
                               {ot && ot.target_delivery_value > 0 ? (
-                                <span className={pct(actD, ot.target_delivery_value) >= 100 ? 'text-blue-400' : ''} style={pct(actD, ot.target_delivery_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
+                                <span className={pct(actD, ot.target_delivery_value) >= 100 ? 'text-info' : ''} style={pct(actD, ot.target_delivery_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
                                   {pct(actD, ot.target_delivery_value)}%
                                 </span>
                               ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
@@ -479,12 +479,12 @@ export default function TargetsPage() {
                     <tfoot>
                       <tr style={{ borderTop: '2px solid var(--divider)' }}>
                         <td className="py-3 px-4 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวมทั้งปี</td>
-                        <td className="py-3 px-4 text-right text-emerald-400 font-bold text-sm">{f(orgAllSales)}</td>
+                        <td className="py-3 px-4 text-right text-success font-bold text-sm">{f(orgAllSales)}</td>
                         <td className="py-3 px-4 text-right font-bold text-sm" style={{ color: 'var(--text-1)' }}>{f(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0))}</td>
                         <td className="py-3 px-4 text-right text-xs" style={{ color: 'var(--text-2)' }}>
                           {orgAllSales > 0 ? `${pct(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0), orgAllSales)}%` : '—'}
                         </td>
-                        <td className="py-3 px-4 text-right text-blue-400 font-bold text-sm">{f(orgAllDeliv)}</td>
+                        <td className="py-3 px-4 text-right text-info font-bold text-sm">{f(orgAllDeliv)}</td>
                         <td className="py-3 px-4 text-right font-bold text-sm" style={{ color: 'var(--text-1)' }}>{f(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0))}</td>
                         <td className="py-3 px-4 text-right text-xs" style={{ color: 'var(--text-2)' }}>
                           {orgAllDeliv > 0 ? `${pct(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0), orgAllDeliv)}%` : '—'}
@@ -500,7 +500,7 @@ export default function TargetsPage() {
 
           {/* ══ SALES TARGETS TAB ═══════════════════════════ (placeholder removed) */}
           {false && (() => {
-            const TEAM_COLORS = ['var(--accent)', '#ec4899']
+            const TEAM_COLORS = ['var(--accent)', 'var(--accent-purple)']
             const managerIds = [...new Set(users.filter(u => u.manager_id).map(u => u.manager_id!))]
             const teamData = managerIds.map((mgrId, idx) => {
               const manager = users.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId }
@@ -721,17 +721,17 @@ export default function TargetsPage() {
                         <div className="grid grid-cols-2 gap-2 mb-3">
                           <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
-                            <p className="text-emerald-400 font-bold text-base">{f(t.target_sales_value)}</p>
+                            <p className="text-success font-bold text-base">{f(t.target_sales_value)}</p>
                             <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actS)}</span></p>
                             <ProgressBar value={actS} max={t.target_sales_value} color="var(--accent-green)" />
-                            <p className="text-emerald-400 text-micro mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
+                            <p className="text-success text-micro mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
                           </div>
                           <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
-                            <p className="text-blue-400 font-bold text-base">{f(t.target_delivery_value)}</p>
+                            <p className="text-info font-bold text-base">{f(t.target_delivery_value)}</p>
                             <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>
                             <ProgressBar value={actD} max={t.target_delivery_value} color="var(--accent-blue)" />
-                            <p className="text-blue-400 text-micro mt-0.5 text-right">{pct(actD, t.target_delivery_value)}%</p>
+                            <p className="text-info text-micro mt-0.5 text-right">{pct(actD, t.target_delivery_value)}%</p>
                           </div>
                         </div>
 
@@ -762,7 +762,7 @@ export default function TargetsPage() {
                             { label: 'โทร', v: t.target_calls, c: 'var(--accent-amber)' },
                             { label: 'เยี่ยม', v: t.target_visits, c: 'var(--accent-amber)' },
                             { label: 'Lead', v: t.target_leads, c: 'var(--accent-purple)' },
-                            { label: 'Booking', v: t.target_bookings, c: '#f472b6' },
+                            { label: 'Booking', v: t.target_bookings, c: 'var(--accent-purple)' },
                             { label: 'ปิดขาย', v: t.target_closed, c: 'var(--accent-green)' },
                             { label: 'BK Value', v: null, d: f(t.target_booking_value), c: 'var(--accent-orange)' },
                           ].map(item => (

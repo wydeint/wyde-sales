@@ -213,9 +213,9 @@ export default function WarrantyPage() {
       {/* Alert Banner — expiring soon */}
       {expiringSoon.length > 0 && (
         <div className="rounded-[18px] p-4 mb-4 flex items-start gap-3" style={{ background: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' }}>
-          <AlertTriangle size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+          <AlertTriangle size={16} className="text-value flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-yellow-400">ประกันใกล้หมด {expiringSoon.length} ราย</p>
+            <p className="text-sm font-semibold text-value">ประกันใกล้หมด {expiringSoon.length} ราย</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
               {expiringSoon.map(w => {
                 const name = (w as any).jobs?.customer_name || (w as any).customers?.customer_name || w.room
@@ -295,7 +295,7 @@ export default function WarrantyPage() {
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_end)}</td>
                       <td className="px-4 py-3">
                         {days !== null && (
-                          <span className={`text-sm font-semibold ${days <= 30 ? 'text-yellow-400' : 'text-green-400'}`}>
+                          <span className={`text-sm font-semibold ${days <= 30 ? 'text-value' : 'text-success'}`}>
                             {days > 0 ? `${days} วัน` : 'หมดแล้ว'}
                           </span>
                         )}
@@ -352,7 +352,7 @@ export default function WarrantyPage() {
                         {w.job_id && <p className="text-xs font-mono mb-0.5" style={{ color: 'var(--text-3)' }}>{w.job_id}</p>}
                         <p className="text-accent-blue text-xs">{room}</p>
                       </td>
-                      <td className="px-4 py-3 text-red-400 text-sm">{dateStr(w.warranty_end)}</td>
+                      <td className="px-4 py-3 text-danger text-sm">{dateStr(w.warranty_end)}</td>
                       <td className="px-4 py-3">
                         <button onClick={() => openEdit(w)} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                           <Pencil size={14} />

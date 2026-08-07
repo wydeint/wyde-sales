@@ -13,6 +13,7 @@ import { PageSpinner } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import { crmStage } from '@/lib/status'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
@@ -47,15 +48,15 @@ interface DetailWarranty {
 }
 
 // ─── Stage config ───────────────────────────────────────────
-const STAGES = [
-  { value: 'new',           label: 'ใหม่',              bg: 'color-mix(in srgb, var(--accent-blue) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-blue) 50%, transparent)', text: 'var(--accent-blue)',  dot: 'var(--accent-blue)',  badge: 'color-mix(in srgb, var(--accent-blue) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-blue) 45%, transparent)' },
-  { value: 'interested',    label: 'สนใจ',               bg: 'rgba(6,182,212,0.08)',   border: '#06b6d480', text: '#22d3ee',  dot: '#22d3ee',  badge: 'rgba(6,182,212,0.15)',   chip: 'rgba(6,182,212,0.45)'  },
-  { value: 'quoted',        label: 'เสนอราคาแล้ว',       bg: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)',   border: 'color-mix(in srgb, var(--accent-amber) 50%, transparent)', text: 'var(--accent-amber)',  dot: 'var(--accent-amber)',  badge: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)',   chip: 'color-mix(in srgb, var(--accent-amber) 45%, transparent)'  },
-  { value: 'close_pending', label: 'รอปิด',              bg: 'color-mix(in srgb, var(--accent-purple) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-purple) 50%, transparent)', text: 'var(--accent-purple)',  dot: 'var(--accent-purple)',  badge: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-purple) 45%, transparent)' },
-  { value: 'booked',        label: 'จอง',                bg: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-orange) 50%, transparent)', text: 'var(--accent-orange)',  dot: 'var(--accent-orange)',  badge: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-orange) 45%, transparent)' },
-  { value: 'closed',        label: 'ปิดแล้ว',            bg: 'color-mix(in srgb, var(--accent-green) 8%, transparent)',  border: 'color-mix(in srgb, var(--accent-green) 50%, transparent)', text: 'var(--accent-green)',  dot: 'var(--accent-green)',  badge: 'color-mix(in srgb, var(--accent-green) 15%, transparent)',  chip: 'color-mix(in srgb, var(--accent-green) 45%, transparent)' },
-  { value: 'lost',          label: 'หลุด',               bg: 'color-mix(in srgb, var(--accent-red) 8%, transparent)',   border: 'color-mix(in srgb, var(--accent-red) 50%, transparent)', text: 'var(--accent-red)',  dot: 'var(--accent-red)',  badge: 'color-mix(in srgb, var(--accent-red) 15%, transparent)',   chip: 'color-mix(in srgb, var(--accent-red) 45%, transparent)'  },
-]
+// Derived from the shared vocabulary so a stage cannot end up a different
+// colour here than on Customers or Sales Performance. Column order is this
+// board's own concern and stays as listed.
+const STAGE_ORDER = ['new', 'interested', 'quoted', 'close_pending', 'booked', 'closed', 'lost']
+const STAGES = STAGE_ORDER.map(v => {
+  const { label, color } = crmStage(v)
+  const mix = (pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`
+  return { value: v, label, text: color, dot: color, bg: mix(8), border: mix(50), badge: mix(15), chip: mix(45) }
+})
 const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
 
 const SOURCE_OPTS = [
@@ -1067,7 +1068,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
               {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </div>
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving}
             className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
             style={{ background: saving ? '#666' : 'var(--accent-green)' }}>
@@ -1117,7 +1118,7 @@ function BookingCopyBtn({ lineMsg }: { lineMsg: string }) {
       style={{
         background: copied ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'rgba(0,185,107,0.08)',
         border: `1px solid ${copied ? 'color-mix(in srgb, var(--accent-green) 40%, transparent)' : 'rgba(0,185,107,0.25)'}`,
-        color: copied ? 'var(--accent-green)' : '#00b96b',
+        color: copied ? 'var(--accent-green)' : 'var(--accent-green)',
       }}>
       {copied ? <Check size={10} /> : '💬'} {copied ? 'คัดลอก!' : 'LINE'}
     </button>
@@ -1238,7 +1239,7 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
           onChange={v => setForm(p => ({ ...p, assigned_to: String(v) }))}
           options={[{ value: '', label: '— เลือก —' }, ...users.map(u => ({ value: u.id, label: u.name }))]} /></div>
       <TextArea label="หมายเหตุ" value={form.notes} onChange={s('notes')} rows={2} />
-      {errMsg && <p className="text-xs py-1 px-2 rounded-[8px]" style={{ color: 'var(--accent-red)', background: '#fee2e2' }}>{errMsg}</p>}
+      {errMsg && <p className="text-xs py-1 px-2 rounded-[8px]" style={{ color: 'var(--accent-red)', background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)' }}>{errMsg}</p>}
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-[8px] text-sm border" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
         <button type="submit" disabled={saving}
@@ -1867,12 +1868,12 @@ export default function ProspectsKanbanPage() {
                     />
                     {!repeatJobForm.project_id && (
                       <button onClick={() => setRepeatJobForm(f => ({ ...f, project_id: '__not_found__' }))}
-                        className="mt-1 text-[11px]" style={{ color: 'var(--accent-orange)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        className="mt-1 text-label" style={{ color: 'var(--accent-orange)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                         ไม่มีโครงการนี้ในระบบ? →
                       </button>
                     )}
                     {projectNotFound && (
-                      <p className="mt-1 text-[11px] px-2 py-1 rounded-[6px]"
+                      <p className="mt-1 text-label px-2 py-1 rounded-[6px]"
                         style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)', color: 'var(--accent-orange)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
                         ⚠️ กรุณาสร้างโครงการใหม่ใน Settings ก่อน แล้วกลับมาเพิ่มงานซ้ำอีกครั้ง
                       </p>
@@ -1980,7 +1981,7 @@ export default function ProspectsKanbanPage() {
               </button>
               <button onClick={confirmDelete} disabled={deleting}
                 className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
-                style={{ background: deleting ? '#666' : 'var(--accent-red)' }}>
+                style={{ background: deleting ? 'var(--text-3)' : 'var(--accent-red)' }}>
                 {deleting ? 'กำลังลบ...' : 'ลบ'}
               </button>
             </div>

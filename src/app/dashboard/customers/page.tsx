@@ -696,7 +696,7 @@ export default function CustomersPage() {
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>Sales</th>
-              <th scope="col" className="text-right px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ยอด (Inc.VAT)</th>
+              <th scope="col" className="text-right px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>มูลค่า / งบ</th>
               <th scope="col" className="text-right px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</th>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>สถานะ</th>
               <th scope="col" className="px-4 py-3"><span className="sr-only">แก้ไข</span></th>
@@ -739,13 +739,25 @@ export default function CustomersPage() {
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
                   {(() => {
                     const cJobs: any[] = (c as any).jobs || []
-                    const totalRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0
+                    const jobRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0)
+                    const isBudget = jobRev === 0 && (c.budget || 0) > 0
+                    const totalRev = jobRev || c.budget || 0
                     const totalPaid = cJobs.reduce((s: number, j: any) =>
                       s + ((j.payments || []) as any[]).filter((p: any) => p.status === 'paid').reduce((ps: number, p: any) => ps + (p.paid_amount ?? p.amount ?? 0), 0), 0)
                     return (
                       <>
-                        <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums" style={{ color: totalRev > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
-                          {totalRev > 0 ? fmt(totalRev) : '—'}
+                        <td className="px-4 py-3 text-right tabular-nums">
+                          {totalRev > 0 ? (
+                            <div className="flex items-center justify-end gap-1.5">
+                              {isBudget && (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px]"
+                                  style={{ background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)', color: 'var(--accent-amber)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' }}>
+                                  งบ
+                                </span>
+                              )}
+                              <span className="text-sm font-semibold" style={{ color: isBudget ? 'var(--text-2)' : 'var(--text-1)' }}>{fmt(totalRev)}</span>
+                            </div>
+                          ) : <span className="text-sm font-semibold" style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
                         <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums" style={{ color: totalPaid > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
                           {totalPaid > 0 ? fmt(totalPaid) : '—'}

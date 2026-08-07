@@ -117,17 +117,17 @@ const PERIOD_LABELS: Record<Period, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  'Reserved': '#f59e0b', 'Backlog': '#60a5fa', 'FC': '#34d399', 'Backlog พต': '#a78bfa',
-  'New Sale 2025': '#fbbf24', 'New Sale 2026': '#f97316',
+  'Reserved': 'var(--accent-amber)', 'Backlog': 'var(--accent-blue)', 'FC': 'var(--accent-green)', 'Backlog พต': 'var(--accent-purple)',
+  'New Sale 2025': 'var(--accent-amber)', 'New Sale 2026': 'var(--accent-orange)',
 }
 
 const WORKING_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  'จอง': { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
-  'กำลังดำเนินการ': { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa' },
-  'ดำเนินการ': { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa' },
-  'รอส่งมอบ': { bg: 'rgba(167,139,250,0.15)', color: '#a78bfa' },
-  'ส่งมอบแล้ว': { bg: 'rgba(74,222,128,0.15)', color: '#4ade80' },
-  'ยกเลิก': { bg: 'rgba(248,113,113,0.15)', color: '#f87171' },
+  'จอง': { bg: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)', color: 'var(--accent-amber)' },
+  'กำลังดำเนินการ': { bg: 'color-mix(in srgb, var(--accent-blue) 15%, transparent)', color: 'var(--accent-blue)' },
+  'ดำเนินการ': { bg: 'color-mix(in srgb, var(--accent-blue) 15%, transparent)', color: 'var(--accent-blue)' },
+  'รอส่งมอบ': { bg: 'color-mix(in srgb, var(--accent-purple) 15%, transparent)', color: 'var(--accent-purple)' },
+  'ส่งมอบแล้ว': { bg: 'color-mix(in srgb, var(--accent-green) 15%, transparent)', color: 'var(--accent-green)' },
+  'ยกเลิก': { bg: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' },
 }
 
 // ─────────────────────────────────────────
@@ -160,7 +160,7 @@ export default function RevenuePage() {
       const fields = 'id,project_id,room_no,customer_name,work_type,customer_type,package_type,revenue_ex_vat,revenue_inc_vat,cost,order_date,work_start_date,actual_deliver_date,delivery_lot,accounting_status,working_status,sales_id,commission_amount,notes,po_no,so_no,voucher,projects(name),sales:users!jobs_sales_id_fkey(name)'
       const [{ data: deliverData, error: e1 }, { data: salesData, error: e2 }, { data: targetsData }, { data: tierData }, { data: usersData }, { data: refData }] = await Promise.all([
         supabase.from('jobs').select(fields).eq('working_status', 'ส่งมอบแล้ว').not('actual_deliver_date', 'is', null).order('actual_deliver_date', { ascending: false }),
-        supabase.from('jobs').select(fields).neq('working_status', 'ยกเลิก').order('order_date', { ascending: false }),
+        supabase.from('jobs').select(fields).or('working_status.neq.ยกเลิก,working_status.is.null').order('order_date', { ascending: false }),
         supabase.from('sales_targets').select('user_id,year,month,target_revenue'),
         supabase.from('commission_settings').select('revenue_min,revenue_max,rate,tier_name').eq('active', true),
         supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -389,15 +389,15 @@ export default function RevenuePage() {
       {/* KPI Cards */}
       {(() => {
         const kpis = mainTab === 'sales' ? [
-          { label: 'จำนวนงาน', value: unitCount + ' งาน', sub: `เฉลี่ย ${unitCount > 0 ? fk(totalRevenue / unitCount) : '—'}/งาน`, color: '#60a5fa' },
-          { label: 'ยอดขาย (Inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: '#f97316' },
-          { label: 'ยอดขาย (Ex.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: '#fbbf24' },
-          { label: 'Commission (คาดการณ์)', value: fk(totalCommission), sub: totalRevenueEx > 0 ? (totalCommission / totalRevenueEx * 100).toFixed(2) + '% ของ Ex.VAT' : '—', color: '#a78bfa' },
+          { label: 'จำนวนงาน', value: unitCount + ' งาน', sub: `เฉลี่ย ${unitCount > 0 ? fk(totalRevenue / unitCount) : '—'}/งาน`, color: 'var(--accent-blue)' },
+          { label: 'ยอดขาย (Inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: 'var(--accent-orange)' },
+          { label: 'ยอดขาย (Ex.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: 'var(--accent-amber)' },
+          { label: 'Commission (คาดการณ์)', value: fk(totalCommission), sub: totalRevenueEx > 0 ? (totalCommission / totalRevenueEx * 100).toFixed(2) + '% ของ Ex.VAT' : '—', color: 'var(--accent-purple)' },
         ] : [
-          { label: 'จำนวนห้อง/งาน', value: unitCount + ' งาน', sub: `เฉลี่ย ${unitCount > 0 ? fk(totalRevenue / unitCount) : '—'}/งาน`, color: '#60a5fa' },
-          { label: 'Revenue ส่งมอบ (Inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: '#4ade80' },
-          { label: 'Revenue (Ex.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: '#fbbf24' },
-          { label: 'Profit (GP)', value: fk(totalProfit), sub: totalRevenueEx > 0 ? 'GP ' + (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—', color: totalProfit >= 0 ? '#4ade80' : '#f87171' },
+          { label: 'จำนวนห้อง/งาน', value: unitCount + ' งาน', sub: `เฉลี่ย ${unitCount > 0 ? fk(totalRevenue / unitCount) : '—'}/งาน`, color: 'var(--accent-blue)' },
+          { label: 'Revenue ส่งมอบ (Inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: 'var(--accent-green)' },
+          { label: 'Revenue (Ex.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: 'var(--accent-amber)' },
+          { label: 'Profit (GP)', value: fk(totalProfit), sub: totalRevenueEx > 0 ? 'GP ' + (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—', color: totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' },
         ]
         return (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -426,7 +426,7 @@ export default function RevenuePage() {
               <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full rounded-t-lg relative group" style={{
                   height: m.revenue > 0 ? Math.max(m.revenue / trendMax * 112, 4) + 'px' : '4px',
-                  background: m.revenue > 0 ? 'linear-gradient(180deg,var(--accent),rgba(99,102,241,0.4))' : 'var(--divider)',
+                  background: m.revenue > 0 ? 'linear-gradient(180deg,var(--accent),color-mix(in srgb, var(--accent) 40%, transparent))' : 'var(--divider)',
                   minHeight: '4px',
                 }}>
                   {m.revenue > 0 && (
@@ -436,7 +436,7 @@ export default function RevenuePage() {
                     </div>
                   )}
                 </div>
-                <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>{m.label}</span>
+                <span className="text-micro" style={{ color: 'var(--text-3)' }}>{m.label}</span>
               </div>
             ))}
           </div>
@@ -448,7 +448,7 @@ export default function RevenuePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="ds-card p-5">
             <h2 className="text-section-title mb-4 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
-              <Users size={13} style={{ color: '#60a5fa' }} />
+              <Users size={13} style={{ color: 'var(--accent-blue)' }} />
               {mainTab === 'sales' ? 'ยอดขาย by Sales' : 'Revenue by Sales'}
             </h2>
             {bySales.length === 0 ? (
@@ -461,7 +461,7 @@ export default function RevenuePage() {
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{s.name}</span>
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.units} งาน</span>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{fk(s.revenue)}</span>
+                  <span className="text-sm font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(s.revenue)}</span>
                 </div>
                 <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
                   <div className="h-full rounded-full" style={{ width: (s.revenue / salesMax * 100) + '%', background: `hsl(${220 + i * 30}, 80%, 65%)` }} />
@@ -522,17 +522,17 @@ export default function RevenuePage() {
                         <div className="flex items-center gap-2">
                           <ChevronDown size={12} style={{ color: 'var(--text-3)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
                           <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-bold"
-                            style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-purple))' }}>
                             {s.name[0]}
                           </div>
                           {s.name}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center" style={{ color: 'var(--text-2)' }}>{s.units}</td>
-                      <td className="px-4 py-3 font-bold" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{f(s.revenue)}</td>
+                      <td className="px-4 py-3 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(s.revenue)}</td>
                       {mainTab === 'deliver' && <>
-                        <td className="px-4 py-3" style={{ color: '#f87171' }}>{cost ? f(cost) : '—'}</td>
-                        <td className="px-4 py-3" style={{ color: profit >= 0 ? '#4ade80' : '#f87171' }}>{cost ? f(profit) : '—'}</td>
+                        <td className="px-4 py-3" style={{ color: 'var(--accent-red)' }}>{cost ? f(cost) : '—'}</td>
+                        <td className="px-4 py-3" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{cost ? f(profit) : '—'}</td>
                         <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
                       </>}
                     </tr>
@@ -562,12 +562,12 @@ export default function RevenuePage() {
                                       <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{j.work_type || '—'}</td>
                                       {mainTab === 'sales' && (
                                         <td className="px-3 py-2">
-                                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
+                                          <span className="px-1.5 py-0.5 rounded-full text-micro font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
                                             {j.working_status}
                                           </span>
                                         </td>
                                       )}
-                                      <td className="px-3 py-2 font-bold" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{f(jobRev(j))}</td>
+                                      <td className="px-3 py-2 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
                                     </tr>
                                   )
                                 })}
@@ -583,10 +583,10 @@ export default function RevenuePage() {
               <tr style={{ borderTop: '2px solid var(--accent)', background: 'var(--active-bg)' }}>
                 <td className="px-4 py-3 font-bold" style={{ color: 'var(--text-1)' }}>รวมทั้งหมด</td>
                 <td className="px-4 py-3 text-center font-bold" style={{ color: 'var(--text-1)' }}>{unitCount}</td>
-                <td className="px-4 py-3 font-bold" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{f(totalRevenue)}</td>
+                <td className="px-4 py-3 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(totalRevenue)}</td>
                 {mainTab === 'deliver' && <>
-                  <td className="px-4 py-3 font-bold" style={{ color: '#f87171' }}>{f(totalCost)}</td>
-                  <td className="px-4 py-3 font-bold" style={{ color: totalProfit >= 0 ? '#4ade80' : '#f87171' }}>{f(totalProfit)}</td>
+                  <td className="px-4 py-3 font-bold" style={{ color: 'var(--accent-red)' }}>{f(totalCost)}</td>
+                  <td className="px-4 py-3 font-bold" style={{ color: totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{f(totalProfit)}</td>
                   <td className="px-4 py-3 font-bold" style={{ color: 'var(--text-2)' }}>
                     {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—'}
                   </td>
@@ -602,7 +602,7 @@ export default function RevenuePage() {
         <div className="ds-card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
             <div className="flex items-center gap-2">
-              <Building2 size={14} style={{ color: '#f97316' }} />
+              <Building2 size={14} style={{ color: 'var(--accent-orange)' }} />
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายโครงการ</h2>
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{byProject.length} โครงการ · {periodJobs.length} งาน</span>
             </div>
@@ -628,7 +628,7 @@ export default function RevenuePage() {
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
                   <span className="flex-1 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>{p.units} งาน</span>
-                  <span className="text-sm font-bold flex-shrink-0 w-24 text-right" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{fk(p.revenue)}</span>
+                  <span className="text-sm font-bold flex-shrink-0 w-24 text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(p.revenue)}</span>
                   <ChevronDown size={14} className="flex-shrink-0 transition-transform" style={{ color: 'var(--text-3)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </button>
                 {expanded && (
@@ -659,14 +659,14 @@ export default function RevenuePage() {
                               <td className="px-4 py-2" style={{ color: 'var(--text-3)' }}>{(j.sales as any)?.name || '—'}</td>
                               {mainTab === 'sales' && (
                                 <td className="px-4 py-2">
-                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
+                                  <span className="px-1.5 py-0.5 rounded-full text-micro font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
                                     {j.working_status}
                                   </span>
                                 </td>
                               )}
-                              <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{f(jobRev(j))}</td>
+                              <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
                               {mainTab === 'deliver' && (
-                                <td className="px-4 py-2 text-right" style={{ color: gp !== null ? (gp >= 30 ? '#4ade80' : gp >= 15 ? '#fbbf24' : '#f87171') : 'var(--text-3)' }}>
+                                <td className="px-4 py-2 text-right" style={{ color: gp !== null ? (gp >= 30 ? 'var(--accent-green)' : gp >= 15 ? 'var(--accent-amber)' : 'var(--accent-red)') : 'var(--text-3)' }}>
                                   {gp !== null ? gp.toFixed(1) + '%' : '—'}
                                 </td>
                               )}
@@ -677,7 +677,7 @@ export default function RevenuePage() {
                       <tfoot>
                         <tr style={{ background: 'var(--hover-bg)', borderTop: '2px solid var(--divider)' }}>
                           <td colSpan={mainTab === 'sales' ? 5 : 5} className="px-4 py-2 font-semibold" style={{ color: 'var(--text-2)' }}>รวม {p.units} งาน</td>
-                          <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{f(p.revenue)}</td>
+                          <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(p.revenue)}</td>
                           {mainTab === 'deliver' && <td />}
                         </tr>
                       </tfoot>
@@ -730,12 +730,12 @@ export default function RevenuePage() {
                         {j.work_type || '—'}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 font-bold text-right" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>
+                    <td className="px-3 py-2.5 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>
                       {f(jobRev(j))}
                     </td>
                     {mainTab === 'deliver' && <>
-                      <td className="px-3 py-2.5 text-right" style={{ color: '#f87171' }}>{j.cost ? f(j.cost) : '—'}</td>
-                      <td className="px-3 py-2.5 text-right" style={{ color: profit >= 0 ? '#4ade80' : '#f87171' }}>{gp}{gp !== '—' ? '%' : ''}</td>
+                      <td className="px-3 py-2.5 text-right" style={{ color: 'var(--accent-red)' }}>{j.cost ? f(j.cost) : '—'}</td>
+                      <td className="px-3 py-2.5 text-right" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
                     </>}
                     <td className="px-3 py-2.5">
                       <span className="px-1.5 py-0.5 rounded-full text-xs font-semibold" style={{ background: wsCfg.bg, color: wsCfg.color }}>
@@ -752,9 +752,9 @@ export default function RevenuePage() {
                 <td colSpan={4} className="px-3 py-2.5 font-bold text-xs" style={{ color: 'var(--text-1)' }}>
                   รวม {periodJobs.length} รายการ
                 </td>
-                <td className="px-3 py-2.5 font-bold text-right" style={{ color: mainTab === 'sales' ? '#f97316' : '#4ade80' }}>{f(totalRevenue)}</td>
+                <td className="px-3 py-2.5 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(totalRevenue)}</td>
                 {mainTab === 'deliver' && <>
-                  <td className="px-3 py-2.5 font-bold text-right" style={{ color: '#f87171' }}>{f(totalCost)}</td>
+                  <td className="px-3 py-2.5 font-bold text-right" style={{ color: 'var(--accent-red)' }}>{f(totalCost)}</td>
                   <td className="px-3 py-2.5 font-bold text-right" style={{ color: 'var(--text-2)' }}>
                     {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(1) + '%' : '—'}
                   </td>

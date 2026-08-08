@@ -1588,12 +1588,12 @@ export default function ProspectsKanbanPage() {
       <FilterBar search={search} onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mx-6 mb-3">
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
-          <option value="">โครงการ</option>
+          <option value="">ทุกโครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
-          <option value="">Sales</option>
+          <option value="">ทุก Sales</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
         {(search || filterProject || filterSales) && (

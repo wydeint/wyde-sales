@@ -183,7 +183,7 @@ export default function DashboardPage() {
           <span className="text-xs ml-2" style={{ color: 'var(--text-3)' }}>ประเภทงาน</span>
           <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
-            <option value="">ทุกประเภท</option>
+            <option value="">ทุกประเภทงาน</option>
             {workTypes.map(w => <option key={w} value={w}>{w}</option>)}
           </select>
           </div>

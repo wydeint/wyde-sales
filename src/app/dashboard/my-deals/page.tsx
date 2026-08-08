@@ -2212,12 +2212,12 @@ export default function MyDealsPage() {
       <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mb-4">
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
-          <option value="">โครงการ</option>
+          <option value="">ทุกโครงการ</option>
           {projectOptions.map(([pid, name]) => <option key={pid} value={pid}>{name}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
-          <option value="">Sales</option>
+          <option value="">ทุก Sales</option>
           {salesUsers.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
         {(search || filterProject || filterSales) && (

@@ -204,17 +204,22 @@ export default function ExecutivePage() {
 
   const salesMax = Math.max(...salesRanking.map(s => s.revenue), 1)
 
-  // Lead source breakdown
+  // Lead source breakdown — only customers whose source was actually recorded.
+  // Including the blanks made ไม่ระบุ a 92% bar that dwarfed every real source
+  // and left the chart unreadable. Nearly all blanks come from the one-time
+  // import at go-live and cannot be backfilled, so they are stated as coverage
+  // beneath the chart rather than drawn as a category.
   const sourceBreakdown = useMemo(() => {
     const map = new Map<string, number>()
     customers.forEach(c => {
-      const src = c.source || 'ไม่ระบุ'
-      map.set(src, (map.get(src) || 0) + 1)
+      if (!c.source) return
+      map.set(c.source, (map.get(c.source) || 0) + 1)
     })
     return [...map.entries()].map(([source, count]) => ({ source, count }))
       .sort((a, b) => b.count - a.count)
   }, [customers])
 
+  const sourceKnown = useMemo(() => customers.filter(c => !!c.source).length, [customers])
   const sourceMax = Math.max(...sourceBreakdown.map(s => s.count), 1)
 
   // Monthly trend (year view)
@@ -403,22 +408,28 @@ export default function ExecutivePage() {
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Lead Source</h2>
           </div>
           {sourceBreakdown.length === 0 ? (
-            <EmptyState message="ยังไม่มีข้อมูล" />
+            <EmptyState message="ยังไม่มีลูกค้าที่บันทึกช่องทางไว้" />
           ) : (
-            <div className="space-y-3">
-              {sourceBreakdown.map((s, i) => (
-                <div key={s.source}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs" style={{ color: 'var(--text-2)' }}>{s.source}</span>
-                    <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{s.count} · {pct(s.count, customers.length)}%</span>
+            <>
+              <div className="space-y-3">
+                {sourceBreakdown.map((s, i) => (
+                  <div key={s.source}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs" style={{ color: 'var(--text-2)' }}>{s.source}</span>
+                      {/* share of customers whose source is known, not of all customers */}
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{s.count} · {pct(s.count, sourceKnown)}%</span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
+                      <div className="h-full rounded-full transition-all"
+                        style={{ width: Math.max(s.count / sourceMax * 100, 4) + '%', background: `hsl(${40 + i * 25},80%,65%)` }} />
+                    </div>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
-                    <div className="h-full rounded-full transition-all"
-                      style={{ width: Math.max(s.count / sourceMax * 100, 4) + '%', background: `hsl(${40 + i * 25},80%,65%)` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <p className="text-label mt-3 pt-3" style={{ color: pct(sourceKnown, customers.length) < 50 ? 'var(--accent-orange)' : 'var(--text-3)', borderTop: '1px solid var(--divider)' }}>
+                จากลูกค้าที่บันทึกช่องทางไว้ {sourceKnown}/{customers.length} ราย ({pct(sourceKnown, customers.length)}%)
+              </p>
+            </>
           )}
         </div>
       </div>

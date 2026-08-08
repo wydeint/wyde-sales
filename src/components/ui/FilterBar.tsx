@@ -49,9 +49,19 @@ export default function FilterBar({
   return (
     <div
       className={`ds-card p-4 flex flex-wrap items-center gap-3 ${sticky ? 'sticky top-0 z-20' : ''} ${className}`.trim()}
-      // The default card background is translucent; content would scroll through
-      // a pinned bar, so the sticky variant gets an opaque surface of its own.
-      style={sticky ? { background: 'var(--panel-bg)' } : undefined}
+      /*
+       * A pinned bar needs its own surface or the rows scrolling underneath show
+       * through. --panel-bg alone is not enough: at 96% opacity the remaining 4%
+       * still leaves dark table text legible through the bar. The blur turns
+       * whatever passes behind into an even wash, and the border marks the bar
+       * as a layer sitting above the content rather than part of it.
+       */
+      style={sticky ? {
+        background: 'var(--panel-bg)',
+        backdropFilter: 'blur(12px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+        borderColor: 'var(--divider)',
+      } as React.CSSProperties : undefined}
     >
       {hasSearch && (
         <div

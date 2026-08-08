@@ -709,7 +709,7 @@ export default function FinancePage() {
           return Object.entries(map).sort((a, b) => b[1] - a[1])
         }
 
-        const CUST_COLORS = { B2C: 'var(--accent)', B2B: 'var(--accent-purple)' }
+        const CUST_COLORS = { B2C: 'var(--chart-1)', B2B: 'var(--chart-2)' }
         const RPT_COLOR = 'var(--accent-green)'
         const NRPT_COLOR = 'var(--accent-amber)'
 

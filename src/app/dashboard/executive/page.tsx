@@ -412,7 +412,7 @@ export default function ExecutivePage() {
           ) : (
             <>
               <div className="space-y-3">
-                {sourceBreakdown.map((s, i) => (
+                {sourceBreakdown.map(s => (
                   <div key={s.source}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs" style={{ color: 'var(--text-2)' }}>{s.source}</span>
@@ -421,7 +421,7 @@ export default function ExecutivePage() {
                     </div>
                     <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
                       <div className="h-full rounded-full transition-all"
-                        style={{ width: Math.max(s.count / sourceMax * 100, 4) + '%', background: `hsl(${40 + i * 25},80%,65%)` }} />
+                        style={{ width: Math.max(s.count / sourceMax * 100, 4) + '%', background: 'var(--chart-1)' }} />
                     </div>
                   </div>
                 ))}
@@ -486,7 +486,7 @@ export default function ExecutivePage() {
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden ml-9" style={{ background: 'var(--divider)' }}>
                   <div className="h-full rounded-full transition-all"
-                    style={{ width: (s.revenue / salesMax * 100) + '%', background: `hsl(${220 + i * 30},75%,65%)` }} />
+                    style={{ width: (s.revenue / salesMax * 100) + '%', background: 'var(--chart-1)' }} />
                 </div>
               </div>
             ))}
@@ -499,7 +499,7 @@ export default function ExecutivePage() {
       {/* ══ TEAM TAB ══════════════════════════════════════════ */}
       {mainTab === 'team' && (() => {
         const now = new Date(); const thisMonth = now.getMonth() + 1
-        const TEAM_COLORS = ['var(--accent)', 'var(--accent-purple)']
+        const TEAM_COLORS = ['var(--chart-1)', 'var(--chart-2)']
         const managerIds = [...new Set(teamUsers.filter(u => u.manager_id).map(u => u.manager_id!))]
         const teamData = managerIds.map((mgrId, idx) => {
           const manager = teamUsers.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId, manager_id: null }

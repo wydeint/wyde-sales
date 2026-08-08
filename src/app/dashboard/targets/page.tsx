@@ -500,7 +500,7 @@ export default function TargetsPage() {
 
           {/* ══ SALES TARGETS TAB ═══════════════════════════ (placeholder removed) */}
           {false && (() => {
-            const TEAM_COLORS = ['var(--accent)', 'var(--accent-purple)']
+            const TEAM_COLORS = ['var(--chart-1)', 'var(--chart-2)']
             const managerIds = [...new Set(users.filter(u => u.manager_id).map(u => u.manager_id!))]
             const teamData = managerIds.map((mgrId, idx) => {
               const manager = users.find(u => u.id === mgrId) ?? { id: mgrId, name: mgrId }

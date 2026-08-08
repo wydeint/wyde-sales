@@ -464,7 +464,7 @@ export default function RevenuePage() {
                   <span className="text-sm font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(s.revenue)}</span>
                 </div>
                 <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
-                  <div className="h-full rounded-full" style={{ width: (s.revenue / salesMax * 100) + '%', background: `hsl(${220 + i * 30}, 80%, 65%)` }} />
+                  <div className="h-full rounded-full" style={{ width: (s.revenue / salesMax * 100) + '%', background: 'var(--chart-1)' }} />
                 </div>
               </div>
             ))}
@@ -615,7 +615,7 @@ export default function RevenuePage() {
             <p className="text-sm text-center py-10" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
           ) : byProject.map((p, i) => {
             const expanded = expandedProjects.has(p.name)
-            const color = `hsl(${(i * 47) % 360}, 65%, 55%)`
+            const color = 'var(--chart-1)'
             return (
               <div key={p.name} style={{ borderBottom: '1px solid var(--divider)' }}>
                 <button className="w-full flex items-center gap-3 px-5 py-3 text-left"

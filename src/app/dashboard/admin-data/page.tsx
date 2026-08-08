@@ -41,7 +41,7 @@ const TABLES: TableDef[] = [
       { key: 'revenue_ex_vat', label: 'มูลค่า (ex VAT)', type: 'number', width: 130 },
       { key: 'revenue_inc_vat', label: 'มูลค่า (inc VAT)', type: 'number', width: 130 },
       { key: 'cost', label: 'ต้นทุน', type: 'number', width: 110 },
-      { key: 'working_status', label: 'สถานะงาน', type: 'select', options: ['กำลังดำเนินการ', 'ส่งมอบแล้ว', 'ยกเลิก'], width: 140 },
+      { key: 'working_status', label: 'สถานะงาน', type: 'select', options: ['จอง', 'ดำเนินการ', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก'], width: 140 },
       { key: 'actual_deliver_date', label: 'วันส่งมอบ', type: 'date', width: 120 },
       { key: 'expected_finish_date', label: 'กำหนดเสร็จ', type: 'date', width: 120 },
       { key: 'sales_id', label: 'Sales ID', type: 'text', width: 100 },

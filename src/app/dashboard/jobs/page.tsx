@@ -9,7 +9,7 @@ import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
 import StatusChip from '@/components/ui/StatusChip'
-import { COMMISSION_STATUSES } from '@/lib/status'
+import { COMMISSION_STATUSES, WORKING_STATUSES } from '@/lib/status'
 
 // ─────────────────────────────────────────
 // Constants
@@ -20,7 +20,9 @@ const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
   'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',
 ]
-const WORKING_STATUSES = ['ดำเนินการ', 'รอเอกสาร', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก']
+// Filter and edit-form options come from the shared vocabulary. The local list
+// this replaces omitted 'จอง' (183 jobs — the largest undelivered group, so it
+// could not be filtered for at all) and offered 'รอเอกสาร', which has no rows.
 
 
 type CommissionTier = {
@@ -922,7 +924,7 @@ export default function JobsPage() {
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุกสถานะ</option>
-          {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          {WORKING_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
@@ -1219,7 +1221,7 @@ export default function JobsPage() {
                       <label className="field-label">สถานะการทำงาน</label>
                       <select value={editing.working_status || ''} onChange={e => setEditing(e2 => ({ ...e2, working_status: e.target.value }))}
                         className="field-input w-full mt-1">
-                        {WORKING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                        {WORKING_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
                     </div>
                     <div>

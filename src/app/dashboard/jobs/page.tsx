@@ -9,6 +9,7 @@ import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
 import StatusChip from '@/components/ui/StatusChip'
+import { COMMISSION_STATUSES } from '@/lib/status'
 
 // ─────────────────────────────────────────
 // Constants
@@ -20,8 +21,7 @@ const PRODUCT_TYPES = [
   'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',
 ]
 const WORKING_STATUSES = ['ดำเนินการ', 'รอเอกสาร', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก']
-const COMMISSION_STATUSES = ['pending', 'approved', 'paid']
-const COMMISSION_STATUS_LABEL: Record<string, string> = { pending: 'รอ', approved: 'อนุมัติ', paid: 'จ่ายแล้ว' }
+
 
 type CommissionTier = {
   revenue_min: number
@@ -1328,14 +1328,14 @@ export default function JobsPage() {
                 <div className="col-span-3">
                   <label className="field-label">สถานะ Commission</label>
                   <div className="flex gap-2 mt-1">
-                    {COMMISSION_STATUSES.map(s => (
+                    {COMMISSION_STATUSES.map(({ value: s, label }) => (
                       <button key={s} onClick={() => setEditing(e => ({ ...e, commission_status: s }))}
                         className="px-3 py-1.5 rounded-[var(--radius-sm)] text-xs font-semibold"
                         style={{
                           background: editing.commission_status === s ? 'var(--accent)' : 'var(--hover-bg)',
                           color: editing.commission_status === s ? '#fff' : 'var(--text-2)',
                         }}>
-                        {COMMISSION_STATUS_LABEL[s]}
+                        {label}
                       </button>
                     ))}
                   </div>

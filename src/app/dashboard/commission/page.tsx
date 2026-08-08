@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { DollarSign, ChevronDown, ChevronRight, CheckCircle, Clock, Banknote, Plus, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import { COMMISSION_STATUSES } from '@/lib/status'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -52,12 +53,16 @@ function calcTier(revenue: number, tiers: Tier[]): { rate: number; amount: numbe
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 const fDate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  pending:  { label: 'รอดำเนินการ', color: 'var(--accent-orange)', bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', icon: Clock },
-  approved: { label: 'อนุมัติแล้ว',  color: 'var(--accent-blue)',   bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)', icon: CheckCircle },
-  paid:     { label: 'จ่ายแล้ว',     color: 'var(--accent-green)',  bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)', icon: Banknote },
-}
-const STATUSES = ['pending', 'approved', 'paid'] as const
+// Labels and colours come from the shared vocabulary; only the icon is local.
+const STATUS_ICON: Record<string, typeof Clock> = { pending: Clock, approved: CheckCircle, paid: Banknote }
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> =
+  Object.fromEntries(COMMISSION_STATUSES.map(s => [s.value, {
+    label: s.label,
+    color: s.color,
+    bg: `color-mix(in srgb, ${s.color} 12%, transparent)`,
+    icon: STATUS_ICON[s.value],
+  }]))
+const STATUSES = COMMISSION_STATUSES.map(s => s.value) as ('pending' | 'approved' | 'paid')[]
 
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 function monthLabel(ym: string) {

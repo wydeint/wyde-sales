@@ -126,11 +126,12 @@ export default function NotificationBell() {
         style={{ color: todayCount > 0 ? 'var(--accent)' : 'var(--text-3)' }}
         onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        aria-label="การแจ้งเตือน"
+        aria-label={total > 0 ? `การแจ้งเตือน ${total} รายการ` : 'การแจ้งเตือน'}
       >
         <Bell size={14} />
         {total > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center text-white"
+          <span aria-hidden="true"
+            className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-micro font-bold leading-none flex items-center justify-center text-white"
             style={{ background: 'var(--accent)' }}>
             {total > 9 ? '9+' : total}
           </span>

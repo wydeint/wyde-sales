@@ -216,7 +216,7 @@ const TABLES: TableDef[] = [
       { key: 'commission_amount', label: 'Commission', type: 'number', width: 130 },
       { key: 'bonus', label: 'Bonus', type: 'number', width: 110 },
       { key: 'total_commission', label: 'รวม Commission', type: 'number', width: 140 },
-      { key: 'status', label: 'สถานะ', type: 'select', options: ['pending', 'approved', 'paid', 'cancelled'], width: 110 },
+      { key: 'status', label: 'สถานะ', type: 'select', options: ['pending', 'approved', 'paid'], width: 110 },
       { key: 'paid_date', label: 'วันจ่าย', type: 'date', width: 110 },
       { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
     ],

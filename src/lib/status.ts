@@ -99,3 +99,19 @@ export const PAYMENT_STATUSES: StatusEntry[] = [
 export function paymentStatus(s: string | null | undefined): StatusEntry {
   return PAYMENT_STATUSES.find(x => x.value === s) ?? UNKNOWN
 }
+
+/**
+ * jobs.commission_status. Data holds only pending / approved / paid (and null
+ * on jobs where commission has not been raised yet). The Data Entry screen also
+ * offered 'cancelled', which no page can render — removed, since picking it
+ * would have written a value that displays nowhere.
+ */
+export const COMMISSION_STATUSES: StatusEntry[] = [
+  { value: 'pending',  label: 'รอดำเนินการ', icon: '◷', badge: 'badge badge-orange', color: 'var(--accent-orange)' },
+  { value: 'approved', label: 'อนุมัติแล้ว',  icon: '◉', badge: 'badge badge-blue',   color: 'var(--accent-blue)' },
+  { value: 'paid',     label: 'จ่ายแล้ว',     icon: '✓', badge: 'badge badge-green',  color: 'var(--accent-green)' },
+]
+
+export function commissionStatus(s: string | null | undefined): StatusEntry {
+  return COMMISSION_STATUSES.find(x => x.value === s) ?? UNKNOWN
+}

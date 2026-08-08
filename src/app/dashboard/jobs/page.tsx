@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, X, Calculator, Briefcase, Receipt, ChevronRight, Phone, FileDown } from 'lucide-react'
+import {X, Calculator, Briefcase, Receipt, ChevronRight, Phone, FileDown } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import Money from '@/components/ui/Money'
 import Link from 'next/link'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
 import StatusChip from '@/components/ui/StatusChip'
+import FilterBar from '@/components/ui/FilterBar'
 import { COMMISSION_STATUSES, WORKING_STATUSES } from '@/lib/status'
 
 // ─────────────────────────────────────────
@@ -908,13 +909,7 @@ export default function JobsPage() {
       </div>
 
       {/* Filters */}
-      <div className="ds-card p-4 flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-48 rounded-[8px] px-3 py-2" style={{ background: 'var(--hover-bg)' }}>
-          <Search size={14} style={{ color: 'var(--text-3)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="ค้นหา PO / SO / ลูกค้า..." className="bg-transparent text-sm flex-1 outline-none"
-            style={{ color: 'var(--text-1)' }} />
-        </div>
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา PO / SO / ลูกค้า...">
         <SearchableSelect
           value={filterProject}
           onChange={v => setFilterProject(v)}
@@ -942,7 +937,7 @@ export default function JobsPage() {
           <option value="">ทุกประเภทงาน</option>
           {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
-      </div>
+      </FilterBar>
 
       {/* ─── Card Grid (grouped by project) ─── */}
       {filtered.length === 0 ? (

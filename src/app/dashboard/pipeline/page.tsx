@@ -13,6 +13,7 @@ import { PageSpinner } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+import FilterBar from '@/components/ui/FilterBar'
 import { CRM_STAGES, crmStage, PROSPECT_STAGES } from '@/lib/status'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
@@ -1584,28 +1585,14 @@ export default function ProspectsKanbanPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex-shrink-0 px-6 pb-3 flex items-center gap-2 flex-wrap">
-        <div className="relative">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-          <input value={search} onChange={e => { setSearch(e.target.value); setSelectedCustomer(null) }}
-            placeholder="ค้นหาห้อง, ลูกค้า..."
-            className="pl-8 pr-7 py-2 rounded-[8px] text-sm focus:outline-none w-44"
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-          {search && (
-            <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
-              <X size={12} style={{ color: 'var(--text-3)' }} />
-            </button>
-          )}
-        </div>
+      <FilterBar search={search} onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mx-6 mb-3">
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)', maxWidth: '10rem' }}>
+          className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
           <option value="">โครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterSales ? 'var(--accent)' : 'var(--divider)'}`, color: filterSales ? 'var(--text-1)' : 'var(--text-3)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">Sales</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
@@ -1621,7 +1608,7 @@ export default function ProspectsKanbanPage() {
             ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length + ' งาน'
             : list.length + ' ราย'}
         </span>
-      </div>
+      </FilterBar>
 
       {/* Summary strip */}
       {(activeStage === 'booked' && !search ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length > 0 : list.length > 0) && (() => {

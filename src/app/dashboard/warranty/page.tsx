@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, ShieldCheck, Pencil, AlertTriangle, Search } from 'lucide-react'
+import { Plus, ShieldCheck, Pencil, AlertTriangle } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Warranty {
@@ -227,14 +228,7 @@ export default function WarrantyPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5 flex-wrap">
-        <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="ค้นหาชื่อลูกค้า / เลขห้อง..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-[8px] text-sm focus:outline-none"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }} />
-        </div>
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อลูกค้า / เลขห้อง..." className="mb-5">
         <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
           <option value="">ทุกโครงการ</option>
@@ -245,7 +239,7 @@ export default function WarrantyPage() {
           <option value="">ทุกสถานะ</option>
           {STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
-      </div>
+      </FilterBar>
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
 import Money from '@/components/ui/Money'
+import FilterBar from '@/components/ui/FilterBar'
 import { EmptyState } from '@/components/ui/StateUI'
 
 // ─── LINE Logo ────────────────────────────────────────────
@@ -2208,28 +2209,14 @@ export default function MyDealsPage() {
         </div>
 
       {/* Filter bar — separate row, same position as Pipeline */}
-      <div className="flex items-center gap-2 flex-wrap mb-4">
-        <div className="relative">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder='ค้นหาห้อง, ลูกค้า...'
-            className="pl-8 pr-7 py-2 rounded-[8px] text-sm focus:outline-none w-44"
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-          {search && (
-            <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
-              <X size={12} style={{ color: 'var(--text-3)' }} />
-            </button>
-          )}
-        </div>
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mb-4">
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)', maxWidth: '10rem' }}>
+          className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
           <option value="">โครงการ</option>
           {projectOptions.map(([pid, name]) => <option key={pid} value={pid}>{name}</option>)}
         </select>
         <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterSales ? 'var(--accent)' : 'var(--divider)'}`, color: filterSales ? 'var(--text-1)' : 'var(--text-3)' }}>
+          className="field-input" style={{ width: 'auto' }}>
           <option value="">Sales</option>
           {salesUsers.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
@@ -2243,7 +2230,7 @@ export default function MyDealsPage() {
         <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>
           {grouped.reduce((s, g) => s + g.active.length + g.done.length, 0)} ราย
         </span>
-      </div>
+      </FilterBar>
 
       {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-6">

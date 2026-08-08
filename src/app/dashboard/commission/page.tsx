@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { DollarSign, ChevronDown, ChevronRight, CheckCircle, Clock, Banknote, Plus, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { COMMISSION_STATUSES } from '@/lib/status'
 
 // ─── Types ────────────────────────────────────────────────
@@ -351,11 +352,7 @@ function ReferralTab({
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 flex-wrap items-center">
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="ค้นหาลูกค้า ห้อง หรือโครงการ..."
-          className="flex-1 min-w-[180px] px-4 py-2.5 rounded-[11px] text-sm focus:outline-none"
-          style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาลูกค้า ห้อง หรือโครงการ...">
         <div className="tab-group">
           {STATUS_OPTS.map(opt => (
             <button key={opt.value} onClick={() => setFilterStatus(opt.value)}
@@ -371,7 +368,7 @@ function ReferralTab({
             {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
         )}
-      </div>
+      </FilterBar>
 
       {/* Job list */}
       <div className="space-y-2">

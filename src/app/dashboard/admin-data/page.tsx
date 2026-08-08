@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, Save, X, Edit2, Layers, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react'
 import { TableEmpty } from '@/components/ui/StateUI'
+import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 
 // ─── Table definitions ─────────────────────────────────────
 type ColType = 'text' | 'number' | 'date' | 'select' | 'boolean' | 'readonly'
@@ -807,36 +809,26 @@ export default function AdminDataPage() {
     <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
       {/* Header */}
       <div className="flex-shrink-0 px-5 pt-5 pb-3">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-page-title flex-1" style={{ color: 'var(--text-1)' }}>{isReconcile ? 'Reconcile Check' : 'Data Entry'}</h1>
-          {!isReconcile && (<>
-            <div className="relative">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหา..."
-                className="field-input pl-8 pr-7 w-44" />
-              {search && (
-                <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
-                  <X size={12} style={{ color: 'var(--text-3)' }} />
-                </button>
-              )}
-            </div>
-            <button onClick={load} className="btn-util text-xs">รีเฟรช</button>
-          </>)}
-        </div>
+        <PageHeader
+          title={isReconcile ? 'Reconcile Check' : 'Data Entry'}
+          className="mb-4"
+          actions={!isReconcile && <button onClick={load} className="btn-util text-xs">รีเฟรช</button>}
+        />
 
-        {/* Project filter (only for tables with project_id) */}
-        {!isReconcile && hasProjectFilter && (
-          <div className="flex items-center gap-2 mb-3">
-            <label className="field-label">โครงการ</label>
-            <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
-              className="field-input" style={{ width: 'auto', minWidth: 160 }}>
-              <option value="">ทั้งหมด</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+        {/* Search + project filter — one block, like every other list page */}
+        {!isReconcile && (
+          <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา..." className="mb-3">
+            {hasProjectFilter && (
+              <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
+                className="field-input" style={{ width: 'auto', minWidth: 160 }}>
+                <option value="">ทุกโครงการ</option>
+                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            )}
             {filterProject && (
               <button onClick={() => setFilterProject('')} className="btn-util text-xs">✕ ล้าง</button>
             )}
-          </div>
+          </FilterBar>
         )}
 
         {/* Tabs — Finance style: group row + table row */}

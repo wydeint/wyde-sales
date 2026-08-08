@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import {
-  Search, Upload, CheckCircle, XCircle, AlertCircle,
+import {Upload, CheckCircle, XCircle, AlertCircle,
   UserPlus, Users, RefreshCw, PhoneCall, Briefcase, ChevronDown
 } from 'lucide-react'
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 
 interface Lead {
   id: number
@@ -593,14 +593,7 @@ export default function LeadsPage() {
       )}
 
       {/* Filters */}
-      <div className="filter-row mb-4">
-        <div className="flex items-center gap-2 rounded-[8px] px-3 py-2 flex-1 min-w-[200px]"
-          style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
-          <Search size={14} style={{ color: 'var(--text-3)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="ค้นหาชื่อ เบอร์ ตึก ห้อง..."
-            className="bg-transparent text-sm outline-none flex-1" style={{ color: 'var(--text-1)' }} />
-        </div>
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาชื่อ เบอร์ ตึก ห้อง..." className="mb-4">
         <SearchableSelect
           value={filterProject}
           onChange={v => setFilterProject(v)}
@@ -624,7 +617,7 @@ export default function LeadsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </FilterBar>
 
       {addError && (
         <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>

@@ -1,15 +1,16 @@
 ﻿'use client'
 
-import { useEffect, useState, useId } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-  Plus, Users, Pencil, Search, AlertCircle, Trash2, X,
+  Plus, Users, Pencil, AlertCircle, Trash2, X,
   Phone, Mail, MessageCircle, Building2, Home, Banknote,
   Briefcase, FileText, CheckCircle, Clock, Shield, ChevronRight,
 } from 'lucide-react'
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { CRM_STAGES, crmStage, isProspectStage } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -506,7 +507,6 @@ export default function CustomersPage() {
   const [fetchError, setFetchError] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const searchId = useId()
   const [filterStatus, setFilterStatus] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null)
@@ -619,31 +619,20 @@ export default function CustomersPage() {
       <PageHeader title="Customers" subtitle="รายชื่อลูกค้าและ Pipeline การขาย" />
 
       {/* Filters */}
-      <div className="filter-row mb-4 items-center">
-        <label htmlFor={searchId} className="sr-only">ค้นหาลูกค้า</label>
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-          <input
-            id={searchId}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="ค้นหาชื่อ ห้อง โครงการ เบอร์..."
-            className="field-input pl-9"
-            style={{ paddingTop: '0.625rem', paddingBottom: '0.625rem' }}
-          />
-          {search && (
-            <button className="absolute right-2.5 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
-              <X size={12} style={{ color: 'var(--text-3)' }} />
-            </button>
-          )}
-        </div>
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="ค้นหาชื่อ ห้อง โครงการ เบอร์..."
+        searchLabel="ค้นหาลูกค้า"
+        className="mb-4"
+      >
         <select
           value={filterProject}
           onChange={e => setFilterProject(e.target.value)}
-          className="py-2 pl-3 pr-7 rounded-[8px] text-sm focus:outline-none appearance-none"
-          style={{ background: 'var(--input-bg)', border: `1px solid ${filterProject ? 'var(--accent)' : 'var(--divider)'}`, color: filterProject ? 'var(--text-1)' : 'var(--text-3)', maxWidth: '12rem' }}
+          className="field-input"
+          style={{ width: 'auto', maxWidth: '12rem' }}
         >
-          <option value="">โครงการ</option>
+          <option value="">ทุกโครงการ</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         {(search || filterProject) && (
@@ -653,7 +642,7 @@ export default function CustomersPage() {
             ล้าง
           </button>
         )}
-      </div>
+      </FilterBar>
 
       {/* Status filter pills */}
       <div className="tab-group mb-4 flex-wrap">

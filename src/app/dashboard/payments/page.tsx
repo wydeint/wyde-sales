@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, ExternalLink, FileText, X } from 'lucide-react'
+import { ExternalLink, FileText, X } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Installment {
@@ -331,13 +332,7 @@ export default function PaymentsPage() {
         />
 
         {/* Filters */}
-        <div className="flex gap-2 mb-3 flex-wrap">
-          <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาห้อง / ลูกค้า"
-              className="pl-7 pr-6 py-1.5 rounded-[8px] text-xs focus:outline-none w-44" style={inputStyle} />
-            {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2"><X size={10} style={{ color: 'var(--text-3)' }} /></button>}
-          </div>
+        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" className="mb-3">
           <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุกโครงการ</option>
@@ -348,7 +343,7 @@ export default function PaymentsPage() {
             <option value="">ทุก Sales</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
-        </div>
+        </FilterBar>
 
         {/* Summary */}
         <div className="flex gap-3 flex-wrap">

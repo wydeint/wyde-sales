@@ -808,7 +808,6 @@ export default function AdminDataPage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div>
         <PageHeader
           title={isReconcile ? 'Reconcile Check' : 'Data Entry'}
           className="mb-4"
@@ -860,7 +859,6 @@ export default function AdminDataPage() {
             ))}
           </div>
         </div>
-      </div>
 
       {/* Reconcile view */}
       {isReconcile && <ReconcileCheck />}

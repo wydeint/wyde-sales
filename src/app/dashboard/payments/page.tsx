@@ -321,7 +321,6 @@ export default function PaymentsPage() {
 
   return (
     <div className="page-content">
-      <div>
         <PageHeader
           title="Payments"
           subtitle="สถานะชำระเงินและเอกสารรายห้อง"
@@ -358,7 +357,6 @@ export default function PaymentsPage() {
           </div>
           <p className="text-xs self-center" style={{ color: 'var(--text-3)' }}>{filtered.length} รายการ</p>
         </div>
-      </div>
 
       {/* Table */}
       <div className="tbl-scroll rounded-[11px]"

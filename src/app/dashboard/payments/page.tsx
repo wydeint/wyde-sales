@@ -352,10 +352,11 @@ export default function PaymentsPage() {
             <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
             <p className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
           </div>
+          {/* Outstanding is a normal state, not an error — matches the drawer. */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
-            style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)' }}>
-            <p className="text-micro font-semibold" style={{ color: 'var(--accent-red)' }}>คงเหลือ</p>
-            <p className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{f(totalUnpaid)}</p>
+            style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
+            <p className="text-micro font-semibold" style={{ color: 'var(--accent-orange)' }}>คงเหลือ</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
           </div>
           <p className="text-xs self-center" style={{ color: 'var(--text-3)' }}>{filtered.length} รายการ</p>
         </div>

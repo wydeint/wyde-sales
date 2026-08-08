@@ -320,10 +320,8 @@ export default function PaymentsPage() {
   if (loading) return <PageSpinner />
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
-
-      {/* Header */}
-      <div className="flex-shrink-0 px-6 pt-5 pb-3">
+    <div className="page-content">
+      <div>
         <PageHeader
           title="Payments"
           subtitle="สถานะชำระเงินและเอกสารรายห้อง"
@@ -332,7 +330,7 @@ export default function PaymentsPage() {
         />
 
         {/* Filters */}
-        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" className="mb-3">
+        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" sticky className="mb-3">
           <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุกโครงการ</option>
@@ -363,8 +361,8 @@ export default function PaymentsPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto mx-6 mb-6 rounded-[11px]"
-        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div className="tbl-scroll rounded-[11px]"
+        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'var(--hover-bg)', position: 'sticky', top: 0, zIndex: 10 }}>

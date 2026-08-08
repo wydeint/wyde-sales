@@ -197,10 +197,10 @@ export default function ProjectSummaryPage() {
   const totalNRPT = totals.b2c_nrpt + totals.b2b_nrpt
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+    <div className="page-content">
 
       {/* Header */}
-      <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+      <div className="pb-4 mb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
 
         {/* Title */}
         <PageHeader
@@ -209,28 +209,6 @@ export default function ProjectSummaryPage() {
           className="mb-4"
           actions={<span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>}
         />
-
-        {/* KPI cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-          {[
-            { icon: Building2, label: 'โครงการที่มีงาน', value: `${filtered.length}`, sub: `จากทั้งหมด ${rows.length}`, color: 'var(--accent)' },
-            { icon: TrendingUp, label: 'ห้องทั้งหมด', value: totals.units.toLocaleString(), sub: 'ตามที่บันทึก', color: 'var(--accent-blue)' },
-            { icon: CheckCircle2, label: 'Wyde Clients', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: 'var(--accent-green)' },
-            { icon: DollarSign, label: 'รายได้รวม', value: fM(totals.rev), sub: `ส่งมอบแล้ว ${fM(totals.revDel)}`, color: 'var(--accent-amber)' },
-          ].map(k => {
-            const Icon = k.icon
-            return (
-              <div key={k.label} className="ds-card p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Icon size={13} style={{ color: k.color }} />
-                  <span className="text-card-title" style={{ color: 'var(--text-3)' }}>{k.label}</span>
-                </div>
-                <p className="text-kpi-number" style={{ color: k.color }}>{k.value}</p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
-              </div>
-            )
-          })}
-        </div>
 
         {/* Filter row — Finance pill style */}
         <div className="flex items-center gap-3 flex-wrap">
@@ -265,10 +243,32 @@ export default function ProjectSummaryPage() {
             ซ่อนโครงการที่ยังไม่มีงาน
           </label>
         </div>
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          {[
+            { icon: Building2, label: 'โครงการที่มีงาน', value: `${filtered.length}`, sub: `จากทั้งหมด ${rows.length}`, color: 'var(--accent)' },
+            { icon: TrendingUp, label: 'ห้องทั้งหมด', value: totals.units.toLocaleString(), sub: 'ตามที่บันทึก', color: 'var(--accent-blue)' },
+            { icon: CheckCircle2, label: 'Wyde Clients', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: 'var(--accent-green)' },
+            { icon: DollarSign, label: 'รายได้รวม', value: fM(totals.rev), sub: `ส่งมอบแล้ว ${fM(totals.revDel)}`, color: 'var(--accent-amber)' },
+          ].map(k => {
+            const Icon = k.icon
+            return (
+              <div key={k.label} className="ds-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon size={13} style={{ color: k.color }} />
+                  <span className="text-card-title" style={{ color: 'var(--text-3)' }}>{k.label}</span>
+                </div>
+                <p className="text-kpi-number" style={{ color: k.color }}>{k.value}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
+              </div>
+            )
+          })}
+        </div>
+
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div className="tbl-scroll">
         <table className="w-full text-sm border-collapse" style={{ minWidth: 900 }}>
           <thead className="sticky top-0 z-10" style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--divider)' }}>
             <tr>

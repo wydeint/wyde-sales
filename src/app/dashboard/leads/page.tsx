@@ -435,11 +435,13 @@ export default function LeadsPage() {
     return matchSearch && matchProject && matchStatus
   })
 
+  // Counts the filtered set — the block sits below the filter bar, so counting
+  // every lead would leave it looking frozen when a filter is applied.
   const stats = {
-    total: leads.length,
-    inPipeline: leads.filter(l => !!l.customer_id).length,
-    contacted: leads.filter(l => !l.customer_id && contactedInfo(l).contacted).length,
-    newLead: leads.filter(l => !l.customer_id && !contactedInfo(l).contacted).length,
+    total: filtered.length,
+    inPipeline: filtered.filter(l => !!l.customer_id).length,
+    contacted: filtered.filter(l => !l.customer_id && contactedInfo(l).contacted).length,
+    newLead: filtered.filter(l => !l.customer_id && !contactedInfo(l).contacted).length,
   }
 
   return (
@@ -462,21 +464,6 @@ export default function LeadsPage() {
           </>
         }
       />
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        {[
-          { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
-          { label: 'ยังไม่ได้ติดต่อ', value: stats.newLead, color: 'var(--accent-orange)' },
-          { label: 'ติดต่อแล้ว (ในระบบ)', value: stats.contacted, color: 'var(--accent-blue)' },
-          { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline, color: 'var(--accent-green)' },
-        ].map(s => (
-          <div key={s.label} className="ds-card-sm p-4">
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
-            <p className="text-kpi-number" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
 
       {/* Import Panel */}
       {showImport && (
@@ -618,6 +605,21 @@ export default function LeadsPage() {
           ))}
         </div>
       </FilterBar>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        {[
+          { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
+          { label: 'ยังไม่ได้ติดต่อ', value: stats.newLead, color: 'var(--accent-orange)' },
+          { label: 'ติดต่อแล้ว (ในระบบ)', value: stats.contacted, color: 'var(--accent-blue)' },
+          { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline, color: 'var(--accent-green)' },
+        ].map(s => (
+          <div key={s.label} className="ds-card-sm p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
+            <p className="text-kpi-number" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
 
       {addError && (
         <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>

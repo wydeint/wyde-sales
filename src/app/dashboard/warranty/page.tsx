@@ -246,7 +246,9 @@ export default function WarrantyPage() {
         {STATUS.map(s => (
           <div key={s.value} className="ds-card p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{s.label}</p>
-            <p className="text-kpi-number" style={{ color: s.value === 'active' ? 'var(--accent-green)' : s.value === 'expiring_soon' ? 'var(--accent-orange)' : 'var(--accent-red)' }}>{warranties.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
+            {/* Counts the filtered set, not every warranty — this sits below the
+                filter bar, so leaving it on the full list made it look stuck. */}
+            <p className="text-kpi-number" style={{ color: s.value === 'active' ? 'var(--accent-green)' : s.value === 'expiring_soon' ? 'var(--accent-orange)' : 'var(--accent-red)' }}>{filtered.filter(w => computedStatus(w.warranty_end) === s.value).length}</p>
           </div>
         ))}
       </div>

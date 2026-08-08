@@ -310,11 +310,11 @@ export default function HandoverPage() {
   if (loading) return <PageSpinner />
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+    <div className="page-content">
       {editEntry && <EditDrawer entry={editEntry} onClose={() => setEditEntry(null)} onSaved={load} />}
 
       {/* Header */}
-      <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
+      <div className="pb-4 mb-4" style={{ borderBottom: '1px solid var(--divider)' }}>
         <PageHeader
           title="Handover"
           subtitle="ตารางส่งมอบงานรายเดือน"
@@ -398,7 +398,7 @@ export default function HandoverPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div>
         {totalRooms === 0 ? (
           <div className="flex items-center justify-center h-32">
             <p className="text-sm" style={{ color: 'var(--text-3)' }}>ไม่มีข้อมูลสำหรับเดือนนี้</p>

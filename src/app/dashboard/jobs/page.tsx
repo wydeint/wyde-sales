@@ -825,51 +825,6 @@ export default function JobsPage() {
         }
       />
 
-      {/* Summary KPI */}
-      {(() => {
-        // GP% is computed over jobs that actually have a cost recorded. Dividing
-        // by total revenue counted every job with no cost as pure profit, which
-        // put the headline at 99.3% when only 6.7% of jobs carry cost data —
-        // the real margin across those is about 31%.
-        const costedJobs = filtered.filter(j => (j.cost || 0) > 0)
-        const costedRevenue = costedJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
-        const costedCost = costedJobs.reduce((s, j) => s + (j.cost || 0), 0)
-        const profit = costedRevenue - costedCost
-        const gpPctAvg = costedRevenue > 0 ? (profit / costedRevenue * 100) : null
-        const costCoverage = filtered.length > 0 ? costedJobs.length / filtered.length * 100 : 0
-        const gpColor = gpPctAvg === null ? 'var(--text-3)' : gpPctAvg >= 20 ? 'var(--accent-green)' : gpPctAvg >= 10 ? 'var(--accent-orange)' : 'var(--accent-red)'
-        const overdueCount = filtered.filter(j => {
-          if (j.working_status === 'ส่งมอบแล้ว' || j.working_status === 'ยกเลิก') return false
-          if (!j.expected_finish_date) return false
-          return j.expected_finish_date < new Date().toISOString().slice(0, 10)
-        }).length
-        return (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="ds-card p-4">
-              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
-            </div>
-            <div className="ds-card p-4">
-              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
-              <p className="text-lg font-bold" style={{ color: gpColor }}>
-                {gpPctAvg !== null ? gpPctAvg.toFixed(1) + '%' : '—'}
-              </p>
-              <p className="text-label mt-0.5" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
-                กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
-              </p>
-            </div>
-            <div className="ds-card p-4">
-              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
-              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
-                {overdueCount} งาน
-              </p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
-            </div>
-          </div>
-        )
-      })()}
-
       {/* Quick filter chips */}
       <div className="flex gap-2 flex-wrap">
         <button
@@ -938,6 +893,51 @@ export default function JobsPage() {
           {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </FilterBar>
+
+      {/* Summary KPI */}
+      {(() => {
+        // GP% is computed over jobs that actually have a cost recorded. Dividing
+        // by total revenue counted every job with no cost as pure profit, which
+        // put the headline at 99.3% when only 6.7% of jobs carry cost data —
+        // the real margin across those is about 31%.
+        const costedJobs = filtered.filter(j => (j.cost || 0) > 0)
+        const costedRevenue = costedJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
+        const costedCost = costedJobs.reduce((s, j) => s + (j.cost || 0), 0)
+        const profit = costedRevenue - costedCost
+        const gpPctAvg = costedRevenue > 0 ? (profit / costedRevenue * 100) : null
+        const costCoverage = filtered.length > 0 ? costedJobs.length / filtered.length * 100 : 0
+        const gpColor = gpPctAvg === null ? 'var(--text-3)' : gpPctAvg >= 20 ? 'var(--accent-green)' : gpPctAvg >= 10 ? 'var(--accent-orange)' : 'var(--accent-red)'
+        const overdueCount = filtered.filter(j => {
+          if (j.working_status === 'ส่งมอบแล้ว' || j.working_status === 'ยกเลิก') return false
+          if (!j.expected_finish_date) return false
+          return j.expected_finish_date < new Date().toISOString().slice(0, 10)
+        }).length
+        return (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="ds-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
+              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
+            </div>
+            <div className="ds-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
+              <p className="text-lg font-bold" style={{ color: gpColor }}>
+                {gpPctAvg !== null ? gpPctAvg.toFixed(1) + '%' : '—'}
+              </p>
+              <p className="text-label mt-0.5" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
+                กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
+              </p>
+            </div>
+            <div className="ds-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
+              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
+                {overdueCount} งาน
+              </p>
+              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ─── Card Grid (grouped by project) ─── */}
       {filtered.length === 0 ? (

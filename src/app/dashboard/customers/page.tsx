@@ -624,6 +624,7 @@ export default function CustomersPage() {
         onSearchChange={setSearch}
         searchPlaceholder="ค้นหาชื่อ ห้อง โครงการ เบอร์..."
         searchLabel="ค้นหาลูกค้า"
+        sticky
         className="mb-4"
       >
         <select

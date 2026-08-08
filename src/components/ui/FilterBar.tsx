@@ -24,6 +24,7 @@ export default function FilterBar({
   onSearchChange,
   searchPlaceholder = 'ค้นหา...',
   searchLabel,
+  sticky = false,
   children,
   className = '',
 }: {
@@ -32,13 +33,26 @@ export default function FilterBar({
   searchPlaceholder?: string
   /** Accessible name for the field; falls back to the placeholder. */
   searchLabel?: string
+  /**
+   * Keep the bar pinned while the page scrolls. Turn this on only where the
+   * table is long enough that the controls would otherwise scroll away — it is
+   * what replaced the old `h-screen flex flex-col` pages, which nested a second
+   * scroll region inside the shell's own scrolling <main> and left only part of
+   * the page moving.
+   */
+  sticky?: boolean
   children?: React.ReactNode
   className?: string
 }) {
   const hasSearch = typeof search === 'string' && !!onSearchChange
 
   return (
-    <div className={`ds-card p-4 flex flex-wrap items-center gap-3 ${className}`.trim()}>
+    <div
+      className={`ds-card p-4 flex flex-wrap items-center gap-3 ${sticky ? 'sticky top-0 z-20' : ''} ${className}`.trim()}
+      // The default card background is translucent; content would scroll through
+      // a pinned bar, so the sticky variant gets an opaque surface of its own.
+      style={sticky ? { background: 'var(--panel-bg)' } : undefined}
+    >
       {hasSearch && (
         <div
           className="flex items-center gap-2 flex-1 min-w-48 rounded-[var(--radius-sm)] px-3 py-2"

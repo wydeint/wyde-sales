@@ -563,7 +563,7 @@ function ReconcileCheck() {
   const passCount = checks.filter(c => c.pass).length
 
   return (
-    <div className="flex-1 overflow-auto mx-5 mb-5">
+    <div className="mb-5">
       <div className="max-w-2xl mx-auto pt-6 pb-10 space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -806,9 +806,9 @@ export default function AdminDataPage() {
   const isReconcile = activeGroup === 'Reconcile'
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+    <div className="page-content">
       {/* Header */}
-      <div className="flex-shrink-0 px-5 pt-5 pb-3">
+      <div>
         <PageHeader
           title={isReconcile ? 'Reconcile Check' : 'Data Entry'}
           className="mb-4"
@@ -817,7 +817,7 @@ export default function AdminDataPage() {
 
         {/* Search + project filter — one block, like every other list page */}
         {!isReconcile && (
-          <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา..." className="mb-3">
+          <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา..." sticky className="mb-3">
             {hasProjectFilter && (
               <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
                 className="field-input" style={{ width: 'auto', minWidth: 160 }}>
@@ -886,7 +886,7 @@ export default function AdminDataPage() {
       )}
 
       {/* Table */}
-      {!isReconcile && <div className="flex-1 overflow-auto mx-5 mb-5 rounded-[11px]"
+      {!isReconcile && <div className="tbl-scroll mb-5 rounded-[11px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         {loading ? (
           <div className="flex items-center justify-center h-48">
@@ -973,7 +973,7 @@ export default function AdminDataPage() {
       </div>}
 
       {/* Footer */}
-      {!isReconcile && <div className="flex-shrink-0 px-5 pb-3 flex items-center gap-3">
+      {!isReconcile && <div className="pb-3 flex items-center gap-3">
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>
           {filtered.length} แถว {rows.length !== filtered.length ? `(กรองจาก ${rows.length})` : ''} · แสดงสูงสุด 500 แถว
         </p>

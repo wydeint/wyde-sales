@@ -1502,8 +1502,8 @@ export default function ProspectsKanbanPage() {
   }
 
   if (loading) return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
-      <div className="flex-shrink-0 px-6 pt-5 pb-3">
+    <div className="page-content">
+      <div>
         <div className="h-6 w-28 rounded-lg mb-1 animate-pulse" style={{ background: 'var(--hover-bg)' }} />
         <div className="h-3 w-16 rounded-lg animate-pulse" style={{ background: 'var(--hover-bg)' }} />
       </div>
@@ -1535,10 +1535,10 @@ export default function ProspectsKanbanPage() {
   }).sort((a, b) => (a.c.interested_room || '').localeCompare(b.c.interested_room || '', 'th', { numeric: true, sensitivity: 'base' }))
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'var(--page-bg)' }}>
+    <div className="page-content">
 
       {/* Header */}
-      <div className="flex-shrink-0 px-6 pt-5 pb-3">
+      <div>
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Prospects</h1>
@@ -1585,7 +1585,7 @@ export default function ProspectsKanbanPage() {
       </div>
 
       {/* Filter bar */}
-      <FilterBar search={search} onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mx-6 mb-3">
+      <FilterBar search={search} onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mb-3">
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
           <option value="">ทุกโครงการ</option>
@@ -1617,7 +1617,7 @@ export default function ProspectsKanbanPage() {
           const totalRev = filtered.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
           const noSales = filtered.filter(j => !j.sales_id).length
           return (
-            <div className="flex-shrink-0 px-6 pb-3 grid grid-cols-3 gap-2">
+            <div className="mb-3 grid grid-cols-3 gap-2">
               <div className="ds-card-sm text-center">
                 <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>จองอยู่</p>
                 <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{filtered.length}</p>
@@ -1639,7 +1639,7 @@ export default function ProspectsKanbanPage() {
         const totalBudget = list.reduce((s, card) => s + (card.c.budget || 0), 0)
         const noSales = list.filter(card => !card.c.assigned_to).length
         return (
-          <div className="flex-shrink-0 px-6 pb-3 grid grid-cols-3 gap-2">
+          <div className="mb-3 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">
               <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ในกลุ่มนี้</p>
               <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{list.length}</p>
@@ -1660,7 +1660,7 @@ export default function ProspectsKanbanPage() {
       })()}
 
       {/* Cards list */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
+      <div>
         {activeStage === 'booked' && !search ? (() => {
           const filtered = bookedJobs.filter(j =>
             (!filterProject || j.project_id === filterProject) &&

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, CheckCircle2, X, Save } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import { addDays } from '@/lib/delivery'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Job {
@@ -39,11 +40,6 @@ interface RoomEntry {
 // ─── Helpers ───────────────────────────────────────────────
 const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0)
 const THIS_MONTH = TODAY.toISOString().slice(0, 7)
-
-function addDays(d: string, n: number): string {
-  const dt = new Date(d); dt.setDate(dt.getDate() + n)
-  return dt.toISOString().slice(0, 10)
-}
 
 function monthLabel(ym: string): string {
   const [y, m] = ym.split('-').map(Number)
@@ -356,45 +352,29 @@ export default function HandoverPage() {
         </FilterBar>
 
         {/* Summary cards */}
-        <div className="flex gap-3 flex-wrap">
-          {/* Total */}
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <div>
-              <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
-              <p className="text-kpi-number leading-tight" style={{ color: 'var(--text-1)' }}>
-                {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
-              </p>
-              {deliveredRooms > 0 && <p className="text-micro" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
-            </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="ds-card p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
+            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>
+              {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
+            </p>
+            {deliveredRooms > 0 && <p className="text-micro mt-0.5" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
           </div>
-          {/* Value */}
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
-            style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <div>
-              <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
-              <p className="text-base font-bold leading-tight" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
-            </div>
+          <div className="ds-card p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
+            <p className="text-kpi-number" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
+            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
           </div>
-          {/* Overdue */}
           {overdueRooms > 0 && (
-            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
-              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-              <div>
-                <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
-                <p className="text-kpi-number leading-tight" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
-              </div>
+            <div className="ds-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
             </div>
           )}
-          {/* No start date */}
           {noStartRooms > 0 && (
-            <div className="flex items-center gap-3 px-4 py-2.5 rounded-[8px]"
-              style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-              <div>
-                <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
-                <p className="text-kpi-number leading-tight" style={{ color: 'var(--accent-amber)' }}>{noStartRooms} ห้อง</p>
-              </div>
+            <div className="ds-card p-4">
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
+              <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{noStartRooms} ห้อง</p>
             </div>
           )}
         </div>

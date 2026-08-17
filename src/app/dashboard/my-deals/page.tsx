@@ -12,6 +12,7 @@ import Money from '@/components/ui/Money'
 import FilterBar from '@/components/ui/FilterBar'
 import PageHeader from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/StateUI'
+import { expectedDeliveryDate, fmtShortDate } from '@/lib/delivery'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -961,6 +962,9 @@ interface LineJobCtx {
   revenue_inc_vat: number
   voucher?: number
   working_status: string
+  expected_finish_date?: string | null
+  work_start_date?: string | null
+  work_days?: number | null
 }
 
 function generateLineMsg(job: LineJobCtx, inst: Installment): string {
@@ -989,6 +993,8 @@ function generateLineMsg(job: LineJobCtx, inst: Installment): string {
   if (inst.voucher_amount > 0) lines.push(`หัก Voucher${inst.voucher_code ? ` (${inst.voucher_code})` : ''} : ${fmt(inst.voucher_amount)} บาท`)
   lines.push(`${inst.installment_name} : ${fmt(paid)} บาท`)
   if (inst.channel) lines.push(`ชำระผ่านทาง : ${inst.channel}`)
+  const expected = isDelivered ? null : expectedDeliveryDate(job)
+  if (expected) lines.push(`วันคาดส่งมอบ : ${fmtShortDate(expected)}`)
   return lines.join('\n')
 }
 
@@ -2023,7 +2029,7 @@ export default function MyDealsPage() {
     setLoading(true)
     const { data } = await supabase
       .from('jobs')
-      .select('id, room_no, project_id, customer_name, customer_type, working_status, actual_deliver_date, work_start_date, order_date, contract_date, expected_finish_date, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount, line_notified_at)')
+      .select('id, room_no, project_id, customer_name, customer_type, working_status, actual_deliver_date, work_start_date, work_days, order_date, contract_date, expected_finish_date, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount, line_notified_at)')
       .neq('working_status', 'ยกเลิก')
       .neq('working_status', 'จอง')
       .order('room_no')

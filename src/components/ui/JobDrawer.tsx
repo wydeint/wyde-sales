@@ -8,6 +8,7 @@ import {
   Trash2, AlertTriangle, Loader2, Copy,
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
+import { expectedDeliveryDate, fmtShortDate, type DeliveryJobCtx } from '@/lib/delivery'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -165,8 +166,9 @@ export function getFullStageInfo(job: FullJob) {
 }
 
 function generateLineMsg(
-  job: { project_name: string; room_no: string; customer_name: string; sales_name: string; revenue_inc_vat: number; voucher?: number; working_status: string },
-  inst: Installment
+  job: { project_name: string; room_no: string; customer_name: string; sales_name: string; revenue_inc_vat: number; voucher?: number; working_status: string } & DeliveryJobCtx,
+  inst: Installment,
+  workStartOverride?: string | null
 ): string {
   const isDelivered = job.working_status === 'ส่งมอบแล้ว'
   const isFirst = inst.installment_no === 1
@@ -175,6 +177,7 @@ function generateLineMsg(
   const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
   const fmt = (n: number) => n.toLocaleString('th-TH')
   const paid = inst.paid_amount ?? inst.amount
+  const expected = isDelivered ? null : expectedDeliveryDate(job, workStartOverride)
   const lines = [
     `Wyde Int. (${type})`,
     `วันที่ : ${dateStr}`,
@@ -186,6 +189,7 @@ function generateLineMsg(
     ...(job.voucher && job.voucher > 0 ? [`หัก Voucher : ${fmt(job.voucher)} บาท`] : []),
     `${inst.installment_name} : ${fmt(paid)} บาท`,
     ...(inst.channel ? [`ชำระผ่านทาง : ${inst.channel}`] : []),
+    ...(expected ? [`วันคาดส่งมอบ : ${fmtShortDate(expected)}`] : []),
   ]
   return lines.join('\n')
 }
@@ -271,14 +275,15 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       const vcCode = useVoucher && voucherCode ? voucherCode : null
       const vcAmt = useVoucher && voucherAmount > 0 ? voucherAmount : 0
       const instId = `PAY-${job.id}-1`
-      const lineMsg = generateLineMsg(job, {
+      // work_days / work_start_date were just written above; `job` still holds the old values
+      const lineMsg = generateLineMsg({ ...job, work_days: workDays }, {
         id: instId, installment_no: 1, installment_name: firstInst.name,
         amount: firstInst.amount, paid_amount: firstPaidAmount || firstInst.amount,
         percentage: firstInst.pct, status: 'paid', due_date: null, paid_date: paidDate,
         is_work_trigger: firstInst.trigger, is_final: firstInst.final,
         channel, slip_url: slipPosted ? 'posted' : null, receipt_url: receiptPosted ? 'posted' : null,
         voucher_code: vcCode, voucher_amount: vcAmt, line_notified_at: null,
-      })
+      }, firstInst.trigger ? paidDate : null)
       const result = await sendLineNotify(lineMsg)
       if (result.ts) await supabase.from('payments').update({ line_notified_at: result.ts }).eq('id', instId)
     }
@@ -567,7 +572,11 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
     }).eq('id', selected.id)
     // Auto-send LINE (only if not already sent)
     if (!selected.line_notified_at) {
-      const lineMsg = generateLineMsg(job, { ...selected, paid_date: paidDate, paid_amount: paidAmount, channel, voucher_code: vcCode, voucher_amount: vcAmt })
+      const lineMsg = generateLineMsg(
+        job,
+        { ...selected, paid_date: paidDate, paid_amount: paidAmount, channel, voucher_code: vcCode, voucher_amount: vcAmt },
+        selected.is_work_trigger && !job.work_start_date ? paidDate : null,  // written above, not yet on `job`
+      )
       const result = await sendLineNotify(lineMsg)
       if (result.ts) await supabase.from('payments').update({ line_notified_at: result.ts }).eq('id', selected.id)
     }

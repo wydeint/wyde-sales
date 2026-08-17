@@ -296,21 +296,31 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    Action button utilities
    (replaces scattered hardcoded hex #238636 / #7c3aed / #1f6feb across pages)
 ══════════════════════════════════════════ */
-.btn-green  { background: var(--accent-green)  !important; }
-.btn-purple { background: var(--accent-purple) !important; }
-.btn-blue   { background: var(--accent-blue)   !important; }
+/* .btn-primary is the one primary action button. color.md assigns --accent to
+   "primary button fill", but pages had drifted to green (Projects, Targets,
+   Users, Events, Daily Report), purple (Warranty) and blue — all for the same
+   job of creating or saving a record. The colour-named classes remain only so
+   /design-preview can still show them; do not use them in the app. */
+.btn-primary { background: var(--accent) !important; }
+.btn-green   { background: var(--accent-green)  !important; }
+.btn-purple  { background: var(--accent-purple) !important; }
+.btn-blue    { background: var(--accent-blue)   !important; }
+.btn-primary,
 .btn-green,
 .btn-purple,
 .btn-blue {
   border-radius: var(--radius-pill) !important;
   font-weight: 600 !important;
 }
+.btn-primary:hover:not(:disabled),
 .btn-green:hover:not(:disabled),
 .btn-purple:hover:not(:disabled),
 .btn-blue:hover:not(:disabled)  { filter: brightness(1.12); }
+.btn-primary:active:not(:disabled),
 .btn-green:active:not(:disabled),
 .btn-purple:active:not(:disabled),
 .btn-blue:active:not(:disabled) { transform: scale(0.95); }
+.btn-primary:focus-visible,
 .btn-green:focus-visible,
 .btn-purple:focus-visible,
 .btn-blue:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -550,7 +560,7 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 
 /* ══════════════════════════════════════════
    Utility button — neutral action (icon buttons, filter chips)
-   Not colored — use .btn-green/.btn-blue for primary actions
+   Not colored — use .btn-primary for the primary action
 ══════════════════════════════════════════ */
 .btn-util {
   background: var(--hover-bg);

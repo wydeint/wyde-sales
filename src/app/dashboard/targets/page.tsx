@@ -273,13 +273,13 @@ export default function TargetsPage() {
           <>
           {tab === 'org' && (
             <button onClick={() => { setEditingOrg(null); setOrgForm({ ...emptyOrgForm, year: filterYear }); setOrgModalOpen(true) }}
-              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+              className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
               <Plus size={16} />ตั้งเป้าองค์กร
             </button>
           )}
           {tab === 'sales' && (
             <button onClick={() => { setEditingSales(null); setSalesForm({ ...emptySalesForm, year: filterYear }); setSalesModalStep(1); setSalesModalOpen(true) }}
-              className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+              className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
@@ -795,7 +795,7 @@ export default function TargetsPage() {
           <button onClick={() => setOrgModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
-          <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {orgSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -874,7 +874,7 @@ export default function TargetsPage() {
             </button>
           ) : (
             <button onClick={saveSales} disabled={salesSaving}
-              className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+              className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
               {salesSaving ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           )}

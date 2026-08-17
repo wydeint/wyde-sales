@@ -112,7 +112,7 @@ export default function UsersPage() {
         title="Users"
         subtitle="จัดการผู้ใช้และสิทธิ์การเข้าถึง"
         actions={
-          <button onClick={openNew} className="flex items-center gap-2 btn-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <button onClick={openNew} className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             <Plus size={16} />เพิ่มผู้ใช้
           </button>
         }
@@ -198,7 +198,7 @@ export default function UsersPage() {
         )}
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.name || !form.email} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || !form.name || !form.email} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

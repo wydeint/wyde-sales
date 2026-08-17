@@ -489,7 +489,7 @@ export default function EventsPage() {
         subtitle="จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance"
         actions={
           <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
-            className="flex items-center gap-2 btn-green text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
+            className="flex items-center gap-2 btn-primary text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
             <Plus size={16} /><span className="hidden sm:inline">เพิ่ม Event</span><span className="sm:hidden">เพิ่ม</span>
           </button>
         }
@@ -534,7 +534,7 @@ export default function EventsPage() {
                     if (ev.project_id) loadLeads(ev.project_id)
                     setOpenCustomer(true)
                   }}
-                    className="flex items-center gap-1 text-xs btn-blue text-white px-2.5 py-1.5 rounded-lg transition-colors">
+                    className="flex items-center gap-1 text-xs btn-primary text-white px-2.5 py-1.5 rounded-lg transition-colors">
                     <Users size={12} /><span className="hidden sm:inline">เพิ่มลูกค้า</span><span className="sm:hidden">+</span>
                   </button>
                   <button onClick={() => {
@@ -756,7 +756,7 @@ export default function EventsPage() {
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpenEvent(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -792,7 +792,7 @@ export default function EventsPage() {
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setEditingCustomer(null)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={saveEditCustomer} disabled={editSaving || !editCustForm.customer_name}
-            className="flex items-center gap-2 px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            className="flex items-center gap-2 px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             <Save size={14} />{editSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -919,7 +919,7 @@ export default function EventsPage() {
             className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={saveCustomer}
             disabled={saving || !custForm.customer_name || !!dupCheck.inEvent || (!dupConfirmed && !!dupCheck.inSystem)}
-            className="px-4 py-2 btn-green disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

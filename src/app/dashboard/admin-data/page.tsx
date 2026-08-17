@@ -833,7 +833,7 @@ export default function AdminDataPage() {
         {/* Tabs — Finance style: group row + table row */}
         <div className="space-y-2">
           {/* Row 1: group selector */}
-          <div className="flex gap-1 rounded-[11px] p-1 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="tab-group w-fit">
             {GROUPS.map(grp => (
               <button key={grp} onClick={() => {
                 setActiveGroup(grp)

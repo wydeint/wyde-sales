@@ -259,15 +259,15 @@ export default function ExecutivePage() {
       />
 
       {/* Tab bar — same style as Finance */}
-      <div className="flex gap-1 rounded-[11px] p-1 mb-5 w-fit" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+      {/* The team tab used to fill with --accent-purple — a second selection
+          colour with no meaning behind it. Selection is always --accent. */}
+      <div className="tab-group mb-5 w-fit">
         <button onClick={() => setMainTab('performance')}
-          className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
-          style={{ background: mainTab === 'performance' ? 'var(--accent)' : 'transparent', color: mainTab === 'performance' ? '#fff' : 'var(--text-2)' }}>
+          className={`tab-btn ${mainTab === 'performance' ? 'active' : ''}`}>
           <BarChart3 size={14} />Sales Performance
         </button>
         <button onClick={() => setMainTab('team')}
-          className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
-          style={{ background: mainTab === 'team' ? 'var(--accent-purple)' : 'transparent', color: mainTab === 'team' ? '#fff' : 'var(--text-2)' }}>
+          className={`tab-btn ${mainTab === 'team' ? 'active' : ''}`}>
           <Users size={14} />ทีม Sales
         </button>
       </div>
@@ -280,11 +280,10 @@ export default function ExecutivePage() {
           <option value="B2C">B2C</option>
           <option value="B2B">B2B</option>
         </select>
-        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+        <div className="tab-group">
           {PERIODS.map(p => (
             <button key={p.key} onClick={() => { setPeriod(p.key); setOffset(0) }}
-              className="px-3 py-1.5 text-xs font-semibold"
-              style={{ background: period === p.key ? 'var(--accent)' : 'var(--hover-bg)', color: period === p.key ? '#fff' : 'var(--text-2)' }}>
+              className={`tab-btn ${period === p.key ? 'active' : ''}`}>
               {p.label}
             </button>
           ))}

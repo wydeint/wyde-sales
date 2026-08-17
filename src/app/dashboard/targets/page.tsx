@@ -289,26 +289,24 @@ export default function TargetsPage() {
 
       {/* Tab + Period row */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        {/* Tabs */}
-        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-          <button onClick={() => setTab('org')}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'org' ? 'var(--accent-orange)' : 'transparent', color: tab === 'org' ? '#fff' : 'var(--text-2)' }}>
+        {/* Tabs — .tab-group like every other page. The old markup filled the
+            active tab with --accent-orange, the only orange selection in the
+            app, and orange is reserved for "needs attention". */}
+        <div className="tab-group">
+          <button onClick={() => setTab('org')} className={`tab-btn ${tab === 'org' ? 'active' : ''}`}>
             <Building2 size={12} />เป้าองค์กร
           </button>
-          <button onClick={() => setTab('sales')}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: tab === 'sales' ? 'var(--accent)' : 'transparent', color: tab === 'sales' ? '#fff' : 'var(--text-2)' }}>
+          <button onClick={() => setTab('sales')} className={`tab-btn ${tab === 'sales' ? 'active' : ''}`}>
             <Users size={12} />เป้า Sales
           </button>
         </div>
 
-        {/* Period pills */}
-        <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+        {/* Period pills — the active colour used to swap with the tab above it,
+            so an unrelated control changed this one's appearance. */}
+        <div className="tab-group">
           {(['month','quarter','year'] as ViewPeriod[]).map(p => (
             <button key={p} onClick={() => setViewPeriod(p)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-              style={{ background: viewPeriod === p ? (tab === 'org' ? 'var(--accent-orange)' : 'var(--accent)') : 'transparent', color: viewPeriod === p ? '#fff' : 'var(--text-2)' }}>
+              className={`tab-btn ${viewPeriod === p ? 'active' : ''}`}>
               {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
             </button>
           ))}

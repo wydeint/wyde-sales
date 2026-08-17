@@ -218,21 +218,19 @@ export default function ProjectSummaryPage() {
             {rows.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
           </select>
 
-          <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="tab-group">
             {(['all', 'B2C', 'B2B'] as CustFilter[]).map(v => (
               <button key={v} onClick={() => setCustFilter(v)}
-                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                style={{ background: custFilter === v ? 'var(--accent)' : 'transparent', color: custFilter === v ? '#fff' : 'var(--text-2)' }}>
+                className={`tab-btn ${custFilter === v ? 'active' : ''}`}>
                 {v === 'all' ? 'ลูกค้าทั้งหมด' : v}
               </button>
             ))}
           </div>
 
-          <div className="flex gap-1 rounded-[11px] p-1" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="tab-group">
             {(['all', 'RPT', 'N-RPT'] as WorkFilter[]).map(v => (
               <button key={v} onClick={() => setWorkFilter(v)}
-                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-colors"
-                style={{ background: workFilter === v ? 'var(--accent)' : 'transparent', color: workFilter === v ? '#fff' : 'var(--text-2)' }}>
+                className={`tab-btn ${workFilter === v ? 'active' : ''}`}>
                 {v === 'all' ? 'งานทั้งหมด' : v}
               </button>
             ))}

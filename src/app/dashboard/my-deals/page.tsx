@@ -10,6 +10,7 @@ import {
 import FileAttach from '@/components/ui/FileAttach'
 import Money from '@/components/ui/Money'
 import FilterBar from '@/components/ui/FilterBar'
+import PageHeader from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/StateUI'
 
 // ─── LINE Logo ────────────────────────────────────────────
@@ -2196,17 +2197,11 @@ export default function MyDealsPage() {
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <div className="flex-1">
-          <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>My Deals</h1>
-          {!loading && (
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-              {totalActive} งานที่กำลังดำเนินการ · {grouped.length} โครงการ
-            </p>
-          )}
-        </div>
-
-        </div>
+      <PageHeader
+        title="My Deals"
+        subtitle={loading ? undefined : `${totalActive} งานที่กำลังดำเนินการ · ${grouped.length} โครงการ`}
+        className="mb-5"
+      />
 
       {/* Filter bar — separate row, same position as Pipeline */}
       <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mb-4">

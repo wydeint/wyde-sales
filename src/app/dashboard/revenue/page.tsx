@@ -361,11 +361,10 @@ export default function RevenuePage() {
             <option value="">ทุก Sales</option>
             {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
-          <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="tab-group">
             {(['today', 'week', 'month', 'quarter', 'year'] as Period[]).map(p => (
               <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-                className="px-3 py-1.5 text-xs font-semibold"
-                style={{ background: period === p ? 'var(--accent)' : 'var(--hover-bg)', color: period === p ? '#fff' : 'var(--text-2)' }}>
+                className={`tab-btn ${period === p ? 'active' : ''}`}>
                 {PERIOD_LABELS[p]}
               </button>
             ))}

@@ -587,7 +587,7 @@ export default function LeadsPage() {
           options={[{ value: '', label: 'ทุกโครงการ' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
           placeholder="ทุกโครงการ"
         />
-        <div className="flex rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
+        <div className="tab-group">
           {([
             { val: 'all', label: 'ทั้งหมด' },
             { val: 'new', label: 'ยังไม่ติดต่อ' },
@@ -595,11 +595,7 @@ export default function LeadsPage() {
             { val: 'in_pipeline', label: 'เข้า Pipeline' },
           ] as const).map(s => (
             <button key={s.val} onClick={() => setFilterStatus(s.val)}
-              className="px-3 py-2 text-xs font-semibold transition-colors"
-              style={{
-                background: filterStatus === s.val ? 'var(--accent)' : 'var(--glass-bg)',
-                color: filterStatus === s.val ? '#fff' : 'var(--text-2)',
-              }}>
+              className={`tab-btn ${filterStatus === s.val ? 'active' : ''}`}>
               {s.label}
             </button>
           ))}

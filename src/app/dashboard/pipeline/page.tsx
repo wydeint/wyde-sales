@@ -15,6 +15,7 @@ import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import FilterBar from '@/components/ui/FilterBar'
 import { CRM_STAGES, crmStage, PROSPECT_STAGES } from '@/lib/status'
+import PageHeader from '@/components/ui/PageHeader'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
@@ -1539,17 +1540,18 @@ export default function ProspectsKanbanPage() {
 
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>Prospects</h1>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>{customers.length} ราย</p>
-          </div>
-          <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
-            style={{ background: 'var(--accent)' }}>
-            <Plus size={15} /> เพิ่ม Prospect
-          </button>
-        </div>
+        <PageHeader
+          title="Prospects"
+          subtitle={`${customers.length} ราย`}
+          className="mb-4"
+          actions={
+            <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
+              style={{ background: 'var(--accent)' }}>
+              <Plus size={15} /> เพิ่ม Prospect
+            </button>
+          }
+        />
 
         {/* Stage chips — single select */}
         <div className="flex gap-1.5 flex-wrap">

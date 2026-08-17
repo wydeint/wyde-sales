@@ -356,7 +356,7 @@ export default function TargetsPage() {
                 </div>
                 {/* Period breakdown progress */}
                 {(orgTotalSales > 0 || orgTotalDeliv > 0) && (
-                  <div className="mt-4 pt-4 border-t border-orange-500/20 grid grid-cols-2 gap-4">
+                  <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span style={{ color: 'var(--text-2)' }}>เป้า{periodLabel}</span>

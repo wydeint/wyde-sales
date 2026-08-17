@@ -177,7 +177,7 @@ export default function SettingsPage() {
               <div className="col-span-1 flex justify-center">
                 {isAdmin ? (
                   <input type="checkbox" checked={t.active} onChange={e => updateTier(t.id, 'active', e.target.checked)}
-                    className="w-4 h-4 accent-indigo-500" />
+                    className="w-4 h-4" style={{ accentColor: 'var(--accent)' }} />
                 ) : (
                   <span style={{ color: t.active ? 'var(--accent-green)' : 'var(--accent-red)' }}>{t.active ? '✓' : '✗'}</span>
                 )}

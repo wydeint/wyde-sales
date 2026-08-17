@@ -273,6 +273,8 @@ html:not(.dark) thead tr {
   transition: border-color 0.15s;
 }
 .field-input:focus { border-color: var(--accent); }
+/* Validation failure on a field — the token, not Tailwind's fixed red-500. */
+.field-input-error { border-color: var(--accent-red); }
 .field-input::placeholder { color: var(--text-3); opacity: 0.5; }
 .field-input option { background: var(--card-bg, #fff); color: var(--text-1, #1e1b4b); }
 

@@ -28,7 +28,7 @@ export function Input({ label, error, className, id: externalId, ...props }: Inp
         aria-required={props.required ? 'true' : undefined}
         aria-describedby={error ? errId : undefined}
         aria-invalid={error ? 'true' : undefined}
-        className={cn('field-input w-full', error && 'border-red-500', className)}
+        className={cn('field-input w-full', error && 'field-input-error', className)}
         {...props}
       />
       {error && (
@@ -66,7 +66,7 @@ export function Select({ label, options, className, id: externalId, error, ...pr
         aria-required={props.required ? 'true' : undefined}
         aria-describedby={error ? errId : undefined}
         aria-invalid={error ? 'true' : undefined}
-        className={cn('field-input w-full', error && 'border-red-500', className)}
+        className={cn('field-input w-full', error && 'field-input-error', className)}
         {...props}
       >
         {options.map(o => (
@@ -108,7 +108,7 @@ export function TextArea({ label, className, id: externalId, error, ...props }: 
         aria-required={props.required ? 'true' : undefined}
         aria-describedby={error ? errId : undefined}
         aria-invalid={error ? 'true' : undefined}
-        className={cn('field-input w-full resize-none', error && 'border-red-500', className)}
+        className={cn('field-input w-full resize-none', error && 'field-input-error', className)}
         {...props}
       />
       {error && (

@@ -617,7 +617,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
           <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-3 px-4 py-3 cursor-pointer" style={{ background: 'var(--hover-bg)' }}>
               <input type="checkbox" checked={useVoucher} onChange={e => { setUseVoucher(e.target.checked); if (!e.target.checked) { setVoucherAmount(0); setVoucherCode('') } }}
-                className="w-4 h-4 rounded accent-pink-500" />
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-amber)' }} />
               <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>ใช้ Voucher / ส่วนลด</span>
             </label>
             {useVoucher && (
@@ -633,7 +633,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
                     <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดส่วนลด (฿)</label>
                     <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
                       placeholder="0"
-                      className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold text-pink-400"
+                      className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold text-value"
                       style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)' }} />
                   </div>
                 </div>
@@ -642,7 +642,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
                     <div className="flex justify-between text-xs" style={{ color: 'var(--text-2)' }}>
                       <span>ยอดงวด</span><span>{fmtBaht(paidAmount)}</span>
                     </div>
-                    <div className="flex justify-between text-xs text-pink-400">
+                    <div className="flex justify-between text-xs text-value">
                       <span>ส่วนลด Voucher</span><span>-{fmtBaht(voucherAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm font-bold pt-1" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-1)' }}>

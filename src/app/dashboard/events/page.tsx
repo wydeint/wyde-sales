@@ -664,8 +664,10 @@ export default function EventsPage() {
                                 <td className="px-3 py-2 text-center">
                                   <button
                                     onClick={() => toggleLineAdded(c.id, c.line_added)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors text-sm ${c.line_added ? 'bg-green-500/20 text-success' : ''}`}
-                                    style={!c.line_added ? { background: 'var(--hover-bg)', color: 'var(--text-3)' } : undefined}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center mx-auto transition-colors text-sm"
+                                    style={c.line_added
+                                      ? { background: 'color-mix(in srgb, var(--accent-green) 20%, transparent)', color: 'var(--accent-green)' }
+                                      : { background: 'var(--hover-bg)', color: 'var(--text-3)' }}
                                     title={c.line_added ? 'Add LINE แล้ว' : 'ยังไม่ได้ Add LINE'}
                                   >
                                     {c.line_added ? '✓' : '+'}

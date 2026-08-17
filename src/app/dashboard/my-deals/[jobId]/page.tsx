@@ -293,7 +293,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                       <div>
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
                         {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded text-accent" style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}>เริ่มงาน</span>}
-                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-green-500/15 text-success">สุดท้าย</span>}
+                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded text-success" style={{ background: 'color-mix(in srgb, var(--accent-green) 15%, transparent)' }}>สุดท้าย</span>}
                       </div>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(p.amount)}</span>
                     </div>
@@ -444,7 +444,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     {inst.status === 'paid' && <span className="text-micro text-success">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                     {inst.is_work_trigger && <span className="text-micro text-accent">เริ่มงาน</span>}
                     {inst.is_final && <span className="text-micro text-value">งวดสุดท้าย</span>}
-                    {inst.voucher_amount > 0 && <span className="text-micro text-pink-400">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
+                    {inst.voucher_amount > 0 && <span className="text-micro text-value">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
                     {inst.status !== 'paid' && inst.due_date && <span className="text-micro" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}
                   </div>
                 </button>
@@ -471,7 +471,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
           <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-3 px-4 py-3 cursor-pointer" style={{ background: 'var(--hover-bg)' }}>
               <input type="checkbox" checked={useVoucher} onChange={e => { setUseVoucher(e.target.checked); if (!e.target.checked) { setVoucherAmount(0); setVoucherCode('') } }}
-                className="w-4 h-4 rounded accent-pink-500" />
+                className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-amber)' }} />
               <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>ใช้ Voucher / ส่วนลด</span>
             </label>
             {useVoucher && (
@@ -488,7 +488,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดส่วนลด (฿)</label>
                     <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
                       placeholder="0"
-                      className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold text-pink-400"
+                      className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold text-value"
                       style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)' }} />
                   </div>
                 </div>
@@ -497,7 +497,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     <div className="flex justify-between text-xs" style={{ color: 'var(--text-2)' }}>
                       <span>ยอดงวด</span><span>{fmtBaht(paidAmount)}</span>
                     </div>
-                    <div className="flex justify-between text-xs text-pink-400">
+                    <div className="flex justify-between text-xs text-value">
                       <span>ส่วนลด Voucher</span><span>-{fmtBaht(voucherAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm font-bold pt-1" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-1)' }}>
@@ -663,7 +663,7 @@ function InstallmentRows({ installments }: { installments: Installment[] }) {
             {inst.voucher_amount > 0 && inst.status === 'paid' ? (
               <>
                 <span className="text-micro line-through" style={{ color: 'var(--text-3)' }}>{fmtBaht(inst.amount)}</span>
-                <p className="text-micro text-pink-400">-{fmtBaht(inst.voucher_amount)}</p>
+                <p className="text-micro text-value">-{fmtBaht(inst.voucher_amount)}</p>
                 <span className="text-xs font-semibold text-success">{fmtBaht(inst.paid_amount ?? 0)}</span>
               </>
             ) : (
@@ -672,7 +672,7 @@ function InstallmentRows({ installments }: { installments: Installment[] }) {
               </span>
             )}
             {inst.paid_date && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{fmtDate(inst.paid_date)}</p>}
-            {inst.voucher_code && <p className="text-micro text-pink-400">{inst.voucher_code}</p>}
+            {inst.voucher_code && <p className="text-micro text-value">{inst.voucher_code}</p>}
           </div>
         </div>
       ))}

@@ -439,6 +439,11 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .text-card-title    { font-size: var(--fs-card-title); font-weight: 600; line-height: 1.3; }
 .text-body-strong   { font-size: var(--fs-body);       font-weight: 600; line-height: 1.4; }
 .text-kpi-number    { font-size: var(--fs-kpi);        font-weight: 700; line-height: var(--lh-kpi);        letter-spacing: -0.01em; }
+/* Money inside a KPI card. A baht figure is 3-4x wider than the 2-3 digit count
+   .text-kpi-number was sized for, so at --fs-kpi it overflows a half-width card
+   on a phone and gets clipped mid-number. Shrinks on narrow screens only —
+   from ~560px up it is identical to .text-kpi-number. */
+.text-kpi-money     { font-size: clamp(17px, 5vw, var(--fs-kpi)); font-weight: 700; line-height: var(--lh-kpi); letter-spacing: -0.01em; }
 .text-label-upper   { font-size: var(--fs-label);      font-weight: 600; line-height: 1.3;                  letter-spacing: var(--ls-label); text-transform: uppercase; }
 .text-label         { font-size: var(--fs-label);      line-height: 1.3; }
 .text-micro         { font-size: var(--fs-micro);      line-height: 1.3; }

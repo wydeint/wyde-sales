@@ -301,7 +301,7 @@ export default function HandoverPage() {
   const totalValue = monthEntries.reduce((s, e) => s + e.revenue, 0)
   const deliveredValue = monthEntries.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0)
 
-  const f = (n: number) => '฿' + n.toLocaleString('th-TH')
+  const f = (n: number) => '฿' + Math.round(n).toLocaleString('th-TH')
   const isThisMonth = selectedMonth === THIS_MONTH
 
   if (loading) return <PageSpinner />
@@ -362,7 +362,7 @@ export default function HandoverPage() {
           </div>
           <div className="ds-card p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
-            <p className="text-kpi-number" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
+            <p className="text-kpi-money" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
             <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
           </div>
           {overdueRooms > 0 && (

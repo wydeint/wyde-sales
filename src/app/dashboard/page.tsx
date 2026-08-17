@@ -197,7 +197,7 @@ export default function DashboardPage() {
           {/* ยอดขาย */}
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยอดขายเดือนนี้</p>
-            <p className="text-kpi-number leading-none" style={{ color: 'var(--accent-orange)' }}>{f(actualSales)}</p>
+            <p className="text-kpi-money leading-none" style={{ color: 'var(--accent-orange)' }}>{f(actualSales)}</p>
             {orgTarget?.target_sales_value ? (
               <>
                 <p className="text-xs mt-2 mb-1" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTarget.target_sales_value)} · <span style={{ color: salesPct >= 100 ? 'var(--accent-green)' : 'var(--accent-orange)' }}>{salesPct}%</span></p>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           {/* ส่งมอบ */}
           <div>
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบเดือนนี้</p>
-            <p className="text-kpi-number leading-none" style={{ color: 'var(--accent-green)' }}>{f(actualDeliv)}</p>
+            <p className="text-kpi-money leading-none" style={{ color: 'var(--accent-green)' }}>{f(actualDeliv)}</p>
             {orgTarget?.target_delivery_value ? (
               <>
                 <p className="text-xs mt-2 mb-1" style={{ color: 'var(--text-3)' }}>เป้า {f(orgTarget.target_delivery_value)} · <span style={{ color: delivPct >= 100 ? 'var(--accent-green)' : 'var(--accent-blue)' }}>{delivPct}%</span></p>
@@ -229,8 +229,8 @@ export default function DashboardPage() {
           { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${customers.filter(c => c.status === 'booked').length} · ปิด ${customers.filter(c => c.status === 'closed').length}`, color: 'var(--accent-blue)', onClick: undefined },
           { icon: TrendingUp, label: 'ยอดขายเดือนนี้', value: fn(salesThisMonth.length) + ' รายการ', sub: f(salesThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: 'var(--accent-orange)', onClick: undefined },
           { icon: Package, label: 'ยอดส่งมอบเดือนนี้', value: fn(deliveredThisMonth.length) + ' รายการ', sub: f(deliveredThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: 'var(--accent-green)', onClick: () => setDeliverDrillOpen(true) },
-          { icon: Wallet, label: 'รายรับเดือนนี้', value: f(monthPayments.reduce((s, p) => s + (p.paid_amount || 0), 0)), sub: `${monthPayments.length} งวด`, color: 'var(--accent-green)', onClick: undefined },
-        ].map(({ icon: Icon, label, value, sub, color, onClick }) => (
+          { icon: Wallet, label: 'รายรับเดือนนี้', value: f(monthPayments.reduce((s, p) => s + (p.paid_amount || 0), 0)), sub: `${monthPayments.length} งวด`, color: 'var(--accent-green)', onClick: undefined, money: true },
+        ].map(({ icon: Icon, label, value, sub, color, onClick, money }) => (
           <div key={label} onClick={onClick}
             className="ds-card p-4"
             style={{ cursor: onClick ? 'pointer' : 'default' }}
@@ -243,7 +243,7 @@ export default function DashboardPage() {
               </div>
               {onClick && <ChevronRight size={13} style={{ color: 'var(--text-3)' }} />}
             </div>
-            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{value}</p>
+            <p className={money ? 'text-kpi-money' : 'text-kpi-number'} style={{ color: 'var(--text-1)' }}>{value}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>
           </div>
         ))}

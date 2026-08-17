@@ -45,7 +45,7 @@ interface Project { id: string; name: string }
 interface User { id: string; name: string }
 
 // ─── Helpers ───────────────────────────────────────────────
-const f = (n: number) => n ? '฿' + n.toLocaleString('th-TH') : '฿0'
+const f = (n: number) => n ? '฿' + Math.round(n).toLocaleString('th-TH') : '฿0'
 
 // ─── Auto-check rules ──────────────────────────────────────
 // ส่งมอบแล้ว → เอกสารทุกอย่างครบ
@@ -346,16 +346,16 @@ export default function PaymentsPage() {
             only summary in the app rendered as tinted pills, with the record
             count loose beside them instead of inside a tile.
             คงเหลือ stays orange: outstanding is a normal state, not an error. */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
           <div className="ds-card p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว</p>
-            <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
+            <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
           </div>
           <div className="ds-card p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>คงเหลือ</p>
-            <p className="text-kpi-number" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
+            <p className="text-kpi-money" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
           </div>
-          <div className="ds-card p-4">
+          <div className="ds-card p-4 col-span-2 sm:col-span-1">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รายการ</p>
             <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{filtered.length.toLocaleString('th-TH')}</p>
           </div>

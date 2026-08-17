@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, ChevronRight, CheckCircle2, X, Save } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Job {
@@ -327,30 +328,32 @@ export default function HandoverPage() {
           }
         />
 
-        {/* Month navigator */}
-        <div className="flex items-center gap-3 mb-4">
+        {/* Month navigator — the month IS this page's filter, so it lives in a
+            FilterBar like every other page's controls. The label now uses the
+            same ds-card pill Revenue, Finance and Sales Performance use for
+            their month, instead of a bare bold heading. */}
+        <FilterBar className="mb-4">
           <button onClick={() => nearestPrev && setSelectedMonth(nearestPrev)} disabled={!nearestPrev}
+            aria-label="เดือนก่อนหน้า"
             className="p-1.5 rounded-[8px] disabled:opacity-30"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <ChevronLeft size={16} />
           </button>
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>{monthLabel(selectedMonth)}</h2>
-            {isThisMonth && (
-              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
-                style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)', color: 'var(--accent)' }}>เดือนนี้</span>
-            )}
-          </div>
+          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
+            {monthLabel(selectedMonth)}
+            {isThisMonth && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
+          </span>
           <button onClick={() => nearestNext && setSelectedMonth(nearestNext)} disabled={!nearestNext}
+            aria-label="เดือนถัดไป"
             className="p-1.5 rounded-[8px] disabled:opacity-30"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <ChevronRight size={16} />
           </button>
-          <button onClick={() => setSelectedMonth(THIS_MONTH)} className="ml-1 text-xs px-3 py-1"
-            style={{ color: 'var(--accent)', textDecoration: isThisMonth ? 'none' : 'underline', opacity: isThisMonth ? 0.4 : 1 }}>
+          <button onClick={() => setSelectedMonth(THIS_MONTH)} disabled={isThisMonth}
+            className="btn-util text-xs disabled:opacity-40">
             ปัจจุบัน
           </button>
-        </div>
+        </FilterBar>
 
         {/* Summary cards */}
         <div className="flex gap-3 flex-wrap">

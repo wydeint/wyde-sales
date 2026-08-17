@@ -134,23 +134,31 @@ function IndividualTab({
 
   return (
     <div className="space-y-4">
-      {/* Sales selector (manager only) */}
+      {/* Sales selector (manager only) — in the filter card as a scrolling chip
+          row. Eleven buttons floating loose wrapped onto three lines, so the
+          page height moved with the number of salespeople. */}
       {isManager && (
-        <div className="flex gap-2 items-center flex-wrap">
-          <span className="text-xs" style={{ color: 'var(--text-3)' }}>Sales:</span>
-          <button onClick={() => setFilterSales('all')}
-            className="px-3 py-1.5 rounded-[8px] text-xs font-semibold"
-            style={{ background: filterSales === 'all' ? 'var(--accent)' : 'var(--hover-bg)', color: filterSales === 'all' ? '#fff' : 'var(--text-2)', border: '1px solid var(--divider)' }}>
-            ทั้งหมด
-          </button>
-          {salesUsers.map(u => (
-            <button key={u.id} onClick={() => setFilterSales(u.id)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold"
-              style={{ background: filterSales === u.id ? 'var(--accent)' : 'var(--hover-bg)', color: filterSales === u.id ? '#fff' : 'var(--text-2)', border: '1px solid var(--divider)' }}>
-              {u.name}
+        <FilterBar
+          className=""
+          chips={<>
+            <button onClick={() => setFilterSales('all')}
+              className="px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+              style={filterSales === 'all'
+                ? { background: 'var(--accent)', color: '#fff' }
+                : { color: 'var(--text-2)' }}>
+              ทั้งหมด
             </button>
-          ))}
-        </div>
+            {salesUsers.map(u => (
+              <button key={u.id} onClick={() => setFilterSales(u.id)}
+                className="px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+                style={filterSales === u.id
+                  ? { background: 'var(--accent)', color: '#fff' }
+                  : { color: 'var(--text-2)' }}>
+                {u.name}
+              </button>
+            ))}
+          </>}
+        />
       )}
 
       {/* Summary */}

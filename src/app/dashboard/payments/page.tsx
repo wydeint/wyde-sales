@@ -342,20 +342,23 @@ export default function PaymentsPage() {
           </select>
         </FilterBar>
 
-        {/* Summary */}
-        <div className="flex gap-3 flex-wrap">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
-            style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' }}>
-            <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
-            <p className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
+        {/* Summary — ds-card KPI tiles, as on every other page. This was the
+            only summary in the app rendered as tinted pills, with the record
+            count loose beside them instead of inside a tile.
+            คงเหลือ stays orange: outstanding is a normal state, not an error. */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="ds-card p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว</p>
+            <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
           </div>
-          {/* Outstanding is a normal state, not an error — matches the drawer. */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-[8px]"
-            style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
-            <p className="text-micro font-semibold" style={{ color: 'var(--accent-orange)' }}>คงเหลือ</p>
-            <p className="text-sm font-bold" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
+          <div className="ds-card p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>คงเหลือ</p>
+            <p className="text-kpi-number" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
           </div>
-          <p className="text-xs self-center" style={{ color: 'var(--text-3)' }}>{filtered.length} รายการ</p>
+          <div className="ds-card p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รายการ</p>
+            <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{filtered.length.toLocaleString('th-TH')}</p>
+          </div>
         </div>
 
       {/* Table */}

@@ -53,6 +53,9 @@ export default function FilterBar({
   className?: string
 }) {
   const hasSearch = typeof search === 'string' && !!onSearchChange
+  // A chips-only bar (Commission's sales selector) has nothing on the second
+  // row, so the divider and the empty row below it are both dropped.
+  const hasBottomRow = hasSearch || !!children
 
   return (
     <div
@@ -73,13 +76,14 @@ export default function FilterBar({
     >
       {chips && (
         <div
-          className="filter-row items-center pb-3 mb-3"
-          style={{ borderBottom: '1px solid var(--divider)' }}
+          className={`filter-row items-center ${hasBottomRow ? 'pb-3 mb-3' : ''}`.trim()}
+          style={hasBottomRow ? { borderBottom: '1px solid var(--divider)' } : undefined}
         >
           {chips}
         </div>
       )}
 
+      {hasBottomRow && (
       <div className="flex flex-wrap items-center gap-3">
       {hasSearch && (
         <div
@@ -109,6 +113,7 @@ export default function FilterBar({
       )}
       {children}
       </div>
+      )}
     </div>
   )
 }

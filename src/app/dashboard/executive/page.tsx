@@ -36,6 +36,9 @@ const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+/* Display year in Buddhist Era, as every other page does via the th-TH locale.
+   ld() above stays Gregorian — it builds ISO keys for querying, not labels. */
+const beYear = (y: number) => y + 543
 function getPeriodBounds(period: Period, offset = 0): { start: string; end: string; label: string } {
   const now = new Date()
   if (period === 'week') {
@@ -50,17 +53,17 @@ function getPeriodBounds(period: Period, offset = 0): { start: string; end: stri
     const y = now.getFullYear(); const m = now.getMonth() + offset
     const d = new Date(y, m, 1)
     const last = new Date(y, m + 1, 0)
-    return { start: ld(d), end: ld(last), label: `${MONTHS_TH[d.getMonth()]} ${d.getFullYear()}` }
+    return { start: ld(d), end: ld(last), label: `${MONTHS_TH[d.getMonth()]} ${beYear(d.getFullYear())}` }
   }
   if (period === 'quarter') {
     const totalQ = Math.floor(now.getMonth() / 3) + offset
     const y = now.getFullYear() + Math.floor(totalQ / 4)
     const q = ((totalQ % 4) + 4) % 4
     const qs = new Date(y, q * 3, 1); const qe = new Date(y, q * 3 + 3, 0)
-    return { start: ld(qs), end: ld(qe), label: `Q${q + 1} ${y}` }
+    return { start: ld(qs), end: ld(qe), label: `Q${q + 1} ${beYear(y)}` }
   }
   const y = now.getFullYear() + offset
-  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${y}` }
+  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${beYear(y)}` }
 }
 
 export default function ExecutivePage() {
@@ -308,10 +311,10 @@ export default function ExecutivePage() {
 
       {/* Org Target Banner */}
       {orgTarget && offset === 0 && (
-        <div className="rounded-[18px] p-4 flex gap-6 flex-wrap" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
+        <div className="ds-card p-4 flex gap-6 flex-wrap">
           <div className="flex items-center gap-2">
-            <Target size={13} style={{ color: 'var(--accent-orange)' }} />
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--accent-orange)' }}>เป้าองค์กร {label}</span>
+            <Target size={13} style={{ color: 'var(--accent)' }} />
+            <span className="text-label-upper" style={{ color: 'var(--text-2)' }}>เป้าองค์กร {label}</span>
           </div>
           <div className="flex gap-8 flex-wrap">
             <div>

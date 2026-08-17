@@ -82,6 +82,10 @@ function getWeekRange(date: Date): { start: Date; end: Date; label: string } {
   return { start, end, label: `${fmt(start)} – ${fmt(end)}` }
 }
 
+/* Buddhist Era for display, matching the month label the th-TH locale produces
+   a few lines below — quarter and year were printing the Gregorian year, so one
+   page showed both 2569 and 2026 depending on the period picked. */
+const beYear = (y: number) => y + 543
 function getPeriodBounds(period: Period, offset: number): { start: Date; end: Date; label: string } {
   const now = new Date()
   if (period === 'today') {
@@ -104,10 +108,10 @@ function getPeriodBounds(period: Period, offset: number): { start: Date; end: Da
     const y = now.getFullYear() + Math.floor(totalQ / 4)
     const q = ((totalQ % 4) + 4) % 4
     const start = new Date(y, q * 3, 1); const end = new Date(y, q * 3 + 3, 0, 23, 59, 59)
-    return { start, end, label: `Q${q + 1} ${y}` }
+    return { start, end, label: `Q${q + 1} ${beYear(y)}` }
   }
   const y = now.getFullYear() + offset
-  return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59), label: `ปี ${y}` }
+  return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59), label: `ปี ${beYear(y)}` }
 }
 
 function inRange(dateStr: string | null, start: Date, end: Date) {

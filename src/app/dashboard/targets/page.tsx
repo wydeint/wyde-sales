@@ -6,6 +6,7 @@ import { Plus, Target, Pencil, Building2, Users } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { Input, Select } from '@/components/ui/Input'
 
 interface OrgTarget {
@@ -288,7 +289,7 @@ export default function TargetsPage() {
       />
 
       {/* Tab + Period row */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+      <FilterBar className="mb-6">
         {/* Tabs — .tab-group like every other page. The old markup filled the
             active tab with --accent-orange, the only orange selection in the
             app, and orange is reserved for "needs attention". */}
@@ -320,7 +321,7 @@ export default function TargetsPage() {
           ))}
         </select>
         <span className="text-sm" style={{ color: 'var(--text-3)' }}>{periodLabel}</span>
-      </div>
+      </FilterBar>
 
       {loading ? (
         <div className="flex justify-center py-12">

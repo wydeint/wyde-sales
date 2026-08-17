@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { crmStage, FUNNEL_ORDER } from '@/lib/status'
 
 type Customer = {
@@ -272,8 +273,8 @@ export default function ExecutivePage() {
         </button>
       </div>
 
-      {/* Period + filter row — same style as Finance, always visible */}
-      <div className="flex items-center gap-3 flex-wrap mb-5">
+      {/* Period + filter row — always visible */}
+      <FilterBar className="mb-5">
         <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)}
           className="field-input" style={{ width: 'auto' }}>
           <option value="">B2C + B2B</option>
@@ -301,7 +302,7 @@ export default function ExecutivePage() {
             <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
           </button>
         </div>
-      </div>
+      </FilterBar>
 
       {mainTab === 'performance' && <>
 

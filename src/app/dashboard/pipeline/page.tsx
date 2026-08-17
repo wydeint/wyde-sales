@@ -1553,41 +1553,44 @@ export default function ProspectsKanbanPage() {
           }
         />
 
-        {/* Stage chips — single select */}
-        <div className="flex gap-1.5 flex-wrap">
+      </div>
+
+      {/* Filter bar — stage chips ride on top, so everything that narrows the
+          list sits in one card instead of floating above it. An inactive chip
+          used to carry four signals at once (own border, tinted background,
+          coloured dot, 0.6 opacity); now only the selected one is filled. */}
+      <FilterBar
+        search={search}
+        onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }}
+        searchPlaceholder="ค้นหาห้อง, ลูกค้า..."
+        className="mb-3"
+        chips={<>
           {STAGES.map(s => {
             const count = s.value === 'booked'
               ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
               : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value).length
             const active = activeStage === s.value && !search
+            const done = s.value === 'closed' || s.value === 'lost'
             return (
               <button key={s.value} onClick={() => { setActiveStage(s.value); setSearch(''); setSelectedCustomer(null) }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all"
-                style={{
-                  background: active ? s.badge : 'var(--hover-bg)',
-                  color: active ? s.text : 'var(--text-3)',
-                  border: `1px solid ${active ? s.border : 'var(--divider)'}`,
-                  opacity: active ? 1 : 0.6,
-                }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: active ? s.dot : 'var(--text-3)' }} />
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+                style={active
+                  ? { background: s.badge, color: s.text }
+                  : { color: done ? 'var(--text-3)' : 'var(--text-2)' }}>
                 {s.label}
-                <span className="font-bold ml-0.5">{count}</span>
+                <span className="font-bold" style={{ color: active ? s.text : done ? 'var(--text-3)' : 'var(--text-1)' }}>{count}</span>
               </button>
             )
           })}
           {search && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0"
+              style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
               ทั้งหมด
-              <span className="font-bold ml-0.5">{list.length}</span>
+              <span className="font-bold">{list.length}</span>
             </span>
           )}
-        </div>
-      </div>
-
-      {/* Filter bar */}
-      <FilterBar search={search} onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }} searchPlaceholder="ค้นหาห้อง, ลูกค้า..." className="mb-3">
+        </>}
+      >
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
           <option value="">ทุกโครงการ</option>

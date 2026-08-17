@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -210,8 +211,8 @@ export default function ProjectSummaryPage() {
           actions={<span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>}
         />
 
-        {/* Filter row — Finance pill style */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Filter row */}
+        <FilterBar className="mb-4">
           <select value={search} onChange={e => setSearch(e.target.value)}
             className="field-input" style={{ width: '13rem' }}>
             <option value="">— ทุกโครงการ —</option>
@@ -240,7 +241,7 @@ export default function ProjectSummaryPage() {
             <input type="checkbox" checked={hideEmpty} onChange={e => setHideEmpty(e.target.checked)} className="rounded" />
             ซ่อนโครงการที่ยังไม่มีงาน
           </label>
-        </div>
+        </FilterBar>
         {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           {[

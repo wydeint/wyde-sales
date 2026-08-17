@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Wallet, Pencil, AlertCircle, TrendingUp, TrendingDown, DollarSign, Trash2, ChevronLeft, ChevronRight, Package, Save, RotateCcw } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 
@@ -372,7 +373,7 @@ export default function FinancePage() {
       </div>
 
       {/* Period selector — always visible regardless of tab */}
-      <div className="flex items-center gap-3 flex-wrap mb-5">
+      <FilterBar className="mb-5">
         <div className="tab-group">
           {(['today','week','month','quarter','year'] as Period[]).map(p => (
             <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
@@ -394,7 +395,7 @@ export default function FinancePage() {
             <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
           </button>
         </div>
-      </div>
+      </FilterBar>
 
       {/* ── Tab: Overview ─────────────────────────────────── */}
       {tab === 'overview' && (

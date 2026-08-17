@@ -7,6 +7,7 @@ import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import { WORKING_STATUSES } from '@/lib/status'
 import StatusChip from '@/components/ui/StatusChip'
+import FilterBar from '@/components/ui/FilterBar'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -345,9 +346,9 @@ export default function RevenuePage() {
         ))}
       </div>
 
-      {/* Filters + Period */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3 flex-wrap">
+      {/* Filters + Period — one card, like every list page */}
+      <FilterBar className="">
+        <div className="w-full flex items-center gap-3 flex-wrap">
           <select value={filterCustType} onChange={e => setFilterCustType(e.target.value)} className="field-input" style={{ width: 'auto' }}>
             <option value="">B2C + B2B</option>
             <option value="B2C">B2C</option>
@@ -370,7 +371,7 @@ export default function RevenuePage() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="w-full flex items-center gap-2">
           <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', minWidth: 36, minHeight: 36 }}>
             <ChevronLeft size={16} style={{ color: 'var(--text-2)' }} />
           </button>
@@ -383,7 +384,7 @@ export default function RevenuePage() {
             <ChevronRight size={16} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
           </button>
         </div>
-      </div>
+      </FilterBar>
 
       {/* KPI Cards */}
       {(() => {

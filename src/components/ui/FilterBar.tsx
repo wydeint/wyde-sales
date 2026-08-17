@@ -25,6 +25,7 @@ export default function FilterBar({
   searchPlaceholder = 'ค้นหา...',
   searchLabel,
   sticky = false,
+  chips,
   children,
   className = '',
 }: {
@@ -41,6 +42,13 @@ export default function FilterBar({
    * the page moving.
    */
   sticky?: boolean
+  /**
+   * Status / stage chips that narrow the same list. They belong in this card
+   * rather than floating above it — everything that narrows the list lives in
+   * one box. Rendered on their own row, which scrolls sideways instead of
+   * wrapping so the card keeps a fixed height however many chips there are.
+   */
+  chips?: React.ReactNode
   children?: React.ReactNode
   className?: string
 }) {
@@ -48,7 +56,7 @@ export default function FilterBar({
 
   return (
     <div
-      className={`ds-card p-4 flex flex-wrap items-center gap-3 ${sticky ? 'sticky top-0 z-20' : ''} ${className}`.trim()}
+      className={`ds-card p-4 ${sticky ? 'sticky top-0 z-20' : ''} ${className}`.trim()}
       /*
        * A pinned bar needs its own surface or the rows scrolling underneath show
        * through. --panel-bg alone is not enough: at 96% opacity the remaining 4%
@@ -63,6 +71,16 @@ export default function FilterBar({
         borderColor: 'var(--divider)',
       } as React.CSSProperties : undefined}
     >
+      {chips && (
+        <div
+          className="filter-row items-center pb-3 mb-3"
+          style={{ borderBottom: '1px solid var(--divider)' }}
+        >
+          {chips}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
       {hasSearch && (
         <div
           className="flex items-center gap-2 flex-1 min-w-48 rounded-[var(--radius-sm)] px-3 py-2"
@@ -90,6 +108,7 @@ export default function FilterBar({
         </div>
       )}
       {children}
+      </div>
     </div>
   )
 }

@@ -825,46 +825,28 @@ export default function JobsPage() {
         }
       />
 
-      {/* Quick filter chips */}
-      <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => setFilterNoSO(v => !v)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-          style={{
-            background: filterNoSO ? 'var(--accent)' : 'var(--card-bg)',
-            color: filterNoSO ? '#fff' : 'var(--text-2)',
-            border: `1px solid ${filterNoSO ? 'var(--accent)' : 'var(--card-border)'}`,
-          }}
-        >
-          ไม่มี SO
-          {noSOCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
-              style={{ background: filterNoSO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: filterNoSO ? '#fff' : 'var(--accent-orange)' }}>
-              {noSOCount}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setFilterNoPO(v => !v)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-          style={{
-            background: filterNoPO ? 'var(--accent)' : 'var(--card-bg)',
-            color: filterNoPO ? '#fff' : 'var(--text-2)',
-            border: `1px solid ${filterNoPO ? 'var(--accent)' : 'var(--card-border)'}`,
-          }}
-        >
-          ไม่มี PO
-          {noPOCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
-              style={{ background: filterNoPO ? 'rgba(255,255,255,0.25)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: filterNoPO ? '#fff' : 'var(--accent-orange)' }}>
-              {noPOCount}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Filters */}
-      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา PO / SO / ลูกค้า...">
+      {/* Filters — the no-SO / no-PO chips live in the card too; they narrow
+          the same list, so they belong with the other controls. */}
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="ค้นหา PO / SO / ลูกค้า..."
+        chips={([
+          { on: filterNoSO, toggle: () => setFilterNoSO(v => !v), label: 'ไม่มี SO', count: noSOCount },
+          { on: filterNoPO, toggle: () => setFilterNoPO(v => !v), label: 'ไม่มี PO', count: noPOCount },
+        ]).map(c => (
+          <button key={c.label} onClick={c.toggle}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+            style={c.on
+              ? { background: 'var(--accent)', color: '#fff' }
+              : { color: 'var(--text-2)' }}>
+            {c.label}
+            {c.count > 0 && (
+              <span className="font-bold" style={{ color: c.on ? '#fff' : 'var(--accent-orange)' }}>{c.count}</span>
+            )}
+          </button>
+        ))}
+      >
         <SearchableSelect
           value={filterProject}
           onChange={v => setFilterProject(v)}

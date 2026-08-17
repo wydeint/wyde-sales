@@ -105,7 +105,7 @@ export default function PwaUpdateBanner() {
       <button
         onClick={applyUpdate}
         disabled={updating}
-        className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-indigo-600 flex-shrink-0 disabled:opacity-60"
+        className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-accent flex-shrink-0 disabled:opacity-60"
       >
         {updating ? '⏳' : 'อัปเดต'}
       </button>

@@ -334,10 +334,13 @@ export default function TargetsPage() {
           {tab === 'org' && (
             <div className="space-y-6">
               {/* Annual Summary Card */}
-              <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent-orange) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
+              {/* Plain card. This was tinted orange end to end, but nothing here
+                  needs attention — it is just the org target summary, and orange
+                  means "act on this" everywhere else in the app. */}
+              <div className="ds-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Building2 size={16} className="text-warning" />
-                  <h2 className="text-warning font-bold text-sm uppercase tracking-wider">สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
+                  <Building2 size={16} style={{ color: 'var(--accent)' }} />
+                  <h2 className="text-label-upper" style={{ color: 'var(--text-2)' }}>สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -382,11 +385,11 @@ export default function TargetsPage() {
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>ยอดขาย</p>
                       <div className="flex items-end gap-2">
-                        <span className="text-warning text-sm font-bold">{f(orgTotalSales)}</span>
+                        <span className="text-sm font-bold" style={{ color: 'var(--chart-1)' }}>{f(orgTotalSales)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
                       </div>
                       <div className="flex items-end gap-2 mt-0.5">
-                        <span className="text-indigo-400 text-sm font-bold">{f(salesTeamSalesTarget)}</span>
+                        <span className="text-sm font-bold" style={{ color: 'var(--chart-2)' }}>{f(salesTeamSalesTarget)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamSalesTarget < orgTotalSales && (
@@ -396,11 +399,11 @@ export default function TargetsPage() {
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบ</p>
                       <div className="flex items-end gap-2">
-                        <span className="text-warning text-sm font-bold">{f(orgTotalDeliv)}</span>
+                        <span className="text-sm font-bold" style={{ color: 'var(--chart-1)' }}>{f(orgTotalDeliv)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าองค์กร</span>
                       </div>
                       <div className="flex items-end gap-2 mt-0.5">
-                        <span className="text-indigo-400 text-sm font-bold">{f(salesTeamDelivTarget)}</span>
+                        <span className="text-sm font-bold" style={{ color: 'var(--chart-2)' }}>{f(salesTeamDelivTarget)}</span>
                         <span className="text-xs" style={{ color: 'var(--text-3)' }}>เป้าทีม</span>
                       </div>
                       {salesTeamDelivTarget < orgTotalDeliv && (
@@ -437,7 +440,7 @@ export default function TargetsPage() {
                             onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
                             onMouseLeave={e => (e.currentTarget.style.background = isCurrentMonth ? 'var(--hover-bg)' : 'transparent')}>
                             <td className="py-2.5 px-4 text-sm">
-                              <span className={isCurrentMonth ? 'text-warning font-bold' : ''} style={isCurrentMonth ? {} : { color: 'var(--text-2)' }}>
+                              <span className={isCurrentMonth ? 'text-accent font-bold' : ''} style={isCurrentMonth ? {} : { color: 'var(--text-2)' }}>
                                 {MONTHS_FULL[m - 1]}
                               </span>
                             </td>

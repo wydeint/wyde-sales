@@ -867,8 +867,8 @@ export default function AdminDataPage() {
       {!isReconcile && selectedIds.size > 0 && (
         <div className="flex-shrink-0 mx-5 mb-2 px-4 py-2.5 rounded-[8px] flex items-center gap-3"
           style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
-          <Layers size={14} className="text-indigo-400" />
-          <span className="text-sm font-semibold text-indigo-400">{selectedIds.size} แถวที่เลือก</span>
+          <Layers size={14} className="text-accent" />
+          <span className="text-sm font-semibold text-accent">{selectedIds.size} แถวที่เลือก</span>
           <div className="flex-1" />
           <button onClick={() => setBulkModal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold text-white"
@@ -976,7 +976,7 @@ export default function AdminDataPage() {
           {filtered.length} แถว {rows.length !== filtered.length ? `(กรองจาก ${rows.length})` : ''} · แสดงสูงสุด 500 แถว
         </p>
         {selectedIds.size > 0 && (
-          <p className="text-xs text-indigo-400 font-semibold">{selectedIds.size} แถวที่เลือก</p>
+          <p className="text-xs text-accent font-semibold">{selectedIds.size} แถวที่เลือก</p>
         )}
       </div>}
 

@@ -29,7 +29,7 @@ const NAV = [
   {
     label: 'SALES',
     color: 'text-success',
-    dot: 'bg-emerald-400',
+    dot: 'dot-success',
     items: [
       { href: '/dashboard/leads', icon: Database, label: 'Origin Pool' },
       { href: '/dashboard/pipeline', icon: TrendingUp, label: 'Prospects' },
@@ -41,8 +41,8 @@ const NAV = [
   },
   {
     label: 'MONITORING',
-    color: 'text-sky-400',
-    dot: 'bg-sky-400',
+    color: 'text-info',
+    dot: 'dot-info',
     items: [
       { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
       { href: '/dashboard/customers', icon: Users, label: 'Customers' },
@@ -56,7 +56,7 @@ const NAV = [
   {
     label: 'REPORTS',
     color: 'text-value',
-    dot: 'bg-amber-400',
+    dot: 'dot-value',
     items: [
       { href: '/dashboard/revenue', icon: TrendingDown, label: 'Revenue' },
       { href: '/dashboard/project-summary', icon: BarChart3, label: 'Project Summary' },

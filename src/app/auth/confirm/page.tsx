@@ -20,7 +20,7 @@ export default function AuthConfirmPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
     </div>
   )
 }

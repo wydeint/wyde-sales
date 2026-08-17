@@ -437,7 +437,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
               <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>งวดที่ 1 — {firstInst?.name}</p>
                 <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(firstInst?.amount || 0)}</p>
-                {firstInst?.trigger && <p className="text-xs mt-1 text-indigo-400">งวดนี้เป็นงวดเริ่มงาน</p>}
+                {firstInst?.trigger && <p className="text-xs mt-1 text-accent">งวดนี้เป็นงวดเริ่มงาน</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

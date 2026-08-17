@@ -1576,7 +1576,7 @@ export default function QuickPage() {
             <img src="/logo.svg" alt="WydE" style={{ height: 28, width: 'auto', objectFit: 'contain' }} />
             <div>
               <p className="text-white text-xs font-semibold leading-tight">Super Sales</p>
-              <p className="text-indigo-400 text-micro font-bold tracking-widest uppercase leading-tight">Quick Mode</p>
+              <p className="text-accent text-micro font-bold tracking-widest uppercase leading-tight">Quick Mode</p>
             </div>
           </div>
           <button onClick={() => router.push('/dashboard')} aria-label="กลับหน้าหลัก"

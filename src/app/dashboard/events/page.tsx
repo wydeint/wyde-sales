@@ -608,7 +608,8 @@ export default function EventsPage() {
                       <button
                         onClick={promoteAll}
                         disabled={promotingAll}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/30 transition-colors font-semibold disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg text-accent transition-colors font-semibold disabled:opacity-50"
+                        style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}
                       >
                         <UserPlus size={12} />
                         {promotingAll ? 'กำลังนำเข้า...' : 'นำรายชื่อเข้าระบบ'}

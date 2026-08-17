@@ -292,7 +292,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                       style={{ background: 'var(--hover-bg)' }}>
                       <div>
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
-                        {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400">เริ่มงาน</span>}
+                        {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded text-accent" style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}>เริ่มงาน</span>}
                         {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded bg-green-500/15 text-success">สุดท้าย</span>}
                       </div>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(p.amount)}</span>
@@ -311,7 +311,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
               <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>งวดที่ 1 — {firstInstallment?.name}</p>
                 <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(firstInstallment?.amount || 0)}</p>
-                {firstInstallment?.trigger && <p className="text-xs mt-1 text-indigo-400">งวดนี้เป็นงวดเริ่มงาน</p>}
+                {firstInstallment?.trigger && <p className="text-xs mt-1 text-accent">งวดนี้เป็นงวดเริ่มงาน</p>}
               </div>
               <div>
                 <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
@@ -442,7 +442,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                   </div>
                   <div className="flex gap-2 mt-0.5">
                     {inst.status === 'paid' && <span className="text-micro text-success">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
-                    {inst.is_work_trigger && <span className="text-micro text-indigo-400">เริ่มงาน</span>}
+                    {inst.is_work_trigger && <span className="text-micro text-accent">เริ่มงาน</span>}
                     {inst.is_final && <span className="text-micro text-value">งวดสุดท้าย</span>}
                     {inst.voucher_amount > 0 && <span className="text-micro text-pink-400">Voucher -{fmtBaht(inst.voucher_amount)}</span>}
                     {inst.status !== 'paid' && inst.due_date && <span className="text-micro" style={{ color: 'var(--text-3)' }}>ครบ {fmtDate(inst.due_date)}</span>}

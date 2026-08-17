@@ -357,6 +357,13 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .text-info    { color: var(--accent-blue); }
 .text-value   { color: var(--accent-amber); }
 .text-premium { color: var(--accent-purple); }
+.text-accent  { color: var(--accent); }
+
+/* Solid dots — sidebar section markers. Same roles as the text utilities. */
+.dot-success { background: var(--accent-green); }
+.dot-info    { background: var(--accent-blue); }
+.dot-value   { background: var(--accent-amber); }
+.dot-accent  { background: var(--accent); }
 
 /* Responsive table wrapper */
 .tbl-scroll {

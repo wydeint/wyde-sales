@@ -883,9 +883,13 @@ export default function AdminDataPage() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Table.
+          overscrollBehaviorX, not plain `contain`: setting overflow-x alone makes
+          overflow-y compute to `auto`, so this div is a vertical scroll container with
+          nothing to scroll. Containing the Y axis too made it swallow every wheel event
+          over the table and refuse to chain to the page — the table would not scroll. */}
       {!isReconcile && <div className="tbl-scroll mb-5 rounded-[11px]"
-        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         {loading ? (
           <div className="flex items-center justify-center h-48">
             <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>

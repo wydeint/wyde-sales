@@ -6,6 +6,7 @@ import { Search, Save, X, Edit2, Layers, AlertTriangle, CheckCircle2, XCircle, R
 import { TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import { fetchAllRows } from '@/lib/fetchAll'
 
 // ─── Table definitions ─────────────────────────────────────
 type ColType = 'text' | 'number' | 'date' | 'select' | 'boolean' | 'readonly'
@@ -468,9 +469,12 @@ function ReconcileCheck() {
       { data: jobs },
       { data: payments },
     ] = await Promise.all([
-      supabase.from('customers').select('id, status'),
-      supabase.from('jobs').select('id, customer_id, working_status, revenue_inc_vat'),
-      supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger'),
+      // This screen exists to verify the data is complete, so it must not read a
+      // truncated copy of it. payments is already past PostgREST's 1,000-row cap
+      // (1,192 rows) and jobs/customers are within a year of crossing it.
+      fetchAllRows(() => supabase.from('customers').select('id, status').order('id')),
+      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, revenue_inc_vat').order('id')),
+      fetchAllRows(() => supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger').order('id')),
     ])
 
     const c = (customers || []) as { id: string; status: string }[]

@@ -10,6 +10,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
+import { fetchAllRows } from '@/lib/fetchAll'
 
 interface Lead {
   id: number
@@ -194,7 +195,9 @@ export default function LeadsPage() {
       { data: custData },
       { data: jobData },
     ] = await Promise.all([
-      supabase.from('condo_leads').select('*, projects(name)').order('tower').order('room_no'),
+      // Read in chunks: condo_leads is past PostgREST's 1,000-row cap, which
+      // truncates silently — 542 leads were simply absent from this page.
+      fetchAllRows(() => supabase.from('condo_leads').select('*, projects(name)').order('tower').order('room_no')),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
       supabase.from('customers').select('phone, project_id, interested_room'),

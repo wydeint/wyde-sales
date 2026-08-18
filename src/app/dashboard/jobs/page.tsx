@@ -662,6 +662,16 @@ export default function JobsPage() {
     payload.contract_date = payload.contract_date || null
     payload.work_start_date = payload.work_start_date || null
     payload.plan_transfer_month = payload.plan_transfer_month || null
+    // Selects too, not just dates. An empty string is not "no value" to Postgres:
+    // it produced one job stored with working_status = '' (JOB-1095), which matches
+    // no status anywhere, and it would be rejected outright by the CHECK constraints
+    // on commission_status and crm_stage.
+    payload.working_status = payload.working_status || null
+    payload.commission_status = payload.commission_status || null
+    payload.crm_stage = payload.crm_stage || null
+    payload.work_type = payload.work_type || null
+    payload.package_type = payload.package_type || null
+    payload.sales_id = payload.sales_id || null
     // Auto-correct: if actual_deliver_date is set, status must not be lower than ส่งมอบแล้ว
     if (payload.actual_deliver_date && payload.working_status === 'ดำเนินการ') {
       payload.working_status = 'ส่งมอบแล้ว'
@@ -1196,8 +1206,13 @@ export default function JobsPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="field-label">สถานะการทำงาน</label>
+                      {/* The list has no entry for "", so a job with no status yet used to
+                          display the first option (จอง) while the state stayed empty —
+                          saving without touching the dropdown then wrote an empty string.
+                          An explicit option keeps what is shown and what is stored in step. */}
                       <select value={editing.working_status || ''} onChange={e => setEditing(e2 => ({ ...e2, working_status: e.target.value }))}
                         className="field-input w-full mt-1">
+                        <option value="">— ยังไม่ระบุ —</option>
                         {WORKING_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
                     </div>

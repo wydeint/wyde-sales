@@ -63,6 +63,25 @@ export const isProspectStage = (s: string | null | undefined): boolean =>
 /** Funnel order excluding `lost`, which is an exit, not a step. */
 export const FUNNEL_ORDER: CrmStage[] = CRM_STAGES.filter(s => s.value !== 'lost').map(s => s.value)
 
+/**
+ * How a cancelled deal settled financially. This is deliberately NOT a CRM
+ * stage: the deal is `lost` either way, and `customers.status` is constrained
+ * to the seven stages above — writing 'cancelled' there is rejected by the
+ * database. The money outcome lives in `cancel_type` / `cancel_amount` and is
+ * shown as a second chip beside the stage, so a forfeited booking stays
+ * distinguishable from a customer who simply walked away, without adding a
+ * funnel stage that every report would have to learn.
+ */
+export const CANCEL_OUTCOMES: StatusEntry[] = [
+  { value: 'forfeit', label: 'ยึดเงินจอง', icon: '⊘', badge: 'badge badge-amber', color: 'var(--accent-amber)' },
+  { value: 'refund',  label: 'คืนเงิน',    icon: '↩', badge: 'badge badge-blue',  color: 'var(--accent-blue)' },
+]
+
+/** Returns null when the deal was not cancelled with a money outcome. */
+export function cancelOutcome(t: string | null | undefined): StatusEntry | null {
+  return CANCEL_OUTCOMES.find(x => x.value === t) ?? null
+}
+
 const UNKNOWN: StatusEntry = {
   value: '', label: '—', icon: '·', badge: 'badge badge-gray', color: 'var(--text-3)',
 }

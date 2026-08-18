@@ -14,7 +14,7 @@ import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import FilterBar from '@/components/ui/FilterBar'
-import { CRM_STAGES, crmStage, PROSPECT_STAGES } from '@/lib/status'
+import { CRM_STAGES, crmStage, PROSPECT_STAGES, cancelOutcome } from '@/lib/status'
 import PageHeader from '@/components/ui/PageHeader'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
@@ -32,6 +32,7 @@ interface Customer {
   id: string; customer_name: string; phone: string; email: string; line_id: string
   source: string; project_id: string; interested_room: string; budget: number
   status: string; assigned_to: string; notes: string; created_at: string
+  cancel_type?: string | null; cancel_amount?: number | null; cancel_date?: string | null
   projects?: { name: string }; users?: { name: string }
 }
 interface Project { id: string; name: string }
@@ -139,6 +140,14 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
           <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}
+          </span>
+        ) })()}
+        {/* How the cancellation settled — a forfeited booking is money we kept,
+            which "หลุด" on its own does not say. */}
+        {(() => { const co = cancelOutcome(c.cancel_type); return co && (
+          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+            style={{ background: `color-mix(in srgb, ${co.color} 15%, transparent)`, color: co.color, border: `1px solid color-mix(in srgb, ${co.color} 30%, transparent)` }}>
+            {co.label}{c.cancel_amount ? ` ฿${Math.round(c.cancel_amount).toLocaleString('th-TH')}` : ''}
           </span>
         ) })()}
       </div>
@@ -839,6 +848,18 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             />
           </div>
 
+          {/* Already cancelled — the cancel toggle below is gone once the stage is
+              lost, so without this the drawer said nothing about what was settled. */}
+          {(() => { const co = cancelOutcome(customer.cancel_type); return co && (
+            <div className="rounded-[11px] p-3" style={{ background: `color-mix(in srgb, ${co.color} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${co.color} 25%, transparent)` }}>
+              <p className="text-label font-semibold" style={{ color: co.color }}>ยกเลิกสัญญา · {co.label}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
+                {customer.cancel_amount ? `฿${Math.round(customer.cancel_amount).toLocaleString('th-TH')}` : 'ไม่ได้ระบุยอด'}
+                {customer.cancel_date ? ` · ${new Date(customer.cancel_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}` : ''}
+              </p>
+            </div>
+          ) })()}
+
           {/* Cancel — hidden behind toggle (booked only) */}
           {effectiveStage === 'booked' && (
             <div>
@@ -887,15 +908,27 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
             const { data: { session } } = await supabase.auth.getSession()
-            await supabase.from('customers').update({
-              status: 'cancelled',
+            // 'lost', not 'cancelled': customers.status has a CHECK constraint listing
+            // the seven CRM stages, so every cancel written here was silently rejected
+            // by the database while the UI optimistically showed it as done. The money
+            // outcome is carried by cancel_type/cancel_amount and shown as its own chip.
+            const { error: cancelErr } = await supabase.from('customers').update({
+              status: 'lost',
               cancel_type: type,
               cancel_date: date || null,
               cancel_amount: amount || null,
               cancel_notes: notes || null,
             }).eq('id', customer.id)
+            if (cancelErr) { alert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
+            if (focusJobId) {
+              await supabase.from('jobs').update({
+                crm_stage: 'lost', working_status: 'ยกเลิก',
+                cancel_type: type, cancel_date: date || null,
+                cancel_amount: amount || null, cancel_notes: notes || null,
+              }).eq('id', focusJobId)
+            }
             if (amount > 0) {
-              await supabase.from('finance_entries').insert({
+              const { error: finErr } = await supabase.from('finance_entries').insert({
                 type: type === 'forfeit' ? 'income' : 'expense',
                 category: type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงินยกเลิก',
                 amount,
@@ -904,8 +937,9 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 ref_id: customer.id,
                 created_by: session?.user?.id || null,
               })
+              if (finErr) alert(`ยกเลิกแล้ว แต่บันทึกรายการเงินไม่สำเร็จ: ${finErr.message}`)
             }
-            onUpdate({ ...customer, status: 'cancelled' })
+            onUpdate({ ...customer, status: 'lost', cancel_type: type, cancel_amount: amount || null } as any)
             setShowCancel(false)
           }}
         />
@@ -1303,7 +1337,7 @@ export default function ProspectsKanbanPage() {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1395,7 +1429,7 @@ export default function ProspectsKanbanPage() {
     const { data, error } = await supabase.from('customers').insert([{
       id: newId, ...form, project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
       customer_type: form.customer_type || 'B2C', work_type: form.work_type || null,
-    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)').single()
+    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)').single()
     if (error) return error.message
     if (data) {
       const crmStage = form.status || 'new'

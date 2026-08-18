@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Wallet, Pencil, AlertCircle, TrendingUp, TrendingDown, DollarSign, Trash2, ChevronLeft, ChevronRight, Package, Save, RotateCcw } from 'lucide-react'
+import { Plus, Wallet, Pencil, AlertCircle, TrendingUp, TrendingDown, DollarSign, Trash2, Package, Save, RotateCcw } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import PeriodPicker from '@/components/ui/PeriodPicker'
+import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 
@@ -75,7 +77,6 @@ interface Entry {
   ref_id: string
 }
 
-type Period = 'today' | 'week' | 'month' | 'quarter' | 'year'
 
 type EntryDraft = {
   revenue_ex_vat: string
@@ -93,8 +94,6 @@ const PAY_STATUS = [
   { value: 'partial', label: 'ชำระบางส่วน', color: 'badge badge-blue' },
 ]
 const emptyEntry = { type: 'expense', category: '', amount: 0, entry_date: new Date().toISOString().slice(0, 10), description: '', ref_id: '' }
-const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
-const PERIOD_LABELS: Record<Period, string> = { today: 'วันนี้', week: 'สัปดาห์', month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี' }
 
 // ── Helpers ────────────────────────────────────────────────
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
@@ -107,38 +106,6 @@ const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day
 
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 /* Buddhist Era for display; ld() stays Gregorian because it builds ISO keys. */
-const beYear = (y: number) => y + 543
-function getPeriodBounds(period: Period, offset: number): { start: string; end: string; label: string } {
-  const now = new Date()
-  if (period === 'today') {
-    const d = new Date(now); d.setDate(now.getDate() + offset)
-    const s = ld(d)
-    return { start: s, end: s, label: offset === 0 ? 'วันนี้' : `${d.getDate()} ${MONTHS_TH[d.getMonth()]}` }
-  }
-  if (period === 'week') {
-    const base = new Date(now); base.setDate(now.getDate() + offset * 7)
-    const dow = base.getDay() === 0 ? 6 : base.getDay() - 1
-    const mon = new Date(base); mon.setDate(base.getDate() - dow); mon.setHours(0,0,0,0)
-    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-    const fmt = (d: Date) => `${d.getDate()} ${MONTHS_TH[d.getMonth()]}`
-    return { start: ld(mon), end: ld(sun), label: `${fmt(mon)} – ${fmt(sun)}` }
-  }
-  if (period === 'month') {
-    const y = now.getFullYear(); const m = now.getMonth() + offset
-    const s = new Date(y, m, 1); const e = new Date(y, m+1, 0)
-    return { start: ld(s), end: ld(e), label: `${MONTHS_TH[s.getMonth()]} ${beYear(s.getFullYear())}` }
-  }
-  if (period === 'quarter') {
-    const totalQ = Math.floor(now.getMonth()/3) + offset
-    const y = now.getFullYear() + Math.floor(totalQ/4)
-    const q = ((totalQ%4)+4)%4
-    const s = new Date(y, q*3, 1); const e = new Date(y, q*3+3, 0)
-    return { start: ld(s), end: ld(e), label: `Q${q+1} ${beYear(y)}` }
-  }
-  const y = now.getFullYear() + offset
-  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${beYear(y)}` }
-}
-
 // ── Page ───────────────────────────────────────────────────
 export default function FinancePage() {
   const supabase = createClient()
@@ -157,7 +124,7 @@ export default function FinancePage() {
   const [fetchError, setFetchError] = useState('')
   const [drilldown, setDrilldown] = useState<'backlog' | 'pending_final' | 'overdue' | null>(null)
 
-  const [period, setPeriod] = useState<Period>('month')
+  const [period, setPeriod] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
 
   const [entryOpen, setEntryOpen] = useState(false)
@@ -376,27 +343,8 @@ export default function FinancePage() {
 
       {/* Period selector — always visible regardless of tab */}
       <FilterBar className="mb-5">
-        <div className="tab-group">
-          {(['today','week','month','quarter','year'] as Period[]).map(p => (
-            <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-              className={`tab-btn ${period === p ? 'active' : ''}`}>
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-            <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
-          </button>
-          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
-            {label}
-            {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
-          </span>
-          <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-            className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-            <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
-          </button>
-        </div>
+        <PeriodPicker unit={period} setUnit={setPeriod} offset={offset} setOffset={setOffset}
+          units={['today','week','month','quarter','year']} />
       </FilterBar>
 
       {/* ── Tab: Overview ─────────────────────────────────── */}

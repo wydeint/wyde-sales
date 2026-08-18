@@ -7,6 +7,8 @@ import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import PeriodPicker from '@/components/ui/PeriodPicker'
+import { getPeriodBounds, monthsInPeriod, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
 
 interface OrgTarget {
@@ -39,14 +41,7 @@ const thisYear = new Date().getFullYear()
 const thisMonth = new Date().getMonth() + 1
 const thisQ = Math.floor((thisMonth - 1) / 3) + 1
 
-type ViewPeriod = 'month' | 'quarter' | 'year'
 type TabView = 'org' | 'sales'
-
-function getViewMonths(p: ViewPeriod, month: number, quarter: number): number[] {
-  if (p === 'month') return [month]
-  if (p === 'quarter') return [quarter * 3 - 2, quarter * 3 - 1, quarter * 3]
-  return [1,2,3,4,5,6,7,8,9,10,11,12]
-}
 
 const f = (v: number) => v ? '฿' + Math.round(v).toLocaleString() : '฿0'
 const pct = (a: number, b: number) => b > 0 ? Math.min(Math.round(a / b * 100), 100) : 0
@@ -85,10 +80,10 @@ const emptySalesForm = {
 export default function TargetsPage() {
   const supabase = createClient()
   const [tab, setTab] = useState<TabView>('org')
-  const [viewPeriod, setViewPeriod] = useState<ViewPeriod>('month')
-  const [filterYear, setFilterYear] = useState(thisYear)
-  const [filterMonth, setFilterMonth] = useState(thisMonth)
-  const [filterQuarter, setFilterQuarter] = useState(thisQ)
+  const [viewPeriod, setViewPeriod] = useState<PeriodUnit>('month')
+  const [offset, setOffset] = useState(0)
+  const bounds = getPeriodBounds(viewPeriod, offset)
+  const filterYear = new Date(bounds.start).getFullYear()
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
 
@@ -219,10 +214,8 @@ export default function TargetsPage() {
     setSalesSaving(false); setSalesModalOpen(false); load()
   }
 
-  const viewMonths = getViewMonths(viewPeriod, filterMonth, filterQuarter)
-  const periodLabel = viewPeriod === 'month' ? `${MONTHS_FULL[filterMonth - 1]} ${filterYear + 543}`
-    : viewPeriod === 'quarter' ? `Q${filterQuarter}/${filterYear + 543}`
-    : `ปี ${filterYear + 543}`
+  const viewMonths = monthsInPeriod(viewPeriod, offset)
+  const periodLabel = bounds.label
 
   // Org aggregation for view period
   const orgInView = orgTargets.filter(o => viewMonths.includes(o.month))
@@ -304,43 +297,9 @@ export default function TargetsPage() {
           </button>
         </div>
 
-        {/* Period pills — the active colour used to swap with the tab above it,
-            so an unrelated control changed this one's appearance. */}
-        <div className="tab-group">
-          {(['month','quarter','year'] as ViewPeriod[]).map(p => (
-            <button key={p} onClick={() => setViewPeriod(p)}
-              className={`tab-btn ${viewPeriod === p ? 'active' : ''}`}>
-              {p === 'month' ? 'เดือน' : p === 'quarter' ? 'ไตรมาส' : 'ปี'}
-            </button>
-          ))}
-        </div>
-
-        {/* Which month / quarter. The period pills used to pick only the *kind* of
-            range while the range itself was pinned to today, so "เดือน" always meant
-            the current month and no other month could be viewed. */}
-        {viewPeriod === 'month' && (
-          <select value={filterMonth} onChange={e => setFilterMonth(Number(e.target.value))}
-            className="field-input" style={{ width: 'auto' }} aria-label="เลือกเดือน">
-            {MONTHS_FULL.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-        )}
-        {viewPeriod === 'quarter' && (
-          <select value={filterQuarter} onChange={e => setFilterQuarter(Number(e.target.value))}
-            className="field-input" style={{ width: 'auto' }} aria-label="เลือกไตรมาส">
-            {[1, 2, 3, 4].map(q => (
-              <option key={q} value={q}>Q{q} ({MONTHS[q * 3 - 3]}–{MONTHS[q * 3 - 1]})</option>
-            ))}
-          </select>
-        )}
-
-        {/* Year */}
-        <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))}
-          className="field-input" style={{ width: 'auto' }} aria-label="เลือกปี">
-          {[thisYear - 1, thisYear, thisYear + 1].map(y => (
-            <option key={y} value={y}>{y + 543} (พ.ศ.)</option>
-          ))}
-        </select>
-        <span className="text-sm" style={{ color: 'var(--text-3)' }}>{periodLabel}</span>
+        {/* One control for both the unit and which one — replaces three separate
+            selects. Every text slot has a reserved width so nothing shifts. */}
+        <PeriodPicker unit={viewPeriod} setUnit={setViewPeriod} offset={offset} setOffset={setOffset} />
       </FilterBar>
 
       {loading ? (

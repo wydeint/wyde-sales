@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BarChart3, TrendingUp, Users, DollarSign, Target, Package, Award, } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import PeriodPicker from '@/components/ui/PeriodPicker'
+import { getPeriodBounds, MONTHS_TH, beYear, type PeriodUnit } from '@/lib/period'
 import { crmStage, FUNNEL_ORDER } from '@/lib/status'
 
 type Customer = {
@@ -23,7 +25,6 @@ type Job = {
 }
 type PaidPayment = { paid_amount: number; paid_date: string; job_id: string; jobs: { sales_id: string } | null }
 
-type Period = 'week' | 'month' | 'quarter' | 'year'
 
 const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
 const fk = (v: number) => {
@@ -33,38 +34,10 @@ const fk = (v: number) => {
 }
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 
-const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 /* Display year in Buddhist Era, as every other page does via the th-TH locale.
    ld() above stays Gregorian — it builds ISO keys for querying, not labels. */
-const beYear = (y: number) => y + 543
-function getPeriodBounds(period: Period, offset = 0): { start: string; end: string; label: string } {
-  const now = new Date()
-  if (period === 'week') {
-    const base = new Date(now); base.setDate(now.getDate() + offset * 7)
-    const dow = base.getDay() === 0 ? 6 : base.getDay() - 1
-    const mon = new Date(base); mon.setDate(base.getDate() - dow)
-    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-    const fmt = (d: Date) => `${d.getDate()} ${MONTHS_TH[d.getMonth()]}`
-    return { start: ld(mon), end: ld(sun), label: `${fmt(mon)} – ${fmt(sun)}` }
-  }
-  if (period === 'month') {
-    const y = now.getFullYear(); const m = now.getMonth() + offset
-    const d = new Date(y, m, 1)
-    const last = new Date(y, m + 1, 0)
-    return { start: ld(d), end: ld(last), label: `${MONTHS_TH[d.getMonth()]} ${beYear(d.getFullYear())}` }
-  }
-  if (period === 'quarter') {
-    const totalQ = Math.floor(now.getMonth() / 3) + offset
-    const y = now.getFullYear() + Math.floor(totalQ / 4)
-    const q = ((totalQ % 4) + 4) % 4
-    const qs = new Date(y, q * 3, 1); const qe = new Date(y, q * 3 + 3, 0)
-    return { start: ld(qs), end: ld(qe), label: `Q${q + 1} ${beYear(y)}` }
-  }
-  const y = now.getFullYear() + offset
-  return { start: `${y}-01-01`, end: `${y}-12-31`, label: `ปี ${beYear(y)}` }
-}
 
 export default function ExecutivePage() {
   const supabase = createClient()
@@ -74,7 +47,7 @@ export default function ExecutivePage() {
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
 
-  const [period, setPeriod] = useState<Period>('month')
+  const [period, setPeriod] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
   const [filterCustType, setFilterCustType] = useState('')
   const [allPayments, setAllPayments] = useState<PaidPayment[]>([])
@@ -245,13 +218,7 @@ export default function ExecutivePage() {
   if (loading) return <PageSpinner />
   if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />
 
-  const PERIODS: { key: Period; label: string }[] = [
-    { key: 'week', label: 'สัปดาห์' },
-    { key: 'month', label: 'เดือน' },
-    { key: 'quarter', label: 'ไตรมาส' },
-    { key: 'year', label: 'ปี' },
-  ]
-
+  
   return (
     <div className="page-content space-y-5">
 
@@ -286,27 +253,8 @@ export default function ExecutivePage() {
           <option value="B2C">B2C</option>
           <option value="B2B">B2B</option>
         </select>
-        <div className="tab-group">
-          {PERIODS.map(p => (
-            <button key={p.key} onClick={() => { setPeriod(p.key); setOffset(0) }}
-              className={`tab-btn ${period === p.key ? 'active' : ''}`}>
-              {p.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={() => setOffset(o => o - 1)} className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-            <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
-          </button>
-          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
-            {label}
-            {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
-          </span>
-          <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-            className="p-1.5 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
-            <ChevronRight size={15} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
-          </button>
-        </div>
+        <PeriodPicker unit={period} setUnit={setPeriod} offset={offset} setOffset={setOffset}
+          units={['week','month','quarter','year']} />
       </FilterBar>
 
       {mainTab === 'performance' && <>

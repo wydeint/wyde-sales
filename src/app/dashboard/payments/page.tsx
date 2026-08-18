@@ -135,16 +135,22 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Summary */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-[8px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              <p className="text-micro font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
+              <p className="font-bold text-base" style={{ color: 'var(--text-1)' }}>{f(job.revenue_inc_vat)}</p>
+            </div>
             <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 30%, transparent)' }}>
-              <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>รับแล้ว</p>
+              <p className="text-micro font-semibold" style={{ color: 'var(--accent-green)' }}>ชำระแล้ว</p>
               <p className="font-bold text-base" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
             </div>
             {/* Outstanding balance is a normal state, not an error — orange, not red.
                 Red stays reserved for instalments that are actually overdue. */}
             <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
               <p className="text-micro font-semibold" style={{ color: 'var(--accent-orange)' }}>คงเหลือ</p>
-              <p className="font-bold text-base" style={{ color: 'var(--accent-orange)' }}>{f(job.unpaid_total)}</p>
+              <p className="font-bold text-base" style={{ color: 'var(--accent-orange)' }}>
+                {job.unpaid_total < -1 ? `เกิน ${f(-job.unpaid_total)}` : job.unpaid_total > 1 ? f(job.unpaid_total) : 'ครบแล้ว'}
+              </p>
             </div>
           </div>
 
@@ -276,7 +282,11 @@ export default function PaymentsPage() {
     const built: JobRow[] = (jobsRaw || []).map((j: any) => {
       const insts: Installment[] = instMap.get(j.id) || []
       const paid_total = insts.filter(i => i.status === 'paid').reduce((s, i) => s + ((i as any).paid_amount ?? i.amount), 0)
-      const unpaid_total = insts.filter(i => i.status !== 'paid').reduce((s, i) => s + i.amount, 0)
+      // Outstanding is revenue minus what came in — NOT the sum of unpaid
+      // instalments. Most jobs carry only the booking instalment until the plan
+      // is set up, so summing unpaid rows reported ฿0 owing on a ฿2,000,000 job
+      // that had received ฿10,000. Across the book that hid ฿31.8M on 350 jobs.
+      const unpaid_total = (j.revenue_inc_vat || 0) - paid_total
       return {
         id: j.id, room_no: j.room_no, project_id: j.project_id,
         project_name: j.projects?.name || j.project_id,
@@ -320,6 +330,7 @@ export default function PaymentsPage() {
   useEffect(() => { setPage(1) }, [search, filterProject, filterSales])
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const totalRevenue = filtered.reduce((s, j) => s + j.revenue_inc_vat, 0)
   const totalPaid = filtered.reduce((s, j) => s + j.paid_total, 0)
   const totalUnpaid = filtered.reduce((s, j) => s + j.unpaid_total, 0)
 
@@ -354,16 +365,23 @@ export default function PaymentsPage() {
             only summary in the app rendered as tinted pills, with the record
             count loose beside them instead of inside a tile.
             คงเหลือ stays orange: outstanding is a normal state, not an error. */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div className="ds-card p-4">
-            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว</p>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
+            <p className="text-kpi-money" style={{ color: 'var(--text-1)' }}>{f(totalRevenue)}</p>
+          </div>
+          <div className="ds-card p-4">
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ชำระแล้ว</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
+            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+              {totalRevenue > 0 ? Math.round(totalPaid / totalRevenue * 100) : 0}% ของมูลค่างาน
+            </p>
           </div>
           <div className="ds-card p-4">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>คงเหลือ</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
           </div>
-          <div className="ds-card p-4 col-span-2 sm:col-span-1">
+          <div className="ds-card p-4 col-span-2 lg:col-span-1">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รายการ</p>
             <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{filtered.length.toLocaleString('th-TH')}</p>
           </div>
@@ -375,14 +393,14 @@ export default function PaymentsPage() {
         <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'var(--hover-bg)' }}>
-              {['ห้อง / โครงการ', 'ลูกค้า / Sales', 'งวดชำระ', 'รับแล้ว', 'คงเหลือ', 'เอกสาร'].map(h => (
+              {['ห้อง / โครงการ', 'ลูกค้า / Sales', 'งวดชำระ', 'มูลค่างาน', 'ชำระแล้ว', 'คงเหลือ', 'เอกสาร'].map(h => (
                 <th key={h} className="text-xs font-semibold" style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid var(--divider)', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-3)' }}>ไม่พบข้อมูล</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-3)' }}>ไม่พบข้อมูล</td></tr>
             ) : paginated.map((job, ri) => {
               const paidCount = job.installments.filter(i => i.status === 'paid').length
               const docsDone = [job.quotation1_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length
@@ -415,14 +433,28 @@ export default function PaymentsPage() {
                     )}
                   </td>
 
+                  {/* มูลค่างาน → ชำระแล้ว → คงเหลือ, so the subtraction is on screen
+                      and the reader can check it. */}
+                  <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
+                    <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{f(job.revenue_inc_vat)}</p>
+                  </td>
+
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>{f(job.paid_total)}</p>
                   </td>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
-                    <p className="font-semibold" style={{ color: job.unpaid_total > 0 ? 'var(--accent-red)' : 'var(--text-3)' }}>
-                      {job.unpaid_total > 0 ? f(job.unpaid_total) : '—'}
-                    </p>
+                    {job.unpaid_total > 1 ? (
+                      <p className="font-semibold" style={{ color: 'var(--accent-orange)' }}>{f(job.unpaid_total)}</p>
+                    ) : job.unpaid_total < -1 ? (
+                      // 80 jobs have taken more than the recorded revenue. Saying
+                      // "เกิน" is honest; a negative number reads as a mistake.
+                      <p className="font-semibold" style={{ color: 'var(--accent-blue)' }} title="รับเงินเกินมูลค่างานที่บันทึกไว้">
+                        เกิน {f(-job.unpaid_total)}
+                      </p>
+                    ) : (
+                      <p className="font-semibold" style={{ color: 'var(--accent-green)' }}>ครบแล้ว</p>
+                    )}
                   </td>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>

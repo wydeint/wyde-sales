@@ -42,9 +42,9 @@ const thisQ = Math.floor((thisMonth - 1) / 3) + 1
 type ViewPeriod = 'month' | 'quarter' | 'year'
 type TabView = 'org' | 'sales'
 
-function getViewMonths(p: ViewPeriod): number[] {
-  if (p === 'month') return [thisMonth]
-  if (p === 'quarter') return [thisQ * 3 - 2, thisQ * 3 - 1, thisQ * 3]
+function getViewMonths(p: ViewPeriod, month: number, quarter: number): number[] {
+  if (p === 'month') return [month]
+  if (p === 'quarter') return [quarter * 3 - 2, quarter * 3 - 1, quarter * 3]
   return [1,2,3,4,5,6,7,8,9,10,11,12]
 }
 
@@ -87,6 +87,8 @@ export default function TargetsPage() {
   const [tab, setTab] = useState<TabView>('org')
   const [viewPeriod, setViewPeriod] = useState<ViewPeriod>('month')
   const [filterYear, setFilterYear] = useState(thisYear)
+  const [filterMonth, setFilterMonth] = useState(thisMonth)
+  const [filterQuarter, setFilterQuarter] = useState(thisQ)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
 
@@ -217,9 +219,9 @@ export default function TargetsPage() {
     setSalesSaving(false); setSalesModalOpen(false); load()
   }
 
-  const viewMonths = getViewMonths(viewPeriod)
-  const periodLabel = viewPeriod === 'month' ? MONTHS_FULL[thisMonth - 1]
-    : viewPeriod === 'quarter' ? `Q${thisQ}/${filterYear + 543}`
+  const viewMonths = getViewMonths(viewPeriod, filterMonth, filterQuarter)
+  const periodLabel = viewPeriod === 'month' ? `${MONTHS_FULL[filterMonth - 1]} ${filterYear + 543}`
+    : viewPeriod === 'quarter' ? `Q${filterQuarter}/${filterYear + 543}`
     : `ปี ${filterYear + 543}`
 
   // Org aggregation for view period
@@ -313,9 +315,27 @@ export default function TargetsPage() {
           ))}
         </div>
 
+        {/* Which month / quarter. The period pills used to pick only the *kind* of
+            range while the range itself was pinned to today, so "เดือน" always meant
+            the current month and no other month could be viewed. */}
+        {viewPeriod === 'month' && (
+          <select value={filterMonth} onChange={e => setFilterMonth(Number(e.target.value))}
+            className="field-input" style={{ width: 'auto' }} aria-label="เลือกเดือน">
+            {MONTHS_FULL.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          </select>
+        )}
+        {viewPeriod === 'quarter' && (
+          <select value={filterQuarter} onChange={e => setFilterQuarter(Number(e.target.value))}
+            className="field-input" style={{ width: 'auto' }} aria-label="เลือกไตรมาส">
+            {[1, 2, 3, 4].map(q => (
+              <option key={q} value={q}>Q{q} ({MONTHS[q * 3 - 3]}–{MONTHS[q * 3 - 1]})</option>
+            ))}
+          </select>
+        )}
+
         {/* Year */}
         <select value={filterYear} onChange={e => setFilterYear(Number(e.target.value))}
-          className="field-input" style={{ width: 'auto' }}>
+          className="field-input" style={{ width: 'auto' }} aria-label="เลือกปี">
           {[thisYear - 1, thisYear, thisYear + 1].map(y => (
             <option key={y} value={y}>{y + 543} (พ.ศ.)</option>
           ))}

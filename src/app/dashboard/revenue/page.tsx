@@ -8,6 +8,8 @@ import PageHeader from '@/components/ui/PageHeader'
 import { WORKING_STATUSES } from '@/lib/status'
 import StatusChip from '@/components/ui/StatusChip'
 import FilterBar from '@/components/ui/FilterBar'
+import PeriodPicker from '@/components/ui/PeriodPicker'
+import { getPeriodBounds, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit as Period } from '@/lib/period'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -39,7 +41,6 @@ type Job = {
   sales?: { name: string }
 }
 
-type Period = 'today' | 'week' | 'month' | 'quarter' | 'year'
 type MainTab = 'sales' | 'deliver'
 type ViewTab = 'summary' | 'sales' | 'project' | 'list'
 
@@ -86,42 +87,17 @@ function getWeekRange(date: Date): { start: Date; end: Date; label: string } {
    a few lines below — quarter and year were printing the Gregorian year, so one
    page showed both 2569 and 2026 depending on the period picked. */
 const beYear = (y: number) => y + 543
-function getPeriodBounds(period: Period, offset: number): { start: Date; end: Date; label: string } {
-  const now = new Date()
-  if (period === 'today') {
-    const d = new Date(now); d.setDate(now.getDate() + offset)
-    const start = new Date(d); start.setHours(0, 0, 0, 0)
-    const end = new Date(d); end.setHours(23, 59, 59, 999)
-    return { start, end, label: d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) }
-  }
-  if (period === 'week') {
-    const base = new Date(now); base.setDate(now.getDate() + offset * 7)
-    return getWeekRange(base)
-  }
-  if (period === 'month') {
-    const y = now.getFullYear(); const m = now.getMonth() + offset
-    const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0, 23, 59, 59)
-    return { start, end, label: start.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }) }
-  }
-  if (period === 'quarter') {
-    const totalQ = Math.floor(now.getMonth() / 3) + offset
-    const y = now.getFullYear() + Math.floor(totalQ / 4)
-    const q = ((totalQ % 4) + 4) % 4
-    const start = new Date(y, q * 3, 1); const end = new Date(y, q * 3 + 3, 0, 23, 59, 59)
-    return { start, end, label: `Q${q + 1} ${beYear(y)}` }
-  }
-  const y = now.getFullYear() + offset
-  return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59), label: `ปี ${beYear(y)}` }
+/* Bounds come from src/lib/period.ts now — this file had the third private copy.
+   It compares Date objects, so widen the shared ISO strings to cover the day. */
+function periodDates(period: Period, offset: number): { start: Date; end: Date; label: string } {
+  const b = getPeriodBounds(period, offset)
+  return { start: new Date(b.start + 'T00:00:00'), end: new Date(b.end + 'T23:59:59'), label: b.label }
 }
 
 function inRange(dateStr: string | null, start: Date, end: Date) {
   if (!dateStr) return false
   const d = new Date(dateStr)
   return d >= start && d <= end
-}
-
-const PERIOD_LABELS: Record<Period, string> = {
-  today: 'วันนี้', week: 'สัปดาห์', month: 'เดือน', quarter: 'ไตรมาส', year: 'ปี'
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -185,7 +161,7 @@ export default function RevenuePage() {
   }, [])
 
   const allJobs = mainTab === 'deliver' ? allDeliverJobs : allSalesJobs
-  const { start, end, label } = getPeriodBounds(period, offset)
+  const { start, end, label } = periodDates(period, offset)
 
   const workTypes = useMemo(() => {
     const s = new Set(allJobs.map(j => j.work_type).filter(Boolean))
@@ -202,7 +178,7 @@ export default function RevenuePage() {
     [allJobs, start, end, filterSales, filterCustType, filterWorkType, mainTab]
   )
 
-  const prevBounds = getPeriodBounds(period, offset - 1)
+  const prevBounds = periodDates(period, offset - 1)
   const prevJobs = useMemo(() =>
     allJobs.filter(j => inRange(getJobDate(j, mainTab), prevBounds.start, prevBounds.end)),
     [allJobs, prevBounds, mainTab]
@@ -368,27 +344,8 @@ export default function RevenuePage() {
             <option value="">ทุก Sales</option>
             {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
-          <div className="tab-group">
-            {(['today', 'week', 'month', 'quarter', 'year'] as Period[]).map(p => (
-              <button key={p} onClick={() => { setPeriod(p); setOffset(0) }}
-                className={`tab-btn ${period === p ? 'active' : ''}`}>
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="w-full flex items-center gap-2">
-          <button onClick={() => setOffset(o => o - 1)} className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', minWidth: 36, minHeight: 36 }}>
-            <ChevronLeft size={16} style={{ color: 'var(--text-2)' }} />
-          </button>
-          <span className="flex-1 text-center text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
-            {label}
-            {offset === 0 && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
-          </span>
-          <button onClick={() => setOffset(o => o + 1)} disabled={offset >= 0}
-            className="p-2 rounded-[8px]" style={{ background: 'var(--hover-bg)', minWidth: 36, minHeight: 36 }}>
-            <ChevronRight size={16} style={{ color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} />
-          </button>
+          <PeriodPicker unit={period} setUnit={setPeriod} offset={offset} setOffset={setOffset}
+            units={['today','week','month','quarter','year']} />
         </div>
       </FilterBar>
 

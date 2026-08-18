@@ -259,8 +259,13 @@ export default function ExecutivePage() {
 
       {mainTab === 'performance' && <>
 
-      {/* Org Target Banner */}
-      {orgTarget && offset === 0 && (
+      {/* Org Target Banner.
+          The `offset === 0` guard that used to be here hid the target for every
+          period except the current one, so stepping back to compare against last
+          month showed actuals with nothing to measure them against — even though
+          orgTarget is computed from start/end and was already correct for any
+          offset. The heading carries the period, so there is nothing to confuse. */}
+      {orgTarget && (
         <div className="ds-card p-4 flex gap-6 flex-wrap">
           <div className="flex items-center gap-2">
             <Target size={13} style={{ color: 'var(--accent)' }} />

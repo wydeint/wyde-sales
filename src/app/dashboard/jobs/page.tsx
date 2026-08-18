@@ -973,7 +973,7 @@ export default function JobsPage() {
       })()}
       <div className="ds-card" style={{ padding: 0 }}>
         <Pagination page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE} unit="งาน"
-          totalLabel={`ทั้งหมด ${jobs.length.toLocaleString('th-TH')} งาน`} />
+          grandTotal={jobs.length} />
       </div>
 
       {/* ─── Detail Drawer ─── */}

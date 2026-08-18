@@ -630,7 +630,7 @@ export default function LeadsPage() {
 
       {/* Table */}
       <div className="ds-card">
-        <div className="overflow-x-auto tbl-head-sticky">
+        <div className="overflow-x-auto">
           <table className="w-full" style={{ minWidth: 780 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -695,7 +695,7 @@ export default function LeadsPage() {
         </div>
         {!loading && (
           <Pagination page={page} setPage={setPage} total={filtered.length} unit="lead"
-            totalLabel={`โหลดมา ${leads.length.toLocaleString('th-TH')} lead`} />
+            grandTotal={leads.length} />
         )}
       </div>
     </div>

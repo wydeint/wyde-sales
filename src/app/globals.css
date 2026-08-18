@@ -400,18 +400,17 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 }
 .tbl-scroll tbody td { padding: 10px 16px; }
 
-/* Sticky column headers. Opt in with .tbl-head-sticky on the scroll wrapper.
-   Without it, scrolling past the first screen loses the column names for the
-   rest of the table — on Wyde Clients that was 67 screens of unlabelled
-   numbers. The header pins against the page scroller (main), so it needs an
-   opaque background of its own or rows show through as they pass under. */
-.tbl-head-sticky thead th {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: var(--card-bg);
-  box-shadow: inset 0 -1px 0 var(--divider);
-}
+/* No sticky column headers here, deliberately.
+   `position: sticky` on a th anchors to the nearest scrolling ancestor, and for
+   these tables that is the horizontal-scroll wrapper itself: setting overflow-x
+   forces overflow-y to compute to `auto`, so the wrapper is a vertical scroll
+   container that never actually scrolls. The header therefore pins to something
+   static and slides away with the page. Verified on Warranty — at scrollTop
+   2000 the th sat at -1301, i.e. fully gone.
+   Making it work needs the wrapper to own the vertical scroll (a max-height),
+   which puts a second scrollbar inside the page — the nested-scrolling pattern
+   that was reported as confusing. Pagination keeps these tables ~25 rows, so
+   the header is never far. Revisit only if the tables grow again. */
 
 /* ══════════════════════════════════════════
    Tab group — shared across pages (Finance, Commission, Handover, etc.)

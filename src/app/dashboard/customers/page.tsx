@@ -774,7 +774,7 @@ export default function CustomersPage() {
         </table>
         {!loading && (
           <Pagination page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE}
-            unit="ราย" totalLabel={`ทั้งหมด ${customers.length.toLocaleString('th-TH')} ราย`} />
+            unit="ราย" grandTotal={customers.length} />
         )}
       </div>
 

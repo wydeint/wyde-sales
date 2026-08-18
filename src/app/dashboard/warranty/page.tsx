@@ -267,7 +267,7 @@ export default function WarrantyPage() {
       {active.length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>อยู่ในประกัน ({active.length})</h2>
-          <div className="ds-card overflow-hidden tbl-scroll tbl-head-sticky" style={{ padding: 0 }}>
+          <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -338,7 +338,7 @@ export default function WarrantyPage() {
       {expired.length > 0 && (
         <div>
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>หมดประกันแล้ว ({expired.length})</h2>
-          <div className="ds-card overflow-hidden tbl-scroll tbl-head-sticky" style={{ padding: 0, opacity: 0.75 }}>
+          <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0, opacity: 0.75 }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>

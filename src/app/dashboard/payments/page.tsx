@@ -370,7 +370,7 @@ export default function PaymentsPage() {
         </div>
 
       {/* Table */}
-      <div className="tbl-scroll tbl-head-sticky rounded-[11px]"
+      <div className="tbl-scroll rounded-[11px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
@@ -445,7 +445,7 @@ export default function PaymentsPage() {
           </tbody>
         </table>
         <Pagination page={page} setPage={setPage} total={filtered.length} unit="งาน"
-          totalLabel={`ทั้งหมด ${rows.length.toLocaleString('th-TH')} งาน`} />
+          grandTotal={rows.length} />
       </div>
 
       {selected && <RowDrawer job={selected} onClose={() => setSelected(null)} />}

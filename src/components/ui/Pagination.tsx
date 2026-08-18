@@ -23,17 +23,19 @@ function pageItems(page: number, totalPages: number): (number | '…')[] {
 }
 
 export default function Pagination({
-  page, setPage, total, pageSize = PAGE_SIZE, unit = 'รายการ', totalLabel,
+  page, setPage, total, grandTotal, pageSize = PAGE_SIZE, unit = 'รายการ',
 }: {
   page: number
   setPage: (p: number) => void
   /** Rows after filtering — what the pager walks through. */
   total: number
+  /** Rows before filtering. The "(ทั้งหมด N)" suffix appears only when a filter
+   *  is actually hiding something; with no filter on it repeated the same
+   *  number twice in one sentence. */
+  grandTotal?: number
   pageSize?: number
   /** Counting word for this page's rows: ราย, งาน, งวด, ห้อง … */
   unit?: string
-  /** Optional "(ทั้งหมด N)" suffix, for when a filter is narrowing the set. */
-  totalLabel?: string
 }) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const from = total > 0 ? (page - 1) * pageSize + 1 : 0
@@ -44,7 +46,9 @@ export default function Pagination({
       style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
       <span>
         แสดง {from.toLocaleString('th-TH')}–{to.toLocaleString('th-TH')} จาก {total.toLocaleString('th-TH')} {unit}
-        {totalLabel ? ` (${totalLabel})` : ''}
+        {grandTotal !== undefined && grandTotal !== total
+          ? ` · กรองจากทั้งหมด ${grandTotal.toLocaleString('th-TH')} ${unit}`
+          : ''}
       </span>
       {totalPages > 1 && (
         <div className="flex items-center gap-1">

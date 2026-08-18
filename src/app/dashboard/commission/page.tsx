@@ -140,27 +140,18 @@ function IndividualTab({
           row. Eleven buttons floating loose wrapped onto three lines, so the
           page height moved with the number of salespeople. */}
       {isManager && (
-        <FilterBar
-          className=""
-          chips={<>
-            <button onClick={() => setFilterSales('all')}
-              className="px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
-              style={filterSales === 'all'
-                ? { background: 'var(--accent)', color: '#fff' }
-                : { color: 'var(--text-2)' }}>
-              ทั้งหมด
+        <div className="tab-group mb-4 flex-wrap">
+          <button onClick={() => setFilterSales('all')}
+            className={`tab-btn ${filterSales === 'all' ? 'active' : ''}`}>
+            ทั้งหมด
+          </button>
+          {salesUsers.map(u => (
+            <button key={u.id} onClick={() => setFilterSales(u.id)}
+              className={`tab-btn ${filterSales === u.id ? 'active' : ''}`}>
+              {u.name}
             </button>
-            {salesUsers.map(u => (
-              <button key={u.id} onClick={() => setFilterSales(u.id)}
-                className="px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
-                style={filterSales === u.id
-                  ? { background: 'var(--accent)', color: '#fff' }
-                  : { color: 'var(--text-2)' }}>
-                {u.name}
-              </button>
-            ))}
-          </>}
-        />
+          ))}
+        </div>
       )}
 
       {/* Summary */}
@@ -584,8 +575,15 @@ function StatusTab({
       {/* Period selector — was hand-rolled pills plus a dropdown that swapped per
           mode, the same shape (and the same width jitter) that PeriodPicker was
           built to replace on Sales Targets. */}
-      <FilterBar>
+      <FilterBar className="mb-4">
         <PeriodPicker unit={periodMode} setUnit={setPeriodMode} offset={periodOffset} setOffset={setPeriodOffset} />
+        {isManager && (
+          <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+            className="field-input" style={{ width: 'auto' }}>
+            <option value="all">— Sales ทั้งหมด —</option>
+            {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+        )}
       </FilterBar>
 
       {/* KPI grid */}
@@ -638,35 +636,20 @@ function StatusTab({
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex gap-1 p-1 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-          <button onClick={() => setFilterStatus('all')}
-            className="px-3 py-1.5 rounded-[8px] text-xs font-semibold"
-            style={{ background: filterStatus === 'all' ? 'var(--accent)' : 'transparent', color: filterStatus === 'all' ? '#fff' : 'var(--text-2)' }}>
-            ทั้งหมด
+      {/* Status chips get the shared .tab-group chrome and sit directly above the
+          list they filter — the Customers pattern. The Sales select moved up into
+          the filter card, since it narrows the whole view rather than the status. */}
+      <div className="tab-group mb-4 flex-wrap">
+        <button onClick={() => setFilterStatus('all')}
+          className={`tab-btn ${filterStatus === 'all' ? 'active' : ''}`}>
+          ทั้งหมด {filtered.length}
+        </button>
+        {STATUSES.map(s2 => (
+          <button key={s2} onClick={() => setFilterStatus(filterStatus === s2 ? 'all' : s2)}
+            className={`tab-btn ${filterStatus === s2 ? 'active' : ''}`}>
+            {STATUS_CFG[s2].label}
           </button>
-          {STATUSES.map(s => {
-            const cfg = STATUS_CFG[s]
-            return (
-              <button key={s} onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
-                className="px-3 py-1.5 rounded-[8px] text-xs font-semibold"
-                style={{ background: filterStatus === s ? cfg.color : 'transparent', color: filterStatus === s ? '#fff' : 'var(--text-2)' }}>
-                {cfg.label}
-              </button>
-            )
-          })}
-        </div>
-        {isManager && (
-          <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
-            className="field-input" style={{ width: 'auto' }}>
-            <option value="all">— Sales ทั้งหมด —</option>
-            {salesUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
-        )}
-        <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>
-          {filtered.length} งาน
-        </span>
+        ))}
       </div>
 
       {/* Job list */}

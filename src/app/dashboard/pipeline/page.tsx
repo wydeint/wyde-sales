@@ -1617,32 +1617,6 @@ export default function ProspectsKanbanPage() {
         onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }}
         searchPlaceholder="ค้นหาห้อง, ลูกค้า..."
         className="mb-3"
-        chips={<>
-          {STAGES.map(s => {
-            const count = s.value === 'booked'
-              ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
-              : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value).length
-            const active = activeStage === s.value && !search
-            const done = s.value === 'closed' || s.value === 'lost'
-            return (
-              <button key={s.value} onClick={() => { setActiveStage(s.value); setSearch(''); setSelectedCustomer(null) }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
-                style={active
-                  ? { background: s.badge, color: s.text }
-                  : { color: done ? 'var(--text-3)' : 'var(--text-2)' }}>
-                {s.label}
-                <span className="font-bold" style={{ color: active ? s.text : done ? 'var(--text-3)' : 'var(--text-1)' }}>{count}</span>
-              </button>
-            )
-          })}
-          {search && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0"
-              style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
-              ทั้งหมด
-              <span className="font-bold">{list.length}</span>
-            </span>
-          )}
-        </>}
       >
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
@@ -1667,6 +1641,35 @@ export default function ProspectsKanbanPage() {
             : list.length + ' ราย'}
         </span>
       </FilterBar>
+
+      {/* Stage chips in their own row between the filter card and the board,
+          matching Customers — search, then narrow by stage, then results. */}
+      <div className="tab-group mb-4 flex-wrap">
+          {STAGES.map(s => {
+            const count = s.value === 'booked'
+              ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
+              : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value).length
+            const active = activeStage === s.value && !search
+            const done = s.value === 'closed' || s.value === 'lost'
+            return (
+              <button key={s.value} onClick={() => { setActiveStage(s.value); setSearch(''); setSelectedCustomer(null) }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+                style={active
+                  ? { background: s.badge, color: s.text }
+                  : { color: done ? 'var(--text-3)' : 'var(--text-2)' }}>
+                {s.label}
+                <span className="font-bold" style={{ color: active ? s.text : done ? 'var(--text-3)' : 'var(--text-1)' }}>{count}</span>
+              </button>
+            )
+          })}
+          {search && (
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0"
+              style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+              ทั้งหมด
+              <span className="font-bold">{list.length}</span>
+            </span>
+          )}
+      </div>
 
       {/* Summary strip */}
       {(activeStage === 'booked' && !search ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length > 0 : list.length > 0) && (() => {

@@ -851,21 +851,6 @@ export default function JobsPage() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="ค้นหา PO / SO / ลูกค้า..."
-        chips={([
-          { on: filterNoSO, toggle: () => setFilterNoSO(v => !v), label: 'ไม่มี SO', count: noSOCount },
-          { on: filterNoPO, toggle: () => setFilterNoPO(v => !v), label: 'ไม่มี PO', count: noPOCount },
-        ]).map(c => (
-          <button key={c.label} onClick={c.toggle}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
-            style={c.on
-              ? { background: 'var(--accent)', color: '#fff' }
-              : { color: 'var(--text-2)' }}>
-            {c.label}
-            {c.count > 0 && (
-              <span className="font-bold" style={{ color: c.on ? '#fff' : 'var(--accent-orange)' }}>{c.count}</span>
-            )}
-          </button>
-        ))}
       >
         <SearchableSelect
           value={filterProject}
@@ -895,6 +880,27 @@ export default function JobsPage() {
           {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </FilterBar>
+
+      {/* Status chips in their own row between the filter card and the data,
+          matching Customers. They used to sit inside the filter card; separated
+          they read as a sequence — search, then narrow by status, then results. */}
+      <div className="tab-group mb-4 flex-wrap">
+        {([
+          { on: filterNoSO, toggle: () => setFilterNoSO(v => !v), label: 'ไม่มี SO', count: noSOCount },
+          { on: filterNoPO, toggle: () => setFilterNoPO(v => !v), label: 'ไม่มี PO', count: noPOCount },
+        ]).map(c => (
+          <button key={c.label} onClick={c.toggle}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+            style={c.on
+              ? { background: 'var(--accent)', color: '#fff' }
+              : { color: 'var(--text-2)' }}>
+            {c.label}
+            {c.count > 0 && (
+              <span className="font-bold" style={{ color: c.on ? '#fff' : 'var(--accent-orange)' }}>{c.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* Summary KPI */}
       {(() => {

@@ -61,6 +61,25 @@ const STAGES = CRM_STAGES.map(({ value: v }) => {
 })
 const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
 
+/**
+ * Look a stage up without ever silently landing on STAGES[0].
+ *
+ * `jobs.crm_stage` is not constrained and holds at least one 'Booked' with a
+ * capital B. A plain `stageMap[x] || STAGES[0]` turned that miss into "ใหม่" —
+ * a cancelled, forfeited room displayed as a brand new lead, which is the most
+ * misleading answer available. Match case-insensitively, then fall back to the
+ * customer's own status, and only then to an explicit unknown chip.
+ */
+const UNKNOWN_STAGE = { value: '', label: '—', text: 'var(--text-3)', dot: 'var(--text-3)', bg: 'transparent', border: 'var(--divider)', badge: 'var(--hover-bg)', chip: 'var(--hover-bg)' }
+function resolveStage(...candidates: (string | null | undefined)[]) {
+  for (const c of candidates) {
+    if (!c) continue
+    const hit = stageMap[c] || stageMap[c.toLowerCase()]
+    if (hit) return hit
+  }
+  return UNKNOWN_STAGE
+}
+
 const SOURCE_OPTS = [
   { value: '', label: '— ช่องทาง —' }, { value: 'event', label: 'Event' },
   { value: 'referral', label: 'Referral' }, { value: 'walk_in', label: 'Walk-in' },
@@ -99,7 +118,7 @@ function CardSkeleton() {
 }
 
 // ─── CustomerCard ───────────────────────────────────────────
-function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: typeof STAGES[0]; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
+function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: ReturnType<typeof resolveStage>; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
   const custType = (c as any).customer_type || 'B2C'
   const workType = (c as any).work_type || ''
   const prospectCrmStages: string[] = PROSPECT_STAGES
@@ -136,7 +155,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
             </span>
           )}
         </div>
-        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : (stageMap[jobCrmStage || c.status] || stage); return (
+        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : resolveStage(jobCrmStage, c.status); return (
           <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}
@@ -399,7 +418,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   const jobsArr = ((customer as any).jobs as JobMeta[]) || []
   const focusJobMeta = focusJobId ? jobsArr.find((j: JobMeta) => j.id === focusJobId) : null
   const effectiveStage = focusJobMeta?.crm_stage || focusJobCrmStage || customer.status
-  const stage = (focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : stageMap[effectiveStage]) || STAGES[0]
+  const stage = focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : resolveStage(effectiveStage, customer.status)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ ...customer })
   const [saving, setSaving] = useState(false)
@@ -1773,7 +1792,7 @@ export default function ProspectsKanbanPage() {
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                       {items.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, jobCrmStage, cardKey }) => (
-                        <CustomerCard key={cardKey} c={c} stage={stageMap[jobCrmStage || c.status] || stage} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null); setSelectedJobCrmStage(jobCrmStage || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
+                        <CustomerCard key={cardKey} c={c} stage={resolveStage(jobCrmStage, c.status)} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null); setSelectedJobCrmStage(jobCrmStage || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
                       ))}
                     </div>
                   </div>
@@ -1845,7 +1864,7 @@ export default function ProspectsKanbanPage() {
               <div className="space-y-1.5 max-h-56 overflow-y-auto">
                 {addSearchResults.map(c => {
                   const cJobs = ((c as any).jobs as JobMeta[] | null) || []
-                  const cStage = stageMap[(cJobs[0]?.crm_stage ?? c.status) || c.status] || STAGES[0]
+                  const cStage = resolveStage(cJobs[0]?.crm_stage, c.status)
                   return (
                     <button key={c.id} onClick={() => setRepeatConfirm(c)}
                       className="w-full flex items-center gap-3 p-3 rounded-[10px] text-left transition-all"

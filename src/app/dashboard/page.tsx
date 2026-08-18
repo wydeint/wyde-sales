@@ -167,9 +167,11 @@ export default function DashboardPage() {
     <div className="page-content space-y-6">
 
       {/* Header + Filters */}
+      {/* The greeting used to be the title, so this was the one page that never
+          said which page it was — and it rendered "คุณPrasert.l" with no space. */}
       <PageHeader
-        title={<>{greeting}คุณ{userName || '...'} 👋</>}
-        subtitle={new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        title="Dashboard"
+        subtitle={`${greeting} คุณ${userName ? ' ' + userName : ''} · ${new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`}
         className=""
         actions={
           <div className="filter-row items-center">

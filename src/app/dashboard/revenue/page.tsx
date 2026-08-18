@@ -316,7 +316,9 @@ export default function RevenuePage() {
       {/* Header */}
       <PageHeader
         title="Revenue"
-        subtitle={mainTab === 'sales' ? 'ยอดขาย — นับตามวันจอง / เริ่มงาน' : 'Revenue Recognition — นับเมื่อ working_status = ส่งมอบแล้ว'}
+        // The delivery subtitle read "working_status = ส่งมอบแล้ว" — a column name
+        // and a code comparison shown to the reader.
+        subtitle={mainTab === 'sales' ? 'ยอดขาย — นับตามวันจอง / เริ่มงาน' : 'ยอดส่งมอบ — นับเมื่องานส่งมอบแล้ว'}
         className=""
         actions={
           <button onClick={exportCSV}

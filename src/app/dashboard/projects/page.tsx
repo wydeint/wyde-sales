@@ -6,6 +6,7 @@ import { Plus, Building2, Pencil, ToggleLeft, ToggleRight, AlertCircle } from 'l
 import { TableSpinner, TableError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
+import FilterBar from '@/components/ui/FilterBar'
 import { Input, TextArea } from '@/components/ui/Input'
 
 interface Project {
@@ -52,6 +53,8 @@ export default function ProjectsPage() {
   const [saveError, setSaveError] = useState('')
   const [fetchError, setFetchError] = useState('')
   const [similarWarning, setSimilarWarning] = useState<Project[]>([])
+  const [search, setSearch] = useState('')
+  const [showInactive, setShowInactive] = useState(true)
 
   async function load() {
     setLoading(true)
@@ -63,6 +66,13 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  const filtered = projects.filter(p => {
+    if (!showInactive && !p.active) return false
+    const q = search.trim().toLowerCase()
+    if (!q) return true
+    return [p.id, p.name, p.developer, p.location].some(v => (v || '').toLowerCase().includes(q))
+  })
 
   function openNew() {
     setEditing(null)
@@ -121,6 +131,23 @@ export default function ProjectsPage() {
         }
       />
 
+      {/* 56 projects and no way to search them — the only list page with no
+          filter at all. */}
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="ค้นหาชื่อโครงการ, Developer, ที่ตั้ง, ID..."
+        searchLabel="ค้นหาโครงการ"
+        className="mb-4"
+      >
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: 'var(--text-2)' }}>
+          <input type="checkbox" checked={showInactive} onChange={e => setShowInactive(e.target.checked)}
+            className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent)' }} />
+          แสดงโครงการที่ปิดแล้ว
+        </label>
+        <span className="text-sm ml-auto" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>
+      </FilterBar>
+
       {/* Table */}
       <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
         <table className="w-full">
@@ -139,13 +166,13 @@ export default function ProjectsPage() {
           <tbody>
             {loading && <TableSpinner colSpan={8} />}
             {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
-            {!loading && projects.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <tr><td colSpan={8} className="text-center py-12">
                 <Building2 size={32} className="mx-auto mb-2" style={{ color: 'var(--text-3)' }} />
                 <p className="text-sm" style={{ color: 'var(--text-2)' }}>ยังไม่มีโครงการ กด "เพิ่มโครงการ" เพื่อเริ่มต้น</p>
               </td></tr>
             )}
-            {projects.map((p, i) => (
+            {filtered.map((p, i) => (
               <tr key={p.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
                 <td className="px-4 py-3 text-accent-blue text-sm font-mono">{p.id}</td>
                 <td className="px-4 py-3 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</td>

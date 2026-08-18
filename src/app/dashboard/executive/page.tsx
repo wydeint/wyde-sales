@@ -258,7 +258,9 @@ export default function ExecutivePage() {
       {/* Header */}
       <PageHeader
         title="Sales Performance"
-        subtitle="ยอดขายนับจาก order_date · ยอดส่งมอบจาก actual_deliver_date"
+        // Was "ยอดขายนับจาก order_date · ยอดส่งมอบจาก actual_deliver_date" — those are
+        // database column names, not words the sales team uses.
+        subtitle="ยอดขายนับจากวันที่ขาย · ยอดส่งมอบนับจากวันส่งมอบจริง"
         className="mb-5"
       />
 
@@ -268,7 +270,7 @@ export default function ExecutivePage() {
       <div className="tab-group mb-5 w-fit">
         <button onClick={() => setMainTab('performance')}
           className={`tab-btn ${mainTab === 'performance' ? 'active' : ''}`}>
-          <BarChart3 size={14} />Sales Performance
+          <BarChart3 size={14} />ภาพรวม
         </button>
         <button onClick={() => setMainTab('team')}
           className={`tab-btn ${mainTab === 'team' ? 'active' : ''}`}>

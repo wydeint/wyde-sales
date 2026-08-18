@@ -12,20 +12,25 @@ import { getPeriodBounds, UNIT_LABELS, type PeriodUnit } from '@/lib/period'
  * fixed box slides the text ~41px each way — more visible than the box resizing.
  *
  * So every text slot reserves its own width instead:
- *   - the period name sits in a 34px slot, right-aligned, so its right edge is
- *     pinned ("เม.ย." is the widest at 29px)
- *   - the year sits in a 32px slot with tabular figures, so the digits never
- *     shift between 2568 / 2569 / 2570
- *   - the date range underneath has a fixed 108px slot and is always rendered,
- *     so it can never push the content below it around
- * Week and today carry their dates in the name itself, so they get a wider slot
- * and hide the separate year.
+ *   - the whole label sits in one group of a fixed GROUP width, so the arrows
+ *     and everything after them never move, whatever the unit
+ *   - inside it, the period name gets 34px right-aligned and the year 32px with
+ *     tabular figures, pinned to the group's right edge — so across
+ *     month/quarter/year the digits never shift between 2568 / 2569 / 2570
+ *   - the date range underneath has its own fixed slot and always renders, so
+ *     it can never push the content below it around
+ *
+ * Week and today carry their dates in the name itself and fill the group alone.
+ * The group has to be sized for *them*, not for the month labels: the first cut
+ * gave the wide units their own bigger slot, which moved the arrows 34px on
+ * Finance every time the unit changed — the exact bug this component exists to
+ * avoid. Widths below are the measured worst cases in the app's own font.
  */
 
-const SLOT_NAME = 34
-const SLOT_NAME_WIDE = 104   // week / today, whose name is a date range
-const SLOT_YEAR = 32
-const SLOT_RANGE = 108
+const SLOT_NAME = 34         // "เม.ย." is widest at 30px
+const SLOT_YEAR = 32         // "2569" is 31px
+const SLOT_GROUP = 106       // "28 เม.ย.–31 เม.ย." is widest at 104px
+const SLOT_RANGE = 114       // "28 เม.ย. – 31 เม.ย. 2569" is widest at 111px
 
 export default function PeriodPicker({
   unit, setUnit, offset, setOffset,
@@ -67,14 +72,18 @@ export default function PeriodPicker({
 
           <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card flex items-center gap-1"
             style={{ color: 'var(--text-1)' }}>
-            <span style={{ display: 'inline-block', width: wideName ? SLOT_NAME_WIDE : SLOT_NAME, textAlign: 'right' }}>
-              {b.name}
+            {/* One fixed-width group for every unit — the arrows sit outside it
+                and therefore never move. */}
+            <span style={{ display: 'inline-flex', width: SLOT_GROUP, justifyContent: 'flex-end', gap: 4 }}>
+              {wideName ? (
+                <span style={{ width: '100%', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{b.name}</span>
+              ) : (
+                <>
+                  <span style={{ width: SLOT_NAME, textAlign: 'right' }}>{b.name}</span>
+                  <span style={{ width: SLOT_YEAR, textAlign: 'left', fontVariantNumeric: 'tabular-nums' }}>{b.year}</span>
+                </>
+              )}
             </span>
-            {!wideName && (
-              <span style={{ display: 'inline-block', width: SLOT_YEAR, textAlign: 'left', fontVariantNumeric: 'tabular-nums' }}>
-                {b.year}
-              </span>
-            )}
             {/* Marks "this is the current period" without changing the layout —
                 the dot slot is always there, only its colour changes. */}
             <span aria-hidden style={{

@@ -74,7 +74,11 @@ export default function PeriodPicker({
             style={{ color: 'var(--text-1)' }}>
             {/* One fixed-width group for every unit — the arrows sit outside it
                 and therefore never move. */}
-            <span style={{ display: 'inline-flex', width: SLOT_GROUP, justifyContent: 'flex-end', gap: 4 }}>
+            {/* Centred, not right-aligned: the name+year pair is always exactly
+                SLOT_NAME + gap + SLOT_YEAR wide whatever the content, so centring
+                it keeps the year pinned just as flex-end did — and stops the short
+                labels from hugging the right edge of the 106px group. */}
+            <span style={{ display: 'inline-flex', width: SLOT_GROUP, justifyContent: 'center', gap: 4 }}>
               {wideName ? (
                 <span style={{ width: '100%', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{b.name}</span>
               ) : (

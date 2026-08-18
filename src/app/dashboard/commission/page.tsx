@@ -7,6 +7,8 @@ import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { COMMISSION_STATUSES } from '@/lib/status'
+import PeriodPicker from '@/components/ui/PeriodPicker'
+import { getPeriodBounds, type PeriodUnit } from '@/lib/period'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -521,43 +523,17 @@ function StatusTab({
   const canApprove = ['admin', 'admin_sales'].includes(myRole)
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterSales, setFilterSales] = useState<string>('all')
-  const [periodMode, setPeriodMode] = useState<'month' | 'quarter' | 'year'>('month')
+  const [periodMode, setPeriodMode] = useState<PeriodUnit>('month')
+  const [periodOffset, setPeriodOffset] = useState(0)
   const [saving, setSaving] = useState<string | null>(null)
   const supabase = createClient()
 
   const now = new Date()
   const curMonth = now.toISOString().slice(0, 7)
   const curYear = now.getFullYear()
-  const curQ = Math.floor(now.getMonth() / 3) + 1
 
-  // Build period options
-  const monthOptions = useMemo(() => {
-    const opts: string[] = []
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(curYear, now.getMonth() - i, 1)
-      opts.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-    }
-    return opts
-  }, [curYear])
-  const quarterOptions = useMemo(() => {
-    const opts: { label: string; value: string }[] = []
-    for (let y = curYear; y >= curYear - 1; y--) {
-      for (let q = 4; q >= 1; q--) {
-        if (y === curYear && q > curQ) continue
-        opts.push({ label: `Q${q} ${y + 543}`, value: `${y}-Q${q}` })
-      }
-    }
-    return opts
-  }, [curYear, curQ])
-  const yearOptions = useMemo(() => {
-    const opts: number[] = []
-    for (let y = curYear; y >= curYear - 3; y--) opts.push(y)
-    return opts
-  }, [curYear])
-
-  const [selMonth, setSelMonth]     = useState(curMonth)
-  const [selQuarter, setSelQuarter] = useState(`${curYear}-Q${curQ}`)
-  const [selYear, setSelYear]       = useState(curYear)
+  // The three option lists (12 months, 8 quarters, 4 years) and the three
+  // selection states they fed are gone — PeriodPicker walks periods by offset.
 
   function getCommission(j: Job) { return calcTier(j.revenue_ex_vat || 0, tiers) }
   function getStatus(j: Job) {
@@ -567,21 +543,16 @@ function StatusTab({
   }
   function getMonth(j: Job) { return normalizeYM(j.commission_month || j.actual_deliver_date?.slice(0, 7) || '') }
 
+  // Compares against the shared period bounds instead of three hand-rolled
+  // comparisons against three separate pieces of state.
+  const periodBounds = getPeriodBounds(periodMode, periodOffset)
   function matchPeriod(j: Job): boolean {
     const ym = getMonth(j)
     if (!ym) return false
-    if (periodMode === 'month') return ym === selMonth
-    if (periodMode === 'quarter') {
-      const [y, q] = selQuarter.split('-Q')
-      const qNum = parseInt(q)
-      const [jy, jm] = ym.split('-').map(Number)
-      const jq = Math.floor((jm - 1) / 3) + 1
-      return jy === parseInt(y) && jq === qNum
-    }
-    return ym.startsWith(String(selYear))
+    return ym >= periodBounds.start.slice(0, 7) && ym <= periodBounds.end.slice(0, 7)
   }
 
-  const periodJobs = useMemo(() => jobs.filter(matchPeriod), [jobs, periodMode, selMonth, selQuarter, selYear])
+  const periodJobs = useMemo(() => jobs.filter(matchPeriod), [jobs, periodMode, periodOffset])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     return periodJobs.filter(j => {
@@ -610,33 +581,10 @@ function StatusTab({
 
   return (
     <div className="space-y-4">
-      {/* Period selector */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex gap-1 p-1 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-          {(['month', 'quarter', 'year'] as const).map(m => (
-            <button key={m} onClick={() => setPeriodMode(m)}
-              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold"
-              style={{ background: periodMode === m ? 'var(--accent)' : 'transparent', color: periodMode === m ? '#fff' : 'var(--text-2)' }}>
-              {m === 'month' ? 'เดือน' : m === 'quarter' ? 'ไตรมาส' : 'ปี'}
-            </button>
-          ))}
-        </div>
-        {periodMode === 'month' && (
-          <select value={selMonth} onChange={e => setSelMonth(e.target.value)} className="field-input" style={{ width: 'auto' }}>
-            {monthOptions.map(ym => <option key={ym} value={ym}>{monthLabel(ym)}</option>)}
-          </select>
-        )}
-        {periodMode === 'quarter' && (
-          <select value={selQuarter} onChange={e => setSelQuarter(e.target.value)} className="field-input" style={{ width: 'auto' }}>
-            {quarterOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        )}
-        {periodMode === 'year' && (
-          <select value={selYear} onChange={e => setSelYear(Number(e.target.value))} className="field-input" style={{ width: 'auto' }}>
-            {yearOptions.map(y => <option key={y} value={y}>{y + 543}</option>)}
-          </select>
-        )}
-      </div>
+      {/* Period selector — was hand-rolled pills plus a dropdown that swapped per
+          mode, the same shape (and the same width jitter) that PeriodPicker was
+          built to replace on Sales Targets. */}
+      <PeriodPicker unit={periodMode} setUnit={setPeriodMode} offset={periodOffset} setOffset={setPeriodOffset} />
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3">

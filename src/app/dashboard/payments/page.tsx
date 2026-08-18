@@ -7,6 +7,7 @@ import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
+import { fetchAllRows } from '@/lib/fetchAll'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Installment {
@@ -269,8 +270,14 @@ export default function PaymentsPage() {
     ])
 
     const jobIds = (jobsRaw || []).map((j: any) => j.id)
+    // Chunked: these jobs have 1,184 instalments between them and PostgREST caps
+    // a select at 1,000, silently. The missing rows dropped out of paid_total,
+    // which made คงเหลือ too high on whichever jobs lost them.
     const { data: instsRaw } = jobIds.length > 0
-      ? await supabase.from('payments').select('id, job_id, installment_no, installment_name, amount, paid_amount, status, slip_url, receipt_url').in('job_id', jobIds).order('installment_no')
+      ? await fetchAllRows<Installment & { job_id: string }>(() =>
+          supabase.from('payments')
+            .select('id, job_id, installment_no, installment_name, amount, paid_amount, status, slip_url, receipt_url')
+            .in('job_id', jobIds).order('id'))
       : { data: [] }
 
     const instMap = new Map<string, Installment[]>()
@@ -278,6 +285,9 @@ export default function PaymentsPage() {
       if (!instMap.has(p.job_id)) instMap.set(p.job_id, [])
       instMap.get(p.job_id)!.push(p)
     }
+    // The query orders by id so the chunks cannot overlap; badges still need to
+    // read 1, 2, 3, so sort each job's own list here.
+    for (const list of instMap.values()) list.sort((a, b) => a.installment_no - b.installment_no)
 
     const built: JobRow[] = (jobsRaw || []).map((j: any) => {
       const insts: Installment[] = instMap.get(j.id) || []

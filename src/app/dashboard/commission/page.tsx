@@ -586,54 +586,36 @@ function StatusTab({
         )}
       </FilterBar>
 
-      {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Period summary */}
-        <div className="col-span-2 rounded-[11px] p-4" style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
-          <div className="flex gap-6">
-            <div>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ค่าคอมเซลล์</p>
-              <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(periodComm)}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{periodJobs.length} งาน</p>
-            </div>
-            <div>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ค่าแนะนำ</p>
-              <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(periodRef)}</p>
-            </div>
-            <div>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>รวม</p>
-              <p className="text-kpi-number" style={{ color: 'var(--accent-green)' }}>{f(periodComm + periodRef)}</p>
-            </div>
-          </div>
+      {/* One row of four, not a strip of three plus a grid of four.
+          The old pair repeated ค่าแนะนำ in both, and รวม was just the sum of the
+          two figures beside it — seven numbers where four carry the meaning, and
+          on a phone that filled half the screen before the table appeared.
+          The total leads and names its own split; the three statuses follow. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="ds-card-sm p-4">
+          <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รวมทั้งหมด</p>
+          <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(periodComm + periodRef)}</p>
+          <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+            ค่าคอม {f(periodComm)} · ค่าแนะนำ {f(periodRef)}
+          </p>
         </div>
 
-        {/* Status cards */}
-        {STATUSES.map(s => {
-          const cfg = STATUS_CFG[s]
+        {STATUSES.map(st => {
+          const cfg = STATUS_CFG[st]
           const Icon = cfg.icon
-          const commAmt = s === 'pending' ? pendingComm : s === 'approved' ? approvedComm : paidComm
-          const cnt = periodJobs.filter(j => getStatus(j) === s).length
+          const commAmt = st === 'pending' ? pendingComm : st === 'approved' ? approvedComm : paidComm
+          const cnt = periodJobs.filter(j => getStatus(j) === st).length
           return (
-            <div key={s} className="ds-card-sm p-4">
-              <div className="flex items-center gap-1.5 mb-2">
+            <div key={st} className="ds-card-sm p-4">
+              <div className="flex items-center gap-1.5 mb-1">
                 <Icon size={13} style={{ color: cfg.color }} />
                 <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
               </div>
-              <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(commAmt)}</p>
+              <p className="text-kpi-money" style={{ color: 'var(--text-1)' }}>{f(commAmt)}</p>
               <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{cnt} งาน</p>
             </div>
           )
         })}
-
-        {/* Referral total */}
-        <div className="ds-card-sm p-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Users size={13} style={{ color: 'var(--accent-blue)' }} />
-            <p className="text-xs font-semibold" style={{ color: 'var(--accent-blue)' }}>ค่าแนะนำรวม</p>
-          </div>
-          <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{f(totalRef)}</p>
-          <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{referrals.length} รายการ</p>
-        </div>
       </div>
 
       {/* Status chips get the shared .tab-group chrome and sit directly above the

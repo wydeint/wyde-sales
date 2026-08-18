@@ -589,7 +589,20 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 ══════════════════════════════════════════ */
 
 /* Smooth touch scroll + axis lock for ALL scroll containers */
-[class*="overflow-x-auto"],
+
+/* Horizontal table wrappers: contain the X axis ONLY.
+   `overflow-x: auto` with no overflow-y makes overflow-y compute to `auto`, so
+   these divs are vertical scroll containers with nothing to scroll. Containing
+   the Y axis as well made them swallow the wheel and refuse to chain to the
+   page — with the cursor over a tall table, which is most of the screen on
+   Data Entry and Origin Pool, the page would not scroll at all. */
+[class*="overflow-x-auto"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* Panels and boxes that genuinely scroll vertically — both axes contained,
+   so an iOS bounce stays inside the panel instead of dragging the page. */
 [class*="overflow-auto"],
 [data-panel],
 .modal-panel {

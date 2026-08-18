@@ -63,15 +63,19 @@ export default function PeriodPicker({
         ))}
       </div>
 
-      <div className="flex flex-col items-center">
+      <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1">
           <button onClick={() => setOffset(offset - 1)} aria-label="ช่วงก่อนหน้า"
             className="p-1.5 rounded-[8px] transition-colors" style={{ background: 'var(--hover-bg)' }}>
             <ChevronLeft size={15} style={{ color: 'var(--text-2)' }} />
           </button>
 
-          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card flex items-center gap-1"
-            style={{ color: 'var(--text-1)' }}>
+          {/* Not .ds-card: that class carries padding: var(--space-lg), which wins
+              over Tailwind's px-3 py-1.5 and made this pill 67px tall instead of ~30
+              — 24px of padding on every side. The pages this pattern was copied from
+              have the same bug. Border and background are set directly instead. */}
+          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] flex items-center gap-1"
+            style={{ color: 'var(--text-1)', background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             {/* One fixed-width group for every unit — the arrows sit outside it
                 and therefore never move. */}
             {/* Centred, not right-aligned: the name+year pair is always exactly
@@ -104,7 +108,10 @@ export default function PeriodPicker({
           </button>
         </div>
 
-        <span className="text-micro mt-0.5 text-center"
+        {/* Beside the stepper, not under it — on a 375px screen the stacked
+            version made this control 136px tall. Fixed width so it still cannot
+            shift anything; wraps to its own line only when the row runs out. */}
+        <span className="text-micro"
           style={{ color: 'var(--text-3)', width: SLOT_RANGE, fontVariantNumeric: 'tabular-nums' }}>
           {b.range}
         </span>

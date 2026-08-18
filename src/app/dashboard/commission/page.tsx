@@ -584,7 +584,9 @@ function StatusTab({
       {/* Period selector — was hand-rolled pills plus a dropdown that swapped per
           mode, the same shape (and the same width jitter) that PeriodPicker was
           built to replace on Sales Targets. */}
-      <PeriodPicker unit={periodMode} setUnit={setPeriodMode} offset={periodOffset} setOffset={setPeriodOffset} />
+      <FilterBar>
+        <PeriodPicker unit={periodMode} setUnit={setPeriodMode} offset={periodOffset} setOffset={setPeriodOffset} />
+      </FilterBar>
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3">

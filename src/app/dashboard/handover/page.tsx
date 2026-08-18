@@ -335,7 +335,7 @@ export default function HandoverPage() {
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             <ChevronLeft size={16} />
           </button>
-          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] ds-card" style={{ color: 'var(--text-1)' }}>
+          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px]" style={{ color: "var(--text-1)", background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
             {monthLabel(selectedMonth)}
             {isThisMonth && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
           </span>

@@ -7,6 +7,7 @@ import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Warranty {
@@ -163,6 +164,9 @@ export default function WarrantyPage() {
   const projOptions = [{ value: '', label: '— เลือกโครงการ —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]
   const statusOptions = STATUS.map(s => ({ value: s.value, label: s.label }))
 
+  const [activePage, setActivePage] = useState(1)
+  const [expiredPage, setExpiredPage] = useState(1)
+
   const filtered = warranties.filter(w => {
     const q = search.toLowerCase()
     const qNorm = q.replace(/-/g, '')
@@ -177,6 +181,12 @@ export default function WarrantyPage() {
   const active = filtered.filter(w => computedStatus(w.warranty_end) === 'active' || computedStatus(w.warranty_end) === 'expiring_soon')
   const expired = filtered.filter(w => computedStatus(w.warranty_end) === 'expired')
   const expiringSoon = filtered.filter(w => computedStatus(w.warranty_end) === 'expiring_soon')
+
+  // Two independent tables on one page, so each gets its own page number —
+  // paging the expired list should not move the reader's place in the active one.
+  useEffect(() => { setActivePage(1); setExpiredPage(1) }, [search, projectFilter, statusFilter])
+  const activePaged = active.slice((activePage - 1) * PAGE_SIZE, activePage * PAGE_SIZE)
+  const expiredPaged = expired.slice((expiredPage - 1) * PAGE_SIZE, expiredPage * PAGE_SIZE)
 
   function openEdit(w: Warranty) {
     setEditing(w)
@@ -257,7 +267,7 @@ export default function WarrantyPage() {
       {active.length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>อยู่ในประกัน ({active.length})</h2>
-          <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
+          <div className="ds-card overflow-hidden tbl-scroll tbl-head-sticky" style={{ padding: 0 }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -271,7 +281,7 @@ export default function WarrantyPage() {
                 </tr>
               </thead>
               <tbody>
-                {active.map((w, i) => {
+                {activePaged.map((w, i) => {
                   const st = STATUS.find(s => s.value === computedStatus(w.warranty_end)) || STATUS[0]
                   const days = daysLeft(w.warranty_end)
                   const custName = (w as any).jobs?.customer_name || (w as any).customers?.customer_name || '-'
@@ -319,6 +329,7 @@ export default function WarrantyPage() {
                 })}
               </tbody>
             </table>
+            <Pagination page={activePage} setPage={setActivePage} total={active.length} unit="ราย" />
           </div>
         </div>
       )}
@@ -327,7 +338,7 @@ export default function WarrantyPage() {
       {expired.length > 0 && (
         <div>
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>หมดประกันแล้ว ({expired.length})</h2>
-          <div className="ds-card overflow-hidden" style={{ padding: 0, opacity: 0.75 }}>
+          <div className="ds-card overflow-hidden tbl-scroll tbl-head-sticky" style={{ padding: 0, opacity: 0.75 }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -338,7 +349,7 @@ export default function WarrantyPage() {
                 </tr>
               </thead>
               <tbody>
-                {expired.map((w, i) => {
+                {expiredPaged.map((w, i) => {
                   const custName = (w as any).jobs?.customer_name || (w as any).customers?.customer_name || '-'
                   const room = w.room || (w as any).jobs?.room_no || '-'
                   return (
@@ -359,6 +370,7 @@ export default function WarrantyPage() {
                 })}
               </tbody>
             </table>
+            <Pagination page={expiredPage} setPage={setExpiredPage} total={expired.length} unit="ราย" />
           </div>
         </div>
       )}

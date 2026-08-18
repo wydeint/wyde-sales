@@ -11,6 +11,7 @@ import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { CRM_STAGES, crmStage, isProspectStage } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
@@ -510,7 +511,6 @@ export default function CustomersPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null)
-  const PAGE_SIZE = 25
   const [page, setPage] = useState(1)
 
   async function load() {
@@ -610,7 +610,6 @@ export default function CustomersPage() {
     return matchSearch && matchStatus && matchProject
   })
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -774,30 +773,8 @@ export default function CustomersPage() {
           </tbody>
         </table>
         {!loading && (
-          <div className="flex items-center justify-between px-4 py-2 text-xs flex-wrap gap-2" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
-            <span>แสดง {filtered.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0}–{Math.min(page * PAGE_SIZE, filtered.length)} จาก {filtered.length} ราย (ทั้งหมด {customers.length} ราย)</span>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="px-2 py-1 rounded disabled:opacity-30 transition-colors"
-                  style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>‹</button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 1).reduce<(number | '...')[]>((acc, n, idx, arr) => {
-                  if (idx > 0 && n - (arr[idx - 1] as number) > 1) acc.push('...')
-                  acc.push(n)
-                  return acc
-                }, []).map((n, idx) =>
-                  n === '...'
-                    ? <span key={`e${idx}`} className="px-1" style={{ color: 'var(--text-3)' }}>…</span>
-                    : <button key={n} onClick={() => setPage(n as number)}
-                        className="w-7 h-7 rounded text-xs font-semibold transition-colors"
-                        style={{ background: page === n ? 'var(--accent)' : 'var(--hover-bg)', color: page === n ? '#fff' : 'var(--text-2)' }}>{n}</button>
-                )}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="px-2 py-1 rounded disabled:opacity-30 transition-colors"
-                  style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>›</button>
-              </div>
-            )}
-          </div>
+          <Pagination page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE}
+            unit="ราย" totalLabel={`ทั้งหมด ${customers.length.toLocaleString('th-TH')} ราย`} />
         )}
       </div>
 

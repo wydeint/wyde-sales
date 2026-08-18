@@ -10,11 +10,14 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
 import StatusChip from '@/components/ui/StatusChip'
 import FilterBar from '@/components/ui/FilterBar'
+import Pagination from '@/components/ui/Pagination'
 import { COMMISSION_STATUSES, WORKING_STATUSES } from '@/lib/status'
 
 // ─────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────
+// 50, not the shared 25: these are cards in a 4-up grid, so 50 is about the
+// same amount of scrolling as 25 table rows.
 const PAGE_SIZE = 50
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
@@ -743,9 +746,16 @@ export default function JobsPage() {
     return pa.num - pb.num
   }
 
+  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO, filterNoPO])
+
+  // Paginate the flat list first, then group what is on this page. Grouping the
+  // whole set and paginating groups would give wildly uneven pages — one project
+  // has hundreds of rooms, most have a handful.
+  const paginated = useMemo(() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filtered, page])
+
   const groupedJobs = useMemo(() => {
     const groups = new Map<string, { projectName: string; jobs: Job[] }>()
-    for (const j of filtered) {
+    for (const j of paginated) {
       const pid = j.project_id || '__no_project__'
       const name = (j.projects as any)?.name || j.project_id || 'ไม่ระบุโครงการ'
       if (!groups.has(pid)) groups.set(pid, { projectName: name, jobs: [] })
@@ -754,7 +764,7 @@ export default function JobsPage() {
     return [...groups.entries()]
       .map(([pid, g]) => ({ projectId: pid, projectName: g.projectName, jobs: g.jobs.sort((a, b) => sortRoomNo(a.room_no, b.room_no)) }))
       .sort((a, b) => a.projectName.localeCompare(b.projectName, 'th'))
-  }, [filtered])
+  }, [paginated])
 
   function exportCSV() {
     const headers = [
@@ -961,7 +971,10 @@ export default function JobsPage() {
           </div>
         )
       })()}
-      <p className="text-xs" style={{ color: 'var(--text-3)' }}>แสดง {filtered.length} งาน</p>
+      <div className="ds-card" style={{ padding: 0 }}>
+        <Pagination page={page} setPage={setPage} total={filtered.length} pageSize={PAGE_SIZE} unit="งาน"
+          totalLabel={`ทั้งหมด ${jobs.length.toLocaleString('th-TH')} งาน`} />
+      </div>
 
       {/* ─── Detail Drawer ─── */}
       {open && (

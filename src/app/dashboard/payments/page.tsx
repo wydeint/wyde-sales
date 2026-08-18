@@ -6,6 +6,7 @@ import { ExternalLink, FileText, X } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Installment {
@@ -301,6 +302,8 @@ export default function PaymentsPage() {
 
   useEffect(() => { load() }, [load])
 
+  const [page, setPage] = useState(1)
+
   const filtered = useMemo(() => {
     let r = rows
     if (filterProject) r = r.filter(j => j.project_id === filterProject)
@@ -311,6 +314,11 @@ export default function PaymentsPage() {
     }
     return r
   }, [rows, filterProject, filterSales, search])
+
+  // Reset to page 1 whenever the filter changes, or a narrow filter can land
+  // the reader on an empty page that used to have rows.
+  useEffect(() => { setPage(1) }, [search, filterProject, filterSales])
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const totalPaid = filtered.reduce((s, j) => s + j.paid_total, 0)
   const totalUnpaid = filtered.reduce((s, j) => s + j.unpaid_total, 0)
@@ -362,11 +370,11 @@ export default function PaymentsPage() {
         </div>
 
       {/* Table */}
-      <div className="tbl-scroll rounded-[11px]"
+      <div className="tbl-scroll tbl-head-sticky rounded-[11px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
-            <tr style={{ background: 'var(--hover-bg)', position: 'sticky', top: 0, zIndex: 10 }}>
+            <tr style={{ background: 'var(--hover-bg)' }}>
               {['ห้อง / โครงการ', 'ลูกค้า / Sales', 'งวดชำระ', 'รับแล้ว', 'คงเหลือ', 'เอกสาร'].map(h => (
                 <th key={h} className="text-xs font-semibold" style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '1px solid var(--divider)', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
@@ -375,7 +383,7 @@ export default function PaymentsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-3)' }}>ไม่พบข้อมูล</td></tr>
-            ) : filtered.map((job, ri) => {
+            ) : paginated.map((job, ri) => {
               const paidCount = job.installments.filter(i => i.status === 'paid').length
               const docsDone = [job.quotation1_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length
               return (
@@ -436,6 +444,8 @@ export default function PaymentsPage() {
             })}
           </tbody>
         </table>
+        <Pagination page={page} setPage={setPage} total={filtered.length} unit="งาน"
+          totalLabel={`ทั้งหมด ${rows.length.toLocaleString('th-TH')} งาน`} />
       </div>
 
       {selected && <RowDrawer job={selected} onClose={() => setSelected(null)} />}

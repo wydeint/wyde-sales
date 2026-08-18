@@ -400,6 +400,19 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 }
 .tbl-scroll tbody td { padding: 10px 16px; }
 
+/* Sticky column headers. Opt in with .tbl-head-sticky on the scroll wrapper.
+   Without it, scrolling past the first screen loses the column names for the
+   rest of the table — on Wyde Clients that was 67 screens of unlabelled
+   numbers. The header pins against the page scroller (main), so it needs an
+   opaque background of its own or rows show through as they pass under. */
+.tbl-head-sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--card-bg);
+  box-shadow: inset 0 -1px 0 var(--divider);
+}
+
 /* ══════════════════════════════════════════
    Tab group — shared across pages (Finance, Commission, Handover, etc.)
 ══════════════════════════════════════════ */

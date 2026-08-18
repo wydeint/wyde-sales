@@ -9,6 +9,7 @@ import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 
 interface Lead {
   id: number
@@ -177,6 +178,7 @@ export default function LeadsPage() {
   const [addingId, setAddingId] = useState<number | null>(null)
   const [addError, setAddError] = useState<string>('')
   const [fetchError, setFetchError] = useState('')
+  const [page, setPage] = useState(1)
   // System contact lookups (customers + jobs)
   const [sysPhones, setSysPhones] = useState<Set<string>>(new Set())
   const [sysRooms, setSysRooms] = useState<Set<string>>(new Set())
@@ -435,6 +437,9 @@ export default function LeadsPage() {
     return matchSearch && matchProject && matchStatus
   })
 
+  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus])
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   // Counts the filtered set — the block sits below the filter bar, so counting
   // every lead would leave it looking frozen when a filter is applied.
   const stats = {
@@ -625,7 +630,7 @@ export default function LeadsPage() {
 
       {/* Table */}
       <div className="ds-card">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto tbl-head-sticky">
           <table className="w-full" style={{ minWidth: 780 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -640,7 +645,7 @@ export default function LeadsPage() {
               {!loading && filtered.length === 0 && (
                 <TableEmpty colSpan={9} icon={Users} message={leads.length === 0 ? 'ยังไม่มีข้อมูล' : 'ไม่พบ lead ที่ตรงกับการค้นหา'} sub={leads.length === 0 ? 'กด "นำเข้า xlsx" เพื่อเริ่มต้น' : undefined} />
               )}
-              {filtered.map((l, i) => (
+              {paginated.map((l, i) => (
                 <tr key={l.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
                   <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                     {l.projects?.name || l.project_id || '—'}
@@ -689,9 +694,8 @@ export default function LeadsPage() {
           </table>
         </div>
         {!loading && (
-          <div className="px-4 py-2 text-xs" style={{ borderTop: '1px solid var(--divider)', color: 'var(--text-3)' }}>
-            แสดง {filtered.length} จาก {leads.length} lead
-          </div>
+          <Pagination page={page} setPage={setPage} total={filtered.length} unit="lead"
+            totalLabel={`โหลดมา ${leads.length.toLocaleString('th-TH')} lead`} />
         )}
       </div>
     </div>

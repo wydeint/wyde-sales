@@ -95,12 +95,18 @@ function calcB2CInstallments(plan: string, total: number, deposit: number) {
     { no: 2, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: 50, amount: total * 0.5, trigger: false, final: true },
   ]
   if (plan === 'C') {
+    // 50% of the FULL job value, with the deposit coming out of the last
+    // instalment — ฿100,000 with a ฿10,000 deposit is 10,000 / 50,000 / 40,000.
+    // This file had been splitting the remainder instead (10,000 / 45,000 /
+    // 45,000), so the same plan produced different instalments depending on
+    // which screen it was set up from. 13 of 52 plan-C jobs carry that shape.
     const dep = deposit > 0 ? deposit : Math.round(total * 0.1)
-    const rest = (total - dep) / 2
+    const first50 = Math.round(total * 0.5)
+    const last50 = total - dep - first50
     return [
       { no: 1, name: 'มัดจำจองสิทธิ์', pct: Math.round((dep / total) * 100), amount: dep, trigger: false, final: false },
-      { no: 2, name: 'ชำระ 50% แรก เริ่มงาน', pct: Math.round((rest / total) * 100), amount: rest, trigger: true, final: false },
-      { no: 3, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: Math.round((rest / total) * 100), amount: rest, trigger: false, final: true },
+      { no: 2, name: 'ชำระ 50% แรก เริ่มงาน', pct: 50, amount: first50, trigger: true, final: false },
+      { no: 3, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: Math.round((last50 / total) * 100), amount: last50, trigger: false, final: true },
     ]
   }
   return []

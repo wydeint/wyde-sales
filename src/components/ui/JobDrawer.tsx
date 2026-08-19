@@ -276,24 +276,11 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       voucher_code: i === 0 && useVoucher && voucherCode ? voucherCode : null,
       voucher_amount: i === 0 && useVoucher && voucherAmount > 0 ? voucherAmount : null,
     })))
-    // Auto-send LINE for first paid installment (not B2B PO-only, and never for
-    // a backfill — the group does not need a notice about an old payment)
-    if (!isSingleB2B && firstInst && !isBackfill) {
-      const vcCode = useVoucher && voucherCode ? voucherCode : null
-      const vcAmt = useVoucher && voucherAmount > 0 ? voucherAmount : 0
-      const instId = `PAY-${job.id}-1`
-      // work_days / work_start_date were just written above; `job` still holds the old values
-      const lineMsg = generateLineMsg({ ...job, work_days: workDays }, {
-        id: instId, installment_no: 1, installment_name: firstInst.name,
-        amount: firstInst.amount, paid_amount: firstPaidAmount || firstInst.amount,
-        percentage: firstInst.pct, status: 'paid', due_date: null, paid_date: paidDate,
-        is_work_trigger: firstInst.trigger, is_final: firstInst.final,
-        channel, slip_url: slipPosted ? 'posted' : null, receipt_url: receiptPosted ? 'posted' : null,
-        voucher_code: vcCode, voucher_amount: vcAmt, line_notified_at: null,
-      }, firstInst.trigger ? paidDate : null)
-      const result = await sendLineNotify(lineMsg)
-      if (result.ts) await supabase.from('payments').update({ line_notified_at: result.ts }).eq('id', instId)
-    }
+    // No automatic LINE post. Notifying the group is a deliberate act now —
+    // the instalment row carries a LINE button and a copy button for that.
+    // This modal was the last place still posting on its own, which meant
+    // setting a plan from Prospects notified the group while doing the same
+    // thing from My Deals did not.
     setSaving(false); onSaved(); onClose()
   }
 
@@ -584,16 +571,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
       voucher_code: vcCode,
       voucher_amount: vcAmt || null,
     }).eq('id', selected.id)
-    // Auto-send LINE (only if not already sent)
-    if (!selected.line_notified_at) {
-      const lineMsg = generateLineMsg(
-        job,
-        { ...selected, paid_date: paidDate, paid_amount: paidAmount, channel, voucher_code: vcCode, voucher_amount: vcAmt },
-        selected.is_work_trigger && !job.work_start_date ? paidDate : null,  // written above, not yet on `job`
-      )
-      const result = await sendLineNotify(lineMsg)
-      if (result.ts) await supabase.from('payments').update({ line_notified_at: result.ts }).eq('id', selected.id)
-    }
+    // Same here — recording a payment no longer posts by itself.
     setSaving(false); onSaved(); onClose()
   }
 

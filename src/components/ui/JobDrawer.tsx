@@ -1619,12 +1619,14 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
               cancel_type: type, cancel_date: date || null,
               cancel_amount: amount || null, cancel_notes: notes || null,
             }).eq('id', job.id)
-            if (amount > 0) {
+            // Refund only — a forfeited deposit is money already received and
+            // already in รายรับ; booking it again as income double-counted it.
+            if (type === 'refund' && amount > 0) {
               await supabase.from('finance_entries').insert({
-                type: type === 'forfeit' ? 'income' : 'expense',
-                category: type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงินยกเลิก',
+                type: 'expense',
+                category: 'คืนเงินยกเลิก',
                 amount, entry_date: date,
-                description: `${type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงิน'}: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
+                description: `คืนเงินยกเลิก: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
                 ref_id: job.id,
                 created_by: session?.user?.id || null,
               })

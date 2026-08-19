@@ -946,13 +946,16 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 cancel_amount: amount || null, cancel_notes: notes || null,
               }).eq('id', focusJobId)
             }
-            if (amount > 0) {
+            // Only a refund moves money. A forfeited deposit was already banked and
+            // already counted as รายรับ when the instalment was marked paid —
+            // adding an income row here counted the same ฿ twice.
+            if (type === 'refund' && amount > 0) {
               const { error: finErr } = await supabase.from('finance_entries').insert({
-                type: type === 'forfeit' ? 'income' : 'expense',
-                category: type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงินยกเลิก',
+                type: 'expense',
+                category: 'คืนเงินยกเลิก',
                 amount,
                 entry_date: date,
-                description: `${type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงิน'}: ${customer.customer_name}${notes ? ' — ' + notes : ''}`,
+                description: `คืนเงินยกเลิก: ${customer.customer_name}${notes ? ' — ' + notes : ''}`,
                 ref_id: customer.id,
                 created_by: session?.user?.id || null,
               })

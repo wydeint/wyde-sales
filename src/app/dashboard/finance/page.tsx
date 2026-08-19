@@ -263,7 +263,10 @@ export default function FinancePage() {
   // Period income
   const periodDelivered = deliveredJobs.filter(j => j.actual_deliver_date >= start && j.actual_deliver_date <= end)
   const periodPaid = paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end)
-  const periodExpenses = entries.filter(e => e.entry_date >= start && e.entry_date <= end)
+  // finance_entries holds both types. Filtering only by date counted every
+  // income row as an expense — the forfeited deposits showed up under รายจ่าย
+  // and inflated the total.
+  const periodExpenses = entries.filter(e => e.type === 'expense' && e.entry_date >= start && e.entry_date <= end)
 
   const periodDeliveredRevenue = periodDelivered.reduce((s, j) => s + (j.revenue_inc_vat || j.revenue_ex_vat || 0), 0)
   const periodPaidAmount = periodPaid.reduce((s, p) => s + (p.paid_amount || 0), 0)
@@ -287,7 +290,7 @@ export default function FinancePage() {
         .filter(p => p.paid_date?.startsWith(key))
         .reduce((s, p) => s + (p.paid_amount || 0), 0)
       const expense = entries
-        .filter(e => e.entry_date?.startsWith(key))
+        .filter(e => e.type === 'expense' && e.entry_date?.startsWith(key))
         .reduce((s, e) => s + (e.amount || 0), 0)
       return { label: `${MONTHS_TH[d.getMonth()]} ${beYear(d.getFullYear()).toString().slice(2)}`, key, received, expense }
     })
@@ -295,7 +298,7 @@ export default function FinancePage() {
 
   const chartMax = Math.max(...monthlyChart.map(m => Math.max(m.received, m.expense)), 1) * 1.2
 
-  const filteredEntries = entries.filter(e => e.entry_date >= start && e.entry_date <= end)
+  const filteredEntries = entries.filter(e => e.type === 'expense' && e.entry_date >= start && e.entry_date <= end)
   const payPeriodBase = payTab === 'outstanding'
     ? outstanding.filter(p => p.due_date >= start && p.due_date <= end)
     : payTab === 'paid'

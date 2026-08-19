@@ -1242,6 +1242,10 @@ function JobCancelModal({ onClose, onConfirm }: {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // A refund with no amount used to save happily and book no expense at all, so
+  // money left the company with nothing recording it. JOB-063 is how we found out.
+  const needsAmount = cancelType === 'refund' && !(Number(amount) > 0)
+
   async function confirm() { setSaving(true); await onConfirm(cancelType, Number(amount) || 0, date, notes); setSaving(false) }
 
   return (
@@ -1266,7 +1270,12 @@ function JobCancelModal({ onClose, onConfirm }: {
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>{cancelType === 'forfeit' ? 'ยอดที่ยึด (บาท)' : 'ยอดคืน (บาท)'}</label>
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
+              style={{ background: 'var(--input-bg)', border: `1px solid ${needsAmount ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }} />
+            {needsAmount && (
+              <p className="text-micro mt-1" style={{ color: 'var(--accent-red)' }}>
+                ต้องระบุยอดคืน เพื่อบันทึกเป็นรายจ่ายในหน้า Finance
+              </p>
+            )}
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>{cancelType === 'forfeit' ? 'วันที่ยึดเงิน' : 'วันที่คืนเงิน'}</label>
@@ -1283,7 +1292,7 @@ function JobCancelModal({ onClose, onConfirm }: {
         </div>
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 py-2 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={confirm} disabled={saving}
+          <button onClick={confirm} disabled={saving || needsAmount}
             className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white disabled:opacity-50"
             style={{ background: cancelType === 'forfeit' ? 'var(--accent-red)' : 'var(--accent-blue)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันยกเลิก'}

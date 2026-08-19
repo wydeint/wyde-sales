@@ -2265,7 +2265,8 @@ export default function MyDealsPage() {
         const activeRev = sumRev(activeJobs), activePaid = sumPaid(activeJobs)
         const activeDue = Math.max(activeRev - activePaid, 0)
         const activePct = activeRev > 0 ? Math.round(activePaid / activeRev * 100) : 0
-        const allDue = Math.max(sumRev([...activeJobs, ...doneJobs]) - sumPaid([...activeJobs, ...doneJobs]), 0)
+        const allRev = sumRev([...activeJobs, ...doneJobs])
+        const allDue = Math.max(allRev - sumPaid([...activeJobs, ...doneJobs]), 0)
         const owing = activeJobs.filter(j => j.total_amount - j.paid_amount_total > 1).length
         const fk = (n: number) => n >= 1000000 ? '฿' + (n / 1000000).toFixed(1) + 'M'
           : n > 0 ? '฿' + Math.round(n / 1000).toLocaleString('th-TH') + 'K' : '฿0'
@@ -2279,7 +2280,9 @@ export default function MyDealsPage() {
             <div className="ds-card-sm text-center">
               <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานที่ทำอยู่</p>
               <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{fk(activeRev)}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว {activePct}%</p>
+              {/* The all-rooms total lives here so nobody has to leave the page for
+                  it — Revenue is period-scoped and cannot answer "everything so far". */}
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว {activePct}% · รวมส่งมอบ {fk(allRev)}</p>
             </div>
             <div className="ds-card-sm text-center">
               <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>

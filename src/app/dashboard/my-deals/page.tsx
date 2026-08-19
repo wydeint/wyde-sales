@@ -271,6 +271,10 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       ? calcB2BSingleInstallment(total)
       : calcB2BInstallments(b2bCount, total, b2bPcts.slice(0, b2bCount))
   const firstInst = preview[0]
+  // A delivered room is being recorded after the fact. Its work started months
+  // ago, so today's payment date must not be written over work_start_date — and
+  // the trigger instalment must not clear it either.
+  const isBackfill = !!job.actual_deliver_date
 
   async function save() {
     if (clientType === 'B2B' && !isSingleB2B && !pctValid) return
@@ -279,7 +283,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       customer_type: clientType,
       payment_plan_type: clientType === 'B2C' ? plan : isSingleB2B ? 'po_bill' : String(b2bCount),
       work_days: workDays,
-      work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
+      ...(isBackfill ? {} : { work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null) }),
     }).eq('id', job.id)
     await supabase.from('payments').delete().eq('job_id', job.id)
     await supabase.from('payments').insert(preview.map((p, i) => ({
@@ -325,6 +329,12 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
           </div>
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
+        {isBackfill && (
+          <div className="mx-5 mt-4 rounded-[8px] p-3 text-xs"
+            style={{ background: 'color-mix(in srgb, var(--accent-amber) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)', color: 'var(--accent-amber)' }}>
+            ห้องนี้ส่งมอบแล้ว — บันทึกงวดย้อนหลังเท่านั้น วันเริ่มงานและสถานะงานจะไม่ถูกเปลี่ยน
+          </div>
+        )}
         <div className="p-5 space-y-4">
           {step === 'plan' ? (
             <>

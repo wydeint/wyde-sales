@@ -944,10 +944,15 @@ export default function JobDetailPage() {
               )}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setModal('pay')}
+              {/* Fourth screen with the same ordering trap: `delivered` is checked
+                  before `!hasPlan`, so a delivered room with no instalments only
+                  ever saw the collect modal, which has nothing to work on. */}
+              <button onClick={() => setModal(hasPlan ? 'pay' : 'setup')}
                 className="flex-1 py-2.5 rounded-[12px] font-semibold text-sm"
-                style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                แก้ไขงวดเงิน
+                style={hasPlan
+                  ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }
+                  : { background: 'var(--accent)', color: '#fff' }}>
+                {hasPlan ? 'แก้ไขงวดเงิน' : '+ ตั้งงวดเงินย้อนหลัง'}
               </button>
               <button onClick={() => setModal('handover')}
                 className="flex-1 py-2.5 rounded-[12px] font-semibold text-sm"

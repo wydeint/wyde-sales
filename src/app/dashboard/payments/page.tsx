@@ -340,17 +340,21 @@ export default function PaymentsPage() {
     return r
   }, [rows, filterProject, filterSales, search])
 
+  // Declared before `filtered`: useMemo runs its factory during render, so a
+  // const defined further down is still in the temporal dead zone and the page
+  // throws the moment a chip is clicked.
+  const moneyOf = (j: JobRow): MoneyFilter =>
+    j.installments.length === 0 ? 'noplan'
+    : j.unpaid_total > 1 ? 'owing'
+    : j.unpaid_total < -1 ? 'over'
+    : 'settled'
+
   const filtered = useMemo(
     () => filterMoney === 'all' ? preFiltered : preFiltered.filter(j => moneyOf(j) === filterMoney),
     [preFiltered, filterMoney]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Counts come from the set the other filters already narrowed, so a chip
   // always says how many it will actually show.
-  const moneyOf = (j: JobRow): MoneyFilter =>
-    j.installments.length === 0 ? 'noplan'
-    : j.unpaid_total > 1 ? 'owing'
-    : j.unpaid_total < -1 ? 'over'
-    : 'settled'
   const moneyCounts = useMemo(() => {
     const c = { all: preFiltered.length, owing: 0, settled: 0, over: 0, noplan: 0 } as Record<MoneyFilter, number>
     for (const j of preFiltered) c[moneyOf(j)]++

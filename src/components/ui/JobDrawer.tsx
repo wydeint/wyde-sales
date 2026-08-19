@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { calcB2BInstallments, calcB2BSingleInstallment, calcB2CInstallments } from '@/lib/paymentPlans'
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -119,35 +120,6 @@ export const todayStr = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function calcB2BSingleInstallment(total: number) {
-  return [{ no: 1, name: 'วางบิลเมื่อส่งมอบงาน', pct: 100, amount: total, trigger: false, final: true }]
-}
-function calcB2CInstallments(plan: string, total: number, deposit: number) {
-  if (plan === 'A') return [{ no: 1, name: 'ชำระเต็มจำนวน 100%', pct: 100, amount: total, trigger: true, final: true }]
-  if (plan === 'B') return [
-    { no: 1, name: 'ชำระ 50% แรก เริ่มงาน', pct: 50, amount: total * 0.5, trigger: true, final: false },
-    { no: 2, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: 50, amount: total * 0.5, trigger: false, final: true },
-  ]
-  if (plan === 'C') {
-    const dep = deposit > 0 ? deposit : Math.round(total * 0.1)
-    const first50 = Math.round(total * 0.5)
-    const last50 = total - dep - first50
-    return [
-      { no: 1, name: 'มัดจำจองสิทธิ์', pct: Math.round((dep / total) * 100), amount: dep, trigger: false, final: false },
-      { no: 2, name: 'ชำระ 50% แรก เริ่มงาน', pct: 50, amount: first50, trigger: true, final: false },
-      { no: 3, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: Math.round((last50 / total) * 100), amount: last50, trigger: false, final: true },
-    ]
-  }
-  return []
-}
-function calcB2BInstallments(count: number, total: number, percentages: number[]) {
-  return percentages.map((pct, i) => ({
-    no: i + 1,
-    name: i === 0 ? 'งวดที่ 1 เริ่มงาน' : i === count - 1 ? 'งวดสุดท้าย ส่งมอบ' : `งวดที่ ${i + 1}`,
-    pct, amount: Math.round((pct / 100) * total),
-    trigger: i === 0, final: i === count - 1,
-  }))
-}
 
 export function getFullStageInfo(job: FullJob) {
   const hasPlan = job.installments.length > 0

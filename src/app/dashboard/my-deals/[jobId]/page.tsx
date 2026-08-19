@@ -1,5 +1,6 @@
 'use client'
 
+import { calcB2BInstallments, calcB2CInstallments } from '@/lib/paymentPlans'
 import DateInput from '@/components/ui/DateInput'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
@@ -88,37 +89,6 @@ const B2C_PLANS = [
 ]
 const WORK_DAYS_OPTIONS = [30, 45, 60, 90]
 
-function calcB2CInstallments(plan: string, total: number, deposit: number) {
-  if (plan === 'A') return [{ no: 1, name: 'ชำระเต็มจำนวน 100%', pct: 100, amount: total, trigger: true, final: true }]
-  if (plan === 'B') return [
-    { no: 1, name: 'ชำระ 50% แรก เริ่มงาน', pct: 50, amount: total * 0.5, trigger: true, final: false },
-    { no: 2, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: 50, amount: total * 0.5, trigger: false, final: true },
-  ]
-  if (plan === 'C') {
-    // 50% of the FULL job value, with the deposit coming out of the last
-    // instalment — ฿100,000 with a ฿10,000 deposit is 10,000 / 50,000 / 40,000.
-    // This file had been splitting the remainder instead (10,000 / 45,000 /
-    // 45,000), so the same plan produced different instalments depending on
-    // which screen it was set up from. 13 of 52 plan-C jobs carry that shape.
-    const dep = deposit > 0 ? deposit : Math.round(total * 0.1)
-    const first50 = Math.round(total * 0.5)
-    const last50 = total - dep - first50
-    return [
-      { no: 1, name: 'มัดจำจองสิทธิ์', pct: Math.round((dep / total) * 100), amount: dep, trigger: false, final: false },
-      { no: 2, name: 'ชำระ 50% แรก เริ่มงาน', pct: 50, amount: first50, trigger: true, final: false },
-      { no: 3, name: 'ชำระ 50% สุดท้าย ส่งมอบ', pct: Math.round((last50 / total) * 100), amount: last50, trigger: false, final: true },
-    ]
-  }
-  return []
-}
-function calcB2BInstallments(count: number, total: number, percentages: number[]) {
-  return percentages.map((pct, i) => ({
-    no: i + 1,
-    name: i === 0 ? 'งวดที่ 1 เริ่มงาน' : i === count - 1 ? 'งวดสุดท้าย ส่งมอบ' : `งวดที่ ${i + 1}`,
-    pct, amount: Math.round((pct / 100) * total),
-    trigger: i === 0, final: i === count - 1,
-  }))
-}
 
 // ─── Setup + First Payment Modal ──────────────────────────
 function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => void; onSaved: () => void }) {

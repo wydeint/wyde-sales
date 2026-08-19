@@ -322,9 +322,14 @@ export default function PaymentsPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Finding the rooms that need attention meant paging through 900 rows by eye,
+  // or searching one at a time — a day's data cleanup that the table already had
+  // the answers for.
+  type MoneyFilter = 'all' | 'owing' | 'settled' | 'over' | 'noplan'
+  const [filterMoney, setFilterMoney] = useState<MoneyFilter>('all')
   const [page, setPage] = useState(1)
 
-  const filtered = useMemo(() => {
+  const preFiltered = useMemo(() => {
     let r = rows
     if (filterProject) r = r.filter(j => j.project_id === filterProject)
     if (filterSales) r = r.filter(j => (j as any).sales_id === filterSales)
@@ -335,9 +340,26 @@ export default function PaymentsPage() {
     return r
   }, [rows, filterProject, filterSales, search])
 
+  const filtered = useMemo(
+    () => filterMoney === 'all' ? preFiltered : preFiltered.filter(j => moneyOf(j) === filterMoney),
+    [preFiltered, filterMoney]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Counts come from the set the other filters already narrowed, so a chip
+  // always says how many it will actually show.
+  const moneyOf = (j: JobRow): MoneyFilter =>
+    j.installments.length === 0 ? 'noplan'
+    : j.unpaid_total > 1 ? 'owing'
+    : j.unpaid_total < -1 ? 'over'
+    : 'settled'
+  const moneyCounts = useMemo(() => {
+    const c = { all: preFiltered.length, owing: 0, settled: 0, over: 0, noplan: 0 } as Record<MoneyFilter, number>
+    for (const j of preFiltered) c[moneyOf(j)]++
+    return c
+  }, [preFiltered])
+
   // Reset to page 1 whenever the filter changes, or a narrow filter can land
   // the reader on an empty page that used to have rows.
-  useEffect(() => { setPage(1) }, [search, filterProject, filterSales])
+  useEffect(() => { setPage(1) }, [search, filterProject, filterSales, filterMoney])
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const totalRevenue = filtered.reduce((s, j) => s + j.revenue_inc_vat, 0)
@@ -370,6 +392,24 @@ export default function PaymentsPage() {
             {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
         </FilterBar>
+
+        {/* Money-state chips, in their own row above the data they narrow —
+            the Customers pattern. Without these, finding the rooms that need
+            attention meant paging through 900 rows or searching one at a time. */}
+        <div className="tab-group mb-4 flex-wrap">
+          {([
+            ['all',     'ทั้งหมด'],
+            ['owing',   'ค้างชำระ'],
+            ['settled', 'ครบแล้ว'],
+            ['over',    'เก็บเกิน'],
+            ['noplan',  'ยังไม่มีแผนชำระ'],
+          ] as [MoneyFilter, string][]).map(([key, label]) => (
+            <button key={key} onClick={() => setFilterMoney(key)}
+              className={`tab-btn ${filterMoney === key ? 'active' : ''}`}>
+              {label} {moneyCounts[key].toLocaleString('th-TH')}
+            </button>
+          ))}
+        </div>
 
         {/* Summary — ds-card KPI tiles, as on every other page. This was the
             only summary in the app rendered as tinted pills, with the record

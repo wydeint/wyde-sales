@@ -58,6 +58,8 @@ interface RoomJob {
   paid_count: number
   total_count: number
   total_amount: number
+  /** Cash actually received, for the outstanding figure. */
+  paid_amount_total: number
   total_paid: number
   total_settled: number
   revenue_inc_vat: number
@@ -2040,7 +2042,7 @@ export default function MyDealsPage() {
     if (!data) { setLoading(false); return }
 
     setJobs((data as any[]).map(r => {
-      const insts: { status: string; is_final: boolean; amount: number; paid_amount?: number | null; voucher_amount?: number }[] = r.installments || []
+      const insts: { status: string; is_final: boolean; amount: number; paid_amount?: number | null; voucher_amount?: number; due_date?: string | null }[] = r.installments || []
       return {
         id: r.id,
         room_no: r.room_no || '',
@@ -2053,11 +2055,20 @@ export default function MyDealsPage() {
         actual_deliver_date: r.actual_deliver_date || null,
         revenue_inc_vat: r.revenue_inc_vat || r.revenue_ex_vat || 0,
         has_plan: insts.length > 0,
-        has_overdue: insts.some(i => i.status === 'overdue'),
+        // payments.status only ever holds 'paid' or 'pending' — there is no
+        // 'overdue' row in the table, so the old check was false for every job
+        // and the red งวดเกินกำหนด chip could never appear. Overdue is derived:
+        // still pending, and its due date has passed.
+        has_overdue: insts.some(i => i.status !== 'paid' && !!i.due_date && i.due_date < todayStr()),
         all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         paid_count: insts.filter(i => i.status === 'paid').length,
         total_count: insts.length,
-        total_amount: insts.reduce((s, i) => s + Number(i.amount || 0), 0),
+        // The deal value, not the sum of the payment plan. Most jobs carry only a
+        // booking instalment until the plan is set up, so summing the plan counted
+        // a ฿2,000,000 room as ฿10,000 — ฿2.2M missing across the board.
+        total_amount: r.revenue_inc_vat || r.revenue_ex_vat || 0,
+        paid_amount_total: insts.filter(i => i.status === 'paid')
+          .reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0), 0),
         total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0), 0),
         total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0) + Number(i.voucher_amount ?? 0), 0),
         working_status: r.working_status || '',
@@ -2243,28 +2254,39 @@ export default function MyDealsPage() {
         ))}
       </div>
 
-      {/* Summary strip */}
+      {/* Summary strip — the rooms still being worked on lead, because those are
+          the ones anyone can still act on. Delivered rooms stay as the base each
+          figure is measured against, on the second line. */}
       {!loading && jobs.length > 0 && (() => {
-        const visibleJobs = grouped.flatMap(g => [...g.active, ...g.done])
-        const totalRevenue = visibleJobs.reduce((s, j) => s + j.total_amount, 0)
-        const overdueCount = visibleJobs.filter(j => j.has_overdue).length
-        const allPaidCount = visibleJobs.filter(j => j.all_paid).length
+        const activeJobs = grouped.flatMap(g => g.active)
+        const doneJobs = grouped.flatMap(g => g.done)
+        const sumRev = (list: RoomJob[]) => list.reduce((s, j) => s + j.total_amount, 0)
+        const sumPaid = (list: RoomJob[]) => list.reduce((s, j) => s + j.paid_amount_total, 0)
+        const activeRev = sumRev(activeJobs), activePaid = sumPaid(activeJobs)
+        const activeDue = Math.max(activeRev - activePaid, 0)
+        const activePct = activeRev > 0 ? Math.round(activePaid / activeRev * 100) : 0
+        const allDue = Math.max(sumRev([...activeJobs, ...doneJobs]) - sumPaid([...activeJobs, ...doneJobs]), 0)
+        const owing = activeJobs.filter(j => j.total_amount - j.paid_amount_total > 1).length
+        const fk = (n: number) => n >= 1000000 ? '฿' + (n / 1000000).toFixed(1) + 'M'
+          : n > 0 ? '฿' + Math.round(n / 1000).toLocaleString('th-TH') + 'K' : '฿0'
         return (
           <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>งานที่แสดง</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{visibleJobs.length}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ห้อง</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>กำลังทำ</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{activeJobs.length}</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว {doneJobs.length}</p>
             </div>
             <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalRevenue > 0 ? '฿' + (totalRevenue / 1000000).toFixed(1) + 'M' : '—'}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>บาท</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานที่ทำอยู่</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{fk(activeRev)}</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว {activePct}%</p>
             </div>
             <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างชำระ</p>
-              <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>{overdueCount}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{allPaidCount} ชำระครบ</p>
+              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
+              <p className="text-lg font-bold" style={{ color: activeDue > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(activeDue)}</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>
+                {owing} ห้อง · รวมส่งมอบ {fk(allDue)}
+              </p>
             </div>
           </div>
         )

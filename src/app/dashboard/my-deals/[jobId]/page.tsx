@@ -1,5 +1,6 @@
 'use client'
 
+import DateInput from '@/components/ui/DateInput'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -315,7 +316,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
               </div>
               <div>
                 <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-                <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                   className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                   style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
               </div>
@@ -461,7 +462,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
             </div>
             <div>
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-              <input type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+              <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
             </div>
@@ -595,7 +596,7 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
         <div className="p-5 space-y-4">
           <div>
             <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่ส่งมอบ</label>
-            <input type="date" value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
+            <DateInput value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
               className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>

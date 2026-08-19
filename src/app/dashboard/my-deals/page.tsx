@@ -13,6 +13,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import PageHeader from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/StateUI'
 import { expectedDeliveryDate, fmtShortDate } from '@/lib/delivery'
+import DateInput from '@/components/ui/DateInput'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -232,6 +233,13 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const [workDays, setWorkDays] = useState(job.work_days || 60)
   const [depositAmount, setDepositAmount] = useState(0)
   const [firstPaidAmount, setFirstPaidAmount] = useState(0)
+  // The setup screen had no voucher option at all, so a plan whose first
+  // instalment is also the last one (100%) could never record a discount here —
+  // the only place offering it was the collect screen, which needs an existing
+  // instalment to work on.
+  const [useVoucher, setUseVoucher] = useState(false)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherAmount, setVoucherAmount] = useState(0)
   const [b2bPlan, setB2bPlan] = useState('po_bill')
   const [b2bPoDate, setB2bPoDate] = useState(todayStr())
   const [b2bCount, setB2bCount] = useState(3)
@@ -292,6 +300,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       is_final: p.final,
       slip_url: isSingleB2B ? null : (i === 0 ? (slipUrl.trim() || (slipPosted ? 'posted' : null)) : null),
       receipt_url: isSingleB2B ? null : (i === 0 ? (receiptUrl.trim() || (receiptPosted ? 'posted' : null)) : null),
+      voucher_code: i === 0 && useVoucher && voucherCode ? voucherCode : null,
+      voucher_amount: i === 0 && useVoucher && voucherAmount > 0 ? voucherAmount : null,
     })))
     setSaving(false); onSaved(); onClose()
   }
@@ -377,7 +387,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                   {isSingleB2B && (
                     <div>
                       <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันรับ PO / วันเริ่มงาน</label>
-                      <input type="date" lang="th-TH" value={b2bPoDate} onChange={e => setB2bPoDate(e.target.value)}
+                      <DateInput value={b2bPoDate} onChange={e => setB2bPoDate(e.target.value)}
                         className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                     </div>
                   )}
@@ -461,7 +471,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                 </div>
                 <div>
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-                  <input type="date" lang="th-TH" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                  <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                 </div>
               </div>
@@ -473,6 +483,34 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                   {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+              {!isSingleB2B && (
+                <div className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+                  <label className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer select-none" style={{ background: 'var(--hover-bg)' }}>
+                    <input type="checkbox" checked={useVoucher}
+                      onChange={e => { setUseVoucher(e.target.checked); if (!e.target.checked) { setVoucherAmount(0); setVoucherCode('') } }}
+                      className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-amber)' }} />
+                    <span className="text-xs font-semibold" style={{ color: useVoucher ? 'var(--accent-amber)' : 'var(--text-2)' }}>
+                      ใช้ Voucher / ส่วนลด
+                    </span>
+                  </label>
+                  {useVoucher && (
+                    <div className="p-3 space-y-2">
+                      <input type="text" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
+                        placeholder="รหัส Voucher"
+                        className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                      <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
+                        placeholder="ยอดส่วนลด (บาท)" inputMode="numeric"
+                        className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
+                      {voucherAmount > 0 && firstInst && (
+                        <p className="text-micro" style={{ color: 'var(--text-3)' }}>
+                          รับจริง {fmtBaht(Math.max((firstPaidAmount || firstInst.amount) - voucherAmount, 0))}
+                          {' '}จากงวด {fmtBaht(firstInst.amount)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="rounded-[8px] p-3 space-y-2" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
@@ -603,7 +641,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
             </div>
             <div>
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-              <input type="date" lang="th-TH" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+              <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
             </div>
           </div>
@@ -736,7 +774,7 @@ function QuickDeliverModal({ job, onClose, onSaved }: { job: FullJob; onClose: (
         <div className="p-5 space-y-4">
           <div>
             <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่ส่งมอบ</label>
-            <input type="date" lang="th-TH" value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
+            <DateInput value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
               className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
           </div>
           <div>
@@ -821,7 +859,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
         <div className="p-5 space-y-4">
           <div>
             <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่ส่งมอบ</label>
-            <input type="date" lang="th-TH" value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
+            <DateInput value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
               className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
           </div>
           <div>
@@ -1095,7 +1133,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
         <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="ยอด"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-        <input type="date" lang="th-TH" value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
+        <DateInput value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       </div>
@@ -1196,7 +1234,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
             <span style={fieldLabelStyle}>วันที่รับเงิน</span>
             {editingDate ? (
               <div className="flex items-center gap-1">
-                <input type="date" lang="th-TH" value={dateVal} onChange={e => setDateVal(e.target.value)}
+                <DateInput value={dateVal} onChange={e => setDateVal(e.target.value)}
                   className="text-micro rounded px-2 py-1 focus:outline-none"
                   style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                 <button onClick={saveDate} disabled={saving} className="text-micro px-1.5 py-0.5 rounded font-semibold text-white" style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
@@ -1356,7 +1394,7 @@ function CancelModal({ onClose, onConfirm }: {
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>
               {cancelType === 'forfeit' ? 'วันที่ยึดเงิน' : 'วันที่คืนเงิน'}
             </label>
-            <input type="date" lang="th-TH" value={date} onChange={e => setDate(e.target.value)}
+            <DateInput value={date} onChange={e => setDate(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
@@ -1424,7 +1462,7 @@ function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo, onAdd
         <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="ยอด (บาท)"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-        <input type="date" lang="th-TH" value={dueDate} onChange={e => setDueDate(e.target.value)}
+        <DateInput value={dueDate} onChange={e => setDueDate(e.target.value)}
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       </div>
@@ -1596,7 +1634,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               onClick={() => !editingContract && setEditingContract(true)}>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันทำสัญญา</p>
               {editingContract ? (
-                <input type="date" lang="th-TH" value={contractDateVal} autoFocus
+                <DateInput value={contractDateVal} autoFocus
                   onChange={e => setContractDateVal(e.target.value)}
                   onBlur={e => { saveDateField('contract_date', e.target.value); setEditingContract(false) }}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('contract_date', contractDateVal); setEditingContract(false) } }}
@@ -1613,7 +1651,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               onClick={() => !editingExpected && setEditingExpected(true)}>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันคาดเสร็จ</p>
               {editingExpected ? (
-                <input type="date" lang="th-TH" value={expectedDateVal} autoFocus
+                <DateInput value={expectedDateVal} autoFocus
                   onChange={e => setExpectedDateVal(e.target.value)}
                   onBlur={e => { saveDateField('expected_finish_date', e.target.value); setEditingExpected(false) }}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('expected_finish_date', expectedDateVal); setEditingExpected(false) } }}
@@ -1818,10 +1856,17 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setActionModal('pay')}
+                  {/* A delivered room that never had a plan has no instalment for the
+                      collect modal to work on, so "แก้ไขงวดเงิน" opened a form with
+                      nothing to fill in and the money could not be recorded at all.
+                      `delivered` is checked before `!hasPlan`, so the setup button was
+                      unreachable for these — 61 rooms, ฿3.0M. Offer setup instead. */}
+                  <button onClick={() => setActionModal(hasPlan ? 'pay' : 'setup')}
                     className="flex-1 py-2 rounded-[8px] text-xs font-semibold"
-                    style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
-                    แก้ไขงวดเงิน
+                    style={hasPlan
+                      ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }
+                      : { background: 'var(--accent)', color: '#fff' }}>
+                    {hasPlan ? 'แก้ไขงวดเงิน' : '+ ตั้งงวดเงินย้อนหลัง'}
                   </button>
                   <button onClick={() => setActionModal('handover')}
                     className="flex-1 py-2 rounded-[8px] text-xs font-semibold"

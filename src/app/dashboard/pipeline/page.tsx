@@ -16,6 +16,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 import FilterBar from '@/components/ui/FilterBar'
 import { CRM_STAGES, crmStage, PROSPECT_STAGES, cancelOutcome } from '@/lib/status'
 import PageHeader from '@/components/ui/PageHeader'
+import DateInput from '@/components/ui/DateInput'
 
 const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
@@ -354,7 +355,7 @@ function CancelModal({ onClose, onConfirm }: {
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>
               {cancelType === 'forfeit' ? 'วันที่ยึดเงิน' : 'วันที่คืนเงิน'}
             </label>
-            <input type="date" lang="th-TH" value={date} onChange={e => setDate(e.target.value)}
+            <DateInput value={date} onChange={e => setDate(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
@@ -664,7 +665,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                   <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>{j.customer_type === 'B2B' ? 'วันรับ PO / ยอด' : 'วันรับจอง'}</p>
-                  <input type="date" lang="th-TH" defaultValue={j.order_date || ''}
+                  <DateInput defaultValue={j.order_date || ''}
                     onBlur={async e => {
                       const v = e.target.value || null
                       await supabase.from('jobs').update({ order_date: v }).eq('id', j.id)
@@ -675,7 +676,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 </div>
                 <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                   <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>วันเซ็นสัญญา</p>
-                  <input type="date" lang="th-TH" defaultValue={j.contract_date || ''}
+                  <DateInput defaultValue={j.contract_date || ''}
                     onBlur={async e => {
                       const v = e.target.value || null
                       await supabase.from('jobs').update({ contract_date: v }).eq('id', j.id)
@@ -1126,7 +1127,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>วันที่รับงาน</label>
-            <input type="date" lang="th-TH" value={orderDate} onChange={e => setOrderDate(e.target.value)}
+            <DateInput value={orderDate} onChange={e => setOrderDate(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
           </div>
           <div>

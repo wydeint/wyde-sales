@@ -12,6 +12,7 @@ import StatusChip from '@/components/ui/StatusChip'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination from '@/components/ui/Pagination'
 import { COMMISSION_STATUSES, WORKING_STATUSES } from '@/lib/status'
+import DateInput from '@/components/ui/DateInput'
 
 // ─────────────────────────────────────────
 // Constants
@@ -422,7 +423,7 @@ function AddJobModal({
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>วันที่รับงาน</label>
-            <input type="date" lang="th-TH" value={orderDate} onChange={e => setOrderDate(e.target.value)}
+            <DateInput value={orderDate} onChange={e => setOrderDate(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
           </div>
           <div>
@@ -1237,17 +1238,17 @@ export default function JobsPage() {
                     </div>
                     <div>
                       <label className="field-label">วันเริ่มงาน</label>
-                      <input type="date" lang="th-TH" value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
+                      <DateInput value={(editing as any).work_start_date || ''} onChange={e => setEditing(e2 => ({ ...e2, work_start_date: e.target.value }))}
                         className="field-input w-full mt-1" />
                     </div>
                     <div>
                       <label className="field-label">วันคาดส่งมอบ</label>
-                      <input type="date" lang="th-TH" value={editing.expected_finish_date || ''} onChange={e => setEditing(e2 => ({ ...e2, expected_finish_date: e.target.value }))}
+                      <DateInput value={editing.expected_finish_date || ''} onChange={e => setEditing(e2 => ({ ...e2, expected_finish_date: e.target.value }))}
                         className="field-input w-full mt-1" />
                     </div>
                     <div>
                       <label className="field-label">วันส่งมอบจริง</label>
-                      <input type="date" lang="th-TH" value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
+                      <DateInput value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
                         className="field-input w-full mt-1" />
                     </div>
                     <div className="col-span-2">

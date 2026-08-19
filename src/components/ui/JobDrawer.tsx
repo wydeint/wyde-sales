@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
 import { expectedDeliveryDate, fmtShortDate, type DeliveryJobCtx } from '@/lib/delivery'
+import DateInput from '@/components/ui/DateInput'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -234,6 +235,11 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
     : calcB2BInstallments(b2bCount, total, b2bPcts.slice(0, b2bCount))
   const firstInst = preview[0]
 
+  // Backfilling a room that was delivered long ago must not rewind it: the
+  // trigger instalment would otherwise set working_status back to ดำเนินการ and
+  // fire a LINE notification about a payment from months back.
+  const isBackfill = !!job.actual_deliver_date
+
   async function save() {
     if (clientType === 'B2B' && !isSingleB2B && !pctValid) return
     setSaving(true)
@@ -242,7 +248,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       payment_plan_type: clientType === 'B2C' ? plan : isSingleB2B ? 'po_bill' : String(b2bCount),
       work_days: workDays,
       work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
-      working_status: isSingleB2B || firstInst?.trigger ? 'ดำเนินการ' : job.working_status,
+      working_status: !isBackfill && (isSingleB2B || firstInst?.trigger) ? 'ดำเนินการ' : job.working_status,
       ...(!job.order_date ? { order_date: isSingleB2B ? b2bPoDate : paidDate } : {}),
     }).eq('id', job.id)
     if ((isSingleB2B || firstInst?.trigger) && job.customer_id) {
@@ -270,8 +276,9 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       voucher_code: i === 0 && useVoucher && voucherCode ? voucherCode : null,
       voucher_amount: i === 0 && useVoucher && voucherAmount > 0 ? voucherAmount : null,
     })))
-    // Auto-send LINE for first paid installment (not B2B PO-only)
-    if (!isSingleB2B && firstInst) {
+    // Auto-send LINE for first paid installment (not B2B PO-only, and never for
+    // a backfill — the group does not need a notice about an old payment)
+    if (!isSingleB2B && firstInst && !isBackfill) {
       const vcCode = useVoucher && voucherCode ? voucherCode : null
       const vcAmt = useVoucher && voucherAmount > 0 ? voucherAmount : 0
       const instId = `PAY-${job.id}-1`
@@ -309,6 +316,11 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
           </div>
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
+        {isBackfill && (
+          <div className="mx-5 mt-4 rounded-[8px] p-3 text-xs" style={{ background: 'color-mix(in srgb, var(--accent-amber) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)', color: 'var(--accent-amber)' }}>
+            ห้องนี้ส่งมอบแล้ว — บันทึกงวดย้อนหลังเท่านั้น สถานะงานจะไม่เปลี่ยน และไม่ส่งแจ้งเตือน LINE
+          </div>
+        )}
         <div className="p-5 space-y-4">
           {step === 'plan' ? (
             <>
@@ -371,7 +383,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                   {isSingleB2B && (
                     <div>
                       <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันรับ PO / วันเริ่มงาน</label>
-                      <input type="date" lang="th-TH" value={b2bPoDate} onChange={e => setB2bPoDate(e.target.value)}
+                      <DateInput value={b2bPoDate} onChange={e => setB2bPoDate(e.target.value)}
                         className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                     </div>
                   )}
@@ -453,7 +465,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                 </div>
                 <div>
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-                  <input type="date" lang="th-TH" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+                  <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                 </div>
               </div>
@@ -464,7 +476,9 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                   {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              {firstInst?.final && (
+              {/* Was gated on firstInst.final, so only the 100% plan offered it —
+                  a discount given at the deposit could not be recorded. */}
+              {!isSingleB2B && firstInst && (
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer select-none text-xs"
                     style={{ color: useVoucher ? 'var(--accent)' : 'var(--text-2)' }}>
@@ -627,7 +641,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
             </div>
             <div>
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่รับเงิน</label>
-              <input type="date" lang="th-TH" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+              <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
             </div>
           </div>
@@ -751,7 +765,7 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
         <div className="p-5 space-y-4">
           <div>
             <label className="text-xs" style={{ color: 'var(--text-2)' }}>วันที่ส่งมอบ</label>
-            <input type="date" lang="th-TH" value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
+            <DateInput value={deliverDate} onChange={e => setDeliverDate(e.target.value)}
               className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
           </div>
           <div>
@@ -959,7 +973,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
         <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="ยอด"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-        <input type="date" lang="th-TH" value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
+        <DateInput value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       </div>
@@ -1060,7 +1074,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
             <span style={fieldLabelStyle}>วันที่รับเงิน</span>
             {editingDate ? (
               <div className="flex items-center gap-1">
-                <input type="date" lang="th-TH" value={dateVal} onChange={e => setDateVal(e.target.value)}
+                <DateInput value={dateVal} onChange={e => setDateVal(e.target.value)}
                   className="text-micro rounded px-2 py-1 focus:outline-none"
                   style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                 <button onClick={saveDate} disabled={saving} className="text-micro px-1.5 py-0.5 rounded font-semibold text-white" style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
@@ -1193,7 +1207,7 @@ export function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo
         <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="ยอด (บาท)"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
-        <input type="date" lang="th-TH" value={dueDate} onChange={e => setDueDate(e.target.value)}
+        <DateInput value={dueDate} onChange={e => setDueDate(e.target.value)}
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       </div>
@@ -1279,7 +1293,7 @@ function JobCancelModal({ onClose, onConfirm }: {
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>{cancelType === 'forfeit' ? 'วันที่ยึดเงิน' : 'วันที่คืนเงิน'}</label>
-            <input type="date" lang="th-TH" value={date} onChange={e => setDate(e.target.value)}
+            <DateInput value={date} onChange={e => setDate(e.target.value)}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
@@ -1405,7 +1419,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                 onClick={() => !editingContract && setEditingContract(true)}>
                 <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันทำสัญญา</p>
                 {editingContract ? (
-                  <input type="date" lang="th-TH" value={contractDateVal} autoFocus
+                  <DateInput value={contractDateVal} autoFocus
                     onChange={e => setContractDateVal(e.target.value)}
                     onBlur={e => { saveDateField('contract_date', e.target.value); setEditingContract(false) }}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('contract_date', contractDateVal); setEditingContract(false) } }}
@@ -1422,7 +1436,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                 onClick={() => !editingExpected && setEditingExpected(true)}>
                 <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันคาดเสร็จ</p>
                 {editingExpected ? (
-                  <input type="date" lang="th-TH" value={expectedDateVal} autoFocus
+                  <DateInput value={expectedDateVal} autoFocus
                     onChange={e => setExpectedDateVal(e.target.value)}
                     onBlur={e => { saveDateField('expected_finish_date', e.target.value); setEditingExpected(false) }}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('expected_finish_date', expectedDateVal); setEditingExpected(false) } }}
@@ -1576,8 +1590,14 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                     {job.warranty_end && <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>ประกันหมด {fmtDate(job.warranty_end)}</p>}
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setActionModal('pay')} className="flex-1 py-2 rounded-[8px] text-xs font-semibold"
-                      style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>แก้ไขงวดเงิน</button>
+                    {/* Same trap as My Deals: delivered is checked before !hasPlan, so a
+                        delivered room with no instalments could never reach setup and its
+                        payments could not be entered. */}
+                    <button onClick={() => setActionModal(hasPlan ? 'pay' : 'setup')} className="flex-1 py-2 rounded-[8px] text-xs font-semibold"
+                      style={hasPlan
+                        ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }
+                        : { background: 'var(--accent)', color: '#fff' }}>
+                      {hasPlan ? 'แก้ไขงวดเงิน' : '+ ตั้งงวดเงินย้อนหลัง'}</button>
                     <button onClick={() => setActionModal('handover')} className="flex-1 py-2 rounded-[8px] text-xs font-semibold"
                       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>แก้ไขวันส่งมอบ</button>
                   </div>

@@ -7,6 +7,7 @@ import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { addDays } from '@/lib/delivery'
+import DateInput from '@/components/ui/DateInput'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Job {
@@ -148,7 +149,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
           <div>
             <label className="field-label mb-2 block">วันเริ่มงาน</label>
-            <input type="date" lang="th-TH" value={form.work_start_date}
+            <DateInput value={form.work_start_date}
               onChange={e => setForm(f => ({ ...f, work_start_date: e.target.value }))}
               className="field-input text-base" style={{ minHeight: 44 }} />
             <p className="text-xs mt-1.5" style={{ color: 'var(--text-3)' }}>
@@ -163,7 +164,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
           </div>
           <div>
             <label className="field-label mb-2 block">วันส่งมอบจริง</label>
-            <input type="date" lang="th-TH" value={form.actual_deliver_date}
+            <DateInput value={form.actual_deliver_date}
               onChange={e => setForm(f => ({ ...f, actual_deliver_date: e.target.value }))}
               className="field-input text-base" style={{ minHeight: 44 }} />
           </div>

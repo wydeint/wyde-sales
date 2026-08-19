@@ -401,8 +401,8 @@ export default function WarrantyPage() {
               </div>
             )}
           </div>
-          <Input label="วัน Handover" type="date" lang="th-TH" value={form.handover_date} onChange={e => setForm({ ...form, handover_date: e.target.value })} />
-          <Input label="วันเริ่มประกัน" type="date" lang="th-TH" value={form.warranty_start} onChange={e => updateStart(e.target.value)} />
+          <Input label="วัน Handover" type="date" value={form.handover_date} onChange={e => setForm({ ...form, handover_date: e.target.value })} />
+          <Input label="วันเริ่มประกัน" type="date" value={form.warranty_start} onChange={e => updateStart(e.target.value)} />
           <Input label="ระยะเวลาประกัน (เดือน)" type="number" value={form.warranty_months} onChange={e => updateMonths(Number(e.target.value))} />
           <div className="rounded-lg p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>วันหมดประกัน (คำนวณอัตโนมัติ)</p>

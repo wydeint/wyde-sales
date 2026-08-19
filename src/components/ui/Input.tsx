@@ -2,6 +2,7 @@
 
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
+import { thaiDate } from '@/lib/thaiDate'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -31,6 +32,13 @@ export function Input({ label, error, className, id: externalId, ...props }: Inp
         className={cn('field-input w-full', error && 'field-input-error', className)}
         {...props}
       />
+      {/* A date field renders in the browser's locale, not the page's, so on an
+          en-US machine 1 ก.พ. shows as 2/1. Spell it out underneath. */}
+      {props.type === 'date' && !error && (
+        <span className="text-micro" style={{ color: 'var(--text-3)', minHeight: 14 }}>
+          {thaiDate(typeof props.value === 'string' ? props.value : '') || ' '}
+        </span>
+      )}
       {error && (
         <p id={errId} role="alert" className="text-xs" style={{ color: 'var(--accent-red)' }}>
           {error}

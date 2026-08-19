@@ -745,7 +745,7 @@ export default function EventsPage() {
             <Input label="ชื่องาน *" value={form.event_name} onChange={e => setForm({ ...form, event_name: e.target.value })} placeholder="เช่น ORI Sales Event — Origin Place Petchkasem" />
           </div>
           <Select label="ประเภท Event" value={form.event_type} onChange={e => setForm({ ...form, event_type: e.target.value })} options={EVENT_TYPES} />
-          <Input label="วันจัดงาน" type="date" lang="th-TH" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
+          <Input label="วันจัดงาน" type="date" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
           <Select label="โครงการ" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projOptions} />
           <Input label="สถานที่" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="เช่น ล็อบบี้ตึก A" />
           <Input label="จำนวนคนเข้างาน" type="number" value={form.total_attendees} onChange={e => setForm({ ...form, total_attendees: Number(e.target.value) })} />
@@ -778,7 +778,7 @@ export default function EventsPage() {
           <Select label="STATUS" value={editCustForm.status}
             onChange={e => setEditCustForm({ ...editCustForm, status: e.target.value })}
             options={CUST_STATUS.map(s => ({ value: s.value, label: s.label }))} />
-          <Input label="วัน BOOKED" type="date" lang="th-TH" value={editCustForm.booked_date}
+          <Input label="วัน BOOKED" type="date" value={editCustForm.booked_date}
             onChange={e => setEditCustForm({ ...editCustForm, booked_date: e.target.value })} />
           <Input label="BOOKED VALUE (บาท)" type="number" value={editCustForm.booked_value}
             onChange={e => setEditCustForm({ ...editCustForm, booked_value: e.target.value })} />

@@ -943,7 +943,7 @@ export default function FinancePage() {
             options={[{ value: '', label: '— เลือกหมวด —' }, ...EXPENSE_CATS.map(c => ({ value: c, label: c }))]} />
           <Input label="จำนวนเงิน (บาท) *" type="number" value={entryForm.amount} onChange={e => setEntryForm({ ...entryForm, amount: Number(e.target.value) })} />
           <div className="col-span-2">
-            <Input label="วันที่ *" type="date" lang="th-TH" value={entryForm.entry_date} onChange={e => setEntryForm({ ...entryForm, entry_date: e.target.value })} />
+            <Input label="วันที่ *" type="date" value={entryForm.entry_date} onChange={e => setEntryForm({ ...entryForm, entry_date: e.target.value })} />
           </div>
           <div className="col-span-2">
             <Input label="รายละเอียด" value={entryForm.description} onChange={e => setEntryForm({ ...entryForm, description: e.target.value })} placeholder="เช่น เงินเดือนพนักงาน ก.ค. 68" />

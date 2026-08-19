@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import DateInput from '@/components/ui/DateInput'
 import FileAttach from '@/components/ui/FileAttach'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -736,7 +737,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
             </div>
             <div>
               <label className="text-xs mb-2 block" style={t3}>วันที่ชำระ</label>
-              <input type="date" lang="th-TH" value={paidDate} onChange={e => setPaidDate(e.target.value)}
+              <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)}
                 className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none"
                 style={sheetInputStyle} />
             </div>
@@ -1141,7 +1142,7 @@ function DeliverSheet({ open, onClose, jobs }: {
             <>
               <div>
                 <label className="text-xs mb-2 block" style={t3}>วันที่ส่งมอบจริง</label>
-                <input type="date" lang="th-TH" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
+                <DateInput value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)}
                   className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <div>

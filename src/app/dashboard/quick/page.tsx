@@ -528,39 +528,10 @@ function EventAddSheet({ open, onClose, events }: {
 const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
 
 // ─── Quick Pay Sheet ───────────────────────────────────────
-function buildLineMsg(job: JobOption, inst: { installment_name: string; installment_no: number; paid_date: string; paid_amount: number; channel: string }, vcCode: string, vcAmt: number, monthTotal?: number): string {
-  const isDelivered = job.workingStatus === 'ส่งมอบแล้ว'
-  const isFirst = inst.installment_no === 1
-  const type = isDelivered ? 'ลูกค้าเก่า ส่งมอบ' : isFirst ? 'ลูกค้าใหม่' : 'ลูกค้าเก่า'
-  const d = inst.paid_date ? new Date(inst.paid_date) : new Date()
-  const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
-  const fmt = (n: number) => n.toLocaleString('th-TH')
-  const lines = [
-    `Wyde Int. (${type})`,
-    `วันที่ : ${dateStr}`,
-    `โครงการ : ${job.projectName}`,
-    `ห้อง : ${job.roomNo}`,
-    `ลูกค้าชื่อ : ${job.customerName}`,
-    `Sales Wyde : ${job.salesName}`,
-    `Package : ${fmt(job.revenue)} บาท`,
-    ...(vcAmt > 0 ? [`หัก Voucher${vcCode ? ` (${vcCode})` : ''} : ${fmt(vcAmt)} บาท`] : []),
-    `${inst.installment_name} : ${fmt(inst.paid_amount)} บาท`,
-    ...(inst.channel ? [`ชำระผ่านทาง : ${inst.channel}`] : []),
-    ...(job.expectedFinishDate ? [`วันคาดส่งมอบ : ${(() => { const d = new Date(job.expectedFinishDate); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}` })()} `] : []),
-    '-'.repeat(41),
-    `รายรับรวมเดือนนี้ : ${fmt(monthTotal ?? 0)} บาท`,
-  ]
-  return lines.join('\n')
-}
-
-async function sendLineNotify(message: string): Promise<string | null> {
-  try {
-    const res = await fetch('/api/line-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) })
-    if (!res.ok) return null
-    return new Date().toISOString()
-  } catch { return null }
-}
-
+// buildLineMsg and sendLineNotify used to sit here — a third copy of the LINE
+// message, plus its sender, left behind when auto-posting was removed. Nothing
+// called either one. Quick Mode has no LINE button; posting happens from My
+// Deals and Prospects, both on lib/lineMessage.ts.
 function QuickPaySheet({ open, onClose, jobs }: {
   open: boolean; onClose: () => void; jobs: JobOption[]
 }) {

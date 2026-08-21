@@ -7,7 +7,7 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
-import { isOverdueCollection, CHASE_AFTER_DAYS } from '@/lib/collection'
+import { isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
@@ -124,7 +124,7 @@ export default function FinancePage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
-  const [drilldown, setDrilldown] = useState<'backlog' | 'pending_final' | 'overdue' | null>(null)
+  const [drilldown, setDrilldown] = useState<'backlog' | 'pending_final' | 'overdue' | 'booked_no_job' | null>(null)
 
   const [period, setPeriod] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
@@ -478,34 +478,42 @@ export default function FinancePage() {
             <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>Pipeline การเงิน</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-              {/* 1. Booking Funnel */}
-              <div className="rounded-[11px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
-                <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ลูกค้า Booked</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: 'var(--text-2)' }}>ทั้งหมด</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-1)' }}>{bookedCustomers.length} ราย</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: 'var(--accent-green)' }}>แปลงเป็น Reserved/Backlog แล้ว</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>{bookedWithJob.length} ราย</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs" style={{ color: 'var(--accent-amber)' }}>ยังไม่มี Job</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--accent-amber)' }}>{bookedNoJob.length} ราย</span>
-                  </div>
-                  {bookedNoJobValue > 0 && (
-                    <div className="flex justify-between items-center pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
-                      <span className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่ารอแปลง</span>
-                      <span className="text-xs font-semibold" style={{ color: 'var(--accent-amber)' }}>{fk(bookedNoJobValue)}</span>
-                    </div>
-                  )}
-                  {bookedCustomers.length > 0 && (
-                    <div className="h-1.5 rounded-full mt-1" style={{ background: 'var(--divider)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(bookedWithJob.length / bookedCustomers.length) * 100}%`, background: 'var(--accent-green)' }} />
-                    </div>
+              {/* 1. Booked customers still without a job.
+                  This card used to print three counts — total, converted, not
+                  converted — where the second is just the first minus the third,
+                  plus a progress bar that sits at 99% forever and so says nothing.
+                  The one fact worth acting on, "someone booked and no job was
+                  opened", was the smallest number on it. Now it leads, and the
+                  totals drop to one quiet line of context. */}
+              <div className="rounded-[11px] p-4 flex flex-col" style={{ background: 'var(--hover-bg)' }}>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ลูกค้าจองแล้ว</p>
+                  {bookedNoJob.length > 0 && (
+                    <button onClick={() => setDrilldown('booked_no_job')} className="text-micro hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
                   )}
                 </div>
+
+                {bookedNoJob.length === 0 ? (
+                  <div className="flex-1 flex flex-col justify-center py-2">
+                    <p className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>✓ เปิดงานครบทุกราย</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>จองแล้ว {bookedCustomers.length} ราย</p>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col justify-center py-2">
+                    <p className="text-xs" style={{ color: 'var(--text-2)' }}>ยังไม่ได้เปิดงาน</p>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{bookedNoJob.length}</span>
+                      <span className="text-xs" style={{ color: 'var(--text-2)' }}>ราย</span>
+                      {bookedNoJobValue > 0 && (
+                        <span className="text-xs font-semibold ml-auto" style={{ color: 'var(--accent-amber)' }}>{fk(bookedNoJobValue)}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-micro pt-2" style={{ color: 'var(--text-3)', borderTop: '1px solid var(--divider)' }}>
+                  จองแล้ว {bookedCustomers.length} ราย · เปิดงานแล้ว {bookedWithJob.length}
+                </p>
               </div>
 
               {/* 2. Active Job Backlog — แยก Reserve / Backlog */}
@@ -998,7 +1006,10 @@ export default function FinancePage() {
             onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
-                {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Reserved / Backlog)' :drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง' : '⚠️ งวดเกินกำหนด'}
+                {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Reserved / Backlog)'
+                  : drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง'
+                  : drilldown === 'booked_no_job' ? '⚑ จองแล้วแต่ยังไม่ได้เปิดงาน'
+                  : `⚠️ ค้างเก็บเงินเกิน ${CHASE_AFTER_DAYS} วันหลังส่งมอบ`}
               </h3>
               <button onClick={() => setDrilldown(null)} style={{ color: 'var(--text-3)' }}>✕</button>
             </div>
@@ -1021,13 +1032,29 @@ export default function FinancePage() {
                   <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(p.amount || 0)}</span>
                 </div>
               ))}
-              {drilldown === 'overdue' && activePayments.filter(p => p.status !== 'paid' && p.due_date && p.due_date < new Date().toISOString().slice(0, 10)).map(p => (
-                <div key={p.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 7.0%, transparent)' }}>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
-                    <p className="text-xs" style={{ color: 'var(--accent-red)' }}>{(p as any).jobs?.room_no} · เกินกำหนด {p.due_date}</p>
+              {/* Same rule as the banner and the KPI above — measured from handover,
+                  not due_date, which this list still used. */}
+              {drilldown === 'overdue' && overdue.map(p => {
+                const d = (p as any).jobs?.actual_deliver_date as string | undefined
+                return (
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 7.0%, transparent)' }}>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
+                      <p className="text-xs" style={{ color: 'var(--accent-red)' }}>{(p as any).jobs?.room_no} · ส่งมอบมาแล้ว {daysSinceDelivery(d)} วัน</p>
+                    </div>
+                    <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(p.amount || 0)}</span>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: 'var(--accent-red)' }}>{fk(p.amount || 0)}</span>
+                )
+              })}
+              {drilldown === 'booked_no_job' && bookedNoJob.map(c => (
+                <div key={c.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+                      {c.projects?.name || '—'}{c.booking_date ? ` · จองเมื่อ ${c.booking_date}` : ''}
+                    </p>
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: 'var(--accent-amber)' }}>{fk(c.budget || 0)}</span>
                 </div>
               ))}
             </div>

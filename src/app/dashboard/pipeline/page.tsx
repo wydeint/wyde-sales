@@ -716,9 +716,17 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             <div className="flex flex-wrap gap-1.5">
               {STAGES.filter(s => s.value !== effectiveStage && s.value !== 'closed' && s.value !== 'lost').map(s => (
                 <button key={s.value} onClick={async () => {
-                  if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
+                  // Reaching จอง has to set working_status too. A prospect's job row
+                  // is created with working_status null, and every page that lists
+                  // live work filters `working_status not in (...)`, which drops
+                  // NULL along with the cancelled — so a booked ฿3.8M job sat
+                  // invisible on Finance, My Deals and Payments alike. Moving the
+                  // stage was the only step anyone took, so the stage has to carry it.
+                  const jobPatch: Record<string, unknown> = { crm_stage: s.value }
+                  if (s.value === 'booked') jobPatch.working_status = 'จอง'
+                  if (focusJobId) await supabase.from('jobs').update(jobPatch).eq('id', focusJobId)
                   await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
-                  const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
+                  const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, ...jobPatch } : j) : (customer as any).jobs
                   onUpdate({ ...customer, status: s.value, jobs: updatedJobs } as any)
                 }}
                   className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-colors"

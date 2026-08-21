@@ -8,6 +8,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
+import { crmStage } from '@/lib/status'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
@@ -66,6 +67,7 @@ interface BookedCustomer {
   customer_name: string
   budget: number
   booking_date: string | null
+  status: string
   projects?: { name: string }
 }
 
@@ -124,7 +126,7 @@ export default function FinancePage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
-  const [drilldown, setDrilldown] = useState<'backlog' | 'pending_final' | 'overdue' | 'booked_no_job' | null>(null)
+  const [drilldown, setDrilldown] = useState<'backlog' | 'pending_final' | 'overdue' | 'prospects' | null>(null)
 
   const [period, setPeriod] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
@@ -156,9 +158,11 @@ export default function FinancePage() {
       supabase.from('jobs')
         .select('id,customer_name,room_no,revenue_ex_vat,working_status,customer_id,projects(name)')
         .not('working_status', 'in', '("ส่งมอบแล้ว","ยกเลิก")'),
+      // Prospects — everything before a booking is committed. These are the left
+      // end of the money funnel; จอง and ดำเนินการ come from `jobs` next door.
       supabase.from('customers')
-        .select('id,customer_name,budget,booking_date,projects(name)')
-        .eq('status', 'booked'),
+        .select('id,customer_name,budget,booking_date,status,projects(name)')
+        .in('status', ['new', 'interested', 'quoted', 'close_pending']),
       // data entry jobs
       supabase.from('jobs')
         .select('id,customer_name,room_no,project_id,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,working_status,projects(name)')
@@ -253,11 +257,27 @@ export default function FinancePage() {
   const jobCustomerIds = new Set(activeJobs.map(j => j.customer_id).filter(Boolean))
   const deliveredCustomerIds = new Set(deliveredJobs.map(j => j.id)) // ไม่ใช้ customer_id แต่ job id
 
-  // booked ที่ยังไม่มี job = customer ที่ booked แต่ customer_id ไม่อยู่ใน active jobs
-  const bookedWithJob = bookedCustomers.filter(c => jobCustomerIds.has(c.id))
-  const bookedNoJob = bookedCustomers.filter(c => !jobCustomerIds.has(c.id))
-  const bookedWithJobValue = bookedWithJob.reduce((s, c) => s + (c.budget || 0), 0)
-  const bookedNoJobValue = bookedNoJob.reduce((s, c) => s + (c.budget || 0), 0)
+  // โอกาสก่อนจอง — เงินที่ยังไม่ผูกมัด แยกตามขั้นเดียวกับหน้า Prospects
+  const PRE_BOOK_STAGES: { value: string; label: string }[] = [
+    { value: 'new', label: 'ใหม่' },
+    { value: 'interested', label: 'สนใจ' },
+    { value: 'quoted', label: 'เสนอราคาแล้ว' },
+    { value: 'close_pending', label: 'รอปิด' },
+  ]
+  const prospectRows = PRE_BOOK_STAGES.map(s => {
+    const list = bookedCustomers.filter(c => c.status === s.value)
+    return {
+      ...s,
+      count: list.length,
+      value: list.reduce((sum, c) => sum + (c.budget || 0), 0),
+      noBudget: list.filter(c => !c.budget).length,
+    }
+  }).filter(r => r.count > 0)
+  const prospectCount = prospectRows.reduce((s, r) => s + r.count, 0)
+  const prospectValue = prospectRows.reduce((s, r) => s + r.value, 0)
+  // Stated openly on the card: a total built from rows where most budgets are
+  // blank understates the pipeline, and hiding that would make it look precise.
+  const prospectNoBudget = prospectRows.reduce((s, r) => s + r.noBudget, 0)
 
   // งานกำลังทำ: แยก Reserve (จอง) กับ Backlog (ดำเนินการ)
   const reserveJobs = activeJobs.filter(j => j.working_status === 'จอง')
@@ -478,42 +498,43 @@ export default function FinancePage() {
             <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>Pipeline การเงิน</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-              {/* 1. Booked customers still without a job.
-                  This card used to print three counts — total, converted, not
-                  converted — where the second is just the first minus the third,
-                  plus a progress bar that sits at 99% forever and so says nothing.
-                  The one fact worth acting on, "someone booked and no job was
-                  opened", was the smallest number on it. Now it leads, and the
-                  totals drop to one quiet line of context. */}
+              {/* 1. โอกาสก่อนจอง — the left end of the funnel.
+                  This slot used to hold "booked customers that have no job record
+                  yet", which is a data-completeness check, not money, and it
+                  double-counted the จอง card beside it from a different table.
+                  What was missing from a finance page was the stage before a
+                  booking exists: money that might still arrive. Same stage names
+                  as Prospects, so nothing new has to be learned. */}
               <div className="rounded-[11px] p-4 flex flex-col" style={{ background: 'var(--hover-bg)' }}>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ลูกค้าจองแล้ว</p>
-                  {bookedNoJob.length > 0 && (
-                    <button onClick={() => setDrilldown('booked_no_job')} className="text-micro hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>โอกาสก่อนจอง</p>
+                  {prospectCount > 0 && (
+                    <button onClick={() => setDrilldown('prospects')} className="text-micro hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
                   )}
                 </div>
 
-                {bookedNoJob.length === 0 ? (
-                  <div className="flex-1 flex flex-col justify-center py-2">
-                    <p className="text-sm font-bold" style={{ color: 'var(--accent-green)' }}>✓ เปิดงานครบทุกราย</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>จองแล้ว {bookedCustomers.length} ราย</p>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col justify-center py-2">
-                    <p className="text-xs" style={{ color: 'var(--text-2)' }}>ยังไม่ได้เปิดงาน</p>
-                    <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{bookedNoJob.length}</span>
-                      <span className="text-xs" style={{ color: 'var(--text-2)' }}>ราย</span>
-                      {bookedNoJobValue > 0 && (
-                        <span className="text-xs font-semibold ml-auto" style={{ color: 'var(--accent-amber)' }}>{fk(bookedNoJobValue)}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-kpi-money" style={{ color: 'var(--accent-blue)' }}>{fk(prospectValue)}</span>
+                  <span className="text-xs ml-auto" style={{ color: 'var(--text-2)' }}>{prospectCount} ราย</span>
+                </div>
 
-                <p className="text-micro pt-2" style={{ color: 'var(--text-3)', borderTop: '1px solid var(--divider)' }}>
-                  จองแล้ว {bookedCustomers.length} ราย · เปิดงานแล้ว {bookedWithJob.length}
-                </p>
+                <div className="space-y-1 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--divider)' }}>
+                  {prospectRows.map(r => (
+                    <div key={r.value} className="flex items-center justify-between">
+                      <span className="text-micro" style={{ color: 'var(--text-2)' }}>{r.label}</span>
+                      <span className="text-micro" style={{ color: 'var(--text-3)' }}>
+                        {r.count} ราย
+                        <span className="ml-2 font-semibold" style={{ color: 'var(--text-1)' }}>{r.value > 0 ? fk(r.value) : '—'}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {prospectNoBudget > 0 && (
+                  <p className="text-micro mt-2 pt-2" style={{ color: 'var(--accent-amber)', borderTop: '1px solid var(--divider)' }}>
+                    ⚠ {prospectNoBudget} รายยังไม่ระบุงบ — ยอดจริงสูงกว่านี้
+                  </p>
+                )}
               </div>
 
               {/* 2. Active Job Backlog — แยก Reserve / Backlog */}
@@ -1008,7 +1029,7 @@ export default function FinancePage() {
               <h3 className="modal-title">
                 {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Reserved / Backlog)'
                   : drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง'
-                  : drilldown === 'booked_no_job' ? '⚑ จองแล้วแต่ยังไม่ได้เปิดงาน'
+                  : drilldown === 'prospects' ? '◉ โอกาสก่อนจอง'
                   : `⚠️ ค้างเก็บเงินเกิน ${CHASE_AFTER_DAYS} วันหลังส่งมอบ`}
               </h3>
               <button onClick={() => setDrilldown(null)} style={{ color: 'var(--text-3)' }}>✕</button>
@@ -1046,17 +1067,26 @@ export default function FinancePage() {
                   </div>
                 )
               })}
-              {drilldown === 'booked_no_job' && bookedNoJob.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                      {c.projects?.name || '—'}{c.booking_date ? ` · จองเมื่อ ${c.booking_date}` : ''}
-                    </p>
+              {/* Biggest budget first — the ones worth a call today sit at the top.
+                  Rows with no budget fall to the bottom and say so, rather than
+                  showing ฿0 as though the deal were worthless. */}
+              {drilldown === 'prospects' && [...bookedCustomers]
+                .sort((a, b) => (b.budget || 0) - (a.budget || 0))
+                .map(c => (
+                  <div key={c.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
+                        {crmStage(c.status).label} · {c.projects?.name || '—'}
+                      </p>
+                    </div>
+                    {c.budget ? (
+                      <span className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--accent-blue)' }}>{fk(c.budget)}</span>
+                    ) : (
+                      <span className="text-xs flex-shrink-0" style={{ color: 'var(--accent-amber)' }}>ยังไม่ระบุงบ</span>
+                    )}
                   </div>
-                  <span className="text-sm font-bold" style={{ color: 'var(--accent-amber)' }}>{fk(c.budget || 0)}</span>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>

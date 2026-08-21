@@ -14,6 +14,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import PageHeader from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/StateUI'
 import { expectedDeliveryDate, fmtShortDate } from '@/lib/delivery'
+import { generateLineMsg, type LineJob } from '@/lib/lineMessage'
 import DateInput from '@/components/ui/DateInput'
 
 // ─── LINE Logo ────────────────────────────────────────────
@@ -975,50 +976,8 @@ function RevenueCard({ job, onUpdated }: {
   )
 }
 
-// ─── LINE message generator ────────────────────────────────
-interface LineJobCtx {
-  project_name: string
-  room_no: string
-  customer_name: string
-  sales_name: string
-  revenue_inc_vat: number
-  voucher?: number
-  working_status: string
-  expected_finish_date?: string | null
-  work_start_date?: string | null
-  work_days?: number | null
-}
-
-function generateLineMsg(job: LineJobCtx, inst: Installment): string {
-  const isDelivered = job.working_status === 'ส่งมอบแล้ว'
-  const isFirst = inst.installment_no === 1
-  const type = isDelivered ? 'ลูกค้าเก่า ส่งมอบ' : isFirst ? 'ลูกค้าใหม่' : 'ลูกค้าเก่า'
-
-  const d = inst.paid_date ? new Date(inst.paid_date) : new Date()
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yy = String(d.getFullYear()).slice(2)
-  const dateStr = `${dd}/${mm}/${yy}`
-
-  const fmt = (n: number) => n.toLocaleString('th-TH')
-  const paid = inst.paid_amount ?? inst.amount
-
-  let lines = [
-    `Wyde Int. (${type})`,
-    `วันที่ : ${dateStr}`,
-    `โครงการ : ${job.project_name}`,
-    `ห้อง : ${job.room_no}`,
-    `ลูกค้าชื่อ : ${job.customer_name}`,
-    `Sales Wyde : ${job.sales_name}`,
-    `Package : ${fmt(job.revenue_inc_vat)} บาท`,
-  ]
-  if (inst.voucher_amount > 0) lines.push(`หัก Voucher${inst.voucher_code ? ` (${inst.voucher_code})` : ''} : ${fmt(inst.voucher_amount)} บาท`)
-  lines.push(`${inst.installment_name} : ${fmt(paid)} บาท`)
-  if (inst.channel) lines.push(`ชำระผ่านทาง : ${inst.channel}`)
-  const expected = isDelivered ? null : expectedDeliveryDate(job)
-  if (expected) lines.push(`วันคาดส่งมอบ : ${fmtShortDate(expected)}`)
-  return lines.join('\n')
-}
+// LINE message: see lib/lineMessage.ts (LineJobCtx kept as the local alias)
+type LineJobCtx = LineJob
 
 // ─── Deal Drawer (right panel) ─────────────────────────────
 // ─── Doc field component ───────────────────────────────────

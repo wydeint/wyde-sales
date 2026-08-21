@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import FileAttach from '@/components/ui/FileAttach'
 import { expectedDeliveryDate, fmtShortDate, type DeliveryJobCtx } from '@/lib/delivery'
+import { generateLineMsg } from '@/lib/lineMessage'
 import DateInput from '@/components/ui/DateInput'
 
 // ─── Types ────────────────────────────────────────────────
@@ -138,34 +139,6 @@ export function getFullStageInfo(job: FullJob) {
   return { hasPlan, finalPaid, delivered, paidCount, totalCount, pendingInstallments, activeStage }
 }
 
-function generateLineMsg(
-  job: { project_name: string; room_no: string; customer_name: string; sales_name: string; revenue_inc_vat: number; voucher?: number; working_status: string } & DeliveryJobCtx,
-  inst: Installment,
-  workStartOverride?: string | null
-): string {
-  const isDelivered = job.working_status === 'ส่งมอบแล้ว'
-  const isFirst = inst.installment_no === 1
-  const type = isDelivered ? 'ลูกค้าเก่า ส่งมอบ' : isFirst ? 'ลูกค้าใหม่' : 'ลูกค้าเก่า'
-  const d = inst.paid_date ? new Date(inst.paid_date) : new Date()
-  const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(2)}`
-  const fmt = (n: number) => n.toLocaleString('th-TH')
-  const paid = inst.paid_amount ?? inst.amount
-  const expected = isDelivered ? null : expectedDeliveryDate(job, workStartOverride)
-  const lines = [
-    `Wyde Int. (${type})`,
-    `วันที่ : ${dateStr}`,
-    `โครงการ : ${job.project_name}`,
-    `ห้อง : ${job.room_no}`,
-    `ลูกค้าชื่อ : ${job.customer_name}`,
-    `Sales Wyde : ${job.sales_name}`,
-    `Package : ${fmt(job.revenue_inc_vat)} บาท`,
-    ...(job.voucher && job.voucher > 0 ? [`หัก Voucher : ${fmt(job.voucher)} บาท`] : []),
-    `${inst.installment_name} : ${fmt(paid)} บาท`,
-    ...(inst.channel ? [`ชำระผ่านทาง : ${inst.channel}`] : []),
-    ...(expected ? [`วันคาดส่งมอบ : ${fmtShortDate(expected)}`] : []),
-  ]
-  return lines.join('\n')
-}
 
 // ─── SetupAndPayModal ─────────────────────────────────────
 export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void; onSaved: () => void }) {

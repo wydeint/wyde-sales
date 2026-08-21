@@ -2253,7 +2253,11 @@ export default function MyDealsPage() {
           the other filters have already let through. A stage with no rooms is
           shown greyed and unclickable rather than hidden, so the key stays
           complete. */}
-      <div className="flex flex-wrap items-center gap-2 mb-6">
+      <div className="tab-group mb-6 flex-wrap">
+        <button onClick={() => setFilterStage('')}
+          className={`tab-btn ${!filterStage ? 'active' : ''}`}>
+          ทั้งหมด {visibleBase.length}
+        </button>
         {(Object.entries(STAGE_META) as [ChipStage, typeof STAGE_META[ChipStage]][]).map(([stage, m]) => {
           const n = stageCounts[stage]
           const on = filterStage === stage
@@ -2264,26 +2268,22 @@ export default function MyDealsPage() {
               disabled={empty}
               onClick={() => setFilterStage(on ? '' : stage)}
               aria-pressed={on}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full transition-colors"
+              className="tab-btn"
+              // The stage colour has to survive the active state: .tab-btn.active
+              // paints everything --accent, which would turn the red overdue chip
+              // purple exactly when it is selected. Shape, wrapper and sizing stay
+              // the shared ones; only the two colours are the stage's own.
               style={{
                 background: on ? m.bg : 'transparent',
-                border: `1px solid ${on ? m.border : 'var(--divider)'}`,
                 color: empty ? 'var(--text-3)' : on ? m.color : 'var(--text-2)',
                 cursor: empty ? 'default' : 'pointer',
                 opacity: empty ? 0.45 : 1,
               }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.dot, display: 'inline-block', flexShrink: 0 }} />
-              {m.label}
-              <span className="font-semibold tabular-nums" style={{ color: on ? m.color : 'var(--text-3)' }}>{n}</span>
+              {m.label} {n}
             </button>
           )
         })}
-        {filterStage && (
-          <button onClick={() => setFilterStage('')} className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
-            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-            ล้างสถานะ
-          </button>
-        )}
       </div>
 
       {/* Summary strip — the rooms still being worked on lead, because those are

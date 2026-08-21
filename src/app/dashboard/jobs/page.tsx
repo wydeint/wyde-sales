@@ -962,7 +962,7 @@ export default function JobsPage() {
                   <p className="text-xs font-bold uppercase tracking-wider flex-shrink-0" style={{ color: 'var(--accent)' }}>
                     {projectName}
                   </p>
-                  <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0"
+                  <span className="text-xs px-1.5 py-0.5 rounded-[4px] font-semibold flex-shrink-0"
                     style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                     {groupJobs.length} งาน
                   </span>

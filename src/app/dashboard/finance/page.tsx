@@ -600,7 +600,7 @@ export default function FinancePage() {
                               {salesName[0]}
                             </div>
                             <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{salesName}</span>
-                            <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+                            <span className="text-xs px-1.5 py-0.5 rounded-[4px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                               {payments.length} งวด
                             </span>
                           </div>
@@ -960,7 +960,7 @@ export default function FinancePage() {
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setEntryOpen(false)} className="px-4 py-2 text-sm" style={{ color: 'var(--text-3)' }}>ยกเลิก</button>
           <button onClick={saveEntry} disabled={saving || !entryForm.category || !entryForm.amount}
-            className="px-4 py-2 text-sm rounded-full text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
+            className="px-4 py-2 text-sm rounded-[8px] text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

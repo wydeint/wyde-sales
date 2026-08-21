@@ -194,7 +194,7 @@ function IndividualTab({
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1.5">
                     {STATUSES.map(s => statusCounts[s] > 0 && (
-                      <span key={s} className="text-micro font-semibold px-2 py-0.5 rounded-full"
+                      <span key={s} className="text-micro font-semibold px-2 py-0.5 rounded-[4px]"
                         style={{ background: STATUS_CFG[s].bg, color: STATUS_CFG[s].color }}>
                         {statusCounts[s]}
                       </span>

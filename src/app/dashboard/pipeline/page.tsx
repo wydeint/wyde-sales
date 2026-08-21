@@ -1670,9 +1670,18 @@ export default function ProspectsKanbanPage() {
           matching Customers — search, then narrow by stage, then results. */}
       <div className="tab-group mb-4 flex-wrap">
           {STAGES.map(s => {
+            // Both branches honour the project / sales filters. Only the booked
+            // one used to: every other chip kept counting the whole book while
+            // the cards below it were filtered, so choosing a project moved one
+            // number and left six standing still.
+            // Each half matches its own list — booked cards come from bookedJobs
+            // and carry the job's sales_id, the rest come from allCards and carry
+            // the customer's assigned_to.
             const count = s.value === 'booked'
               ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
-              : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value).length
+              : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value
+                  && (!filterProject || card.c.project_id === filterProject)
+                  && (!filterSales || card.c.assigned_to === filterSales)).length
             const active = activeStage === s.value && !search
             const done = s.value === 'closed' || s.value === 'lost'
             return (

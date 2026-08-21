@@ -547,7 +547,12 @@ export default function FinancePage() {
                   {/* Reserve */}
                   <div className="rounded-[8px] px-3 py-2 space-y-1" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
                     <div className="flex items-center justify-between">
-                      <span className="text-micro font-bold uppercase tracking-wide" style={{ color: 'var(--accent-amber)' }}>Reserve (จอง)</span>
+                      {/* Not "จอง" on its own. Prospects has a จอง stage too, meaning
+                          a position in the sales funnel; this one counts jobs whose
+                          production has not started. The two legitimately differ —
+                          a won deal waiting to begin is จอง here and closed there —
+                          so the label says which one it is. */}
+                      <span className="text-micro font-bold tracking-wide" style={{ color: 'var(--accent-amber)' }}>จองสิทธิ์ (ยังไม่เริ่มงาน)</span>
                       <span className="text-xs font-bold" style={{ color: 'var(--accent-amber)' }}>{reserveJobs.length} งาน</span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1027,7 +1032,7 @@ export default function FinancePage() {
             onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
-                {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (Reserved / Backlog)'
+                {drilldown === 'backlog' ? '📋 งานที่กำลังทำ (จองสิทธิ์ + Backlog)'
                   : drilldown === 'pending_final' ? '⚑ งวดส่งมอบที่ยังค้าง'
                   : drilldown === 'prospects' ? '◉ โอกาสก่อนจอง'
                   : `⚠️ ค้างเก็บเงินเกิน ${CHASE_AFTER_DAYS} วันหลังส่งมอบ`}

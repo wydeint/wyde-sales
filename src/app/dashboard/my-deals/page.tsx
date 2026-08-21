@@ -2045,6 +2045,7 @@ export default function MyDealsPage() {
   const [search, setSearch] = useState('')
   const [filterProject, setFilterProject] = useState('')
   const [filterSales, setFilterSales] = useState('')
+  const [filterStage, setFilterStage] = useState<ChipStage | ''>('')
   const [doneExpanded, setDoneExpanded] = useState<Record<string, boolean>>({})
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [drawerJob, setDrawerJob] = useState<FullJob | null>(null)
@@ -2205,9 +2206,14 @@ export default function MyDealsPage() {
   }, [jobs])
 
 
-  const grouped = useMemo(() => {
+  /**
+   * Everything the project / sales / search filters let through, before the
+   * stage chips narrow it further. The chip counts are taken from here so they
+   * describe what is actually on screen: pick a project and the counts follow.
+   */
+  const visibleBase = useMemo(() => {
     const q = search.toLowerCase().replace(/[-\s]/g, '')
-    const visible = jobs.filter(j => {
+    return jobs.filter(j => {
       if (filterProject && j.project_id !== filterProject) return false
       if (filterSales && j.sales_name !== filterSales) return false
       // Only show jobs with ≥50% settled (cash + voucher) — unless B2B, already delivered, or work has started
@@ -2223,6 +2229,16 @@ export default function MyDealsPage() {
       }
       return true
     })
+  }, [jobs, search, filterProject, filterSales])
+
+  const stageCounts = useMemo(() => {
+    const c = { wait: 0, collect: 0, ready: 0, overdue: 0, done: 0, bill: 0 } as Record<ChipStage, number>
+    for (const j of visibleBase) c[getChipStage(j)]++
+    return c
+  }, [visibleBase])
+
+  const grouped = useMemo(() => {
+    const visible = filterStage ? visibleBase.filter(j => getChipStage(j) === filterStage) : visibleBase
 
     const map = new Map<string, { name: string; active: RoomJob[]; done: RoomJob[] }>()
     for (const j of visible) {
@@ -2234,7 +2250,7 @@ export default function MyDealsPage() {
     return Array.from(map.entries())
       .map(([pid, g]) => ({ pid, ...g }))
       .sort((a, b) => b.active.length - a.active.length)
-  }, [jobs, search, filterProject, filterSales])
+  }, [visibleBase, filterStage])
 
   const totalActive = useMemo(() => jobs.filter(j => !j.actual_deliver_date).length, [jobs])
 
@@ -2259,8 +2275,8 @@ export default function MyDealsPage() {
           <option value="">ทุก Sales</option>
           {salesUsers.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
-        {(search || filterProject || filterSales) && (
-          <button onClick={() => { setSearch(''); setFilterProject(''); setFilterSales('') }}
+        {(search || filterProject || filterSales || filterStage) && (
+          <button onClick={() => { setSearch(''); setFilterProject(''); setFilterSales(''); setFilterStage('') }}
             className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
             style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
             ล้าง
@@ -2271,14 +2287,44 @@ export default function MyDealsPage() {
         </span>
       </FilterBar>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-6">
-        {(Object.entries(STAGE_META) as [ChipStage, typeof STAGE_META[ChipStage]][]).map(([stage, m]) => (
-          <span key={stage} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-3)' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.dot, display: 'inline-block', flexShrink: 0 }} />
-            {m.label}
-          </span>
-        ))}
+      {/* Stage chips — the colour key and the filter are the same control.
+          They read as a legend when nothing is selected, so the meaning of each
+          card colour is still explained, but clicking one narrows the grid to
+          that stage. Counts come from visibleBase, so they always describe what
+          the other filters have already let through. A stage with no rooms is
+          shown greyed and unclickable rather than hidden, so the key stays
+          complete. */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        {(Object.entries(STAGE_META) as [ChipStage, typeof STAGE_META[ChipStage]][]).map(([stage, m]) => {
+          const n = stageCounts[stage]
+          const on = filterStage === stage
+          const empty = n === 0
+          return (
+            <button
+              key={stage}
+              disabled={empty}
+              onClick={() => setFilterStage(on ? '' : stage)}
+              aria-pressed={on}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full transition-colors"
+              style={{
+                background: on ? m.bg : 'transparent',
+                border: `1px solid ${on ? m.border : 'var(--divider)'}`,
+                color: empty ? 'var(--text-3)' : on ? m.color : 'var(--text-2)',
+                cursor: empty ? 'default' : 'pointer',
+                opacity: empty ? 0.45 : 1,
+              }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.dot, display: 'inline-block', flexShrink: 0 }} />
+              {m.label}
+              <span className="font-semibold tabular-nums" style={{ color: on ? m.color : 'var(--text-3)' }}>{n}</span>
+            </button>
+          )
+        })}
+        {filterStage && (
+          <button onClick={() => setFilterStage('')} className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
+            style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            ล้างสถานะ
+          </button>
+        )}
       </div>
 
       {/* Summary strip — the rooms still being worked on lead, because those are
@@ -2341,9 +2387,9 @@ export default function MyDealsPage() {
                 <span className="text-sm font-semibold truncate min-w-0" style={{ color: 'var(--text-1)' }}>{name}</span>
                 <span className="text-xs px-2 py-0.5 rounded-[4px] font-semibold"
                   style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
-                  {active.length} ห้อง
+                  {filterStage ? active.length + done.length : active.length} ห้อง
                 </span>
-                {done.length > 0 && (
+                {!filterStage && done.length > 0 && (
                   <span className="text-xs" style={{ color: 'var(--text-3)' }}>· ส่งมอบแล้ว {done.length}</span>
                 )}
               </div>
@@ -2357,8 +2403,17 @@ export default function MyDealsPage() {
                 </div>
               )}
 
-              {/* Done rooms collapsible */}
-              {done.length > 0 && (
+              {/* Done rooms collapsible — but when a stage chip is filtering to
+                  a delivered stage, hiding the only matches behind a collapsed
+                  toggle would show an empty project, so open it. */}
+              {done.length > 0 && filterStage && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {done.map(j => (
+                    <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} onDelete={() => deleteJob(j)} seqNo={seqMap[j.id]} />
+                  ))}
+                </div>
+              )}
+              {done.length > 0 && !filterStage && (
                 <div className="mt-2">
                   <button
                     className="flex items-center gap-1.5 text-xs py-1"

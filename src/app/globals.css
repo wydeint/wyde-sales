@@ -82,6 +82,12 @@
   --text-1: #1e1b4b;
   --text-2: #4c5a7a;
   --text-3: #576074;   /* ≥4.5:1 on white glass — WCAG AA */
+  /* Tooltips invert against the page in both themes, so they own their pair
+     rather than borrowing --text-*. Never write a tooltip with Tailwind's
+     `text-white`: the light-mode remap below forces it back to dark text and
+     the tooltip becomes dark-on-dark. */
+  --tooltip-bg: #1e1b4b;
+  --tooltip-fg: #f1f5f9;
   --card-bg: rgba(255,255,255,0.55);
   --card-border: rgba(199,210,254,0.45);
   --panel-bg: rgba(255,255,255,0.96);
@@ -114,6 +120,8 @@
   --text-1: #f1f5f9;
   --text-2: #94a3b8;
   --text-3: #7d8fa8;   /* ≥4.5:1 on dark glass — WCAG AA */
+  --tooltip-bg: #f1f5f9;
+  --tooltip-fg: #1e1b4b;
   --card-bg: #1a1530;
   --card-border: rgba(255,255,255,0.10);
   --panel-bg: #1e1838;

@@ -95,11 +95,12 @@ function InstallmentBadge({ inst }: { inst: Installment }) {
           {inst.installment_no}
         </div>
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 hidden group-hover:block pointer-events-none">
-          <div className="bg-gray-900 text-white text-micro rounded-[6px] px-2 py-1.5 whitespace-nowrap shadow-lg">
+          <div className="text-micro rounded-[6px] px-2 py-1.5 whitespace-nowrap shadow-lg"
+            style={{ background: 'var(--tooltip-bg)', color: 'var(--tooltip-fg)' }}>
             <p className="font-semibold">{inst.installment_name}</p>
             <p>{f(inst.amount)}</p>
             {(inst.slip_url || inst.receipt_url) && (
-              <p className="text-success mt-0.5">{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
+              <p className="mt-0.5" style={{ opacity: 0.75 }}>{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
             )}
           </div>
         </div>

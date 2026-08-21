@@ -15,6 +15,8 @@ interface Installment {
   installment_no: number
   installment_name: string
   amount: number
+  paid_amount: number | null
+  voucher_amount: number | null
   status: 'pending' | 'paid' | 'overdue'
   slip_url: string | null
   receipt_url: string | null
@@ -277,7 +279,7 @@ export default function PaymentsPage() {
     const { data: instsRaw } = jobIds.length > 0
       ? await fetchAllRows<Installment & { job_id: string }>(() =>
           supabase.from('payments')
-            .select('id, job_id, installment_no, installment_name, amount, paid_amount, status, slip_url, receipt_url')
+            .select('id, job_id, installment_no, installment_name, amount, paid_amount, voucher_amount, status, slip_url, receipt_url')
             .in('job_id', jobIds).order('id'))
       : { data: [] }
 
@@ -292,7 +294,13 @@ export default function PaymentsPage() {
 
     const built: JobRow[] = (jobsRaw || []).map((j: any) => {
       const insts: Installment[] = instMap.get(j.id) || []
-      const paid_total = insts.filter(i => i.status === 'paid').reduce((s, i) => s + ((i as any).paid_amount ?? i.amount), 0)
+      // A voucher settles part of an instalment: paid_amount holds the cash and
+      // voucher_amount the rest, so the job is closed only when both are counted.
+      // Counting cash alone left five fully-paid rooms showing an outstanding
+      // balance equal to their voucher, flagged "ค้างชำระ". My Deals and Jobs
+      // both add the two — this page was the odd one out.
+      const paid_total = insts.filter(i => i.status === 'paid')
+        .reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0) + Number(i.voucher_amount ?? 0), 0)
       // Outstanding is revenue minus what came in — NOT the sum of unpaid
       // instalments. Most jobs carry only the booking instalment until the plan
       // is set up, so summing unpaid rows reported ฿0 owing on a ฿2,000,000 job

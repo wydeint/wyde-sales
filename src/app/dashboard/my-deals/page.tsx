@@ -15,6 +15,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/StateUI'
 import { expectedDeliveryDate, fmtShortDate } from '@/lib/delivery'
 import { generateLineMsg, type LineJob } from '@/lib/lineMessage'
+import { isAwaitingCollection, isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
 import DateInput from '@/components/ui/DateInput'
 
 // ─── LINE Logo ────────────────────────────────────────────
@@ -56,7 +57,6 @@ interface RoomJob {
   order_date: string | null
   actual_deliver_date: string | null
   has_plan: boolean
-  has_overdue: boolean
   all_paid: boolean
   paid_count: number
   total_count: number
@@ -128,11 +128,17 @@ type ChipStage = 'wait' | 'collect' | 'ready' | 'overdue' | 'done' | 'bill'
 
 function getChipStage(j: RoomJob): ChipStage {
   if (j.actual_deliver_date) {
-    // B2B ส่งมอบแล้วแต่ยังค้างรับเงิน
-    if (j.customer_type === 'B2B' && !j.all_paid && j.has_plan) return 'bill'
+    // Delivered but the balance is short. Was B2B-only, which meant a delivered
+    // B2C room still owing money showed plain green "ส่งมอบแล้ว" and the debt
+    // disappeared from the board. The label fits either type.
+    if (isAwaitingCollection(j)) {
+      // Past the chase window it stops being normal billing lag. This is the
+      // only thing 'overdue' means now — see lib/collection.ts for why the old
+      // due_date test was dropped.
+      return isOverdueCollection(j) ? 'overdue' : 'bill'
+    }
     return 'done'
   }
-  if (j.has_overdue) return 'overdue'
   if (!j.has_plan) return 'wait'
   if (j.all_paid) return 'ready'
   return 'collect'
@@ -152,7 +158,7 @@ const STAGE_META: Record<ChipStage, { label: string; bg: string; color: string; 
   wait:    { label: 'รอเปิดงาน',        bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', color: 'var(--accent-purple)', border: 'color-mix(in srgb, var(--accent-purple) 30%, transparent)', dot: 'var(--accent-purple)' },
   collect: { label: 'กำลังเก็บเงิน',    bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },
   ready:   { label: 'รอส่งมอบ',         bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)', color: 'var(--accent-blue)',   border: 'color-mix(in srgb, var(--accent-blue)   30%, transparent)', dot: 'var(--accent-blue)' },
-  overdue: { label: 'งวดเกินกำหนด',     bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)', color: 'var(--accent-red)',    border: 'color-mix(in srgb, var(--accent-red)    30%, transparent)', dot: 'var(--accent-red)' },
+  overdue: { label: `ค้างเก็บเงิน ${CHASE_AFTER_DAYS}+ วัน`, bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)', color: 'var(--accent-red)',    border: 'color-mix(in srgb, var(--accent-red)    30%, transparent)', dot: 'var(--accent-red)' },
   done:    { label: 'ส่งมอบแล้ว',       bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)', color: 'var(--accent-green)',  border: 'color-mix(in srgb, var(--accent-green)  30%, transparent)', dot: 'var(--accent-green)' },
   bill:    { label: 'ส่งมอบแล้ว/ค้างรับเงิน', bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },
 }
@@ -1952,12 +1958,20 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
             style={{ background: 'var(--hover-bg)', color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
             {job.paid_count}/{job.total_count} งวด
           </span>
-          {job.has_overdue && (
-            <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }}>
-              เกินกำหนด
-            </span>
-          )}
+          {isAwaitingCollection(job) && (() => {
+            const d = daysSinceDelivery(job.actual_deliver_date)
+            const late = isOverdueCollection(job)
+            // How long the money has been outstanding since handover — the one
+            // number that says whether this needs chasing today.
+            return (
+              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+                style={late
+                  ? { background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }
+                  : { background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>
+                ค้างรับ {d} วัน
+              </span>
+            )
+          })()}
         </div>
       )}
       {/* Row 3: progress bar */}
@@ -2042,11 +2056,9 @@ export default function MyDealsPage() {
         actual_deliver_date: r.actual_deliver_date || null,
         revenue_inc_vat: r.revenue_inc_vat || r.revenue_ex_vat || 0,
         has_plan: insts.length > 0,
-        // payments.status only ever holds 'paid' or 'pending' — there is no
-        // 'overdue' row in the table, so the old check was false for every job
-        // and the red งวดเกินกำหนด chip could never appear. Overdue is derived:
-        // still pending, and its due date has passed.
-        has_overdue: insts.some(i => i.status !== 'paid' && !!i.due_date && i.due_date < todayStr()),
+        // due_date is not the signal here — instalments are triggered by events,
+        // and almost nothing carries one. Lateness is derived from the handover
+        // date in lib/collection.ts instead; nothing reads has_overdue any more.
         all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         paid_count: insts.filter(i => i.status === 'paid').length,
         total_count: insts.length,

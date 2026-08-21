@@ -7,6 +7,8 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
+import { isOverdueCollection, CHASE_AFTER_DAYS } from '@/lib/collection'
+import { fetchAllRows } from '@/lib/fetchAll'
 import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
@@ -137,9 +139,14 @@ export default function FinancePage() {
   const load = useCallback(async () => {
     setLoading(true); setFetchError('')
     const [{ data: p, error: e1 }, { data: j, error: e2 }, { data: e }, { data: aj }, { data: bc }, { data: ej }] = await Promise.all([
-      supabase.from('payments')
-        .select('id,job_id,installment_no,installment_name,due_date,amount,paid_date,paid_amount,status,notes,jobs(customer_name,room_no,customer_type,work_type,projects(name),sales:users!jobs_sales_id_fkey(name))')
-        .order('due_date'),
+      // 1,173 instalment rows against PostgREST's 1,000 cap: the page was
+      // silently dropping 173 of them, and because the sort put NULL due_dates
+      // last, the ones dropped were exactly the rows this app creates. Two of
+      // the four rooms owing money past the chase window were invisible here
+      // while My Deals showed all four.
+      fetchAllRows(() => supabase.from('payments')
+        .select('id,job_id,installment_no,installment_name,due_date,amount,paid_date,paid_amount,status,notes,jobs(customer_name,room_no,customer_type,work_type,actual_deliver_date,projects(name),sales:users!jobs_sales_id_fkey(name))')
+        .order('due_date')),
       supabase.from('jobs')
         .select('id,customer_name,room_no,actual_deliver_date,revenue_inc_vat,revenue_ex_vat,projects(name)')
         .eq('working_status', 'ส่งมอบแล้ว')
@@ -233,7 +240,13 @@ export default function FinancePage() {
 
   const paidPayments = payments.filter(p => p.status === 'paid')
   const outstanding = payments.filter(p => p.status !== 'paid')
-  const overdue = payments.filter(p => p.status !== 'paid' && p.due_date && p.due_date < today)
+  // Late money is measured from handover, not from due_date — instalments here
+  // are triggered by events and almost none carry a due date. See lib/collection.ts.
+  const overdue = payments.filter(p => {
+    if (p.status === 'paid') return false
+    const d = (p as any).jobs?.actual_deliver_date as string | undefined
+    return isOverdueCollection({ actual_deliver_date: d, all_paid: false, has_plan: true })
+  })
 
   // ── Pipeline calculations ───────────────────────────────
   // job_ids ที่มี job record แล้ว (แปลงเป็น backlog แล้ว)
@@ -866,7 +879,7 @@ export default function FinancePage() {
         <div className="space-y-4">
           {overdue.length > 0 && (
             <div className="flex items-center gap-3 p-3 rounded-[11px] text-sm" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
-              <AlertCircle size={15} />มี {overdue.length} งวดเกินกำหนด รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
+              <AlertCircle size={15} />มี {overdue.length} งวดค้างเก็บเกิน {CHASE_AFTER_DAYS} วันหลังส่งมอบ รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
             </div>
           )}
           <div className="grid grid-cols-3 gap-3">
@@ -876,7 +889,7 @@ export default function FinancePage() {
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.filter(p => p.due_date >= start && p.due_date <= end).length} งวด</p>
             </div>
             <div className="ds-card p-3">
-              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด (ทั้งหมด)</p>
+              <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างเก็บ {CHASE_AFTER_DAYS}+ วัน</p>
               <p className="text-kpi-number text-danger">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
             </div>

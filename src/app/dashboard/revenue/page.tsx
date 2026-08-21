@@ -566,7 +566,7 @@ export default function RevenuePage() {
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายโครงการ</h2>
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{byProject.length} โครงการ · {periodJobs.length} งาน</span>
             </div>
-            <button className="text-xs px-2 py-1 rounded-lg" style={{ color: 'var(--accent)', background: 'var(--hover-bg)' }}
+            <button className="text-xs px-2 py-1 rounded-[8px]" style={{ color: 'var(--accent)', background: 'var(--hover-bg)' }}
               onClick={() => {
                 const allExp = byProject.every(p => expandedProjects.has(p.name))
                 setExpandedProjects(allExp ? new Set() : new Set(byProject.map(p => p.name)))

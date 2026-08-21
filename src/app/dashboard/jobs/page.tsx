@@ -891,7 +891,7 @@ export default function JobsPage() {
           { on: filterNoPO, toggle: () => setFilterNoPO(v => !v), label: 'ไม่มี PO', count: noPOCount },
         ]).map(c => (
           <button key={c.label} onClick={c.toggle}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
             style={c.on
               ? { background: 'var(--accent)', color: '#fff' }
               : { color: 'var(--text-2)' }}>
@@ -1377,10 +1377,10 @@ export default function JobsPage() {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-[var(--radius-pill)] text-sm"
+              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-[8px] text-sm"
                 style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>ยกเลิก</button>
               <button onClick={save} disabled={saving || !!roomDupWarning}
-                className="px-6 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
+                className="px-6 py-2 rounded-[8px] text-sm font-semibold text-white"
                 style={{ background: 'var(--accent)', opacity: (saving || roomDupWarning) ? 0.5 : 1 }}>
                 {saving ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>

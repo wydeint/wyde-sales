@@ -317,7 +317,7 @@ export default function FinancePage() {
         subtitle="รายรับ = งวดชำระที่รับจริง · รายจ่าย = บันทึกเอง"
         actions={tab === 'expense' && (
           <button onClick={() => { setEditingEntry(null); setEntryForm(emptyEntry); setSaveError(''); setEntryOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-pill)] text-sm font-semibold text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}>
             <Plus size={15} />เพิ่มรายจ่าย
           </button>

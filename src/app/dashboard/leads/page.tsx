@@ -526,7 +526,7 @@ export default function LeadsPage() {
                   <span style={{ color: 'var(--accent-blue)' }}>🔵 {importRows.filter(r => r._dupSystem).length} มีในระบบแล้ว</span> &nbsp;·&nbsp;
                   <span className="text-danger">❌ {importRows.filter(r => !r._valid && !r._dup && !r._dupSystem).length} error</span>
                 </p>
-                <button onClick={() => setImportRows([])} className="text-xs px-3 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
+                <button onClick={() => setImportRows([])} className="text-xs px-3 py-1 rounded-[8px]" style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}>
                   เลือกใหม่
                 </button>
               </div>

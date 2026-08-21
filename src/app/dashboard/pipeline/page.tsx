@@ -539,7 +539,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
               onUpdate({ ...customer, status: s.value, jobs: updatedJobs } as any)
             }}
-              className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold"
+              className="px-2.5 py-1 rounded-[8px] text-label font-semibold"
               style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
               → {s.label}
             </button>
@@ -554,7 +554,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'closed' } : j) : (customer as any).jobs
               onUpdate({ ...customer, status: 'closed', jobs: updatedJobs } as any)
             }}
-            className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-opacity"
+            className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-opacity"
             style={{
               background: canClose ? closedStage.chip : 'rgba(100,100,100,0.3)',
               color: '#fff',
@@ -721,7 +721,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
                   onUpdate({ ...customer, status: s.value, jobs: updatedJobs } as any)
                 }}
-                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
+                  className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-colors"
                   style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
                   → {s.label}
                 </button>
@@ -733,7 +733,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'lost' } : j) : (customer as any).jobs
                   onUpdate({ ...customer, status: 'lost', jobs: updatedJobs } as any)
                 }}
-                  className="px-2.5 py-1 rounded-[var(--radius-pill)] text-label font-semibold transition-colors"
+                  className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-colors"
                   style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
                   → หลุด
                 </button>
@@ -922,7 +922,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             <div className="pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
               <button
                 onClick={() => onStartJob(customer)}
-                className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                className="w-full py-3 rounded-[8px] font-bold text-sm text-white"
                 style={{ background: 'var(--accent-green)' }}>
                 ⚡ เริ่มงาน
               </button>
@@ -1669,7 +1669,7 @@ export default function ProspectsKanbanPage() {
             const done = s.value === 'closed' || s.value === 'lost'
             return (
               <button key={s.value} onClick={() => { setActiveStage(s.value); setSearch(''); setSelectedCustomer(null) }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
                 style={active
                   ? { background: s.badge, color: s.text }
                   : { color: done ? 'var(--text-3)' : 'var(--text-2)' }}>
@@ -1679,7 +1679,7 @@ export default function ProspectsKanbanPage() {
             )
           })}
           {search && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-pill)] text-xs font-semibold whitespace-nowrap flex-shrink-0"
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold whitespace-nowrap flex-shrink-0"
               style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
               ทั้งหมด
               <span className="font-bold">{list.length}</span>

@@ -44,7 +44,7 @@ export default function StatusChip({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-pill)] text-xs font-semibold ${className}`.trim()}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-xs font-semibold ${className}`.trim()}
       style={{
         background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
         border: `1px solid color-mix(in srgb, ${s.color} 35%, transparent)`,

@@ -14,6 +14,9 @@
   --radius-sm:   8px;
   --radius-md:   11px;
   --radius-lg:   18px;
+  /* Quick Mode only. The rest of the app settled on one button shape — the
+     rounded rectangle — so a pill anywhere else is a mistake; use --radius-sm.
+     Quick Mode keeps its own design by standing instruction. */
   --radius-pill: 9999px;
 
   /* Spacing */
@@ -102,6 +105,9 @@
   --radius-sm: 8px;
   --radius-md: 11px;
   --radius-lg: 18px;
+  /* Quick Mode only. The rest of the app settled on one button shape — the
+     rounded rectangle — so a pill anywhere else is a mistake; use --radius-sm.
+     Quick Mode keeps its own design by standing instruction. */
   --radius-pill: 9999px;
 }
 
@@ -136,6 +142,9 @@
   --radius-sm: 8px;
   --radius-md: 11px;
   --radius-lg: 18px;
+  /* Quick Mode only. The rest of the app settled on one button shape — the
+     rounded rectangle — so a pill anywhere else is a mistake; use --radius-sm.
+     Quick Mode keeps its own design by standing instruction. */
   --radius-pill: 9999px;
 }
 
@@ -318,7 +327,10 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .btn-green,
 .btn-purple,
 .btn-blue {
-  border-radius: var(--radius-pill) !important;
+  /* Was --radius-pill, and !important meant the `rounded-lg` every one of these
+     17 buttons already writes was silently discarded. The app uses one button
+     shape now — the rounded rectangle — so this matches --radius-sm instead. */
+  border-radius: var(--radius-sm) !important;
   font-weight: 600 !important;
 }
 .btn-primary:hover:not(:disabled),
@@ -571,7 +583,7 @@ input[type="date"], input[type="number"] { color-scheme: light; }
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: var(--radius-pill);
+  border-radius: 4px;   /* the small-badge radius used across the app */
   font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);
   line-height: 1.3;

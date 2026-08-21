@@ -1302,7 +1302,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                 {job.customer_name}{job.sales_name ? ` · ${job.sales_name}` : ''}
               </p>
             </div>
-            <button onClick={onClose} className="p-1 rounded-lg" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
+            <button onClick={onClose} className="p-1 rounded-[8px]" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
           </div>
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
@@ -1527,20 +1527,20 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                 </div>
               ) : !hasPlan ? (
                 <button onClick={() => setActionModal('setup')}
-                  className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                  className="w-full py-3 rounded-[8px] font-bold text-sm text-white"
                   style={{ background: 'var(--accent)' }}>
                   + ตั้งแผนชำระเงิน & รับเงินงวดแรก
                 </button>
               ) : pendingInstallments.length > 0 ? (
                 <div className="flex gap-2">
                   <button onClick={() => setActionModal('pay')}
-                    className="flex-1 py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                    className="flex-1 py-3 rounded-[8px] font-bold text-sm text-white"
                     style={{ background: 'var(--accent)' }}>
                     + บันทึกรับเงิน
                   </button>
                   {finalPaid && (
                     <button onClick={() => setActionModal('handover')}
-                      className="flex-1 py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                      className="flex-1 py-3 rounded-[8px] font-bold text-sm text-white"
                       style={{ background: 'var(--accent-green)' }}>
                       ส่งมอบ
                     </button>
@@ -1548,7 +1548,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                 </div>
               ) : (
                 <button onClick={() => setActionModal('handover')}
-                  className="w-full py-3 rounded-[var(--radius-pill)] font-bold text-sm text-white"
+                  className="w-full py-3 rounded-[8px] font-bold text-sm text-white"
                   style={{ background: 'var(--accent-green)' }}>
                   + บันทึกส่งมอบ
                 </button>

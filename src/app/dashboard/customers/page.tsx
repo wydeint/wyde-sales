@@ -195,10 +195,10 @@ function CustomerDetail({
             <span className={st.badge}>
               {st.icon} {st.label}
             </span>
-            <button onClick={onEdit} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }} title="แก้ไขข้อมูล">
+            <button onClick={onEdit} className="p-1.5 rounded-[8px] transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }} title="แก้ไขข้อมูล">
               <Pencil size={14} />
             </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
+            <button onClick={onClose} className="p-1.5 rounded-[8px] transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
               <X size={16} />
             </button>
           </div>

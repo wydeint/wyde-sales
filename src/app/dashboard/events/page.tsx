@@ -544,7 +544,7 @@ export default function EventsPage() {
                   }} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => toggleExpand(ev)} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
+                  <button onClick={() => toggleExpand(ev)} className="p-2 rounded-[8px] transition-colors" style={{ color: 'var(--text-2)', background: 'var(--hover-bg)' }}>
                     {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
                 </div>

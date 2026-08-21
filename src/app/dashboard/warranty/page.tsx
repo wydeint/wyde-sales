@@ -314,7 +314,7 @@ export default function WarrantyPage() {
                           {computedStatus(w.warranty_end) === 'expiring_soon' && (
                             <button
                               onClick={() => window.open(`tel:${custPhone}`, '_self')}
-                              className="text-xs px-2 py-1 rounded-lg font-semibold"
+                              className="text-xs px-2 py-1 rounded-[8px] font-semibold"
                               style={{ background: 'color-mix(in srgb, var(--accent-amber) 15%, transparent)', color: 'var(--accent-amber)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' }}>
                               📞 นัดตรวจ
                             </button>

@@ -420,7 +420,12 @@ export default function FinancePage() {
                 </span>
               </div>
             </div>
-            <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: '145px' }}>
+            {/* overflow-x:auto forces overflow-y to compute to auto as well, so a
+                tooltip drawn above the bars was being clipped by this very box —
+                top and bottom both cut off. It cannot escape the scroller, so the
+                room is made inside it: the extra height is headroom for the
+                tooltip, and items stay bottom-aligned so the bars do not move. */}
+            <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: '183px', paddingTop: '38px' }}>
               {monthlyChart.map(m => {
                 const isCurrentMonth = m.key === today.slice(0, 7)
                 return (
@@ -444,10 +449,15 @@ export default function FinancePage() {
                           <div className="rounded-t-sm" style={{ height: `${(m.expense / chartMax) * 100}%`, background: 'var(--accent-red)', opacity: 0.75 }} />
                         )}
                       </div>
-                      {/* Tooltip on hover (desktop) */}
+                      {/* Tooltip on hover (desktop).
+                          --card-bg is 55% transparent, so the value labels behind
+                          the tooltip showed straight through it and the two sets of
+                          digits overlapped. --panel-bg is opaque; the accent colours
+                          stay readable on it in both themes, which pure black would
+                          not allow. */}
                       {(m.received > 0 || m.expense > 0) && (
-                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-micro whitespace-nowrap px-2 py-1 rounded-lg pointer-events-none"
-                          style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }}>
+                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-micro whitespace-nowrap px-2 py-1 rounded-[8px] shadow-lg pointer-events-none"
+                          style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
                           {m.received > 0 && <div style={{ color: 'var(--accent-blue)' }}>รับ {fk(m.received)}</div>}
                           {m.expense > 0 && <div style={{ color: 'var(--accent-red)' }}>จ่าย {fk(m.expense)}</div>}
                         </div>

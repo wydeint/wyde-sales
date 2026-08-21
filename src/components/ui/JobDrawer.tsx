@@ -496,8 +496,13 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
     if (!selected) return
     setSaving(true)
     if (selected.is_work_trigger && !job.work_start_date) {
+      // crm_stage has to move with it. The customer record was already being set
+      // to closed here, but the job kept whatever prospect stage it had, and
+      // Prospects groups by jobs.crm_stage — so a room that had started work and
+      // was paid past 50% carried on sitting under รอปิด. Same one-line omission
+      // in all four places that start work on payment.
       await supabase.from('jobs').update({
-        work_start_date: paidDate, working_status: 'ดำเนินการ',
+        work_start_date: paidDate, working_status: 'ดำเนินการ', crm_stage: 'closed',
         ...(!job.order_date ? { order_date: paidDate } : {}),
       }).eq('id', job.id)
       if (job.customer_id) {

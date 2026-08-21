@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { calcB2BInstallments, calcB2CInstallments } from '@/lib/paymentPlans'
 import DateInput from '@/components/ui/DateInput'
@@ -388,7 +388,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
     if (useVoucher && voucherAmount >= paidAmount) { setError('ยอด Voucher ต้องน้อยกว่ายอดงวด'); return }
     setSaving(true); setError('')
     if (selected.is_work_trigger && !job.work_start_date) {
-      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ' }).eq('id', job.id)
+      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ', crm_stage: 'closed' }).eq('id', job.id)
       await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
     }
     const { error: e } = await supabase.from('payments').update({

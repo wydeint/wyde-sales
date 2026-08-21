@@ -589,7 +589,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
     }).eq('id', selectedInst.id)
 
     if (selectedInst.is_work_trigger) {
-      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ' }).eq('id', selectedJob.id)
+      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ', crm_stage: 'closed' }).eq('id', selectedJob.id)
       const { data: jobData } = await supabase.from('jobs').select('customer_id').eq('id', selectedJob.id).maybeSingle()
       if (jobData?.customer_id) {
         await supabase.from('customers').update({ status: 'closed' }).eq('id', jobData.customer_id)

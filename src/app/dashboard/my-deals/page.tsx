@@ -571,7 +571,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     const jobValue = job.revenue_inc_vat || 0
     const newPct = jobValue > 0 ? newTotal / jobValue : 0
     if (newPct >= 0.5 && !job.work_start_date) {
-      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ' }).eq('id', job.id)
+      await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ', crm_stage: 'closed' }).eq('id', job.id)
     }
     await supabase.from('payments').update({
       status: 'paid',

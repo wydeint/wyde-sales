@@ -14,10 +14,6 @@
   --radius-sm:   8px;
   --radius-md:   11px;
   --radius-lg:   18px;
-  /* Quick Mode only. The rest of the app settled on one button shape — the
-     rounded rectangle — so a pill anywhere else is a mistake; use --radius-sm.
-     Quick Mode keeps its own design by standing instruction. */
-  --radius-pill: 9999px;
 
   /* Spacing */
   --space-xxs: 4px;
@@ -105,10 +101,6 @@
   --radius-sm: 8px;
   --radius-md: 11px;
   --radius-lg: 18px;
-  /* Quick Mode only. The rest of the app settled on one button shape — the
-     rounded rectangle — so a pill anywhere else is a mistake; use --radius-sm.
-     Quick Mode keeps its own design by standing instruction. */
-  --radius-pill: 9999px;
 }
 
 /* Dark — Elevated Dark */
@@ -142,10 +134,6 @@
   --radius-sm: 8px;
   --radius-md: 11px;
   --radius-lg: 18px;
-  /* Quick Mode only. The rest of the app settled on one button shape — the
-     rounded rectangle — so a pill anywhere else is a mistake; use --radius-sm.
-     Quick Mode keeps its own design by standing instruction. */
-  --radius-pill: 9999px;
 }
 
 /* ══════════════════════════════════════════

@@ -515,7 +515,7 @@ function EventAddSheet({ open, onClose, events }: {
               style={{ ...sheetInputStyle, fontSize: 14 }} />
           </div>
           <button onClick={save} disabled={saving}
-            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] transition-colors text-base"
             style={{ background: 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'เพิ่มในรายชื่อ Event'}
           </button>
@@ -680,7 +680,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
             ← เลือกลูกค้าอื่น
           </button>
           <button onClick={resetAndClose}
-            className="w-full py-3 rounded-[var(--radius-pill)] text-sm font-semibold"
+            className="w-full py-3 rounded-[8px] text-sm font-semibold"
             style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>
             ไปตั้งแผนชำระ →
           </button>
@@ -786,7 +786,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
             </label>
           </div>
           <button onClick={confirmPay} disabled={saving}
-            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] transition-colors text-base"
             style={{ background: 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันรับเงิน'}
           </button>
@@ -966,7 +966,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
                     ))}
                   </div>
                   <button onClick={() => saveInstallments(insts)} disabled={saving}
-                    className="w-full py-3 rounded-[var(--radius-pill)] text-sm font-semibold disabled:opacity-40 border"
+                    className="w-full py-3 rounded-[8px] text-sm font-semibold disabled:opacity-40 border"
                     style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)', borderColor: 'color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--accent)' }}>
                     {saving ? 'กำลังบันทึก...' : `เลือกแผน ${plan}`}
                   </button>
@@ -1002,7 +1002,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
                 <span className="text-xs w-16 flex-shrink-0" style={t2}>งวดที่ {i + 1}</span>
                 <input type="number" value={pct}
                   onChange={e => { const n = [...b2bPcts]; n[i] = Number(e.target.value); setB2bPcts(n) }}
-                  className="w-16 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none"
+                  className="w-16 rounded-[8px] px-2 py-1.5 text-sm text-center focus:outline-none"
                   style={{ ...sheetCardDark, color: 'var(--text-1)', fontSize: 14 }} />
                 <span className="text-xs" style={t2}>%</span>
                 <span className="text-xs ml-auto" style={t1}>{fmtBaht(Math.round((pct / 100) * selectedJob.revenue))}</span>
@@ -1013,7 +1013,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
             รวม {totalPct}% {totalPct !== 100 && '— ต้องรวมได้ 100%'}
           </div>
           <button onClick={saveB2BInstallments} disabled={saving || totalPct !== 100}
-            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors"
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] transition-colors"
             style={{ background: 'var(--accent-purple)' }}>
             {saving ? 'กำลังบันทึก...' : 'บันทึกแผนชำระ B2B'}
           </button>
@@ -1152,7 +1152,7 @@ function DeliverSheet({ open, onClose, jobs }: {
                   className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none" style={sheetInputStyle} />
               </div>
               <button onClick={saveDelivery} disabled={saving}
-                className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[var(--radius-pill)] transition-colors text-base"
+                className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] transition-colors text-base"
                 style={{ background: 'var(--accent-green)' }}>
                 {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบงาน'}
               </button>
@@ -1231,7 +1231,7 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
               <div className="flex gap-2">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s.value} onClick={() => updateStatus(j.id, s.value)}
-                    className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors border"
+                    className="flex-1 py-2.5 rounded-[8px] text-xs font-semibold transition-colors border"
                     style={jobStatuses[j.id] === s.value ? s.activeStyle : { background: 'var(--card-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
                     {s.label}
                   </button>
@@ -1453,7 +1453,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   <p className="text-xs mt-0.5" style={t2}>{r.room} · {r.projectName}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-micro px-2 py-0.5 rounded-full font-semibold"
+                  <span className="text-micro px-2 py-0.5 rounded-[4px] font-semibold"
                     style={{ background: r.kind === 'job' ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: r.kind === 'job' ? 'var(--accent)' : 'var(--accent-orange)' }}>
                     {r.kind === 'job' ? 'งาน' : 'Prospect'}
                   </span>

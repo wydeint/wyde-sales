@@ -601,14 +601,21 @@ export default function CustomersPage() {
   // Reset to page 1 whenever filters change
   useEffect(() => { setPage(1) }, [search, filterStatus, filterProject])
 
-  const filtered = customers.filter(c => {
+  // Everything the search and project filters allow through, before the status
+  // pills narrow it further. The pill counts come from here so they describe
+  // what is actually on screen: the counts used to be taken from the full
+  // customer list, so choosing a project left all seven numbers unchanged while
+  // the table below showed a fraction of them. A pill cannot filter by its own
+  // dimension, so status is applied after.
+  const baseFiltered = customers.filter(c => {
     const q = search.toLowerCase()
     const qNorm = q.replace(/-/g, '')
     const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || (c.interested_room?.replace(/-/g, '').toLowerCase() || '').includes(qNorm) || (c as any).projects?.name?.toLowerCase().includes(q)
-    const matchStatus = !filterStatus || c.status === filterStatus
     const matchProject = !filterProject || c.project_id === filterProject
-    return matchSearch && matchStatus && matchProject
+    return matchSearch && matchProject
   })
+
+  const filtered = filterStatus ? baseFiltered.filter(c => c.status === filterStatus) : baseFiltered
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -648,10 +655,10 @@ export default function CustomersPage() {
       <div className="tab-group mb-4 flex-wrap">
         <button onClick={() => setFilterStatus('')}
           className={`tab-btn ${!filterStatus ? 'active' : ''}`}>
-          ทั้งหมด {customers.length}
+          ทั้งหมด {baseFiltered.length}
         </button>
         {STATUS_LIST.map(s => {
-          const count = customers.filter(c => c.status === s.value).length
+          const count = baseFiltered.filter(c => c.status === s.value).length
           if (!count) return null
           return (
             <button key={s.value} onClick={() => setFilterStatus(filterStatus === s.value ? '' : s.value)}

@@ -615,7 +615,9 @@ function StatusTab({
           const cfg = STATUS_CFG[st]
           const Icon = cfg.icon
           const commAmt = st === 'pending' ? pendingComm : st === 'approved' ? approvedComm : paidComm
-          const cnt = periodJobs.filter(j => getStatus(j) === st).length
+          // salesJobs, matching the amount printed directly above it — reading
+          // periodJobs here left the count frozen while the money moved.
+          const cnt = salesJobs.filter(j => getStatus(j) === st).length
           return (
             <div key={st} className="ds-card-sm p-4">
               <div className="flex items-center gap-1.5 mb-1">

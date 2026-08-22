@@ -554,13 +554,24 @@ function StatusTab({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodJobs, filterStatus, filterSales])
 
-  const periodComm = periodJobs.reduce((s, j) => s + getCommission(j).amount, 0)
-  const periodRef  = referrals.filter(r => periodJobs.some(j => j.id === r.job_id)).reduce((s, r) => s + r.referral_amount, 0)
+  // Every figure below honours the salesperson filter. They were all reading
+  // periodJobs, which the filter has not touched, so choosing a salesperson
+  // narrowed the list underneath while the totals kept showing the whole team.
+  // The status filter is deliberately not applied: these four ARE the status
+  // breakdown, so filtering them by status would leave one bar and three zeros.
+  const salesJobs = useMemo(
+    () => filterSales === 'all' ? periodJobs : periodJobs.filter(j => j.sales_id === filterSales),
+    [periodJobs, filterSales]
+  )
+  const refInScope = referrals.filter(r => salesJobs.some(j => j.id === r.job_id))
 
-  const pendingComm   = periodJobs.filter(j => getStatus(j) === 'pending').reduce((s, j) => s + getCommission(j).amount, 0)
-  const approvedComm  = periodJobs.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
-  const paidComm      = periodJobs.filter(j => getStatus(j) === 'paid').reduce((s, j) => s + getCommission(j).amount, 0)
-  const totalRef      = referrals.filter(r => periodJobs.some(j => j.id === r.job_id)).reduce((s, r) => s + r.referral_amount, 0)
+  const periodComm = salesJobs.reduce((s, j) => s + getCommission(j).amount, 0)
+  const periodRef  = refInScope.reduce((s, r) => s + r.referral_amount, 0)
+
+  const pendingComm   = salesJobs.filter(j => getStatus(j) === 'pending').reduce((s, j) => s + getCommission(j).amount, 0)
+  const approvedComm  = salesJobs.filter(j => getStatus(j) === 'approved').reduce((s, j) => s + getCommission(j).amount, 0)
+  const paidComm      = salesJobs.filter(j => getStatus(j) === 'paid').reduce((s, j) => s + getCommission(j).amount, 0)
+  const totalRef      = refInScope.reduce((s, r) => s + r.referral_amount, 0)
 
   async function updateStatus(jobId: string, newStatus: string) {
     setSaving(jobId)

@@ -716,7 +716,16 @@ export default function JobsPage() {
   }
 
   // ─── Filter ───
-  const filtered = jobs.filter(j => {
+  // A cancelled job has no SO or PO and never will, so it is not missing one.
+  // The counts already excluded them; the toggles did not, so turning one on
+  // listed rows the badge had never counted.
+  const missingSO = (j: Job) => !j.so_no?.trim() && j.working_status !== 'ยกเลิก'
+  const missingPO = (j: Job) => j.customer_type === 'B2B' && !j.po_no?.trim() && j.working_status !== 'ยกเลิก'
+
+  // Everything except the two document toggles. Their badges count from here,
+  // so the numbers follow the project / sales / status filters instead of
+  // standing still at the whole-book total while the table shows one project.
+  const baseFiltered = jobs.filter(j => {
     const s = search.toLowerCase()
     const sNorm = s.replace(/-/g, '')
     const name = (j.condo_leads as any)?.customer_name || j.customer_name || (j.customers as any)?.customer_name || ''
@@ -727,13 +736,17 @@ export default function JobsPage() {
     const matchSales = !filterSales || j.sales_id === filterSales
     const matchWorkType = !filterWorkType || j.work_type === filterWorkType
     const matchCustomerType = !filterCustomerType || j.customer_type === filterCustomerType
-    const matchNoSO = !filterNoSO || !j.so_no?.trim()
-    const matchNoPO = !filterNoPO || (j.customer_type === 'B2B' && !j.po_no?.trim())
-    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType && matchNoSO && matchNoPO
+    return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType
   })
 
-  const noSOCount = jobs.filter(j => !j.so_no?.trim() && j.working_status !== 'ยกเลิก').length
-  const noPOCount = jobs.filter(j => j.customer_type === 'B2B' && !j.po_no?.trim() && j.working_status !== 'ยกเลิก').length
+  const filtered = baseFiltered.filter(j =>
+    (!filterNoSO || missingSO(j)) && (!filterNoPO || missingPO(j))
+  )
+
+  // Each badge counts what its own toggle would select, with the other one
+  // still applied — the same rule the status chips elsewhere follow.
+  const noSOCount = baseFiltered.filter(j => missingSO(j) && (!filterNoPO || missingPO(j))).length
+  const noPOCount = baseFiltered.filter(j => missingPO(j) && (!filterNoSO || missingSO(j))).length
 
   useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO, filterNoPO])
 

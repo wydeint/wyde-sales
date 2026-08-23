@@ -107,7 +107,14 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
           <h2 id={titleId} className="font-semibold text-base" style={{ color: 'var(--text-1)' }}>
             {title}
           </h2>
+          {/* type="button" matters: a <button> inside a <form> defaults to
+              submit, and every form in this app renders inside this modal. The
+              close button was therefore submitting the form it sat above —
+              validation ran, the dialog closed, and nothing was saved. The
+              outcome happened to match what someone pressing ✕ wanted, which is
+              why it went unnoticed. */}
           <button
+            type="button"
             onClick={onClose}
             aria-label="ปิด"
             className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"

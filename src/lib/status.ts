@@ -134,3 +134,35 @@ export const COMMISSION_STATUSES: StatusEntry[] = [
 export function commissionStatus(s: string | null | undefined): StatusEntry {
   return COMMISSION_STATUSES.find(x => x.value === s) ?? UNKNOWN
 }
+
+
+/* ══════════════════════════════════════════
+   Work type — jobs.work_type
+══════════════════════════════════════════ */
+
+/**
+ * The only values jobs.work_type accepts. Mirrored by the CHECK constraint
+ * `jobs_work_type_check` added 2026-08-22 — change one and you must change the
+ * other, or saves start failing at the database with no clue why.
+ *
+ * NULL and '' are also legal there: a prospect placeholder job has no work type
+ * because the deal does not exist yet. Do not treat blank as an error.
+ *
+ * This list lived as four identical copies (customers, jobs, pipeline,
+ * JobDrawer). They had not drifted yet — this is the fix before they do.
+ */
+export const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ'] as const
+
+export type WorkType = typeof WORK_TYPES[number]
+
+/**
+ * RPT, N-RPT, or neither. Blank and 'อื่นๆ' are genuinely unclassified and are
+ * reported as such rather than folded into a real category — doing that is what
+ * made Project Summary show 342 RPT jobs against 271 real ones.
+ */
+export function workCategory(wt: string | null | undefined): 'RPT' | 'N-RPT' | 'unknown' {
+  const v = (wt || '').trim()
+  if (v === 'RPT') return 'RPT'
+  if (v === 'N-RPT' || v === 'N-RPT/EQ' || v === 'N-RPT/Event') return 'N-RPT'
+  return 'unknown'
+}

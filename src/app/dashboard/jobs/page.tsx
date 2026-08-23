@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {X, Calculator, Briefcase, Receipt, ChevronRight, Phone, FileDown } from 'lucide-react'
+import { WORK_TYPES } from '@/lib/status'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import Money from '@/components/ui/Money'
 import Link from 'next/link'
@@ -20,7 +21,6 @@ import DateInput from '@/components/ui/DateInput'
 // 50, not the shared 25: these are cards in a 4-up grid, so 50 is about the
 // same amount of scrolling as 25 table rows.
 const PAGE_SIZE = 50
-const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
   'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',

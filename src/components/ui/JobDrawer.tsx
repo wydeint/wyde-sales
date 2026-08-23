@@ -69,7 +69,6 @@ export interface FullJob {
 
 // ─── Constants ────────────────────────────────────────────
 export const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
-const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
   'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',

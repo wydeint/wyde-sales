@@ -12,7 +12,7 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
-import { CRM_STAGES, crmStage, isProspectStage } from '@/lib/status'
+import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 
 interface Customer {
@@ -74,7 +74,6 @@ interface DetailWarranty {
   notes: string
 }
 
-const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 
 const STATUS_LIST = CRM_STAGES
 

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import { workCategory } from '@/lib/status'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -41,23 +42,8 @@ const fM = (n: number) => n > 0 ? '฿' + (n / 1e6).toLocaleString('th-TH', { ma
 const fK = (n: number) => n > 0 ? '฿' + (n / 1000).toLocaleString('th-TH', { maximumFractionDigits: 0 }) + 'K' : '–'
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 
-/**
- * Three answers, not two. The old pair of helpers asked only "is this N-RPT?"
- * and treated everything else as RPT, so 71 jobs with no work_type and one
- * typed "ม่าน" were all counted as RPT — 342 shown against 271 real ones.
- * A job with no work type is not an RPT job; it is a job nobody has classified.
- */
-type WorkCategory = 'RPT' | 'N-RPT' | 'unknown'
-
-function workCategory(wt: string | null): WorkCategory {
-  const v = (wt || '').trim()
-  if (!v) return 'unknown'
-  if (v === 'RPT') return 'RPT'
-  if (v === 'N-RPT' || v === 'N-RPT/EQ' || v === 'N-RPT/Event') return 'N-RPT'
-  // Anything else is a value nobody defined — surfacing it as unknown makes it
-  // findable instead of quietly padding a real category.
-  return 'unknown'
-}
+// workCategory lives in lib/status.ts alongside the value list it classifies
+// and the CHECK constraint that enforces it.
 
 // ─── Mini funnel bar ─────────────────────────────────────────────────────────
 function FunnelBar({ delivered, total }: { delivered: number; total: number }) {

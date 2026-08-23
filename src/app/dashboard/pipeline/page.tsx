@@ -14,11 +14,10 @@ import Modal from '@/components/ui/Modal'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import FilterBar from '@/components/ui/FilterBar'
-import { CRM_STAGES, crmStage, PROSPECT_STAGES, cancelOutcome } from '@/lib/status'
+import { CRM_STAGES, crmStage, PROSPECT_STAGES, cancelOutcome, WORK_TYPES } from '@/lib/status'
 import PageHeader from '@/components/ui/PageHeader'
 import DateInput from '@/components/ui/DateInput'
 
-const WORK_TYPES = ['N-RPT/Event', 'N-RPT/EQ', 'N-RPT', 'RPT', 'อื่นๆ']
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
   'Design', 'Design & Turnkey', 'Ready to move', 'IP', 'EQ', 'Mock up room',

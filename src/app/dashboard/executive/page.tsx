@@ -8,7 +8,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, MONTHS_TH, beYear, type PeriodUnit } from '@/lib/period'
-import { crmStage, FUNNEL_ORDER } from '@/lib/status'
+import { crmStage, FUNNEL_ORDER, workCategory } from '@/lib/status'
 
 type Customer = {
   id: string; status: string; budget: number; customer_type: string
@@ -50,13 +50,12 @@ export default function ExecutivePage() {
   const [period, setPeriod] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
   const [filterCustType, setFilterCustType] = useState('')
-  // Groups the three stored N-RPT variants under one option; '' means no filter.
+  // '' means no filter. workCategory is the shared rule — an unclassified job
+  // matches neither option, so it drops out of a filtered view rather than
+  // being counted as whichever one the test happened to fall through to.
   const [filterWorkType, setFilterWorkType] = useState('')
-  const matchWork = (wt: string | null | undefined) => {
-    if (!filterWorkType) return true
-    const v = (wt || '').trim()
-    return filterWorkType === 'RPT' ? v === 'RPT' : v.startsWith('N-RPT')
-  }
+  const matchWork = (wt: string | null | undefined) =>
+    !filterWorkType || workCategory(wt) === filterWorkType
   const [allPayments, setAllPayments] = useState<PaidPayment[]>([])
   const [mainTab, setMainTab] = useState<'performance' | 'team'>('performance')
   const [teamUsers, setTeamUsers] = useState<{ id: string; name: string; manager_id: string | null }[]>([])

@@ -68,6 +68,8 @@ interface BookedCustomer {
   budget: number
   booking_date: string | null
   status: string
+  /** A prospect has no job yet, so the room lives on the customer record. */
+  interested_room: string | null
   projects?: { name: string }
 }
 
@@ -161,7 +163,7 @@ export default function FinancePage() {
       // Prospects — everything before a booking is committed. These are the left
       // end of the money funnel; จอง and ดำเนินการ come from `jobs` next door.
       supabase.from('customers')
-        .select('id,customer_name,budget,booking_date,status,projects(name)')
+        .select('id,customer_name,budget,booking_date,status,interested_room,projects(name)')
         .in('status', ['new', 'interested', 'quoted', 'close_pending']),
       // data entry jobs
       supabase.from('jobs')
@@ -1082,7 +1084,9 @@ export default function FinancePage() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
                       <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
-                        {crmStage(c.status).label} · {c.projects?.name || '—'}
+                        {crmStage(c.status).label}
+                        {c.interested_room ? ` · ห้อง ${c.interested_room}` : ''}
+                        {' · '}{c.projects?.name || '—'}
                       </p>
                     </div>
                     {c.budget ? (

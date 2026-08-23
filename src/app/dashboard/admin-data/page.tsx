@@ -9,6 +9,10 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { fetchAllRows } from '@/lib/fetchAll'
 
+/** How many rows the table paints at once. Purely a rendering limit — every
+ *  row is loaded and searched, so this can never hide a record from a search. */
+const RENDER_CAP = 500
+
 // ─── Table definitions ─────────────────────────────────────
 type ColType = 'text' | 'number' | 'date' | 'select' | 'boolean' | 'readonly'
 
@@ -712,11 +716,17 @@ export default function AdminDataPage() {
     setLoading(true)
     setEditingRow(null)
     setSelectedIds(new Set())
-    const { data } = await supabase
+    // Every row, not the first 500. Search and the project filter both run in
+    // the browser over whatever this call returned, so a cap here silently
+    // removed rows from the results rather than paging them: four tables are
+    // already past 500 (condo_leads 1,542, payments 1,183, jobs 960, customers
+    // 934), and this is the page people open specifically to find the record
+    // that is missing something. A search that quietly cannot reach a row is
+    // worse than a slow one.
+    const { data } = await fetchAllRows<Record<string, unknown>>(() => supabase
       .from(tableDef.table)
       .select('*')
-      .order(tableDef.orderBy, { ascending: false })
-      .limit(500)
+      .order(tableDef.orderBy, { ascending: false }))
     setRows(data || [])
     setLoading(false)
   }, [activeTab])
@@ -741,6 +751,11 @@ export default function AdminDataPage() {
       })
     )
   }, [rows, search, filterProject, hasProjectFilter, tableDef])
+
+  /** The cap now applies to rendering only, after the search has seen every
+   *  row — so narrowing the search always reaches the record, and the footer
+   *  says plainly when there is more behind the cap. */
+  const visible = useMemo(() => filtered.slice(0, RENDER_CAP), [filtered])
 
   function startEdit(row: Record<string, unknown>) {
     setEditingRow(String(row.id))
@@ -807,8 +822,11 @@ export default function AdminDataPage() {
   }
 
   function toggleSelectAll() {
-    if (selectedIds.size === filtered.length) setSelectedIds(new Set())
-    else setSelectedIds(new Set(filtered.map(r => String(r.id))))
+    // Selects the rows on screen, not every match. This box sits above a bulk
+    // edit that writes to whatever is selected, so it must never reach rows the
+    // person cannot see to check.
+    if (selectedIds.size === visible.length) setSelectedIds(new Set())
+    else setSelectedIds(new Set(visible.map(r => String(r.id))))
   }
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
@@ -911,7 +929,7 @@ export default function AdminDataPage() {
                 {/* Checkbox */}
                 <th style={{ width: 36, padding: '8px 10px', borderBottom: '1px solid var(--divider)', textAlign: 'center', position: 'sticky', left: 0, background: 'var(--hover-bg)' }}>
                   <input type="checkbox"
-                    checked={selectedIds.size === filtered.length && filtered.length > 0}
+                    checked={selectedIds.size === visible.length && visible.length > 0}
                     onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
                 </th>
                 {/* Actions */}
@@ -929,7 +947,7 @@ export default function AdminDataPage() {
             <tbody>
               {filtered.length === 0 ? (
                 <TableEmpty colSpan={tableDef.cols.length + 2} icon={Search} message="ไม่พบข้อมูล" />
-              ) : filtered.map((row, ri) => {
+              ) : visible.map((row, ri) => {
                 const id = String(row.id)
                 const isEditing = editingRow === id
                 const isSelected = selectedIds.has(id)
@@ -987,8 +1005,17 @@ export default function AdminDataPage() {
       {/* Footer */}
       {!isReconcile && <div className="pb-3 flex items-center gap-3">
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-          {filtered.length} แถว {rows.length !== filtered.length ? `(กรองจาก ${rows.length})` : ''} · แสดงสูงสุด 500 แถว
+          {filtered.length} แถว {rows.length !== filtered.length ? `(กรองจาก ${rows.length})` : ''}
         </p>
+        {/* Only shown when the cap is actually biting, and it names what to do
+            about it. The old footer said "แสดงสูงสุด 500 แถว" on every table
+            whether or not anything was hidden, which read as a footnote rather
+            than a warning that the row you wanted might not be on screen. */}
+        {filtered.length > visible.length && (
+          <p className="text-xs" style={{ color: 'var(--accent-amber)' }}>
+            แสดง {visible.length} แถวแรก — ค้นหาเพื่อดูที่เหลือ
+          </p>
+        )}
         {selectedIds.size > 0 && (
           <p className="text-xs text-accent font-semibold">{selectedIds.size} แถวที่เลือก</p>
         )}

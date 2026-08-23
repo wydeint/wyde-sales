@@ -7,6 +7,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { workCategory } from '@/lib/status'
 import { fetchAllRows } from '@/lib/fetchAll'
+import { thaiDate } from '@/lib/thaiDate'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown, PackageCheck } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -50,6 +51,22 @@ interface ProjectRow {
   /** Distinct rooms won in this project. Against total_units it gives the
    *  share of the building we hold; against jobs_total it shows repeats. */
   rooms_sold: number
+  /** Who sells this project. Head of sales opens a project to find its owner;
+   *  the page held sales_id on every job and never surfaced it. */
+  bySales: Map<string, Slice>
+  /** Every job in the project, so the drawer can list the actual rooms instead
+   *  of only counting them. Sorted newest sale first. */
+  jobsList: JobLine[]
+  /** Rows this project still needs filled in — the drawer says which project to
+   *  go and fix rather than leaving it to a separate audit. */
+  miss_wt: number
+  miss_order: number
+  miss_sales: number
+}
+
+export type JobLine = {
+  id: string; room: string; status: string; rev: number; cash: number
+  order_date: string | null; delivered: boolean
 }
 
 /** `del`/`delRev` let one slice answer both sides: what was sold, and how much
@@ -57,7 +74,7 @@ interface ProjectRow {
  *  — so the two cards never need separate aggregations that could drift apart. */
 export type Slice = { n: number; rev: number; cash: number; del: number; delRev: number }
 
-type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled' | 'backlog_rev'
+type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled' | 'backlog_rev' | 'outstanding'
 type CustFilter = 'all' | 'B2C' | 'B2B'
 type WorkFilter = 'all' | 'RPT' | 'N-RPT'
 
@@ -147,6 +164,14 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
 
   // Newest year first — this year is what anyone opens the drawer to see.
   const salesYears = [...row.salesByYear.entries()].sort((a, b) => b[0] - a[0])
+  // Biggest seller first; the unassigned bucket sinks to the bottom whatever it
+  // is worth, since it is a data gap rather than a person to rank.
+  const salesRows = [...row.bySales.entries()].sort((a, b) => {
+    const aGap = a[0] === 'ยังไม่ระบุเซลล์', bGap = b[0] === 'ยังไม่ระบุเซลล์'
+    if (aGap !== bGap) return aGap ? 1 : -1
+    return b[1].rev - a[1].rev
+  })
+  const missing = row.miss_wt + row.miss_order + row.miss_sales
   // Jobs with no order_date cannot appear in the year table. Saying how many
   // are missing stops the total silently disagreeing with มูลค่างาน above.
   const datedJobs = salesYears.reduce((s, [, v]) => s + v.n, 0)
@@ -332,6 +357,31 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               )}
 
               <Group title="แยกตามประเภทลูกค้า" items={custRows} firstCol="ประเภทลูกค้า" side="sales" />
+
+              {salesRows.length > 0 && (
+                <Sub title="ทีมขายที่ดูแลโครงการนี้">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>เซลล์</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>งาน</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salesRows.map(([who, s]) => (
+                        <tr key={who}>
+                          <td className="py-1 font-semibold" style={{ color: who === 'ยังไม่ระบุเซลล์' ? 'var(--accent-amber)' : 'var(--text-1)' }}>{who}</td>
+                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
+                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(s.rev)}</td>
+                          <td className="py-1 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(s.cash)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Sub>
+              )}
             </div>
           </section>
 
@@ -418,6 +468,62 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
             </div>
           </section>
 
+          {/* ── Every job, by name ──────────────────────────────────────
+              The drawer counted rooms in four different ways and never said
+              which rooms. For a head of delivery chasing a specific unit that
+              is the first question, and the page held the answer all along. */}
+          {row.jobsList.length > 0 && (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <Building2 size={13} style={{ color: 'var(--accent)' }} /> รายการห้อง ({row.jobsList.length} งาน)
+              </p>
+              <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
+                <div className="overflow-y-auto" style={{ maxHeight: 280 }}>
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0" style={{ background: 'var(--card-bg)' }}>
+                      <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                        <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ห้อง</th>
+                        <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>สถานะ</th>
+                        <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>วันที่ขาย</th>
+                        <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
+                        <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.jobsList.map(j => (
+                        <tr key={j.id} style={{ borderTop: '1px solid var(--divider)' }}>
+                          <td className="px-3 py-1.5 font-semibold" style={{ color: 'var(--text-1)' }}>{j.room}</td>
+                          <td className="px-3 py-1.5" style={{ color: j.delivered ? 'var(--accent-green)' : 'var(--accent-amber)' }}>{j.status}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: j.order_date ? 'var(--text-2)' : 'var(--accent-amber)' }}>
+                            {j.order_date ? thaiDate(j.order_date) : 'ไม่มีวันที่'}
+                          </td>
+                          <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(j.rev)}</td>
+                          <td className="px-3 py-1.5 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(j.cash)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Named per project so the fix has an address, rather than leaving a
+              book-wide count that nobody owns. */}
+          {missing > 0 && (
+            <section>
+              <div className="ds-card p-3" style={{ borderColor: 'var(--accent-amber)' }}>
+                <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--accent-amber)' }}>ข้อมูลที่ยังไม่ครบในโครงการนี้</p>
+                <div className="space-y-0.5 text-xs" style={{ color: 'var(--text-2)' }}>
+                  {row.miss_wt > 0 && <p>• {row.miss_wt} งานยังไม่ระบุประเภทงาน (RPT / N-RPT)</p>}
+                  {row.miss_order > 0 && <p>• {row.miss_order} งานยังไม่มีวันที่ขาย — ไม่เข้าตารางแยกตามปี และไม่เข้าค่าเฉลี่ยขาย→ส่งมอบ</p>}
+                  {row.miss_sales > 0 && <p>• {row.miss_sales} งานยังไม่ระบุเซลล์ผู้ขาย</p>}
+                </div>
+                <p className="text-micro mt-1.5" style={{ color: 'var(--text-3)' }}>แก้ไขได้ที่หน้า Data Entry</p>
+              </div>
+            </section>
+          )}
+
         </div>
       </div>
     </div>
@@ -458,19 +564,25 @@ export default function ProjectSummaryPage() {
 
   useEffect(() => {
     async function load() {
-      const [projRes, jobRes, custRes, payRes] = await Promise.all([
+      const [projRes, jobRes, custRes, payRes, userRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
-        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date'),
+        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date, sales_id'),
         supabase.from('customers').select('project_id, status'),
         // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
         // the cash figures come out short with no error to say so.
         fetchAllRows(() => supabase.from('payments')
           .select('job_id, status, amount, paid_amount, voucher_amount')),
+        // No active/role filter: a job sold by someone who has since left still
+        // needs a name against it, and 46 of 953 jobs carry no sales_id at all.
+        supabase.from('users').select('id, name'),
       ])
 
       const projects = projRes.data || []
       const jobs = jobRes.data || []
       const customers = custRes.data || []
+      const salesName = new Map<string, string>(
+        ((userRes.data || []) as any[]).map(u => [u.id, u.name])
+      )
 
       // Cash actually collected per job. Voucher counts: it settles the
       // instalment just as cash does, which is the rule every other page uses.
@@ -504,6 +616,9 @@ export default function ProjectSummaryPage() {
         /** Running total for the average sale-to-handover time. Kept as sum and
          *  count rather than a running mean so the division happens once. */
         leadDays: number; leadCount: number
+        bySales: Map<string, Slice>
+        jobsList: JobLine[]
+        miss_wt: number; miss_order: number; miss_sales: number
         /** Distinct rooms won. Jobs outnumber rooms because a room can be sold
          *  again — the gap between the two is the repeat business. */
         rooms: Set<string>
@@ -519,6 +634,9 @@ export default function ProjectSummaryPage() {
         salesByYear: new Map<number, Slice>(),
         leadDays: 0, leadCount: 0,
         rooms: new Set<string>(),
+        bySales: new Map<string, Slice>(),
+        jobsList: [],
+        miss_wt: 0, miss_order: 0, miss_sales: 0,
       })
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
@@ -575,6 +693,23 @@ export default function ProjectSummaryPage() {
         const cat = workCategory(j.work_type)
         addTo(m.byCat[cat], rev, cash, isDel)
         addTo(m.byCust[ctype], rev, cash, isDel)
+
+        const who = j.sales_id ? (salesName.get(j.sales_id) || 'ไม่ทราบชื่อ') : 'ยังไม่ระบุเซลล์'
+        if (!m.bySales.has(who)) m.bySales.set(who, slice())
+        addTo(m.bySales.get(who)!, rev, cash, isDel)
+
+        m.jobsList.push({
+          id: j.id,
+          room: j.room_no ? String(j.room_no).trim() : '–',
+          status: j.working_status || 'ไม่ระบุ',
+          rev, cash,
+          order_date: j.order_date || null,
+          delivered: isDel,
+        })
+
+        if (!j.order_date) m.miss_order++
+        if (!j.sales_id) m.miss_sales++
+        if (cat === 'unknown') m.miss_wt++
         if (cat === 'unknown') m.unknown_wt++
         else if (ctype === 'B2B') { cat === 'N-RPT' ? m.b2b_nrpt++ : m.b2b_rpt++ }
         else                      { cat === 'N-RPT' ? m.b2c_nrpt++ : m.b2c_rpt++ }
@@ -605,6 +740,11 @@ export default function ProjectSummaryPage() {
           lead_days_avg: j.leadCount > 0 ? Math.round(j.leadDays / j.leadCount) : null,
           lead_sample: j.leadCount,
           rooms_sold: j.rooms.size,
+          bySales: j.bySales,
+          // Newest sale first; jobs with no order_date sink to the bottom rather
+          // than sorting as the epoch and heading the list.
+          jobsList: j.jobsList.sort((a, b) => (b.order_date || '').localeCompare(a.order_date || '')),
+          miss_wt: j.miss_wt, miss_order: j.miss_order, miss_sales: j.miss_sales,
         }
       })
 
@@ -643,10 +783,12 @@ export default function ProjectSummaryPage() {
     if (custFilter !== 'all' || workFilter !== 'all') {
       list = list.filter(r => visibleJobs(r) > 0)
     }
-    // backlog_rev is the one sort key that is not a flat property — it lives
-    // inside the backlog slice, so it needs reading rather than indexing.
+    // Two sort keys are not flat properties: backlog_rev lives inside a slice,
+    // and outstanding is a subtraction. Both are read rather than indexed.
     const sortVal = (r: ProjectRow) =>
-      sortKey === 'backlog_rev' ? r.backlog.rev : (r[sortKey] as number)
+      sortKey === 'backlog_rev' ? r.backlog.rev
+      : sortKey === 'outstanding' ? Math.max(r.revenue_total - r.cash_total, 0)
+      : (r[sortKey] as number)
     return [...list].sort((a, b) => {
       const v = sortKey === 'name'
         ? a.name.localeCompare(b.name, 'th')
@@ -675,7 +817,11 @@ export default function ProjectSummaryPage() {
     backlogRev: acc.backlogRev + r.backlog.rev,
     leadSum: acc.leadSum + (r.lead_days_avg !== null ? r.lead_days_avg * r.lead_sample : 0),
     leadCount: acc.leadCount + r.lead_sample,
-  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0, cancelled: 0, revCancelled: 0, backlogN: 0, backlogRev: 0, leadSum: 0, leadCount: 0 }), [filtered])
+    cash: acc.cash + r.cash_total,
+    // Room numbers are only unique inside a project, so these sum rather than
+    // going through a Set — two projects can each hold a room "910".
+    rooms: acc.rooms + r.rooms_sold,
+  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0, cancelled: 0, revCancelled: 0, backlogN: 0, backlogRev: 0, leadSum: 0, leadCount: 0, cash: 0, rooms: 0 }), [filtered])
 
   /** The book-wide average, so a project's own figure has something to sit
    *  against. Weighted by job count, not a mean of means. */
@@ -793,6 +939,10 @@ export default function ProjectSummaryPage() {
               </th>
               <Th label="รายได้รวม" sortKey="revenue_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="รายได้ส่งมอบ" sortKey="revenue_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
+              {/* The page reported what was sold and handed over but never what
+                  had actually been collected — ฿73.75M outstanding across the
+                  book, and finding the worst project meant opening 52 drawers. */}
+              <Th label="ค้างรับ" sortKey="outstanding" current={sortKey} dir={sortDir} onSort={handleSort} />
               {/* Next to รายได้ส่งมอบ so the three read as one sentence: sold,
                   handed over, still owed to the customer in work. */}
               <Th label="รอส่งมอบ" sortKey="backlog_rev" current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -824,10 +974,18 @@ export default function ProjectSummaryPage() {
                       ? <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{r.booked}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
+                  {/* Rooms, not jobs. 18 projects have a room that ordered more
+                      than once, so the job count overstated how much of the
+                      building we have actually reached. Both are shown. */}
                   <td className="px-3 py-2.5 text-right">
-                    {r.jobs_total > 0
-                      ? <span className="text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{r.jobs_total}</span>
-                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                    {r.jobs_total > 0 ? (
+                      <>
+                        <span className="text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{r.rooms_sold} ห้อง</span>
+                        {r.jobs_total > r.rooms_sold && (
+                          <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{r.jobs_total} งาน</p>
+                        )}
+                      </>
+                    ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     {r.jobs_delivered > 0
@@ -848,6 +1006,20 @@ export default function ProjectSummaryPage() {
                     <span className="text-xs tabular-nums" style={{ color: 'var(--accent-green)' }}>
                       {r.revenue_delivered > 0 ? fK(r.revenue_delivered) : '–'}
                     </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    {(() => {
+                      const owed = Math.max(r.revenue_total - r.cash_total, 0)
+                      if (owed <= 0) return <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>
+                      return (
+                        <>
+                          <p className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-orange)' }}>{fK(owed)}</p>
+                          <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>
+                            รับแล้ว {pct(r.cash_total, r.revenue_total)}%
+                          </p>
+                        </>
+                      )
+                    })()}
                   </td>
                   {/* รอส่งมอบ — sold, not handed over yet */}
                   <td className="px-3 py-2.5 text-right">
@@ -879,11 +1051,24 @@ export default function ProjectSummaryPage() {
               <td className="px-3 py-2.5 text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวม {filtered.length} โครงการ</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.units.toLocaleString()}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{totals.booked || '–'}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.jobs}</td>
+              <td className="px-3 py-2.5 text-right">
+                <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.rooms.toLocaleString()} ห้อง</p>
+                {totals.jobs > totals.rooms && (
+                  <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{totals.jobs} งาน</p>
+                )}
+              </td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totals.delivered}</td>
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{fM(totals.rev)}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{fM(totals.revDel)}</td>
+              <td className="px-3 py-2.5 text-right">
+                {totals.rev - totals.cash > 0 ? (
+                  <>
+                    <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-orange)' }}>{fM(totals.rev - totals.cash)}</p>
+                    <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>รับแล้ว {pct(totals.cash, totals.rev)}%</p>
+                  </>
+                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+              </td>
               <td className="px-3 py-2.5 text-right">
                 {totals.backlogN > 0 ? (
                   <>

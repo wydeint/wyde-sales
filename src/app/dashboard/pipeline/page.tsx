@@ -533,6 +533,13 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
         <div className="flex flex-wrap gap-1.5">
           {STAGES.filter(s => s.value !== 'booked' && s.value !== 'closed').map(s => (
             <button key={s.value} onClick={async () => {
+              // The second place a stage can be moved. It cannot reach จอง, so
+              // only the quote rule applies here — but it has to apply, or the
+              // requirement is one button away from being skipped.
+              if (s.value === 'quoted' && !(customer.budget > 0)) {
+                alert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
+                return
+              }
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
               await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
@@ -715,6 +722,19 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             <div className="flex flex-wrap gap-1.5">
               {STAGES.filter(s => s.value !== effectiveStage && s.value !== 'closed' && s.value !== 'lost').map(s => (
                 <button key={s.value} onClick={async () => {
+                  // Ask for each fact at the stage where it exists, not at
+                  // creation. A quote implies a number; a booking implies a
+                  // scope. Demanding either up front only produces guesses —
+                  // 37 of 52 live prospects have no budget precisely because
+                  // nobody knew it on day one.
+                  if (s.value === 'quoted' && !(customer.budget > 0)) {
+                    alert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
+                    return
+                  }
+                  if (s.value === 'booked' && !((customer as any).work_type || '').trim()) {
+                    alert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงานก่อนย้ายสถานะ')
+                    return
+                  }
                   // Reaching จอง has to set working_status too. A prospect's job row
                   // is created with working_status null, and every page that lists
                   // live work filters `working_status not in (...)`, which drops
@@ -1260,8 +1280,22 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    // Required at creation: the four things that identify a prospect and let
+    // anyone follow it up. All four were already being filled by hand on every
+    // one of the 52 live prospects (room and project at 100%, a contact on 50
+    // of 52), so this codifies what people do rather than asking for more.
+    //
+    // Budget and work_type are deliberately NOT required here. At the moment a
+    // prospect is created nobody has discussed price or scope, so demanding
+    // them would only produce guesses — data that looks complete and is not.
+    // They are required later, at the stage where the answer actually exists.
     if (!form.customer_name.trim()) { setErrMsg('กรุณากรอกชื่อลูกค้า'); return }
     if (!form.project_id) { setErrMsg('กรุณาเลือกโครงการ'); return }
+    if (!form.interested_room.trim()) { setErrMsg('กรุณากรอกห้องที่สนใจ'); return }
+    if (!form.phone.trim() && !form.line_id.trim()) {
+      setErrMsg('กรุณากรอกเบอร์โทรหรือ Line ID อย่างน้อยหนึ่งช่อง — ไม่มีช่องทางติดต่อจะตามงานต่อไม่ได้')
+      return
+    }
     setSaving(true)
     setErrMsg(null)
     const err = await onSave(form)
@@ -1272,9 +1306,14 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
   return (
     <form onSubmit={submit} className="space-y-3">
       <Input label="ชื่อลูกค้า *" value={form.customer_name} onChange={s('customer_name')} autoFocus />
-      <div className="grid grid-cols-2 gap-3">
-        <Input label="โทรศัพท์" value={form.phone} onChange={s('phone')} />
-        <Input label="Line ID" value={form.line_id} onChange={s('line_id')} />
+      {/* One of the two, not both — a single asterisk on each would have read as
+          "fill in both", so the requirement is spelled out under the pair. */}
+      <div>
+        <div className="grid grid-cols-2 gap-3">
+          <Input label="โทรศัพท์" value={form.phone} onChange={s('phone')} />
+          <Input label="Line ID" value={form.line_id} onChange={s('line_id')} />
+        </div>
+        <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>* กรอกอย่างน้อยหนึ่งช่องทาง</p>
       </div>
       <Input label="Email" value={form.email} onChange={s('email')} />
       <div>
@@ -1299,7 +1338,7 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
           <SearchableSelect value={form.project_id}
             onChange={v => setForm(p => ({ ...p, project_id: String(v) }))}
             options={[{ value: '', label: '— เลือก —' }, ...projects.map(p => ({ value: p.id, label: p.name }))]} /></div>
-        <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={s('interested_room')} />
+        <Input label="ห้องที่สนใจ *" value={form.interested_room} onChange={s('interested_room')} />
       </div>
       <Select label="ประเภทงาน" value={form.work_type} onChange={s('work_type')}
         options={[{ value: '', label: '— เลือก —' }, ...WORK_TYPES.map(t => ({ value: t, label: t }))]} />

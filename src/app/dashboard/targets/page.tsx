@@ -10,6 +10,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, monthsInPeriod, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
+import { baht, bahtShort } from '@/lib/money'
 
 interface OrgTarget {
   id: string; year: number; month: number
@@ -43,7 +44,7 @@ const thisQ = Math.floor((thisMonth - 1) / 3) + 1
 
 type TabView = 'org' | 'sales'
 
-const f = (v: number) => v ? '฿' + Math.round(v).toLocaleString() : '฿0'
+const f = baht
 const pct = (a: number, b: number) => b > 0 ? Math.min(Math.round(a / b * 100), 100) : 0
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
@@ -732,7 +733,7 @@ export default function TargetsPage() {
                             {sparkMonths.map((m, i) => (
                               <div key={m} className="flex gap-2 justify-between" style={{ color: 'var(--text-3)' }}>
                                 <span>{MONTHS[m - 1]}</span>
-                                <span style={{ color: 'var(--accent-green)' }}>{sparkSales[i] > 0 ? `฿${(sparkSales[i] / 1e6).toFixed(1)}M` : '—'}</span>
+                                <span style={{ color: 'var(--accent-green)' }}>{sparkSales[i] > 0 ? bahtShort(sparkSales[i]) : '—'}</span>
                               </div>
                             ))}
                           </div>

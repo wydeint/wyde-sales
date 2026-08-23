@@ -9,6 +9,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import { COMMISSION_STATUSES } from '@/lib/status'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, type PeriodUnit } from '@/lib/period'
+import { baht } from '@/lib/money'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -53,7 +54,7 @@ function calcTier(revenue: number, tiers: Tier[]): { rate: number; amount: numbe
   return { rate: 0, amount: 0 }
 }
 
-const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
+const f = baht
 const fDate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
 // Labels and colours come from the shared vocabulary; only the icon is local.

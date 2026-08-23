@@ -9,6 +9,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, MONTHS_TH, beYear, type PeriodUnit } from '@/lib/period'
 import { crmStage, FUNNEL_ORDER, workCategory } from '@/lib/status'
+import { baht, bahtShort } from '@/lib/money'
 
 type Customer = {
   id: string; status: string; budget: number; customer_type: string
@@ -26,12 +27,10 @@ type Job = {
 type PaidPayment = { paid_amount: number; paid_date: string; job_id: string; jobs: { sales_id: string } | null }
 
 
-const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
-const fk = (v: number) => {
-  if (v >= 1_000_000) return '฿' + (v / 1_000_000).toFixed(2) + 'M'
-  if (v >= 1_000) return '฿' + (v / 1_000).toFixed(0) + 'K'
-  return '฿' + Math.round(v || 0).toLocaleString()
-}
+const f = baht
+// The K branch here rounded ฿1,600 to ฿2K and ฿999,499 to ฿999K. bahtShort
+// shows the full value below a million instead, and MB. above it.
+const fk = bahtShort
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 
 

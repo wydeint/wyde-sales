@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { bahtShort } from '@/lib/money'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -29,11 +30,11 @@ export function fmtMoney(n: number | null | undefined): string {
   return Math.round(n).toLocaleString('th-TH')
 }
 
-// Compact for mobile: 1.5M / 500K / 50K
+/** The narrow half of <Money>, shown below the `sm` breakpoint. Delegates to
+ *  the app-wide rule; it used to have its own (1.5M / 500K / 50K, no ฿). */
 export function fmtCompact(n: number | null | undefined): string {
   if (n == null) return '—'
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(abs % 1_000_000 === 0 ? 0 : 1) + 'M'
-  if (abs >= 1_000) return (n / 1_000).toFixed(abs % 1_000 === 0 ? 0 : 1) + 'K'
-  return String(Math.round(n))
+  // Callers render the ฿ themselves (`฿<Money value={...} />`), so strip the
+  // one bahtShort adds rather than printing ฿฿1.69 MB.
+  return bahtShort(n).replace('฿', '')
 }

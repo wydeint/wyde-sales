@@ -13,6 +13,7 @@ import { fetchAllRows } from '@/lib/fetchAll'
 import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit } from '@/lib/period'
 import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
+import { baht, bahtShort } from '@/lib/money'
 
 // ── Types ──────────────────────────────────────────────────
 interface Payment {
@@ -102,12 +103,10 @@ const PAY_STATUS = [
 const emptyEntry = { type: 'expense', category: '', amount: 0, entry_date: new Date().toISOString().slice(0, 10), description: '', ref_id: '' }
 
 // ── Helpers ────────────────────────────────────────────────
-const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
-const fk = (v: number) => {
-  if (v >= 1_000_000) return '฿' + (v / 1_000_000).toFixed(2) + 'M'
-  if (v >= 1_000) return '฿' + (v / 1_000).toFixed(0) + 'K'
-  return '฿' + Math.round(v || 0).toLocaleString()
-}
+const f = baht
+// The K branch here rounded ฿1,600 to ฿2K and ฿999,499 to ฿999K. bahtShort
+// shows the full value below a million instead, and MB. above it.
+const fk = bahtShort
 const dateStr = (d: string) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`

@@ -50,3 +50,20 @@ export const bahtShort = (n: number | null | undefined): string => {
 /** `bahtShort` with a dash for nothing, for table cells and summary rows. */
 export const bahtShortOrDash = (n: number | null | undefined): string =>
   n ? bahtShort(n) : '–'
+
+/**
+ * Always MB., however small the figure — for the narrowest slots there are,
+ * where even `฿170,000` will not fit and the column has to hold one unit.
+ * `฿0.17 MB.`
+ *
+ * Two decimals, never one: ฿170,000 reads as `฿0.17 MB.`, not `฿0.2 MB.`.
+ * At one decimal everything between ฿150,000 and ฿249,999 collapses onto the
+ * same `฿0.2 MB.`, which is a ฿100,000 span shown as a single number.
+ *
+ * Reach for `bahtShort` first. This is for when the space genuinely cannot
+ * take the full value, not as a way to keep columns tidy.
+ */
+export const bahtMB = (n: number | null | undefined): string =>
+  n ? '฿' + (n / MILLION).toLocaleString('th-TH', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  }) + ' MB.' : '฿0'

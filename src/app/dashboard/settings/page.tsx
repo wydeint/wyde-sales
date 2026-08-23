@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Settings2, Save, RefreshCw, AlertTriangle } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
+import { baht } from '@/lib/money'
 
 function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
@@ -50,7 +51,7 @@ type Tier = {
   sort_order: number
 }
 
-const f = (v: number) => '฿' + Math.round(v).toLocaleString()
+const f = baht
 
 export default function SettingsPage() {
   const supabase = createClient()

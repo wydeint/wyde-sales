@@ -14,6 +14,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import Pagination from '@/components/ui/Pagination'
 import { COMMISSION_STATUSES, WORKING_STATUSES } from '@/lib/status'
 import DateInput from '@/components/ui/DateInput'
+import { baht } from '@/lib/money'
 
 // ─────────────────────────────────────────
 // Constants
@@ -288,7 +289,7 @@ const emptyJob = (): Partial<Job> => ({
   commission_amount: 0,
 })
 
-const f = (v?: number) => '฿' + Math.round(v || 0).toLocaleString()
+const f = (v?: number) => baht(v)
 const pct = (v?: number) => ((v || 0) * 100).toFixed(1) + '%'
 
 function calcCommission(revenue: number, tiers: CommissionTier[]): { rate: number; amount: number } {

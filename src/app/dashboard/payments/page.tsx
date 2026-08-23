@@ -8,6 +8,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { fetchAllRows } from '@/lib/fetchAll'
+import { baht } from '@/lib/money'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Installment {
@@ -49,7 +50,7 @@ interface Project { id: string; name: string }
 interface User { id: string; name: string }
 
 // ─── Helpers ───────────────────────────────────────────────
-const f = (n: number) => n ? '฿' + Math.round(n).toLocaleString('th-TH') : '฿0'
+const f = baht
 
 // ─── Auto-check rules ──────────────────────────────────────
 // ส่งมอบแล้ว → เอกสารทุกอย่างครบ

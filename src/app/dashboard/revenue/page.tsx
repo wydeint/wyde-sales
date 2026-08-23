@@ -10,6 +10,7 @@ import StatusChip from '@/components/ui/StatusChip'
 import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit as Period } from '@/lib/period'
+import { baht, bahtShort } from '@/lib/money'
 
 // ─────────────────────────────────────────
 // Types & helpers
@@ -62,12 +63,8 @@ function getJobCommission(j: Job, tiers: Tier[]) {
 }
 
 const jobRev = (j: { revenue_inc_vat: number | null; revenue_ex_vat: number }) => j.revenue_inc_vat ?? j.revenue_ex_vat ?? 0
-const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
-const fk = (v: number) => {
-  if (v >= 1_000_000) return '฿' + (v / 1_000_000).toFixed(2) + 'M'
-  if (v >= 1_000) return '฿' + (v / 1_000).toFixed(0) + 'K'
-  return '฿' + Math.round(v || 0).toLocaleString()
-}
+const f = baht
+const fk = bahtShort
 
 function getJobDate(j: Job, mode: MainTab): string | null {
   if (mode === 'deliver') return j.actual_deliver_date

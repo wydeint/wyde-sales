@@ -17,6 +17,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import { CRM_STAGES, crmStage, PROSPECT_STAGES, cancelOutcome, WORK_TYPES } from '@/lib/status'
 import PageHeader from '@/components/ui/PageHeader'
 import DateInput from '@/components/ui/DateInput'
+import { bahtShort } from '@/lib/money'
 
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
@@ -93,12 +94,7 @@ const emptyForm = {
   customer_type: 'B2C', work_type: '',
 }
 
-const f = (n: number) => {
-  if (!n) return '—'
-  if (n >= 1_000_000) return `฿${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`
-  if (n >= 1_000) return `฿${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}K`
-  return '฿' + n.toLocaleString('th-TH')
-}
+const f = (n: number) => n ? bahtShort(n) : '—'
 const fdate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
 // ─── Skeleton card ──────────────────────────────────────────
@@ -1757,8 +1753,7 @@ export default function ProspectsKanbanPage() {
               </div>
               <div className="ds-card-sm text-center">
                 <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalRev > 0 ? '฿' + (totalRev / 1000000).toFixed(1) + 'M' : '—'}</p>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>บาท</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalRev > 0 ? bahtShort(totalRev) : '—'}</p>
               </div>
               <div className="ds-card-sm text-center">
                 <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>
@@ -1779,8 +1774,7 @@ export default function ProspectsKanbanPage() {
             </div>
             <div className="ds-card-sm text-center">
               <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalBudget > 0 ? '฿' + (totalBudget / 1000000).toFixed(1) + 'M' : '—'}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>บาท</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalBudget > 0 ? bahtShort(totalBudget) : '—'}</p>
             </div>
             <div className="ds-card-sm text-center">
               <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>

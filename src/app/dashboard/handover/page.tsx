@@ -8,6 +8,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { addDays } from '@/lib/delivery'
 import DateInput from '@/components/ui/DateInput'
+import { baht } from '@/lib/money'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Job {
@@ -302,7 +303,7 @@ export default function HandoverPage() {
   const totalValue = monthEntries.reduce((s, e) => s + e.revenue, 0)
   const deliveredValue = monthEntries.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0)
 
-  const f = (n: number) => '฿' + Math.round(n).toLocaleString('th-TH')
+  const f = baht
   const isThisMonth = selectedMonth === THIS_MONTH
 
   if (loading) return <PageSpinner />

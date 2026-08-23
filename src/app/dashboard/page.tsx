@@ -6,8 +6,9 @@ import { Users, TrendingUp, Target, Award, Package, X, ChevronRight, Wallet } fr
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import { crmStage, FUNNEL_ORDER } from '@/lib/status'
+import { baht } from '@/lib/money'
 
-const f = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
+const f = baht
 const fn = (v: number) => (v || 0).toLocaleString()
 
 type Customer = { status: string; budget: number; customer_type: string }
@@ -158,7 +159,7 @@ export default function DashboardPage() {
   const delivPct = orgTarget?.target_delivery_value ? Math.min(Math.round(actualDeliv / orgTarget.target_delivery_value * 100), 100) : 0
   const currentMonthThai = new Date().toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
 
-  const f2 = (v: number) => '฿' + Math.round(v || 0).toLocaleString()
+  const f2 = baht
 
   if (loading) return <div className="flex items-center justify-center h-full"><PageSpinner /></div>
   if (fetchError) return <PageError message={fetchError} onRetry={() => { setLoading(true); setFetchError('') }} />

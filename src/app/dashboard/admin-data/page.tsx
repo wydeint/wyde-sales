@@ -8,6 +8,7 @@ import { TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { fetchAllRows } from '@/lib/fetchAll'
+import { baht } from '@/lib/money'
 
 /** How many rows the table paints at once. Purely a rendering limit — every
  *  row is loaded and searched, so this can never hide a record from a search. */
@@ -454,7 +455,7 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
 
 // ─── Reconcile Check ───────────────────────────────────────
 const fmtN = (n: number) => n.toLocaleString('th-TH')
-const fmtB = (n: number) => '฿' + Math.round(n).toLocaleString('th-TH')
+const fmtB = baht
 
 interface CheckItem {
   label: string

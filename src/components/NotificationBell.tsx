@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { Bell, X, Home, Banknote } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { baht } from '@/lib/money'
 
 interface HandoverItem {
   id: string; customer_name: string; room_no: string; handover_date: string; isToday: boolean
@@ -76,7 +77,7 @@ export default function NotificationBell() {
   const total = todayCount
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' })
-  const fmtBaht = (n: number) => '฿' + Math.round(n).toLocaleString()
+  const fmtBaht = baht
 
   function SectionHeader({ icon, label, count, color, bg }: { icon: React.ReactNode; label: string; count: number; color: string; bg: string }) {
     return (

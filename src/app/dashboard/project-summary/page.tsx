@@ -26,9 +26,13 @@ interface ProjectRow {
   jobs_total: number
   revenue_total: number
   revenue_delivered: number
+  /** Cancelled work, held apart from every figure above so the deal we lost is
+   *  visible instead of quietly inflating the ones we kept. */
+  jobs_cancelled: number
+  revenue_cancelled: number
 }
 
-type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered'
+type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled'
 type CustFilter = 'all' | 'B2C' | 'B2B'
 type WorkFilter = 'all' | 'RPT' | 'N-RPT'
 
@@ -117,14 +121,30 @@ export default function ProjectSummaryPage() {
         rev_total: number; rev_del: number
         b2c_rpt: number; b2c_nrpt: number; b2b_rpt: number; b2b_nrpt: number
         unknown_wt: number
+        cancelled: number; rev_cancelled: number
       }
+      const emptyAgg = (): JobAgg => ({
+        active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0,
+        b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0,
+        cancelled: 0, rev_cancelled: 0,
+      })
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
         if (!j.project_id) continue
-        if (!jobMap.has(j.project_id)) jobMap.set(j.project_id, { active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0 })
+        if (!jobMap.has(j.project_id)) jobMap.set(j.project_id, emptyAgg())
         const m = jobMap.get(j.project_id)!
-        m.total++
         const rev = j.revenue_inc_vat || 0
+
+        // A cancelled job is not work we hold, so it is kept out of every other
+        // figure and counted on its own. This page was the only one still adding
+        // them in: 7 jobs worth ฿1.1M were inflating Wyde Clients and รายได้รวม.
+        if (j.working_status === 'ยกเลิก') {
+          m.cancelled++
+          m.rev_cancelled += rev
+          continue
+        }
+
+        m.total++
         if (j.working_status === 'ส่งมอบแล้ว') { m.delivered++; m.rev_del += rev }
         else m.active++
         m.rev_total += rev
@@ -144,7 +164,7 @@ export default function ProjectSummaryPage() {
       }
 
       const result: ProjectRow[] = projects.map(p => {
-        const j = jobMap.get(p.id) ?? { active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0 }
+        const j = jobMap.get(p.id) ?? emptyAgg()
         return {
           id: p.id, name: p.name, total_units: p.total_units || 0,
           booked: custMap.get(p.id) || 0,
@@ -153,6 +173,7 @@ export default function ProjectSummaryPage() {
           unknown_wt: j.unknown_wt,
           jobs_active: j.active, jobs_delivered: j.delivered, jobs_total: j.total,
           revenue_total: j.rev_total, revenue_delivered: j.rev_del,
+          jobs_cancelled: j.cancelled, revenue_cancelled: j.rev_cancelled,
         }
       })
 
@@ -213,7 +234,9 @@ export default function ProjectSummaryPage() {
     b2b_rpt: acc.b2b_rpt + r.b2b_rpt,
     b2b_nrpt: acc.b2b_nrpt + r.b2b_nrpt,
     unknown_wt: acc.unknown_wt + r.unknown_wt,
-  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0 }), [filtered])
+    cancelled: acc.cancelled + r.jobs_cancelled,
+    revCancelled: acc.revCancelled + r.revenue_cancelled,
+  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0, cancelled: 0, revCancelled: 0 }), [filtered])
 
   if (loading) return <PageSpinner />
 
@@ -237,7 +260,9 @@ export default function ProjectSummaryPage() {
           actions={<span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>}
         />
 
-        {/* Filter row */}
+        {/* The card holds the pickers; the chips sit below it — the arrangement
+            every other list page uses. Two tab-groups plus a checkbox crammed
+            inside the card made this page look like a different app. */}
         <FilterBar className="mb-4">
           <select value={search} onChange={e => setSearch(e.target.value)}
             className="field-input" style={{ width: '13rem' }}>
@@ -245,7 +270,22 @@ export default function ProjectSummaryPage() {
             {rows.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
           </select>
 
-          <div className="tab-group">
+          <label className="flex items-center gap-1.5 cursor-pointer select-none text-xs" style={{ color: 'var(--text-2)' }}>
+            <input type="checkbox" checked={hideEmpty} onChange={e => setHideEmpty(e.target.checked)} className="rounded" />
+            ซ่อนโครงการที่ยังไม่มีงาน
+          </label>
+
+          {(custFilter !== 'all' || workFilter !== 'all' || search) && (
+            <button onClick={() => { setSearch(''); setCustFilter('all'); setWorkFilter('all') }}
+              className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
+              style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              ล้าง
+            </button>
+          )}
+        </FilterBar>
+
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <div className="tab-group flex-wrap">
             {(['all', 'B2C', 'B2B'] as CustFilter[]).map(v => (
               <button key={v} onClick={() => setCustFilter(v)}
                 className={`tab-btn ${custFilter === v ? 'active' : ''}`}>
@@ -254,7 +294,7 @@ export default function ProjectSummaryPage() {
             ))}
           </div>
 
-          <div className="tab-group">
+          <div className="tab-group flex-wrap">
             {(['all', 'RPT', 'N-RPT'] as WorkFilter[]).map(v => (
               <button key={v} onClick={() => setWorkFilter(v)}
                 className={`tab-btn ${workFilter === v ? 'active' : ''}`}>
@@ -262,12 +302,7 @@ export default function ProjectSummaryPage() {
               </button>
             ))}
           </div>
-
-          <label className="flex items-center gap-1.5 cursor-pointer select-none text-xs" style={{ color: 'var(--text-2)' }}>
-            <input type="checkbox" checked={hideEmpty} onChange={e => setHideEmpty(e.target.checked)} className="rounded" />
-            ซ่อนโครงการที่ยังไม่มีงาน
-          </label>
-        </FilterBar>
+        </div>
         {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           {[
@@ -326,6 +361,8 @@ export default function ProjectSummaryPage() {
               </th>
               <Th label="รายได้รวม" sortKey="revenue_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="รายได้ส่งมอบ" sortKey="revenue_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
+              {/* Last, and away from the rest: this is work we no longer hold. */}
+              <Th label="ยกเลิก" sortKey="jobs_cancelled" current={sortKey} dir={sortDir} onSort={handleSort} />
             </tr>
           </thead>
           <tbody>
@@ -414,6 +451,18 @@ export default function ProjectSummaryPage() {
                       {r.revenue_delivered > 0 ? fK(r.revenue_delivered) : '–'}
                     </span>
                   </td>
+                  {/* Count and value together — "how many did we lose" and "how
+                      much was it worth" are the same question here. */}
+                  <td className="px-3 py-2.5 text-right">
+                    {r.jobs_cancelled > 0 ? (
+                      <>
+                        <p className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-red)' }}>{r.jobs_cancelled}</p>
+                        {r.revenue_cancelled > 0 && (
+                          <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{fK(r.revenue_cancelled)}</p>
+                        )}
+                      </>
+                    ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                  </td>
                 </tr>
               )
             })}
@@ -434,6 +483,14 @@ export default function ProjectSummaryPage() {
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{fM(totals.rev)}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{fM(totals.revDel)}</td>
+              <td className="px-3 py-2.5 text-right">
+                {totals.cancelled > 0 ? (
+                  <>
+                    <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-red)' }}>{totals.cancelled}</p>
+                    <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{fM(totals.revCancelled)}</p>
+                  </>
+                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+              </td>
             </tr>
           </tbody>
         </table>

@@ -50,6 +50,13 @@ export default function ExecutivePage() {
   const [period, setPeriod] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
   const [filterCustType, setFilterCustType] = useState('')
+  // Groups the three stored N-RPT variants under one option; '' means no filter.
+  const [filterWorkType, setFilterWorkType] = useState('')
+  const matchWork = (wt: string | null | undefined) => {
+    if (!filterWorkType) return true
+    const v = (wt || '').trim()
+    return filterWorkType === 'RPT' ? v === 'RPT' : v.startsWith('N-RPT')
+  }
   const [allPayments, setAllPayments] = useState<PaidPayment[]>([])
   const [mainTab, setMainTab] = useState<'performance' | 'team'>('performance')
   const [teamUsers, setTeamUsers] = useState<{ id: string; name: string; manager_id: string | null }[]>([])
@@ -100,16 +107,16 @@ export default function ExecutivePage() {
   const periodJobs = useMemo(() =>
     allJobs.filter(j => {
       const d = j.order_date || j.work_start_date
-      return !!d && d >= start && d <= end && (!filterCustType || j.customer_type === filterCustType)
+      return !!d && d >= start && d <= end && (!filterCustType || j.customer_type === filterCustType) && matchWork(j.work_type)
     }),
-    [allJobs, start, end, filterCustType]
+    [allJobs, start, end, filterCustType, filterWorkType]
   )
 
   const deliveredJobs = useMemo(() =>
     allJobs.filter(j => j.actual_deliver_date >= start && j.actual_deliver_date <= end &&
       j.working_status === 'ส่งมอบแล้ว' &&
-      (!filterCustType || j.customer_type === filterCustType)),
-    [allJobs, start, end, filterCustType]
+      (!filterCustType || j.customer_type === filterCustType) && matchWork(j.work_type)),
+    [allJobs, start, end, filterCustType, filterWorkType]
   )
 
   // Org target — reactive to period + offset
@@ -207,11 +214,11 @@ export default function ExecutivePage() {
       const ms = `${y}-${String(m + 1).padStart(2, '0')}-01`
       const me = ld(new Date(y, m + 1, 0))
       const rev = allJobs.filter(j => j.order_date >= ms && j.order_date <= me &&
-        (!filterCustType || j.customer_type === filterCustType))
+        (!filterCustType || j.customer_type === filterCustType) && matchWork(j.work_type))
         .reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
       return { label: MONTHS_TH[m], revenue: rev }
     })
-  }, [allJobs, period, start, filterCustType])
+  }, [allJobs, period, start, filterCustType, filterWorkType])
 
   const trendMax = Math.max(...monthlyTrend.map(t => t.revenue), 1)
 
@@ -252,6 +259,15 @@ export default function ExecutivePage() {
           <option value="">B2C + B2B</option>
           <option value="B2C">B2C</option>
           <option value="B2B">B2B</option>
+        </select>
+        {/* N-RPT covers three stored values — N-RPT, N-RPT/EQ and N-RPT/Event —
+            so the option groups them rather than listing all three, matching how
+            Project Summary splits the same field. */}
+        <select value={filterWorkType} onChange={e => setFilterWorkType(e.target.value)}
+          className="field-input" style={{ width: 'auto' }}>
+          <option value="">RPT + N-RPT</option>
+          <option value="RPT">RPT</option>
+          <option value="N-RPT">N-RPT</option>
         </select>
         <PeriodPicker unit={period} setUnit={setPeriod} offset={offset} setOffset={setOffset}
           units={['week','month','quarter','year']} />

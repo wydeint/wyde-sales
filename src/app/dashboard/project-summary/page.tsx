@@ -6,6 +6,7 @@ import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { workCategory } from '@/lib/status'
+import { fetchAllRows } from '@/lib/fetchAll'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -31,7 +32,16 @@ interface ProjectRow {
    *  visible instead of quietly inflating the ones we kept. */
   jobs_cancelled: number
   revenue_cancelled: number
+  /** Cash in the door — paid instalments plus vouchers, the same settlement
+   *  rule the rest of the app uses. Job value alone says what was sold, not
+   *  what has actually been collected. */
+  cash_total: number
+  cash_delivered: number
+  byCat: { RPT: Slice; 'N-RPT': Slice; unknown: Slice }
+  byCust: { B2C: Slice; B2B: Slice }
 }
+
+export type Slice = { n: number; rev: number; cash: number }
 
 type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled'
 type CustFilter = 'all' | 'B2C' | 'B2B'
@@ -55,6 +65,140 @@ function FunnelBar({ delivered, total }: { delivered: number; total: number }) {
           style={{ width: `${p}%`, background: p >= 80 ? 'var(--accent-green)' : p >= 40 ? 'var(--accent)' : 'var(--accent-amber)' }} />
       </div>
       <span className="text-micro tabular-nums w-8 text-right" style={{ color: 'var(--text-3)' }}>{p}%</span>
+    </div>
+  )
+}
+
+// ─── Project drawer ──────────────────────────────────────────────────────────
+/**
+ * The table is fifteen columns wide and its header cannot stick, so reading one
+ * project meant scrolling sideways and losing track of which row you were on.
+ * The drawer answers "how is this project doing" in one place — and pairs every
+ * count with what it is worth and what has actually been collected, which the
+ * table never did.
+ */
+function ProjectDrawer({ row, onClose }: { row: ProjectRow; onClose: () => void }) {
+  const outstanding = Math.max(row.revenue_total - row.cash_total, 0)
+  const collected = pct(row.cash_total, row.revenue_total)
+
+  const catRows: { label: string; s: Slice; color: string }[] = [
+    { label: 'RPT', s: row.byCat.RPT, color: 'var(--accent-green)' },
+    { label: 'N-RPT', s: row.byCat['N-RPT'], color: 'var(--accent)' },
+    { label: 'ไม่ระบุ', s: row.byCat.unknown, color: 'var(--accent-amber)' },
+  ]
+  const custRows: { label: string; s: Slice; color: string }[] = [
+    { label: 'B2C', s: row.byCust.B2C, color: 'var(--accent-green)' },
+    { label: 'B2B', s: row.byCust.B2B, color: 'var(--accent-blue)' },
+  ]
+
+  const Group = ({ title, items }: { title: string; items: typeof catRows }) => (
+    <section>
+      <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{title}</p>
+      <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
+        <table className="w-full text-xs">
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+              <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ประเภท</th>
+              <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>งาน</th>
+              <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
+              <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.filter(r => r.s.n > 0).map(r => (
+              <tr key={r.label} style={{ borderTop: '1px solid var(--divider)' }}>
+                <td className="px-3 py-2 font-semibold" style={{ color: r.color }}>{r.label}</td>
+                <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{r.s.n}</td>
+                <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(r.s.rev)}</td>
+                <td className="px-3 py-2 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(r.s.cash)}</td>
+              </tr>
+            ))}
+            {items.every(r => r.s.n === 0) && (
+              <tr><td colSpan={4} className="px-3 py-3 text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีงาน</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-panel modal-panel-wide flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="min-w-0">
+            <h3 className="modal-title truncate">{row.name}</h3>
+            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+              {row.id}{row.total_units > 0 ? ` · ${row.total_units.toLocaleString()} ห้องในโครงการ` : ''}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}>✕</button>
+        </div>
+
+        <div className="overflow-y-auto p-5 space-y-5">
+          {/* Money first: sold, collected, still owed. */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="ds-card-sm p-3">
+              <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
+              <p className="text-kpi-money" style={{ color: 'var(--accent)' }}>{fM(row.revenue_total)}</p>
+              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{row.jobs_total} งาน</p>
+            </div>
+            <div className="ds-card-sm p-3">
+              <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>รับเงินแล้ว</p>
+              <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{fM(row.cash_total)}</p>
+              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{collected}% ของมูลค่า</p>
+            </div>
+            <div className="ds-card-sm p-3">
+              <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
+              <p className="text-kpi-money" style={{ color: outstanding > 0 ? 'var(--accent-orange)' : 'var(--text-3)' }}>{outstanding > 0 ? fM(outstanding) : '–'}</p>
+              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>มูลค่า − รับแล้ว</p>
+            </div>
+          </div>
+
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ความคืบหน้า</p>
+            <div className="ds-card p-4 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span style={{ color: 'var(--text-2)' }}>ส่งมอบแล้ว</span>
+                <span className="tabular-nums" style={{ color: 'var(--text-1)' }}>
+                  {row.jobs_delivered} / {row.jobs_total} งาน · <span style={{ color: 'var(--accent-green)' }}>{fK(row.revenue_delivered)}</span>
+                </span>
+              </div>
+              <FunnelBar delivered={row.jobs_delivered} total={row.jobs_total} />
+              <div className="flex items-center justify-between text-xs pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
+                <span style={{ color: 'var(--text-2)' }}>กำลังดำเนินการ</span>
+                <span className="tabular-nums" style={{ color: 'var(--accent-amber)' }}>{row.jobs_active} งาน</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span style={{ color: 'var(--text-2)' }}>ลูกค้าจองแล้ว (ยังไม่เปิดงาน)</span>
+                <span className="tabular-nums" style={{ color: 'var(--text-1)' }}>{row.booked} ราย</span>
+              </div>
+              {row.jobs_cancelled > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span style={{ color: 'var(--text-2)' }}>ยกเลิก</span>
+                  <span className="tabular-nums" style={{ color: 'var(--accent-red)' }}>
+                    {row.jobs_cancelled} งาน · {fK(row.revenue_cancelled)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <Group title="แยกตามประเภทงาน" items={catRows} />
+          <Group title="แยกตามประเภทลูกค้า" items={custRows} />
+
+          {row.byCat.unknown.n > 0 && (
+            <p className="text-micro" style={{ color: 'var(--accent-amber)' }}>
+              {/* Most unclassified rows are prospect placeholders worth nothing
+                  yet, so "มูลค่ารวม –" read as an error. Say which case it is. */}
+              ⚠ {row.byCat.unknown.n} งานยังไม่ได้ระบุประเภทงาน
+              {row.byCat.unknown.rev > 0
+                ? ` — มูลค่ารวม ${fK(row.byCat.unknown.rev)}`
+                : ' (ยังไม่มีมูลค่า — เป็นงานที่รอเปิดดีล)'}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -89,30 +233,53 @@ export default function ProjectSummaryPage() {
   const [workFilter, setWorkFilter] = useState<WorkFilter>('all')
   const [sortKey, setSortKey] = useState<SortKey>('revenue_total')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [openRow, setOpenRow] = useState<ProjectRow | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [projRes, jobRes, custRes] = await Promise.all([
+      const [projRes, jobRes, custRes, payRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
-        supabase.from('jobs').select('project_id, working_status, revenue_inc_vat, work_type, customer_type'),
+        supabase.from('jobs').select('id, project_id, working_status, revenue_inc_vat, work_type, customer_type'),
         supabase.from('customers').select('project_id, status'),
+        // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
+        // the cash figures come out short with no error to say so.
+        fetchAllRows(() => supabase.from('payments')
+          .select('job_id, status, amount, paid_amount, voucher_amount')),
       ])
 
       const projects = projRes.data || []
       const jobs = jobRes.data || []
       const customers = custRes.data || []
 
+      // Cash actually collected per job. Voucher counts: it settles the
+      // instalment just as cash does, which is the rule every other page uses.
+      const paidByJob = new Map<string, number>()
+      for (const p of ((payRes.data || []) as any[])) {
+        if (p.status !== 'paid') continue
+        const got = Number(p.paid_amount ?? p.amount ?? 0) + Number(p.voucher_amount ?? 0)
+        paidByJob.set(p.job_id, (paidByJob.get(p.job_id) || 0) + got)
+      }
+
+      const slice = (): Slice => ({ n: 0, rev: 0, cash: 0 })
+      const addTo = (s: Slice, rev: number, cash: number) => { s.n++; s.rev += rev; s.cash += cash }
+
       type JobAgg = {
         active: number; delivered: number; total: number
         rev_total: number; rev_del: number
+        cash_total: number; cash_del: number
         b2c_rpt: number; b2c_nrpt: number; b2b_rpt: number; b2b_nrpt: number
         unknown_wt: number
         cancelled: number; rev_cancelled: number
+        byCat: { RPT: Slice; 'N-RPT': Slice; unknown: Slice }
+        byCust: { B2C: Slice; B2B: Slice }
       }
       const emptyAgg = (): JobAgg => ({
         active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0,
+        cash_total: 0, cash_del: 0,
         b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0,
         cancelled: 0, rev_cancelled: 0,
+        byCat: { RPT: slice(), 'N-RPT': slice(), unknown: slice() },
+        byCust: { B2C: slice(), B2B: slice() },
       })
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
@@ -130,13 +297,17 @@ export default function ProjectSummaryPage() {
           continue
         }
 
+        const cash = paidByJob.get(j.id) || 0
         m.total++
-        if (j.working_status === 'ส่งมอบแล้ว') { m.delivered++; m.rev_del += rev }
+        if (j.working_status === 'ส่งมอบแล้ว') { m.delivered++; m.rev_del += rev; m.cash_del += cash }
         else m.active++
         m.rev_total += rev
+        m.cash_total += cash
 
-        const ctype: string = j.customer_type || 'B2C'
+        const ctype: 'B2C' | 'B2B' = j.customer_type === 'B2B' ? 'B2B' : 'B2C'
         const cat = workCategory(j.work_type)
+        addTo(m.byCat[cat], rev, cash)
+        addTo(m.byCust[ctype], rev, cash)
         if (cat === 'unknown') m.unknown_wt++
         else if (ctype === 'B2B') { cat === 'N-RPT' ? m.b2b_nrpt++ : m.b2b_rpt++ }
         else                      { cat === 'N-RPT' ? m.b2c_nrpt++ : m.b2c_rpt++ }
@@ -160,6 +331,8 @@ export default function ProjectSummaryPage() {
           jobs_active: j.active, jobs_delivered: j.delivered, jobs_total: j.total,
           revenue_total: j.rev_total, revenue_delivered: j.rev_del,
           jobs_cancelled: j.cancelled, revenue_cancelled: j.rev_cancelled,
+          cash_total: j.cash_total, cash_delivered: j.cash_del,
+          byCat: j.byCat, byCust: j.byCust,
         }
       })
 
@@ -359,6 +532,8 @@ export default function ProjectSummaryPage() {
               const nrpt = r.b2c_nrpt + r.b2b_nrpt
               return (
                 <tr key={r.id}
+                  className="cursor-pointer"
+                  onClick={() => setOpenRow(r)}
                   style={{ background: i % 2 === 0 ? 'transparent' : 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--active-bg)'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = i % 2 === 0 ? 'transparent' : 'var(--hover-bg)'}
@@ -487,6 +662,8 @@ export default function ProjectSummaryPage() {
           </div>
         )}
       </div>
+
+      {openRow && <ProjectDrawer row={openRow} onClose={() => setOpenRow(null)} />}
     </div>
   )
 }

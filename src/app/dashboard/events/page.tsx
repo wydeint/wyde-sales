@@ -7,6 +7,7 @@ import { PageError, EmptyState } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select, TextArea } from '@/components/ui/Input'
+import { baht } from '@/lib/money'
 
 interface Project { id: string; name: string }
 interface Lead { id: number; tower: string; room_no: string; customer_name: string; phone: string }
@@ -72,7 +73,7 @@ const emptyCust = {
   deposit_amount: '', booking_type: 'Event', notes: ''
 }
 
-const fmtBaht = (n: number) => n ? '฿' + n.toLocaleString() : '—'
+const fmtBaht = (n: number) => n ? baht(n) : '—'
 const dateStr = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'
 
 export default function EventsPage() {

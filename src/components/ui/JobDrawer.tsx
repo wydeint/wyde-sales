@@ -12,6 +12,7 @@ import FileAttach from '@/components/ui/FileAttach'
 import { expectedDeliveryDate, fmtShortDate, type DeliveryJobCtx } from '@/lib/delivery'
 import { generateLineMsg } from '@/lib/lineMessage'
 import DateInput from '@/components/ui/DateInput'
+import { baht } from '@/lib/money'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -94,7 +95,7 @@ function LineLogo({ size = 14 }: { size?: number }) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────
-export const fmtBaht = (n: number) => n ? '฿' + Math.round(n).toLocaleString('th-TH') : '฿0'
+export const fmtBaht = baht
 
 async function sendLineNotify(message: string): Promise<{ ts: string; error?: undefined } | { ts?: undefined; error: string }> {
   try {

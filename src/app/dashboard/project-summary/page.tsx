@@ -8,6 +8,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import { workCategory } from '@/lib/status'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { thaiDate } from '@/lib/thaiDate'
+import { bahtShortOrDash } from '@/lib/money'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown, PackageCheck, XCircle } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -86,8 +87,12 @@ type CustFilter = 'all' | 'B2C' | 'B2B'
 type WorkFilter = 'all' | 'RPT' | 'N-RPT'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-const fM = (n: number) => n > 0 ? '฿' + (n / 1e6).toLocaleString('th-TH', { maximumFractionDigits: 2 }) + 'M' : '–'
-const fK = (n: number) => n > 0 ? '฿' + (n / 1000).toLocaleString('th-TH', { maximumFractionDigits: 0 }) + 'K' : '–'
+/** Every money slot on this page is a comparison across 52 projects or a
+ *  breakdown inside a fixed-width drawer column, so all of them abbreviate.
+ *  fM and fK are both bahtShortOrDash now: the old fK never rolled over, which
+ *  is how ฿40 million came to print as ฿40,288K. */
+const fM = bahtShortOrDash
+const fK = bahtShortOrDash
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 
 // workCategory lives in lib/status.ts alongside the value list it classifies

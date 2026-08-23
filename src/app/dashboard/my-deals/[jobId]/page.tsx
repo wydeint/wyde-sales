@@ -9,6 +9,7 @@ import {
   ArrowLeft, CheckCircle2, Circle, ChevronDown, ChevronUp,
   Wallet, Package, Wrench, ShoppingCart, AlertTriangle, X,
 } from 'lucide-react'
+import { baht } from '@/lib/money'
 
 // ─── Types ────────────────────────────────────────────────
 type ClientType = 'B2C' | 'B2B'
@@ -57,7 +58,7 @@ interface Job {
 }
 
 // ─── Helpers ──────────────────────────────────────────────
-const fmtBaht = (n: number) => n ? '฿' + Math.round(n).toLocaleString('th-TH') : '฿0'
+const fmtBaht = baht
 const fmtDate = (d: string | null) => d
   ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
   : '—'

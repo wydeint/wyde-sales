@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { crmStage } from '@/lib/status'
 import { Spinner, EmptyState } from '@/components/ui/StateUI'
 import { useRouter } from 'next/navigation'
+import { bahtShort } from '@/lib/money'
 import {
   Search, X, CheckCircle2, ChevronRight, AlertTriangle,
   AlertCircle, ArrowLeft, Home,
@@ -43,11 +44,12 @@ const buildRoomOr = (q: string, base: string) => {
 // For frontend includes: strip dashes from both sides before comparing
 const normRoom = (s: string) => s.replace(/-/g, '').toLowerCase()
 
-const fmtBaht = (n: number) => {
-  if (n >= 1000000) return '฿' + (n / 1000000).toFixed(1) + 'M'
-  if (n >= 1000) return '฿' + Math.round(n / 1000) + 'k'
-  return '฿' + n.toLocaleString()
-}
+/** Phone-first, so figures abbreviate — but by the app-wide rule now, not this
+ *  page's own. The layout stays deliberately different from the desktop pages;
+ *  what a number means should not. The old version rounded ฿1,499,000 to
+ *  ฿1.5M and ฿1,600 to ฿2k, which is a lot of precision to lose on a screen
+ *  people use to quote customers. */
+const fmtBaht = bahtShort
 const fmtDate = (d: string | null) =>
   d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) : '—'
 

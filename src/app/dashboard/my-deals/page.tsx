@@ -17,6 +17,7 @@ import { expectedDeliveryDate, fmtShortDate } from '@/lib/delivery'
 import { generateLineMsg, type LineJob } from '@/lib/lineMessage'
 import { isAwaitingCollection, isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
 import DateInput from '@/components/ui/DateInput'
+import { baht, bahtShort } from '@/lib/money'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -181,7 +182,7 @@ function getFullStageInfo(job: FullJob) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────
-const fmtBaht = (n: number) => n ? '฿' + Math.round(n).toLocaleString('th-TH') : '฿0'
+const fmtBaht = baht
 const fmtDate = (d: string | null) => d
   ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
   : '—'
@@ -2312,8 +2313,9 @@ export default function MyDealsPage() {
         const allRev = sumRev([...activeJobs, ...doneJobs])
         const allDue = Math.max(allRev - sumPaid([...activeJobs, ...doneJobs]), 0)
         const owing = activeJobs.filter(j => j.total_amount - j.paid_amount_total > 1).length
-        const fk = (n: number) => n >= 1000000 ? '฿' + (n / 1000000).toFixed(1) + 'M'
-          : n > 0 ? '฿' + Math.round(n / 1000).toLocaleString('th-TH') + 'K' : '฿0'
+        // Three KPI tiles across a phone width — the one place on this page
+        // that has to abbreviate. Everything else keeps the full value.
+        const fk = bahtShort
         return (
           <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">

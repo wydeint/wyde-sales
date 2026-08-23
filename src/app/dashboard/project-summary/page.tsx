@@ -216,7 +216,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
       : ['งาน', 'ส่งมอบแล้ว', 'รอส่งมอบ', 'มูลค่าที่ค้าง']
     return (
       <Sub title={title}>
-        <table className="w-full text-xs">
+        <SubTable side={side}>
           <thead>
             <tr>
               <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>{firstCol}</th>
@@ -258,7 +258,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
             )}
           </tbody>
           <TotalRow slices={items.map(r => r.s)} side={side} />
-        </table>
+        </SubTable>
       </Sub>
     )
   }
@@ -323,7 +323,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
 
               {salesYears.length > 0 && (
                 <Sub title="ยอดขายแยกตามปี">
-                  <table className="w-full text-xs">
+                  <SubTable side="sales">
                     <thead>
                       <tr>
                         <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
@@ -344,7 +344,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                       ))}
                     </tbody>
                     <TotalRow slices={salesYears.map(([, s]) => s)} side="sales" />
-                  </table>
+                  </SubTable>
                   {noOrderDate > 0 && (
                     <p className="text-micro mt-1" style={{ color: 'var(--accent-amber)' }}>
                       ⚠ อีก {noOrderDate} งานไม่มีวันขาย จึงไม่ปรากฏในตารางนี้
@@ -369,7 +369,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
 
               {salesRows.length > 0 && (
                 <Sub title="ทีมขายที่ดูแลโครงการนี้">
-                  <table className="w-full text-xs">
+                  <SubTable side="sales">
                     <thead>
                       <tr>
                         <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>เซลล์</th>
@@ -389,7 +389,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                       ))}
                     </tbody>
                     <TotalRow slices={salesRows.map(([, s]) => s)} side="sales" />
-                  </table>
+                  </SubTable>
                 </Sub>
               )}
             </div>
@@ -433,7 +433,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   different problem from a new one. */}
               {salesYears.length > 0 && (
                 <Sub title="งานค้างส่งมอบ แยกตามปีที่ขาย">
-                  <table className="w-full text-xs">
+                  <SubTable side="delivery">
                     <thead>
                       <tr>
                         <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
@@ -464,7 +464,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                       })}
                     </tbody>
                     <TotalRow slices={salesYears.map(([, s]) => s)} side="delivery" />
-                  </table>
+                  </SubTable>
                 </Sub>
               )}
             </div>
@@ -622,6 +622,24 @@ function TotalRow({ slices, side }: { slices: Slice[]; side: 'sales' | 'delivery
     </tfoot>
   )
 }
+
+/** Four breakdown tables stack inside one card, and left to themselves each one
+ *  sizes its columns to its own contents — so ปีที่ขาย (short) and ประเภทลูกค้า
+ *  (long) push their number columns to different x positions and the stack
+ *  reads as ragged even though every figure is right-aligned. Fixed layout with
+ *  one shared set of widths per side puts every column on the same line down
+ *  the whole card. */
+const COLS = {
+  sales: ['38%', '14%', '24%', '24%'],
+  delivery: ['30%', '12%', '20%', '16%', '22%'],
+} as const
+
+const SubTable = ({ side, children }: { side: 'sales' | 'delivery'; children: React.ReactNode }) => (
+  <table className="w-full text-xs" style={{ tableLayout: 'fixed' }}>
+    <colgroup>{COLS[side].map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
+    {children}
+  </table>
+)
 
 // ─── Sort header ─────────────────────────────────────────────────────────────
 function Th({ label, sortKey, current, dir, onSort, right = true }: {

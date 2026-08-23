@@ -39,11 +39,19 @@ interface ProjectRow {
   cash_delivered: number
   byCat: { RPT: Slice; 'N-RPT': Slice; unknown: Slice }
   byCust: { B2C: Slice; B2B: Slice }
+  /** Sold and not yet handed over. The page already showed รายได้รวม and
+   *  รายได้ส่งมอบ; this is the difference between them, given a name. */
+  backlog: Slice
+  salesByYear: Map<number, Slice>
+  /** Average days from order to handover for this project, and how many jobs
+   *  that average is built from — an average over two jobs is not a trend. */
+  lead_days_avg: number | null
+  lead_sample: number
 }
 
 export type Slice = { n: number; rev: number; cash: number }
 
-type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled'
+type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled' | 'backlog_rev'
 type CustFilter = 'all' | 'B2C' | 'B2B'
 type WorkFilter = 'all' | 'RPT' | 'N-RPT'
 
@@ -77,9 +85,18 @@ function FunnelBar({ delivered, total }: { delivered: number; total: number }) {
  * count with what it is worth and what has actually been collected, which the
  * table never did.
  */
-function ProjectDrawer({ row, onClose }: { row: ProjectRow; onClose: () => void }) {
+function ProjectDrawer({ row, overallLeadDays, onClose }: {
+  row: ProjectRow; overallLeadDays: number | null; onClose: () => void
+}) {
   const outstanding = Math.max(row.revenue_total - row.cash_total, 0)
   const collected = pct(row.cash_total, row.revenue_total)
+
+  // Newest year first — this year is what anyone opens the drawer to see.
+  const salesYears = [...row.salesByYear.entries()].sort((a, b) => b[0] - a[0])
+  // Jobs with no order_date cannot appear in the year table. Saying how many
+  // are missing stops the total silently disagreeing with มูลค่างาน above.
+  const datedJobs = salesYears.reduce((s, [, v]) => s + v.n, 0)
+  const noOrderDate = row.jobs_total - datedJobs
 
   const catRows: { label: string; s: Slice; color: string }[] = [
     { label: 'RPT', s: row.byCat.RPT, color: 'var(--accent-green)' },
@@ -184,6 +201,79 @@ function ProjectDrawer({ row, onClose }: { row: ProjectRow; onClose: () => void 
             </div>
           </section>
 
+          {/* ── Sales side ──────────────────────────────────────────────
+              The page told the delivery story only. What was sold, what is
+              still owed as work, and how long this project takes to turn one
+              into the other were all absent even though the data was loaded. */}
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ฝั่งขาย</p>
+            <div className="ds-card p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--text-2)' }}>ขายแล้ว รอส่งมอบ</p>
+                  <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>งานที่ปิดการขายแล้วแต่ยังไม่ได้ส่งมอบ</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-kpi-money" style={{ color: 'var(--accent-blue)' }}>{fM(row.backlog.rev)}</p>
+                  <p className="text-micro" style={{ color: 'var(--text-3)' }}>
+                    {row.backlog.n} งาน · รับเงินแล้ว {fK(row.backlog.cash)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                <span className="text-xs" style={{ color: 'var(--text-2)' }}>ขาย → ส่งมอบ เฉลี่ย</span>
+                {row.lead_days_avg === null ? (
+                  <span className="text-xs" style={{ color: 'var(--text-3)' }}>ยังไม่มีงานที่ส่งมอบครบรอบ</span>
+                ) : (
+                  <span className="text-xs tabular-nums" style={{ color: 'var(--text-1)' }}>
+                    {row.lead_days_avg} วัน
+                    {overallLeadDays !== null && (
+                      <span style={{ color: row.lead_days_avg > overallLeadDays ? 'var(--accent-orange)' : 'var(--accent-green)' }}>
+                        {' '}({row.lead_days_avg > overallLeadDays ? 'ช้ากว่า' : 'เร็วกว่า'}ค่าเฉลี่ย {overallLeadDays} วัน)
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--text-3)' }}> · จาก {row.lead_sample} งาน</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {salesYears.length > 0 && (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ยอดขายแยกตามปี</p>
+              <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                      <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>งาน</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesYears.map(([year, s]) => (
+                      <tr key={year} style={{ borderTop: '1px solid var(--divider)' }}>
+                        {/* Buddhist era, matching every other date in the app */}
+                        <td className="px-3 py-2 font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
+                        <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
+                        <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(s.rev)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(s.cash)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {noOrderDate > 0 && (
+                <p className="text-micro mt-1.5" style={{ color: 'var(--accent-amber)' }}>
+                  ⚠ อีก {noOrderDate} งานไม่มีวันขาย จึงไม่ปรากฏในตารางนี้
+                </p>
+              )}
+            </section>
+          )}
+
           <Group title="แยกตามประเภทงาน" items={catRows} />
           <Group title="แยกตามประเภทลูกค้า" items={custRows} />
 
@@ -239,7 +329,7 @@ export default function ProjectSummaryPage() {
     async function load() {
       const [projRes, jobRes, custRes, payRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
-        supabase.from('jobs').select('id, project_id, working_status, revenue_inc_vat, work_type, customer_type'),
+        supabase.from('jobs').select('id, project_id, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date'),
         supabase.from('customers').select('project_id, status'),
         // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
         // the cash figures come out short with no error to say so.
@@ -272,6 +362,14 @@ export default function ProjectSummaryPage() {
         cancelled: number; rev_cancelled: number
         byCat: { RPT: Slice; 'N-RPT': Slice; unknown: Slice }
         byCust: { B2C: Slice; B2B: Slice }
+        /** Sold, not yet handed over — the gap between รายได้รวม and
+         *  รายได้ส่งมอบ that the page showed but never named. */
+        backlog: Slice
+        /** order_date year → what was sold that year. */
+        salesByYear: Map<number, Slice>
+        /** Running total for the average sale-to-handover time. Kept as sum and
+         *  count rather than a running mean so the division happens once. */
+        leadDays: number; leadCount: number
       }
       const emptyAgg = (): JobAgg => ({
         active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0,
@@ -280,6 +378,9 @@ export default function ProjectSummaryPage() {
         cancelled: 0, rev_cancelled: 0,
         byCat: { RPT: slice(), 'N-RPT': slice(), unknown: slice() },
         byCust: { B2C: slice(), B2B: slice() },
+        backlog: slice(),
+        salesByYear: new Map<number, Slice>(),
+        leadDays: 0, leadCount: 0,
       })
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
@@ -303,6 +404,31 @@ export default function ProjectSummaryPage() {
         else m.active++
         m.rev_total += rev
         m.cash_total += cash
+
+        // ── Sales side ──────────────────────────────────────────────
+        // Backlog keys off working_status, not actual_deliver_date, so that
+        // ส่งมอบแล้ว + รอส่งมอบ adds up to Wyde Clients. Seven jobs carry a
+        // handover date while still marked ดำเนินการ; using the date here made
+        // the two columns disagree by ฿813K with nothing on screen to explain it.
+        // Whichever field is stale, the page has to pick one and stay with it.
+        if (j.working_status !== 'ส่งมอบแล้ว') addTo(m.backlog, rev, cash)
+
+        if (j.order_date) {
+          const y = Number(String(j.order_date).slice(0, 4))
+          if (y) {
+            if (!m.salesByYear.has(y)) m.salesByYear.set(y, slice())
+            addTo(m.salesByYear.get(y)!, rev, cash)
+          }
+          if (j.actual_deliver_date) {
+            const days = Math.round(
+              (new Date(j.actual_deliver_date).getTime() - new Date(j.order_date).getTime()) / 86400000
+            )
+            // Negative gaps exist in the imported data — a handover dated before
+            // its own order. Counting them would drag the average below the truth,
+            // so they are left out rather than silently absorbed.
+            if (days >= 0) { m.leadDays += days; m.leadCount++ }
+          }
+        }
 
         const ctype: 'B2C' | 'B2B' = j.customer_type === 'B2B' ? 'B2B' : 'B2C'
         const cat = workCategory(j.work_type)
@@ -333,6 +459,10 @@ export default function ProjectSummaryPage() {
           jobs_cancelled: j.cancelled, revenue_cancelled: j.rev_cancelled,
           cash_total: j.cash_total, cash_delivered: j.cash_del,
           byCat: j.byCat, byCust: j.byCust,
+          backlog: j.backlog,
+          salesByYear: j.salesByYear,
+          lead_days_avg: j.leadCount > 0 ? Math.round(j.leadDays / j.leadCount) : null,
+          lead_sample: j.leadCount,
         }
       })
 
@@ -371,10 +501,14 @@ export default function ProjectSummaryPage() {
     if (custFilter !== 'all' || workFilter !== 'all') {
       list = list.filter(r => visibleJobs(r) > 0)
     }
+    // backlog_rev is the one sort key that is not a flat property — it lives
+    // inside the backlog slice, so it needs reading rather than indexing.
+    const sortVal = (r: ProjectRow) =>
+      sortKey === 'backlog_rev' ? r.backlog.rev : (r[sortKey] as number)
     return [...list].sort((a, b) => {
       const v = sortKey === 'name'
         ? a.name.localeCompare(b.name, 'th')
-        : (a[sortKey] as number) - (b[sortKey] as number)
+        : sortVal(a) - sortVal(b)
       return sortDir === 'asc' ? v : -v
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -395,7 +529,15 @@ export default function ProjectSummaryPage() {
     unknown_wt: acc.unknown_wt + r.unknown_wt,
     cancelled: acc.cancelled + r.jobs_cancelled,
     revCancelled: acc.revCancelled + r.revenue_cancelled,
-  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0, cancelled: 0, revCancelled: 0 }), [filtered])
+    backlogN: acc.backlogN + r.backlog.n,
+    backlogRev: acc.backlogRev + r.backlog.rev,
+    leadSum: acc.leadSum + (r.lead_days_avg !== null ? r.lead_days_avg * r.lead_sample : 0),
+    leadCount: acc.leadCount + r.lead_sample,
+  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0, cancelled: 0, revCancelled: 0, backlogN: 0, backlogRev: 0, leadSum: 0, leadCount: 0 }), [filtered])
+
+  /** The book-wide average, so a project's own figure has something to sit
+   *  against. Weighted by job count, not a mean of means. */
+  const overallLeadDays = totals.leadCount > 0 ? Math.round(totals.leadSum / totals.leadCount) : null
 
   if (loading) return <PageSpinner />
 
@@ -499,13 +641,19 @@ export default function ProjectSummaryPage() {
                   of bare counts pushed the table to fifteen wide and forced a
                   sideways scroll on every read. They live in the drawer now,
                   where each one carries its value and cash alongside. */}
-              <Th label="กำลังดำเนินการ" sortKey="jobs_total" current={sortKey} dir={sortDir} onSort={handleSort} />
+              {/* กำลังดำเนินการ used to sit here as a bare count. รอส่งมอบ below
+                  is the same set of jobs — everything not handed over — but
+                  carries its value too, so one column does the work of two and
+                  the table stays inside the screen. */}
               <Th label="ส่งมอบแล้ว" sortKey="jobs_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 text-left">
                 <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>% ส่งมอบ</span>
               </th>
               <Th label="รายได้รวม" sortKey="revenue_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="รายได้ส่งมอบ" sortKey="revenue_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
+              {/* Next to รายได้ส่งมอบ so the three read as one sentence: sold,
+                  handed over, still owed to the customer in work. */}
+              <Th label="รอส่งมอบ" sortKey="backlog_rev" current={sortKey} dir={sortDir} onSort={handleSort} />
               {/* Last, and away from the rest: this is work we no longer hold. */}
               <Th label="ยกเลิก" sortKey="jobs_cancelled" current={sortKey} dir={sortDir} onSort={handleSort} />
             </tr>
@@ -540,11 +688,6 @@ export default function ProjectSummaryPage() {
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
-                    {r.jobs_active > 0
-                      ? <span className="text-xs tabular-nums" style={{ color: 'var(--accent-amber)' }}>{r.jobs_active}</span>
-                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
-                  </td>
-                  <td className="px-3 py-2.5 text-right">
                     {r.jobs_delivered > 0
                       ? <span className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{r.jobs_delivered}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
@@ -563,6 +706,15 @@ export default function ProjectSummaryPage() {
                     <span className="text-xs tabular-nums" style={{ color: 'var(--accent-green)' }}>
                       {r.revenue_delivered > 0 ? fK(r.revenue_delivered) : '–'}
                     </span>
+                  </td>
+                  {/* รอส่งมอบ — sold, not handed over yet */}
+                  <td className="px-3 py-2.5 text-right">
+                    {r.backlog.n > 0 ? (
+                      <>
+                        <p className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-blue)' }}>{fK(r.backlog.rev)}</p>
+                        <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{r.backlog.n} งาน</p>
+                      </>
+                    ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
                   {/* Count and value together — "how many did we lose" and "how
                       much was it worth" are the same question here. */}
@@ -586,11 +738,18 @@ export default function ProjectSummaryPage() {
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.units.toLocaleString()}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{totals.booked || '–'}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.jobs}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-amber)' }}>{totals.jobs - totals.delivered || '–'}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totals.delivered}</td>
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{fM(totals.rev)}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{fM(totals.revDel)}</td>
+              <td className="px-3 py-2.5 text-right">
+                {totals.backlogN > 0 ? (
+                  <>
+                    <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{fM(totals.backlogRev)}</p>
+                    <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{totals.backlogN} งาน</p>
+                  </>
+                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+              </td>
               <td className="px-3 py-2.5 text-right">
                 {totals.cancelled > 0 ? (
                   <>
@@ -610,7 +769,7 @@ export default function ProjectSummaryPage() {
         )}
       </div>
 
-      {openRow && <ProjectDrawer row={openRow} onClose={() => setOpenRow(null)} />}
+      {openRow && <ProjectDrawer row={openRow} overallLeadDays={overallLeadDays} onClose={() => setOpenRow(null)} />}
     </div>
   )
 }

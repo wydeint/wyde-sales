@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { WORK_TYPES } from '@/lib/status'
 import { Search, Save, X, Edit2, Layers, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react'
 import { TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
@@ -38,7 +39,10 @@ const TABLES: TableDef[] = [
       { key: 'customer_name', label: 'ลูกค้า', type: 'text', width: 140 },
       { key: 'project_id', label: 'Project ID', type: 'text', width: 120 },
       { key: 'customer_type', label: 'ประเภท', type: 'select', options: ['B2C', 'B2B'], width: 80 },
-      { key: 'work_type', label: 'ประเภทงาน', type: 'text', width: 130 },
+      // Free text is how "ม่าน" got into this column, and it is now guarded by a
+      // CHECK constraint — a typo would fail the save with a raw database error
+      // rather than simply not being offered.
+      { key: 'work_type', label: 'ประเภทงาน', type: 'select', options: [...WORK_TYPES], width: 130 },
       { key: 'package_type', label: 'Package', type: 'text', width: 110 },
       { key: 'order_date', label: 'วันขาย', type: 'date', width: 120 },
       { key: 'revenue_ex_vat', label: 'มูลค่า (ex VAT)', type: 'number', width: 130 },
@@ -91,7 +95,9 @@ const TABLES: TableDef[] = [
       { key: 'status', label: 'สถานะ', type: 'text', width: 110 },
       { key: 'assigned_to', label: 'มอบหมายให้', type: 'text', width: 120 },
       { key: 'source', label: 'แหล่งที่มา', type: 'text', width: 110 },
-      { key: 'work_type', label: 'ประเภทงาน', type: 'text', width: 120 },
+      // customers.work_type has no constraint, but offering the same list keeps
+      // the two tables from drifting apart by hand.
+      { key: 'work_type', label: 'ประเภทงาน', type: 'select', options: [...WORK_TYPES], width: 120 },
       { key: 'customer_type', label: 'ประเภทลูกค้า', type: 'select', options: ['B2C', 'B2B'], width: 110 },
       { key: 'sale_revenue', label: 'มูลค่า', type: 'number', width: 110 },
       { key: 'close_date', label: 'วันปิดงาน', type: 'date', width: 120 },

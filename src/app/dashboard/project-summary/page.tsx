@@ -7,7 +7,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { workCategory } from '@/lib/status'
 import { fetchAllRows } from '@/lib/fetchAll'
-import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown } from 'lucide-react'
+import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown, PackageCheck } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface ProjectRow {
@@ -52,7 +52,10 @@ interface ProjectRow {
   rooms_sold: number
 }
 
-export type Slice = { n: number; rev: number; cash: number }
+/** `del`/`delRev` let one slice answer both sides: what was sold, and how much
+ *  of it has been handed over. Backlog is the remainder — n − del, rev − delRev
+ *  — so the two cards never need separate aggregations that could drift apart. */
+export type Slice = { n: number; rev: number; cash: number; del: number; delRev: number }
 
 type SortKey = 'name' | 'total_units' | 'booked' | 'jobs_total' | 'jobs_delivered' | 'revenue_total' | 'revenue_delivered' | 'jobs_cancelled' | 'backlog_rev'
 type CustFilter = 'all' | 'B2C' | 'B2B'
@@ -159,36 +162,73 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
     { label: 'B2B', s: row.byCust.B2B, color: 'var(--accent-blue)' },
   ]
 
-  const Group = ({ title, items }: { title: string; items: typeof catRows }) => (
-    <section>
-      <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>{title}</p>
-      <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
+  // Every one of these breakdowns answers the same question — what did we sell —
+  // so they live inside the sales card as sub-blocks rather than as three more
+  // cards floating below it. No ds-card wrapper here: the parent already is one.
+  const Sub = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
+      <p className="text-micro font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-3)' }}>{title}</p>
+      {children}
+    </div>
+  )
+
+  /** The same breakdown read two ways. On the sales side the question is what
+   *  the work is worth and how much of it we have collected; on the delivery
+   *  side it is how much of that work is still owed. One aggregation, two
+   *  column sets — so the halves cannot disagree about the underlying jobs. */
+  const Group = ({ title, items, firstCol, side }: {
+    title: string; items: typeof catRows; firstCol: string; side: 'sales' | 'delivery'
+  }) => {
+    const cols = side === 'sales'
+      ? ['งาน', 'มูลค่า', 'รับแล้ว']
+      : ['งาน', 'ส่งมอบแล้ว', 'รอส่งมอบ', 'มูลค่าที่ค้าง']
+    return (
+      <Sub title={title}>
         <table className="w-full text-xs">
           <thead>
-            <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ประเภท</th>
-              <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>งาน</th>
-              <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
-              <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+            <tr>
+              <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>{firstCol}</th>
+              {cols.map(c => (
+                <th key={c} className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{c}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {items.filter(r => r.s.n > 0).map(r => (
-              <tr key={r.label} style={{ borderTop: '1px solid var(--divider)' }}>
-                <td className="px-3 py-2 font-semibold" style={{ color: r.color }}>{r.label}</td>
-                <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{r.s.n}</td>
-                <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(r.s.rev)}</td>
-                <td className="px-3 py-2 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(r.s.cash)}</td>
-              </tr>
-            ))}
+            {items.filter(r => r.s.n > 0).map(r => {
+              const waiting = r.s.n - r.s.del
+              return (
+                <tr key={r.label}>
+                  <td className="py-1 font-semibold" style={{ color: r.color }}>{r.label}</td>
+                  <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{r.s.n}</td>
+                  {side === 'sales' ? (
+                    <>
+                      <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(r.s.rev)}</td>
+                      <td className="py-1 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(r.s.cash)}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-1 text-right tabular-nums" style={{ color: r.s.del > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                        {r.s.del > 0 ? `${r.s.del} · ${pct(r.s.del, r.s.n)}%` : '–'}
+                      </td>
+                      <td className="py-1 text-right tabular-nums" style={{ color: waiting > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
+                        {waiting > 0 ? waiting : '–'}
+                      </td>
+                      <td className="py-1 text-right tabular-nums font-semibold" style={{ color: waiting > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
+                        {waiting > 0 ? fK(r.s.rev - r.s.delRev) : '–'}
+                      </td>
+                    </>
+                  )}
+                </tr>
+              )
+            })}
             {items.every(r => r.s.n === 0) && (
-              <tr><td colSpan={4} className="px-3 py-3 text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีงาน</td></tr>
+              <tr><td colSpan={cols.length + 1} className="py-2 text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีงาน</td></tr>
             )}
           </tbody>
         </table>
-      </div>
-    </section>
-  )
+      </Sub>
+    )
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -224,7 +264,11 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
           </div>
 
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--accent-blue)' }}>📈 ฝั่งขาย</p>
+            {/* One icon colour across the drawer — emoji brought their own
+                palette and fought the tokens either side of them. */}
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+              <TrendingUp size={13} style={{ color: 'var(--accent)' }} /> ฝั่งขาย
+            </p>
             <div className="ds-card p-4 space-y-3">
               <StepBar steps={[
                 // Only 38 of 52 projects record a believable unit count — the rest
@@ -243,11 +287,58 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   {row.booked > 0 ? `${row.booked} ราย` : '–'}
                 </span>
               </div>
+
+              {salesYears.length > 0 && (
+                <Sub title="ยอดขายแยกตามปี">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>งาน</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salesYears.map(([year, s]) => (
+                        <tr key={year}>
+                          {/* Buddhist era, matching every other date in the app */}
+                          <td className="py-1 font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
+                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
+                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(s.rev)}</td>
+                          <td className="py-1 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(s.cash)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {noOrderDate > 0 && (
+                    <p className="text-micro mt-1" style={{ color: 'var(--accent-amber)' }}>
+                      ⚠ อีก {noOrderDate} งานไม่มีวันขาย จึงไม่ปรากฏในตารางนี้
+                    </p>
+                  )}
+                </Sub>
+              )}
+
+              <Group title="แยกตามประเภทงาน" items={catRows} firstCol="ประเภทงาน" side="sales" />
+              {row.byCat.unknown.n > 0 && (
+                <p className="text-micro" style={{ color: 'var(--accent-amber)' }}>
+                  {/* Most unclassified rows are prospect placeholders worth nothing
+                      yet, so "มูลค่ารวม –" read as an error. Say which case it is. */}
+                  ⚠ {row.byCat.unknown.n} งานยังไม่ได้ระบุประเภทงาน
+                  {row.byCat.unknown.rev > 0
+                    ? ` — มูลค่ารวม ${fK(row.byCat.unknown.rev)}`
+                    : ' (ยังไม่มีมูลค่า — เป็นงานที่รอเปิดดีล)'}
+                </p>
+              )}
+
+              <Group title="แยกตามประเภทลูกค้า" items={custRows} firstCol="ประเภทลูกค้า" side="sales" />
             </div>
           </section>
 
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--accent-green)' }}>📦 ฝั่งส่งมอบ</p>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+              <PackageCheck size={13} style={{ color: 'var(--accent)' }} /> ฝั่งส่งมอบ
+            </p>
             <div className="ds-card p-4 space-y-3">
               <StepBar steps={[
                 { label: 'งานทั้งหมด', value: row.jobs_total, color: 'var(--text-2)', base: null },
@@ -282,56 +373,51 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   </span>
                 </div>
               )}
+
+              <Group title="ความคืบหน้าตามประเภทงาน" items={catRows} firstCol="ประเภทงาน" side="delivery" />
+              <Group title="ความคืบหน้าตามประเภทลูกค้า" items={custRows} firstCol="ประเภทลูกค้า" side="delivery" />
+
+              {/* Which years are still open is the question the sales-side year
+                  table cannot answer: an old year with work outstanding is a
+                  different problem from a new one. */}
+              {salesYears.length > 0 && (
+                <Sub title="งานค้างส่งมอบ แยกตามปีที่ขาย">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
+                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>งาน</th>
+                        <th className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</th>
+                        <th className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>รอส่งมอบ</th>
+                        <th className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>มูลค่าที่ค้าง</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salesYears.map(([year, s]) => {
+                        const waiting = s.n - s.del
+                        return (
+                          <tr key={year}>
+                            <td className="py-1 font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
+                            <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
+                            <td className="py-1 text-right tabular-nums" style={{ color: s.del > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                              {s.del > 0 ? `${s.del} · ${pct(s.del, s.n)}%` : '–'}
+                            </td>
+                            <td className="py-1 text-right tabular-nums" style={{ color: waiting > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
+                              {waiting > 0 ? waiting : '–'}
+                            </td>
+                            <td className="py-1 text-right tabular-nums font-semibold" style={{ color: waiting > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
+                              {waiting > 0 ? fK(s.rev - s.delRev) : '–'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </Sub>
+              )}
             </div>
           </section>
 
-          {salesYears.length > 0 && (
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ยอดขายแยกตามปี</p>
-              <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                      <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
-                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>งาน</th>
-                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
-                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesYears.map(([year, s]) => (
-                      <tr key={year} style={{ borderTop: '1px solid var(--divider)' }}>
-                        {/* Buddhist era, matching every other date in the app */}
-                        <td className="px-3 py-2 font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
-                        <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
-                        <td className="px-3 py-2 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(s.rev)}</td>
-                        <td className="px-3 py-2 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(s.cash)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {noOrderDate > 0 && (
-                <p className="text-micro mt-1.5" style={{ color: 'var(--accent-amber)' }}>
-                  ⚠ อีก {noOrderDate} งานไม่มีวันขาย จึงไม่ปรากฏในตารางนี้
-                </p>
-              )}
-            </section>
-          )}
-
-          <Group title="แยกตามประเภทงาน" items={catRows} />
-          <Group title="แยกตามประเภทลูกค้า" items={custRows} />
-
-          {row.byCat.unknown.n > 0 && (
-            <p className="text-micro" style={{ color: 'var(--accent-amber)' }}>
-              {/* Most unclassified rows are prospect placeholders worth nothing
-                  yet, so "มูลค่ารวม –" read as an error. Say which case it is. */}
-              ⚠ {row.byCat.unknown.n} งานยังไม่ได้ระบุประเภทงาน
-              {row.byCat.unknown.rev > 0
-                ? ` — มูลค่ารวม ${fK(row.byCat.unknown.rev)}`
-                : ' (ยังไม่มีมูลค่า — เป็นงานที่รอเปิดดีล)'}
-            </p>
-          )}
         </div>
       </div>
     </div>
@@ -395,8 +481,11 @@ export default function ProjectSummaryPage() {
         paidByJob.set(p.job_id, (paidByJob.get(p.job_id) || 0) + got)
       }
 
-      const slice = (): Slice => ({ n: 0, rev: 0, cash: 0 })
-      const addTo = (s: Slice, rev: number, cash: number) => { s.n++; s.rev += rev; s.cash += cash }
+      const slice = (): Slice => ({ n: 0, rev: 0, cash: 0, del: 0, delRev: 0 })
+      const addTo = (s: Slice, rev: number, cash: number, delivered = false) => {
+        s.n++; s.rev += rev; s.cash += cash
+        if (delivered) { s.del++; s.delRev += rev }
+      }
 
       type JobAgg = {
         active: number; delivered: number; total: number
@@ -448,8 +537,9 @@ export default function ProjectSummaryPage() {
         }
 
         const cash = paidByJob.get(j.id) || 0
+        const isDel = j.working_status === 'ส่งมอบแล้ว'
         m.total++
-        if (j.working_status === 'ส่งมอบแล้ว') { m.delivered++; m.rev_del += rev; m.cash_del += cash }
+        if (isDel) { m.delivered++; m.rev_del += rev; m.cash_del += cash }
         else m.active++
         m.rev_total += rev
         m.cash_total += cash
@@ -468,7 +558,7 @@ export default function ProjectSummaryPage() {
           const y = Number(String(j.order_date).slice(0, 4))
           if (y) {
             if (!m.salesByYear.has(y)) m.salesByYear.set(y, slice())
-            addTo(m.salesByYear.get(y)!, rev, cash)
+            addTo(m.salesByYear.get(y)!, rev, cash, isDel)
           }
           if (j.actual_deliver_date) {
             const days = Math.round(
@@ -483,8 +573,8 @@ export default function ProjectSummaryPage() {
 
         const ctype: 'B2C' | 'B2B' = j.customer_type === 'B2B' ? 'B2B' : 'B2C'
         const cat = workCategory(j.work_type)
-        addTo(m.byCat[cat], rev, cash)
-        addTo(m.byCust[ctype], rev, cash)
+        addTo(m.byCat[cat], rev, cash, isDel)
+        addTo(m.byCust[ctype], rev, cash, isDel)
         if (cat === 'unknown') m.unknown_wt++
         else if (ctype === 'B2B') { cat === 'N-RPT' ? m.b2b_nrpt++ : m.b2b_rpt++ }
         else                      { cat === 'N-RPT' ? m.b2c_nrpt++ : m.b2c_rpt++ }

@@ -8,7 +8,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import { workCategory } from '@/lib/status'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { thaiDate } from '@/lib/thaiDate'
-import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown, PackageCheck } from 'lucide-react'
+import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown, PackageCheck, XCircle } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface ProjectRow {
@@ -62,6 +62,13 @@ interface ProjectRow {
   miss_wt: number
   miss_order: number
   miss_sales: number
+  /** Cancelled work split by what happened to the customer's money. ยกเลิก
+   *  alone said a deal was lost but not whether we refunded or kept a deposit. */
+  cancel_refund_n: number; cancel_refund_amt: number
+  cancel_forfeit_n: number; cancel_forfeit_amt: number
+  /** Prospects that never became a job — a different loss from a cancelled job,
+   *  and the only one the หลุด figure was missing entirely. */
+  lost_prospects: number
 }
 
 export type JobLine = {
@@ -250,6 +257,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               <tr><td colSpan={cols.length + 1} className="py-2 text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีงาน</td></tr>
             )}
           </tbody>
+          <TotalRow slices={items.map(r => r.s)} side={side} />
         </table>
       </Sub>
     )
@@ -335,6 +343,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                         </tr>
                       ))}
                     </tbody>
+                    <TotalRow slices={salesYears.map(([, s]) => s)} side="sales" />
                   </table>
                   {noOrderDate > 0 && (
                     <p className="text-micro mt-1" style={{ color: 'var(--accent-amber)' }}>
@@ -379,6 +388,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                         </tr>
                       ))}
                     </tbody>
+                    <TotalRow slices={salesRows.map(([, s]) => s)} side="sales" />
                   </table>
                 </Sub>
               )}
@@ -414,15 +424,6 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   </span>
                 )}
               </div>
-
-              {row.jobs_cancelled > 0 && (
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: 'var(--text-2)' }}>ยกเลิก</span>
-                  <span className="tabular-nums" style={{ color: 'var(--accent-red)' }}>
-                    {row.jobs_cancelled} งาน · {fK(row.revenue_cancelled)}
-                  </span>
-                </div>
-              )}
 
               <Group title="ความคืบหน้าตามประเภทงาน" items={catRows} firstCol="ประเภทงาน" side="delivery" />
               <Group title="ความคืบหน้าตามประเภทลูกค้า" items={custRows} firstCol="ประเภทลูกค้า" side="delivery" />
@@ -462,11 +463,69 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                         )
                       })}
                     </tbody>
+                    <TotalRow slices={salesYears.map(([, s]) => s)} side="delivery" />
                   </table>
                 </Sub>
               )}
             </div>
           </section>
+
+          {/* ── What we lost ────────────────────────────────────────────
+              Two different losses, and the page showed neither properly. A
+              cancelled job had one line saying ยกเลิก with no mention of whose
+              money went where; a prospect that never became a job had no line
+              at all, because there is no job row to cancel. */}
+          {(row.jobs_cancelled > 0 || row.lost_prospects > 0) && (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <XCircle size={13} style={{ color: 'var(--accent-red)' }} /> งานที่หลุด
+              </p>
+              <div className="ds-card p-4 space-y-2.5">
+                {row.jobs_cancelled > 0 && (
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs" style={{ color: 'var(--text-2)' }}>งานที่ยกเลิก</p>
+                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เปิดงานแล้วแต่ไม่ได้ทำต่อ</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-kpi-money" style={{ color: 'var(--accent-red)' }}>{fM(row.revenue_cancelled)}</p>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>{row.jobs_cancelled} งาน</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Refund and forfeit both live in cancel_amount but point in
+                    opposite directions — money out versus money kept. Netting
+                    them into one figure would hide both. */}
+                {row.cancel_refund_n > 0 && (
+                  <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                    <span style={{ color: 'var(--text-2)' }}>คืนเงินลูกค้า</span>
+                    <span className="tabular-nums" style={{ color: 'var(--accent-orange)' }}>
+                      {row.cancel_refund_n} งาน · {row.cancel_refund_amt > 0 ? fK(row.cancel_refund_amt) : 'ยังไม่ระบุยอด'}
+                    </span>
+                  </div>
+                )}
+                {row.cancel_forfeit_n > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: 'var(--text-2)' }}>ยึดเงินจอง</span>
+                    <span className="tabular-nums" style={{ color: 'var(--accent-green)' }}>
+                      {row.cancel_forfeit_n} งาน · {row.cancel_forfeit_amt > 0 ? fK(row.cancel_forfeit_amt) : 'ยังไม่ระบุยอด'}
+                    </span>
+                  </div>
+                )}
+
+                {row.lost_prospects > 0 && (
+                  <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-2)' }}>ลูกค้าที่ปิดไม่ได้</span>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>ยังไม่ถึงขั้นเปิดงาน จึงไม่มีมูลค่างาน</p>
+                    </div>
+                    <span className="tabular-nums flex-shrink-0" style={{ color: 'var(--accent-red)' }}>{row.lost_prospects} ราย</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* ── Every job, by name ──────────────────────────────────────
               The drawer counted rooms in four different ways and never said
@@ -530,6 +589,40 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
   )
 }
 
+/** Every figure in these tables is rounded to the nearest ฿1K, so adding the
+ *  printed values by hand can land a thousand off the real total — ฿401K +
+ *  ฿40,288K reads as ฿40,689K where the true sum is ฿40,690K. Summing the raw
+ *  numbers once and printing the answer removes the need to add them at all. */
+function TotalRow({ slices, side }: { slices: Slice[]; side: 'sales' | 'delivery' }) {
+  const t = slices.reduce((a, s) => ({
+    n: a.n + s.n, rev: a.rev + s.rev, cash: a.cash + s.cash,
+    del: a.del + s.del, delRev: a.delRev + s.delRev,
+  }), { n: 0, rev: 0, cash: 0, del: 0, delRev: 0 })
+  if (t.n === 0) return null
+  const waiting = t.n - t.del
+  const cell = 'py-1 text-right tabular-nums font-bold'
+  return (
+    <tfoot>
+      <tr style={{ borderTop: '1px solid var(--divider)' }}>
+        <td className="py-1 font-bold" style={{ color: 'var(--text-2)' }}>รวม</td>
+        <td className={cell} style={{ color: 'var(--text-1)' }}>{t.n}</td>
+        {side === 'sales' ? (
+          <>
+            <td className={cell} style={{ color: 'var(--text-1)' }}>{fK(t.rev)}</td>
+            <td className={cell} style={{ color: 'var(--accent-green)' }}>{fK(t.cash)}</td>
+          </>
+        ) : (
+          <>
+            <td className={cell} style={{ color: 'var(--accent-green)' }}>{t.del > 0 ? t.del : '–'}</td>
+            <td className={cell} style={{ color: 'var(--accent-amber)' }}>{waiting > 0 ? waiting : '–'}</td>
+            <td className={cell} style={{ color: 'var(--text-1)' }}>{waiting > 0 ? fK(t.rev - t.delRev) : '–'}</td>
+          </>
+        )}
+      </tr>
+    </tfoot>
+  )
+}
+
 // ─── Sort header ─────────────────────────────────────────────────────────────
 function Th({ label, sortKey, current, dir, onSort, right = true }: {
   label: string; sortKey: SortKey; current: SortKey; dir: 'asc' | 'desc'
@@ -566,7 +659,7 @@ export default function ProjectSummaryPage() {
     async function load() {
       const [projRes, jobRes, custRes, payRes, userRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
-        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date, sales_id'),
+        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date, sales_id, cancel_type, cancel_amount'),
         supabase.from('customers').select('project_id, status'),
         // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
         // the cash figures come out short with no error to say so.
@@ -619,6 +712,8 @@ export default function ProjectSummaryPage() {
         bySales: Map<string, Slice>
         jobsList: JobLine[]
         miss_wt: number; miss_order: number; miss_sales: number
+        cancel_refund_n: number; cancel_refund_amt: number
+        cancel_forfeit_n: number; cancel_forfeit_amt: number
         /** Distinct rooms won. Jobs outnumber rooms because a room can be sold
          *  again — the gap between the two is the repeat business. */
         rooms: Set<string>
@@ -637,6 +732,8 @@ export default function ProjectSummaryPage() {
         bySales: new Map<string, Slice>(),
         jobsList: [],
         miss_wt: 0, miss_order: 0, miss_sales: 0,
+        cancel_refund_n: 0, cancel_refund_amt: 0,
+        cancel_forfeit_n: 0, cancel_forfeit_amt: 0,
       })
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
@@ -651,6 +748,12 @@ export default function ProjectSummaryPage() {
         if (j.working_status === 'ยกเลิก') {
           m.cancelled++
           m.rev_cancelled += rev
+          // cancel_amount means opposite things either side of cancel_type:
+          // money handed back on a refund, money we kept on a forfeit. Summing
+          // them together would net a loss against a gain.
+          const amt = Number(j.cancel_amount || 0)
+          if (j.cancel_type === 'forfeit') { m.cancel_forfeit_n++; m.cancel_forfeit_amt += amt }
+          else { m.cancel_refund_n++; m.cancel_refund_amt += amt }
           continue
         }
 
@@ -717,9 +820,13 @@ export default function ProjectSummaryPage() {
 
       // Aggregate customers
       const custMap = new Map<string, number>()
+      const lostMap = new Map<string, number>()
       for (const c of customers) {
         if (!c.project_id) continue
         if (c.status === 'booked') custMap.set(c.project_id, (custMap.get(c.project_id) || 0) + 1)
+        // A prospect that never became a job is a loss the ยกเลิก count could
+        // never show, because there is no job row to cancel.
+        else if (c.status === 'lost') lostMap.set(c.project_id, (lostMap.get(c.project_id) || 0) + 1)
       }
 
       const result: ProjectRow[] = projects.map(p => {
@@ -745,6 +852,9 @@ export default function ProjectSummaryPage() {
           // than sorting as the epoch and heading the list.
           jobsList: j.jobsList.sort((a, b) => (b.order_date || '').localeCompare(a.order_date || '')),
           miss_wt: j.miss_wt, miss_order: j.miss_order, miss_sales: j.miss_sales,
+          cancel_refund_n: j.cancel_refund_n, cancel_refund_amt: j.cancel_refund_amt,
+          cancel_forfeit_n: j.cancel_forfeit_n, cancel_forfeit_amt: j.cancel_forfeit_amt,
+          lost_prospects: lostMap.get(p.id) || 0,
         }
       })
 

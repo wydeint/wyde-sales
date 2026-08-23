@@ -18,6 +18,9 @@ interface ProjectRow {
   b2c_nrpt: number
   b2b_rpt: number
   b2b_nrpt: number
+  /** work_type never filled in. Counted on its own rather than folded into
+   *  RPT, which is where it used to land and what inflated that column. */
+  unknown_wt: number
   jobs_active: number
   jobs_delivered: number
   jobs_total: number
@@ -34,8 +37,22 @@ const fM = (n: number) => n > 0 ? '฿' + (n / 1e6).toLocaleString('th-TH', { ma
 const fK = (n: number) => n > 0 ? '฿' + (n / 1000).toLocaleString('th-TH', { maximumFractionDigits: 0 }) + 'K' : '–'
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
 
-function isNrpt(wt: string | null) {
-  return wt === 'N-RPT' || wt === 'N-RPT/EQ' || wt === 'N-RPT/Event'
+/**
+ * Three answers, not two. The old pair of helpers asked only "is this N-RPT?"
+ * and treated everything else as RPT, so 71 jobs with no work_type and one
+ * typed "ม่าน" were all counted as RPT — 342 shown against 271 real ones.
+ * A job with no work type is not an RPT job; it is a job nobody has classified.
+ */
+type WorkCategory = 'RPT' | 'N-RPT' | 'unknown'
+
+function workCategory(wt: string | null): WorkCategory {
+  const v = (wt || '').trim()
+  if (!v) return 'unknown'
+  if (v === 'RPT') return 'RPT'
+  if (v === 'N-RPT' || v === 'N-RPT/EQ' || v === 'N-RPT/Event') return 'N-RPT'
+  // Anything else is a value nobody defined — surfacing it as unknown makes it
+  // findable instead of quietly padding a real category.
+  return 'unknown'
 }
 
 // ─── Mini funnel bar ─────────────────────────────────────────────────────────
@@ -99,11 +116,12 @@ export default function ProjectSummaryPage() {
         active: number; delivered: number; total: number
         rev_total: number; rev_del: number
         b2c_rpt: number; b2c_nrpt: number; b2b_rpt: number; b2b_nrpt: number
+        unknown_wt: number
       }
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
         if (!j.project_id) continue
-        if (!jobMap.has(j.project_id)) jobMap.set(j.project_id, { active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0 })
+        if (!jobMap.has(j.project_id)) jobMap.set(j.project_id, { active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0 })
         const m = jobMap.get(j.project_id)!
         m.total++
         const rev = j.revenue_inc_vat || 0
@@ -112,9 +130,10 @@ export default function ProjectSummaryPage() {
         m.rev_total += rev
 
         const ctype: string = j.customer_type || 'B2C'
-        const nrpt = isNrpt(j.work_type)
-        if (ctype === 'B2B') { nrpt ? m.b2b_nrpt++ : m.b2b_rpt++ }
-        else                 { nrpt ? m.b2c_nrpt++ : m.b2c_rpt++ }
+        const cat = workCategory(j.work_type)
+        if (cat === 'unknown') m.unknown_wt++
+        else if (ctype === 'B2B') { cat === 'N-RPT' ? m.b2b_nrpt++ : m.b2b_rpt++ }
+        else                      { cat === 'N-RPT' ? m.b2c_nrpt++ : m.b2c_rpt++ }
       }
 
       // Aggregate customers
@@ -125,12 +144,13 @@ export default function ProjectSummaryPage() {
       }
 
       const result: ProjectRow[] = projects.map(p => {
-        const j = jobMap.get(p.id) ?? { active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0 }
+        const j = jobMap.get(p.id) ?? { active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0 }
         return {
           id: p.id, name: p.name, total_units: p.total_units || 0,
           booked: custMap.get(p.id) || 0,
           b2c_rpt: j.b2c_rpt, b2c_nrpt: j.b2c_nrpt,
           b2b_rpt: j.b2b_rpt, b2b_nrpt: j.b2b_nrpt,
+          unknown_wt: j.unknown_wt,
           jobs_active: j.active, jobs_delivered: j.delivered, jobs_total: j.total,
           revenue_total: j.rev_total, revenue_delivered: j.rev_del,
         }
@@ -152,6 +172,10 @@ export default function ProjectSummaryPage() {
     if (custFilter === 'all' && workFilter === 'all') return r.jobs_total
     const b2c = custFilter !== 'B2B', b2b = custFilter !== 'B2C'
     const rpt = workFilter !== 'N-RPT', nrpt = workFilter !== 'RPT'
+    // Unclassified jobs belong to neither RPT nor N-RPT and have no customer
+    // type split of their own, so they only survive an unfiltered view. Leaving
+    // them out of the filtered totals is what keeps the four category columns
+    // adding up to what the filter actually selected.
     return (b2c && rpt ? r.b2c_rpt : 0) + (b2c && nrpt ? r.b2c_nrpt : 0) +
            (b2b && rpt ? r.b2b_rpt : 0) + (b2b && nrpt ? r.b2b_nrpt : 0)
   }
@@ -188,7 +212,8 @@ export default function ProjectSummaryPage() {
     b2c_nrpt: acc.b2c_nrpt + r.b2c_nrpt,
     b2b_rpt: acc.b2b_rpt + r.b2b_rpt,
     b2b_nrpt: acc.b2b_nrpt + r.b2b_nrpt,
-  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0 }), [filtered])
+    unknown_wt: acc.unknown_wt + r.unknown_wt,
+  }), { units: 0, booked: 0, jobs: 0, delivered: 0, rev: 0, revDel: 0, b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0 }), [filtered])
 
   if (loading) return <PageSpinner />
 
@@ -196,6 +221,7 @@ export default function ProjectSummaryPage() {
   const totalB2B = totals.b2b_rpt + totals.b2b_nrpt
   const totalRPT  = totals.b2c_rpt + totals.b2b_rpt
   const totalNRPT = totals.b2c_nrpt + totals.b2b_nrpt
+  const totalUnknownWT = totals.unknown_wt
 
   return (
     <div className="page-content">
@@ -288,6 +314,11 @@ export default function ProjectSummaryPage() {
               <th className="px-3 py-2.5 text-center">
                 <span className="text-micro font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>N-RPT</span>
               </th>
+              {/* Its own column rather than silently padding RPT. Amber so it
+                  reads as outstanding work — someone still has to classify these. */}
+              <th className="px-3 py-2.5 text-center">
+                <span className="text-micro font-semibold tracking-wider" style={{ color: 'var(--accent-amber)' }}>ไม่ระบุ</span>
+              </th>
               <Th label="กำลังดำเนินการ" sortKey="jobs_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="ส่งมอบแล้ว" sortKey="jobs_delivered" current={sortKey} dir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 text-left">
@@ -352,6 +383,12 @@ export default function ProjectSummaryPage() {
                       ? <span className="text-xs tabular-nums" style={{ color: 'var(--accent)' }}>{nrpt}</span>
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
+                  {/* ไม่ระบุ */}
+                  <td className="px-3 py-2.5 text-center">
+                    {r.unknown_wt > 0
+                      ? <span className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-amber)' }}>{r.unknown_wt}</span>
+                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                  </td>
                   <td className="px-3 py-2.5 text-right">
                     {r.jobs_active > 0
                       ? <span className="text-xs tabular-nums" style={{ color: 'var(--accent-amber)' }}>{r.jobs_active}</span>
@@ -391,6 +428,7 @@ export default function ProjectSummaryPage() {
               <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{totalB2B || '–'}</td>
               <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totalRPT || '–'}</td>
               <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{totalNRPT || '–'}</td>
+              <td className="px-3 py-2.5 text-center text-xs font-bold tabular-nums" style={{ color: 'var(--accent-amber)' }}>{totalUnknownWT || '–'}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-amber)' }}>{totals.jobs - totals.delivered || '–'}</td>
               <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totals.delivered}</td>
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>

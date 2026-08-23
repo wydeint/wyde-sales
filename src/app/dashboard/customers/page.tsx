@@ -855,6 +855,11 @@ export default function CustomersPage() {
           projects={projects}
           onClose={() => setDetailCustomer(null)}
           onEdit={() => {
+            // Close the drawer as the edit form opens. Without this the form
+            // appeared behind the drawer, and the only way to reach it was to
+            // dismiss the drawer by hand — the button looked like it had done
+            // nothing.
+            setDetailCustomer(null)
             setEditing(detailCustomer)
             setForm({
               customer_name: detailCustomer.customer_name,

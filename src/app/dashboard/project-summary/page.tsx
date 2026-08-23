@@ -47,6 +47,9 @@ interface ProjectRow {
    *  that average is built from — an average over two jobs is not a trend. */
   lead_days_avg: number | null
   lead_sample: number
+  /** Distinct rooms won in this project. Against total_units it gives the
+   *  share of the building we hold; against jobs_total it shows repeats. */
+  rooms_sold: number
 }
 
 export type Slice = { n: number; rev: number; cash: number }
@@ -77,6 +80,47 @@ function FunnelBar({ delivered, total }: { delivered: number; total: number }) {
   )
 }
 
+// ─── Three-step comparison ───────────────────────────────────────────────────
+/**
+ * Both halves of the drawer answer the same shape of question — how much of the
+ * whole did we reach, and how far along is it — so both are drawn the same way:
+ * a total, then two steps measured against it. Reading one teaches you to read
+ * the other.
+ *
+ * A step whose base is unknown shows a dash. Printing 0% when the denominator
+ * was never recorded would be inventing a fact.
+ */
+function StepBar({ steps }: {
+  // value may be null: a project whose unit count we do not trust shows a dash
+  // rather than the placeholder 1 sitting in the column.
+  steps: { label: string; value: number | null; sub?: string; color: string; base: number | null }[]
+}) {
+  return (
+    <div className="space-y-2.5">
+      {steps.map(s => {
+        const p = s.value !== null && s.base && s.base > 0 ? Math.round(s.value / s.base * 100) : null
+        return (
+          <div key={s.label}>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-xs" style={{ color: 'var(--text-2)' }}>{s.label}</span>
+              <span className="text-xs tabular-nums" style={{ color: 'var(--text-1)' }}>
+                <span className="font-semibold" style={{ color: s.color }}>{s.value === null ? '–' : s.value.toLocaleString()}</span>
+                {p !== null && <span style={{ color: 'var(--text-3)' }}> · {p}%</span>}
+                {s.sub && <span style={{ color: 'var(--text-3)' }}> · {s.sub}</span>}
+              </span>
+            </div>
+            {p !== null && (
+              <div className="h-1.5 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--divider)' }}>
+                <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(p, 100)}%`, background: s.color }} />
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── Project drawer ──────────────────────────────────────────────────────────
 /**
  * The table is fifteen columns wide and its header cannot stick, so reading one
@@ -90,6 +134,13 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
 }) {
   const outstanding = Math.max(row.revenue_total - row.cash_total, 0)
   const collected = pct(row.cash_total, row.revenue_total)
+
+  // total_units is trustworthy on 38 of 52 projects. The rest carry 0 or a
+  // placeholder 1 — and one records 2 units against 8 rooms we have sold. A
+  // penetration % off those numbers would be worse than none, so require the
+  // count to at least exceed what we have already sold before dividing by it.
+  const hasUnitCount = row.total_units > 1 && row.total_units >= row.rooms_sold
+  const repeats = row.jobs_total - row.rooms_sold
 
   // Newest year first — this year is what anyone opens the drawer to see.
   const salesYears = [...row.salesByYear.entries()].sort((a, b) => b[0] - a[0])
@@ -173,56 +224,41 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
           </div>
 
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ความคืบหน้า</p>
-            <div className="ds-card p-4 space-y-2.5">
-              <div className="flex items-center justify-between text-xs">
-                <span style={{ color: 'var(--text-2)' }}>ส่งมอบแล้ว</span>
-                <span className="tabular-nums" style={{ color: 'var(--text-1)' }}>
-                  {row.jobs_delivered} / {row.jobs_total} งาน · <span style={{ color: 'var(--accent-green)' }}>{fK(row.revenue_delivered)}</span>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--accent-blue)' }}>📈 ฝั่งขาย</p>
+            <div className="ds-card p-4 space-y-3">
+              <StepBar steps={[
+                // Only 38 of 52 projects record a believable unit count — the rest
+                // are one-off work carrying a placeholder 1, or a figure smaller
+                // than the rooms we have already sold. A dash is the honest answer
+                // there; a percentage would be fiction.
+                { label: 'ห้องทั้งหมดในโครงการ', value: hasUnitCount ? row.total_units : null, color: 'var(--text-2)', base: null,
+                  sub: hasUnitCount ? undefined : 'ยังไม่ได้ระบุจำนวนห้อง' },
+                { label: 'ห้องที่เราขายได้', value: row.rooms_sold, color: 'var(--accent-blue)', base: hasUnitCount ? row.total_units : null },
+                { label: 'เปิดงาน', value: row.jobs_total, color: 'var(--accent)', base: hasUnitCount ? row.total_units : null,
+                  sub: repeats > 0 ? `ขายซ้ำห้องเดิม ${repeats} งาน` : undefined },
+              ]} />
+              <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                <span style={{ color: 'var(--text-2)' }}>ลูกค้าจองแล้ว ยังไม่เปิดงาน</span>
+                <span className="tabular-nums" style={{ color: row.booked > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
+                  {row.booked > 0 ? `${row.booked} ราย` : '–'}
                 </span>
               </div>
-              <FunnelBar delivered={row.jobs_delivered} total={row.jobs_total} />
-              <div className="flex items-center justify-between text-xs pt-1" style={{ borderTop: '1px solid var(--divider)' }}>
-                <span style={{ color: 'var(--text-2)' }}>กำลังดำเนินการ</span>
-                <span className="tabular-nums" style={{ color: 'var(--accent-amber)' }}>{row.jobs_active} งาน</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span style={{ color: 'var(--text-2)' }}>ลูกค้าจองแล้ว (ยังไม่เปิดงาน)</span>
-                <span className="tabular-nums" style={{ color: 'var(--text-1)' }}>{row.booked} ราย</span>
-              </div>
-              {row.jobs_cancelled > 0 && (
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: 'var(--text-2)' }}>ยกเลิก</span>
-                  <span className="tabular-nums" style={{ color: 'var(--accent-red)' }}>
-                    {row.jobs_cancelled} งาน · {fK(row.revenue_cancelled)}
-                  </span>
-                </div>
-              )}
             </div>
           </section>
 
-          {/* ── Sales side ──────────────────────────────────────────────
-              The page told the delivery story only. What was sold, what is
-              still owed as work, and how long this project takes to turn one
-              into the other were all absent even though the data was loaded. */}
           <section>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ฝั่งขาย</p>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--accent-green)' }}>📦 ฝั่งส่งมอบ</p>
             <div className="ds-card p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-2)' }}>ขายแล้ว รอส่งมอบ</p>
-                  <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>งานที่ปิดการขายแล้วแต่ยังไม่ได้ส่งมอบ</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-kpi-money" style={{ color: 'var(--accent-blue)' }}>{fM(row.backlog.rev)}</p>
-                  <p className="text-micro" style={{ color: 'var(--text-3)' }}>
-                    {row.backlog.n} งาน · รับเงินแล้ว {fK(row.backlog.cash)}
-                  </p>
-                </div>
-              </div>
+              <StepBar steps={[
+                { label: 'งานทั้งหมด', value: row.jobs_total, color: 'var(--text-2)', base: null },
+                { label: 'กำลังดำเนินการ', value: row.backlog.n, color: 'var(--accent-amber)', base: row.jobs_total,
+                  sub: row.backlog.rev > 0 ? fK(row.backlog.rev) : undefined },
+                { label: 'ส่งมอบแล้ว', value: row.jobs_delivered, color: 'var(--accent-green)', base: row.jobs_total,
+                  sub: row.revenue_delivered > 0 ? fK(row.revenue_delivered) : undefined },
+              ]} />
 
-              <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
-                <span className="text-xs" style={{ color: 'var(--text-2)' }}>ขาย → ส่งมอบ เฉลี่ย</span>
+              <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                <span style={{ color: 'var(--text-2)' }}>ขาย → ส่งมอบ เฉลี่ย</span>
                 {row.lead_days_avg === null ? (
                   <span className="text-xs" style={{ color: 'var(--text-3)' }}>ยังไม่มีงานที่ส่งมอบครบรอบ</span>
                 ) : (
@@ -237,6 +273,15 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   </span>
                 )}
               </div>
+
+              {row.jobs_cancelled > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span style={{ color: 'var(--text-2)' }}>ยกเลิก</span>
+                  <span className="tabular-nums" style={{ color: 'var(--accent-red)' }}>
+                    {row.jobs_cancelled} งาน · {fK(row.revenue_cancelled)}
+                  </span>
+                </div>
+              )}
             </div>
           </section>
 
@@ -329,7 +374,7 @@ export default function ProjectSummaryPage() {
     async function load() {
       const [projRes, jobRes, custRes, payRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
-        supabase.from('jobs').select('id, project_id, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date'),
+        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date'),
         supabase.from('customers').select('project_id, status'),
         // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
         // the cash figures come out short with no error to say so.
@@ -370,6 +415,9 @@ export default function ProjectSummaryPage() {
         /** Running total for the average sale-to-handover time. Kept as sum and
          *  count rather than a running mean so the division happens once. */
         leadDays: number; leadCount: number
+        /** Distinct rooms won. Jobs outnumber rooms because a room can be sold
+         *  again — the gap between the two is the repeat business. */
+        rooms: Set<string>
       }
       const emptyAgg = (): JobAgg => ({
         active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0,
@@ -381,6 +429,7 @@ export default function ProjectSummaryPage() {
         backlog: slice(),
         salesByYear: new Map<number, Slice>(),
         leadDays: 0, leadCount: 0,
+        rooms: new Set<string>(),
       })
       const jobMap = new Map<string, JobAgg>()
       for (const j of jobs as any[]) {
@@ -404,6 +453,8 @@ export default function ProjectSummaryPage() {
         else m.active++
         m.rev_total += rev
         m.cash_total += cash
+
+        if (j.room_no && String(j.room_no).trim()) m.rooms.add(String(j.room_no).trim())
 
         // ── Sales side ──────────────────────────────────────────────
         // Backlog keys off working_status, not actual_deliver_date, so that
@@ -463,6 +514,7 @@ export default function ProjectSummaryPage() {
           salesByYear: j.salesByYear,
           lead_days_avg: j.leadCount > 0 ? Math.round(j.leadDays / j.leadCount) : null,
           lead_sample: j.leadCount,
+          rooms_sold: j.rooms.size,
         }
       })
 

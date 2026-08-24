@@ -58,6 +58,8 @@ interface RoomJob {
   order_date: string | null
   actual_deliver_date: string | null
   has_plan: boolean
+  /** Every instalment row ticked. Still feeds lib/collection.ts for the
+   *  delivered side; the chip no longer uses it — see getChipStage. */
   all_paid: boolean
   paid_count: number
   total_count: number
@@ -68,6 +70,11 @@ interface RoomJob {
   total_settled: number
   revenue_inc_vat: number
   working_status: string
+  /** What the instalment plan adds up to. Against revenue_inc_vat it says
+   *  whether the plan actually covers the job — 78 rooms it does not, and the
+   *  card has to say so or "กำลังเก็บเงิน" reads as the customer being late
+   *  when the real gap is an instalment nobody has created yet. */
+  plan_total: number
 }
 
 interface Installment {
@@ -125,7 +132,14 @@ interface FullJob {
 const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
 
 // ─── Stage helpers ─────────────────────────────────────────
-type ChipStage = 'wait' | 'collect' | 'ready' | 'overdue' | 'done' | 'bill'
+type ChipStage = 'collect' | 'ready' | 'overdue' | 'done' | 'bill'
+
+/** True once the money is in, whatever the instalment rows say. */
+export function isFullySettled(j: { total_settled: number; revenue_inc_vat: number }): boolean {
+  // A baht of tolerance: several jobs settle a rounded amount and land a few
+  // satang short of the job value (A603 is ฿152,504.50 against ฿152,513).
+  return j.revenue_inc_vat > 0 && j.total_settled >= j.revenue_inc_vat - 1
+}
 
 function getChipStage(j: RoomJob): ChipStage {
   if (j.actual_deliver_date) {
@@ -140,9 +154,20 @@ function getChipStage(j: RoomJob): ChipStage {
     }
     return 'done'
   }
-  if (!j.has_plan) return 'wait'
-  if (j.all_paid) return 'ready'
-  return 'collect'
+  // Money decides, not the instalment flags. `all_paid` asks whether every
+  // instalment row is ticked, which is only the same question when the plan
+  // adds up to the job value — and on 78 rooms it does not. 70 of them showed
+  // รอส่งมอบ on a plan covering half the job, with ฿2.88M still to collect.
+  //
+  // The owner's rule, and the one anyone reading the card already assumes:
+  // 100% of the money in means ready to hand over; anything less means still
+  // collecting. Below 50% counts as collecting too — the 50% line governs
+  // which jobs reach this page at all, not what the chip says once here.
+  //
+  // 'wait' (รอเปิดงาน) is gone with the old branch: it fired when a job had no
+  // instalments at all, which is now zero rooms, and a job in that state is
+  // better described as collecting nothing yet than as not started.
+  return isFullySettled(j) ? 'ready' : 'collect'
 }
 
 /**
@@ -156,7 +181,6 @@ function getChipStage(j: RoomJob): ChipStage {
  * Every value is still a token, so both themes stay correct.
  */
 const STAGE_META: Record<ChipStage, { label: string; bg: string; color: string; border: string; dot: string }> = {
-  wait:    { label: 'รอเปิดงาน',        bg: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', color: 'var(--accent-purple)', border: 'color-mix(in srgb, var(--accent-purple) 30%, transparent)', dot: 'var(--accent-purple)' },
   collect: { label: 'กำลังเก็บเงิน',    bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },
   ready:   { label: 'รอส่งมอบ',         bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)', color: 'var(--accent-blue)',   border: 'color-mix(in srgb, var(--accent-blue)   30%, transparent)', dot: 'var(--accent-blue)' },
   overdue: { label: `ค้างเก็บเงิน ${CHASE_AFTER_DAYS}+ วัน`, bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)', color: 'var(--accent-red)',    border: 'color-mix(in srgb, var(--accent-red)    30%, transparent)', dot: 'var(--accent-red)' },
@@ -1922,6 +1946,9 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
   const isDone = stage === 'done'
   const payPct = job.revenue_inc_vat > 0 ? Math.min(100, Math.round(job.total_settled / job.revenue_inc_vat * 100)) : null
   const barColor = payPct === null ? '' : payPct >= 100 ? 'var(--accent-green)' : payPct >= 50 ? 'var(--accent-blue)' : 'var(--accent-orange)'
+  // Only while the job is still ours to deliver: once handed over, an unbilled
+  // instalment is a collection problem and the chip already says so.
+  const planShort = !isDone && job.revenue_inc_vat > 0 && job.plan_total < job.revenue_inc_vat - 1
 
   return (
     <div
@@ -1985,6 +2012,15 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${payPct}%`, borderRadius: '9999px', background: barColor }} />
           </div>
+          {/* A short plan is not a late customer. Without this line the chip
+              says กำลังเก็บเงิน and sales chase someone who owes nothing yet —
+              the missing instalment was never created. 78 rooms are in this
+              state, so the card doubles as the list of what to go and fix. */}
+          {planShort && (
+            <p className="text-micro leading-tight" style={{ color: 'var(--accent-amber)' }}>
+              ⚠ แผนงวดรวม {baht(job.plan_total)} · มูลค่างาน {baht(job.revenue_inc_vat)} — ยังไม่ได้สร้างงวดที่เหลือ
+            </p>
+          )}
         </div>
       )}
       {/* Row 4: amount + sales + chevron */}
@@ -2066,10 +2102,10 @@ export default function MyDealsPage() {
         actual_deliver_date: r.actual_deliver_date || null,
         revenue_inc_vat: r.revenue_inc_vat || r.revenue_ex_vat || 0,
         has_plan: insts.length > 0,
+        all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         // due_date is not the signal here — instalments are triggered by events,
         // and almost nothing carries one. Lateness is derived from the handover
         // date in lib/collection.ts instead; nothing reads has_overdue any more.
-        all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         paid_count: insts.filter(i => i.status === 'paid').length,
         total_count: insts.length,
         // The deal value, not the sum of the payment plan. Most jobs carry only a
@@ -2081,6 +2117,9 @@ export default function MyDealsPage() {
         total_paid: insts.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0), 0),
         total_settled: insts.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.paid_amount ?? i.amount ?? 0) + Number(i.voucher_amount ?? 0), 0),
         working_status: r.working_status || '',
+        // Every instalment's face value, paid or not — what the plan says the
+        // customer owes in total. Compared against the deal value on the card.
+        plan_total: insts.reduce((s, i) => s + Number(i.amount ?? 0), 0),
       }
     }))
     setLoading(false)
@@ -2213,7 +2252,7 @@ export default function MyDealsPage() {
   }, [jobs, search, filterProject, filterSales])
 
   const stageCounts = useMemo(() => {
-    const c = { wait: 0, collect: 0, ready: 0, overdue: 0, done: 0, bill: 0 } as Record<ChipStage, number>
+    const c = { collect: 0, ready: 0, overdue: 0, done: 0, bill: 0 } as Record<ChipStage, number>
     for (const j of visibleBase) c[getChipStage(j)]++
     return c
   }, [visibleBase])

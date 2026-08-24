@@ -1526,6 +1526,8 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
   const totalPlannedAmount = job.installments.reduce((s, i) => s + Number(i.amount), 0)
   const paymentDiff = isB2C && jobValue > 0 ? totalPaidAmount - jobValue : null
   const plannedDiff = isB2C && jobValue > 0 ? totalPlannedAmount - jobValue : null
+  /** The money reconciles against the deal value, whatever the plan said. */
+  const fullySettled = jobValue > 0 && totalPaidAmount >= jobValue - 1
 
   function updateDocField(field: keyof FullJob, val: string | null) {
     setJob(prev => ({ ...prev, [field]: val }))
@@ -1634,8 +1636,15 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
             </div>
           </div>
 
-          {/* B2C payment balance warning */}
-          {isB2C && jobValue > 0 && hasPlan && (() => {
+          {/* B2C payment balance warning.
+              Silent once the money is in. A plan that does not sum to the deal
+              value only matters while it is still steering what to collect —
+              A333 planned ฿13,864 against ฿12,504 of work, the customer paid
+              ฿5,000 instead of the planned ฿6,360 on the first instalment and
+              the balance exactly, so ฿12,504 came in, the room was handed over,
+              and the card still demanded the plan be fixed "ก่อนส่งมอบ". The
+              plan was wrong and no longer matters; nothing is owed. */}
+          {isB2C && jobValue > 0 && hasPlan && !fullySettled && (() => {
             const fmtDiff = (v: number) => (v >= 0 ? '+' : '') + Math.abs(Math.round(v)).toLocaleString() + ' บาท'
             // Planned mismatch (งวดรวมไม่ตรงมูลค่างาน)
             if (plannedDiff !== null && Math.abs(plannedDiff) > 1) {
@@ -1684,7 +1693,13 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
               </p>
               <div className="text-right">
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>
-                  เก็บแล้ว {fmtBaht(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0))}
+                  {/* What came in, not what the plan asked for. Summing `amount`
+                      reported A333 as เก็บแล้ว ฿13,864 when ฿12,504 was received
+                      — the plan's figure, printed under a label that says
+                      collected. totalPaidAmount is the same rule the rest of
+                      the app uses: paid_amount, or the planned amount only when
+                      no receipt was typed, plus voucher. */}
+                  เก็บแล้ว {fmtBaht(totalPaidAmount)}
                 </p>
                 {overdueCount > 0 && (
                   <p className="text-xs flex items-center justify-end gap-0.5 mt-0.5" style={{ color: 'var(--accent-red)' }}>
@@ -1945,7 +1960,10 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
   const barColor = payPct === null ? '' : payPct >= 100 ? 'var(--accent-green)' : payPct >= 50 ? 'var(--accent-blue)' : 'var(--accent-orange)'
   // Only while the job is still ours to deliver: once handed over, an unbilled
   // instalment is a collection problem and the chip already says so.
-  const planShort = !isDone && job.revenue_inc_vat > 0 && job.plan_total < job.revenue_inc_vat - 1
+  // Also silent once the money is in: a customer can settle the deal value over
+  // a plan that never covered it, and then there is nothing left to create.
+  const planShort = !isDone && !isFullySettled(job)
+    && job.revenue_inc_vat > 0 && job.plan_total < job.revenue_inc_vat - 1
 
   return (
     <div

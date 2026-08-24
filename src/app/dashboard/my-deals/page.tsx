@@ -2034,8 +2034,17 @@ export default function MyDealsPage() {
     const { data } = await supabase
       .from('jobs')
       .select('id, room_no, project_id, customer_name, customer_type, working_status, actual_deliver_date, work_start_date, work_days, order_date, contract_date, expected_finish_date, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount, line_notified_at)')
-      .neq('working_status', 'ยกเลิก')
-      .neq('working_status', 'จอง')
+      // Name the statuses we want rather than the ones we don't. The old pair
+      // of .neq() calls became `working_status <> 'ยกเลิก'`, which is NULL —
+      // not true — for the 50 prospect stubs that carry no status yet, so they
+      // were dropped by a quirk of SQL rather than by anything the code said.
+      // The result was right and the reason was an accident; naming the three
+      // working statuses makes the intent readable and NULL handling explicit.
+      //
+      // Not crm_stage='closed', which reads like the obvious filter: three real
+      // jobs still sit at booked/quoted, one of them delivered and worth ฿39M.
+      // The stage is not reliably advanced; working_status is.
+      .in('working_status', ['ดำเนินการ', 'รอส่งมอบ', 'ส่งมอบแล้ว'])
       .order('room_no')
 
     const { data: usersData } = await supabase.from('users').select('name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name')

@@ -1636,18 +1636,24 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
             </div>
           </div>
 
-          {/* B2C payment balance warning.
-              Silent once the money is in. A plan that does not sum to the deal
-              value only matters while it is still steering what to collect —
-              A333 planned ฿13,864 against ฿12,504 of work, the customer paid
-              ฿5,000 instead of the planned ฿6,360 on the first instalment and
-              the balance exactly, so ฿12,504 came in, the room was handed over,
-              and the card still demanded the plan be fixed "ก่อนส่งมอบ". The
-              plan was wrong and no longer matters; nothing is owed. */}
-          {isB2C && jobValue > 0 && hasPlan && !fullySettled && (() => {
+          {isB2C && jobValue > 0 && hasPlan && (() => {
             const fmtDiff = (v: number) => (v >= 0 ? '+' : '') + Math.abs(Math.round(v)).toLocaleString() + ' บาท'
-            // Planned mismatch (งวดรวมไม่ตรงมูลค่างาน)
-            if (plannedDiff !== null && Math.abs(plannedDiff) > 1) {
+            // Planned mismatch (งวดรวมไม่ตรงมูลค่างาน).
+            //
+            // Silent once the money is in. A plan that does not sum to the deal
+            // value only matters while it is still steering what to collect —
+            // A333 planned ฿13,864 against ฿12,504 of work, the customer paid
+            // ฿5,000 instead of the planned ฿6,360 on the first instalment and
+            // the balance exactly, so ฿12,504 came in, the room was handed over,
+            // and the card still demanded the plan be fixed "ก่อนส่งมอบ". The
+            // plan was wrong and no longer matters; nothing is owed.
+            //
+            // The guard belongs on this branch alone. Put on the whole block it
+            // also silenced รับเงินเกินมูลค่างาน below — and a job that has been
+            // overpaid is fully settled by definition, so that warning could
+            // never have fired again. No B2C job is overpaid today, which is why
+            // nothing looked wrong.
+            if (!fullySettled && plannedDiff !== null && Math.abs(plannedDiff) > 1) {
               const over = plannedDiff > 0
               return (
                 <div className="flex items-start gap-2.5 rounded-[8px] px-3.5 py-2.5"

@@ -7,7 +7,7 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
-import { isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
+import { isPastChaseWindow, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
 import { crmStage } from '@/lib/status'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type PeriodUnit } from '@/lib/period'
@@ -250,7 +250,8 @@ export default function FinancePage() {
   const overdue = payments.filter(p => {
     if (p.status === 'paid') return false
     const d = (p as any).jobs?.actual_deliver_date as string | undefined
-    return isOverdueCollection({ actual_deliver_date: d, all_paid: false, has_plan: true })
+    // This row is already known to be unpaid, so only the window matters.
+    return isPastChaseWindow(d)
   })
 
   // ── Pipeline calculations ───────────────────────────────

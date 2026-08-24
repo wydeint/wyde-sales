@@ -28,9 +28,10 @@ export const CHASE_AFTER_DAYS = 60
 
 export interface CollectionCtx {
   actual_deliver_date?: string | null
-  /** Every instalment settled — cash and voucher together. */
-  all_paid: boolean
-  has_plan: boolean
+  /** Cash plus voucher actually received against this job. */
+  total_settled: number
+  /** The deal value. The balance owed is this minus total_settled. */
+  revenue_inc_vat: number
 }
 
 /** Whole days since handover; null when the room is not delivered yet. */
@@ -41,14 +42,33 @@ export function daysSinceDelivery(deliverDate?: string | null, today = new Date(
   return Math.floor((today.getTime() - d.getTime()) / 86400000)
 }
 
-/** Delivered, still owed money — the work is done, the balance is not. */
+/** Delivered, still owed money — the work is done, the balance is not.
+ *
+ *  This asks the money, not the instalment flags. It used to read `!all_paid`,
+ *  which is a different question whenever the plan does not add up to the job
+ *  value: 150 delivered rooms had every instalment ticked against a plan that
+ *  covered part of the job, so they showed plain green ส่งมอบแล้ว while ฿5.53M
+ *  sat uncollected and invisible. 109 of those are B2B RPT jobs carrying only a
+ *  ฿0 "รับ PO" row; the rest are B2C rooms where the final instalment was ticked
+ *  paid with a receipt far below its own face value.
+ *
+ *  A baht of tolerance for jobs that settle a rounded amount. */
 export function isAwaitingCollection(job: CollectionCtx): boolean {
-  return !!job.actual_deliver_date && job.has_plan && !job.all_paid
+  if (!job.actual_deliver_date) return false
+  if (!(job.revenue_inc_vat > 0)) return false
+  return job.total_settled < job.revenue_inc_vat - 1
+}
+
+/** Handed over more than CHASE_AFTER_DAYS ago — the date half of the test, on
+ *  its own. Callers holding a single unpaid instalment rather than a whole job
+ *  (the Finance page counts instalments, not rooms) already know money is owed
+ *  and only need to ask whether the chase window has passed. */
+export function isPastChaseWindow(deliverDate?: string | null, today = new Date()): boolean {
+  const days = daysSinceDelivery(deliverDate, today)
+  return days !== null && days > CHASE_AFTER_DAYS
 }
 
 /** Awaiting collection for longer than CHASE_AFTER_DAYS. */
 export function isOverdueCollection(job: CollectionCtx, today = new Date()): boolean {
-  if (!isAwaitingCollection(job)) return false
-  const days = daysSinceDelivery(job.actual_deliver_date, today)
-  return days !== null && days > CHASE_AFTER_DAYS
+  return isAwaitingCollection(job) && isPastChaseWindow(job.actual_deliver_date, today)
 }

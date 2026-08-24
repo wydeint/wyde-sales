@@ -58,9 +58,6 @@ interface RoomJob {
   order_date: string | null
   actual_deliver_date: string | null
   has_plan: boolean
-  /** Every instalment row ticked. Still feeds lib/collection.ts for the
-   *  delivered side; the chip no longer uses it — see getChipStage. */
-  all_paid: boolean
   paid_count: number
   total_count: number
   total_amount: number
@@ -154,7 +151,7 @@ function getChipStage(j: RoomJob): ChipStage {
     }
     return 'done'
   }
-  // Money decides, not the instalment flags. `all_paid` asks whether every
+  // Money decides, not the instalment flags. The old test asked whether every
   // instalment row is ticked, which is only the same question when the plan
   // adds up to the job value — and on 78 rooms it does not. 70 of them showed
   // รอส่งมอบ on a plan covering half the job, with ฿2.88M still to collect.
@@ -2102,7 +2099,6 @@ export default function MyDealsPage() {
         actual_deliver_date: r.actual_deliver_date || null,
         revenue_inc_vat: r.revenue_inc_vat || r.revenue_ex_vat || 0,
         has_plan: insts.length > 0,
-        all_paid: insts.length > 0 && insts.every(i => i.status === 'paid'),
         // due_date is not the signal here — instalments are triggered by events,
         // and almost nothing carries one. Lateness is derived from the handover
         // date in lib/collection.ts instead; nothing reads has_overdue any more.

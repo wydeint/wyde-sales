@@ -176,13 +176,20 @@ function getChipStage(j: RoomJob): ChipStage {
  * scale: this chip is how the card grid is scanned, so distinguishable stages
  * carry more information here than strict red/orange/green semantics would.
  * Every value is still a token, so both themes stay correct.
+ *
+ * Key order is the order the filter chips render in, so it follows the life of
+ * a room: collecting, ready to hand over, then the three delivered states. The
+ * red one used to sit above ส่งมอบแล้ว and read as something that happens before
+ * delivery — it is the opposite, a room handed over more than CHASE_AFTER_DAYS
+ * ago with money still outstanding. Its label now says so, and it sits with the
+ * other delivered states rather than above them.
  */
 const STAGE_META: Record<ChipStage, { label: string; bg: string; color: string; border: string; dot: string }> = {
   collect: { label: 'กำลังเก็บเงิน',    bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },
   ready:   { label: 'รอส่งมอบ',         bg: 'color-mix(in srgb, var(--accent-blue)   12%, transparent)', color: 'var(--accent-blue)',   border: 'color-mix(in srgb, var(--accent-blue)   30%, transparent)', dot: 'var(--accent-blue)' },
-  overdue: { label: `ค้างเก็บเงิน ${CHASE_AFTER_DAYS}+ วัน`, bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)', color: 'var(--accent-red)',    border: 'color-mix(in srgb, var(--accent-red)    30%, transparent)', dot: 'var(--accent-red)' },
-  done:    { label: 'ส่งมอบแล้ว',       bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)', color: 'var(--accent-green)',  border: 'color-mix(in srgb, var(--accent-green)  30%, transparent)', dot: 'var(--accent-green)' },
   bill:    { label: 'ส่งมอบแล้ว/ค้างรับเงิน', bg: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)', border: 'color-mix(in srgb, var(--accent-orange) 30%, transparent)', dot: 'var(--accent-orange)' },
+  overdue: { label: `ส่งมอบแล้ว/ค้างเกิน ${CHASE_AFTER_DAYS} วัน`, bg: 'color-mix(in srgb, var(--accent-red)    12%, transparent)', color: 'var(--accent-red)',    border: 'color-mix(in srgb, var(--accent-red)    30%, transparent)', dot: 'var(--accent-red)' },
+  done:    { label: 'ส่งมอบแล้ว',       bg: 'color-mix(in srgb, var(--accent-green)  12%, transparent)', color: 'var(--accent-green)',  border: 'color-mix(in srgb, var(--accent-green)  30%, transparent)', dot: 'var(--accent-green)' },
 }
 
 function getFullStageInfo(job: FullJob) {
@@ -2272,7 +2279,8 @@ export default function MyDealsPage() {
   }, [jobs, search, filterProject, filterSales])
 
   const stageCounts = useMemo(() => {
-    const c = { collect: 0, ready: 0, overdue: 0, done: 0, bill: 0 } as Record<ChipStage, number>
+    // Same order as STAGE_META so the two stay readable side by side.
+    const c = { collect: 0, ready: 0, bill: 0, overdue: 0, done: 0 } as Record<ChipStage, number>
     for (const j of visibleBase) c[getChipStage(j)]++
     return c
   }, [visibleBase])

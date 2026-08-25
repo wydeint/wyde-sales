@@ -537,12 +537,16 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
     }
 
     const handoverPayload = {
+      // handovers.id is NOT NULL with no default. Every insert here omitted it
+      // and failed the constraint — and only this one of the three call sites
+      // even read the error, so the table sat empty behind 578 delivered jobs.
+      id: `HO-${job.id}`,
       job_id: job.id,
       customer_id: job.customer_id || null,
       project_id: job.project_id || null,
       room: job.room_no,
       delivery_date: deliverDate,
-      work_status: 'ส่งมอบแล้ว',
+      work_status: 'delivered', status: 'completed',
     }
     const { data: existingHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
     if (existingHO) {

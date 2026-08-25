@@ -758,17 +758,25 @@ function QuickDeliverModal({ job, onClose, onSaved }: { job: FullJob; onClose: (
     const { error: e1 } = await supabase.from('jobs').update({
       actual_deliver_date: deliverDate,
       working_status: 'ส่งมอบแล้ว',
+      // Handing a room over closes the deal. Without this the job kept whatever
+      // crm_stage it had — JOB-1107 was delivered while still reading จอง on the
+      // Prospect card, because only working_status moved.
+      crm_stage: 'closed',
       commission_month: commissionMonth,
     }).eq('id', job.id)
     if (e1) { setError(e1.message); setSaving(false); return }
 
-    const handoverData = { job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'ส่งมอบแล้ว' }
-    const { data: existHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
-    if (existHO) { await supabase.from('handovers').update(handoverData).eq('id', existHO.id) }
-    else { await supabase.from('handovers').insert(handoverData) }
+    const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
+    // Upsert on the id we now supply, and read the error. These two call sites
+    // discarded it, which is why a NOT NULL violation on every insert went
+    // unnoticed for 578 handovers.
+    const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
+    if (eHO) { setError('handovers: ' + eHO.message); setSaving(false); return }
 
     await supabase.from('warranties').upsert({
-      id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
+      // job_id, not just the customer: a room ordered twice shares one customer
+      // record, and a warranty without a job showed up on both jobs.
+      id: `WAR-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id,
       room: job.room_no, handover_date: deliverDate, warranty_start: deliverDate,
       warranty_end: wEndStr, warranty_months: warrantyMonths, status: 'active',
     }, { onConflict: 'id' })
@@ -844,17 +852,25 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
     await supabase.from('jobs').update({
       actual_deliver_date: deliverDate,
       working_status: 'ส่งมอบแล้ว',
+      // Handing a room over closes the deal. Without this the job kept whatever
+      // crm_stage it had — JOB-1107 was delivered while still reading จอง on the
+      // Prospect card, because only working_status moved.
+      crm_stage: 'closed',
       commission_month: commissionMonth,
     }).eq('id', job.id)
     if (markFinalPaid && finalInst) {
       await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate, paid_amount: finalPaidAmount }).eq('id', finalInst.id)
     }
-    const handoverData = { job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'ส่งมอบแล้ว' }
-    const { data: existHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
-    if (existHO) { await supabase.from('handovers').update(handoverData).eq('id', existHO.id) }
-    else { await supabase.from('handovers').insert(handoverData) }
+    const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
+    // Upsert on the id we now supply, and read the error. These two call sites
+    // discarded it, which is why a NOT NULL violation on every insert went
+    // unnoticed for 578 handovers.
+    const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
+    if (eHO) { alert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
     await supabase.from('warranties').upsert({
-      id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
+      // job_id, not just the customer: a room ordered twice shares one customer
+      // record, and a warranty without a job showed up on both jobs.
+      id: `WAR-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id,
       room: job.room_no, handover_date: deliverDate, warranty_start: deliverDate,
       warranty_end: wEndStr, warranty_months: warrantyMonths, status: 'active',
     }, { onConflict: 'id' })

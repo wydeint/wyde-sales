@@ -446,8 +446,10 @@ function CustomerDetail({
                       {job.handover && (
                         <div className="mt-3 pt-3 flex items-center justify-between text-xs" style={{ borderTop: '1px solid var(--divider)' }}>
                           <span style={{ color: 'var(--text-3)' }}>ส่งมอบ</span>
-                          <span style={{ color: job.handover.work_status === 'ส่งมอบแล้ว' ? 'var(--accent-green)' : 'var(--text-2)' }}>
-                            {job.handover.work_status}
+                          {/* handovers.work_status is constrained to English
+                              keys; the Thai label belongs on screen only. */}
+                          <span style={{ color: job.handover.work_status === 'delivered' ? 'var(--accent-green)' : 'var(--text-2)' }}>
+                            {({ delivered: 'ส่งมอบแล้ว', ready_to_deliver: 'รอส่งมอบ', in_progress: 'ดำเนินการ' } as Record<string,string>)[job.handover.work_status] || job.handover.work_status}
                             {job.handover.delivery_date ? ' · ' + job.handover.delivery_date.slice(0, 10) : ''}
                           </span>
                         </div>

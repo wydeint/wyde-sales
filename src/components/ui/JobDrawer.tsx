@@ -660,15 +660,17 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
     const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
     const commissionMonth = deliverDate.slice(0, 7) + '-01'
     await supabase.from('jobs').update({
-      actual_deliver_date: deliverDate, working_status: 'ส่งมอบแล้ว', commission_month: commissionMonth,
+      actual_deliver_date: deliverDate, working_status: 'ส่งมอบแล้ว',
+      crm_stage: 'closed',  // delivery closes the deal; see my-deals for why
+      commission_month: commissionMonth,
     }).eq('id', job.id)
     if (markFinalPaid && finalInst) {
       await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate, paid_amount: finalPaidAmount }).eq('id', finalInst.id)
     }
-    const handoverData = { job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'ส่งมอบแล้ว' }
-    const { data: existHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
-    if (existHO) { await supabase.from('handovers').update(handoverData).eq('id', existHO.id) }
-    else { await supabase.from('handovers').insert(handoverData) }
+    const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
+    // See my-deals: id supplied, upsert, and the error actually read.
+    const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
+    if (eHO) { alert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
     await supabase.from('warranties').upsert({
       id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
       room: job.room_no, job_id: job.id, handover_date: deliverDate, warranty_start: deliverDate,

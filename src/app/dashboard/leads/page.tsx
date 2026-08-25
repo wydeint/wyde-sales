@@ -11,6 +11,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { fetchAllRows } from '@/lib/fetchAll'
+import { createProspectJob } from '@/lib/prospectJob'
 
 interface Lead {
   id: number
@@ -417,6 +418,17 @@ export default function LeadsPage() {
       notes: lead.model_name ? `Model: ${lead.model_name}` : '',
     })
     if (ce) { setAddError(ce.message); setAddingId(null); return }
+    // A converted lead is a prospect, and a prospect needs a job — the note this
+    // page writes ("Model: 1 Bedroom Duo") belongs to the order, and without a
+    // job it had nowhere to go and the customer showed on no board.
+    await createProspectJob(supabase, {
+      customerId,
+      customerName: lead.customer_name,
+      projectId: projId,
+      roomNo: room,
+      salesId: null,
+      crmStage: 'new',
+    })
     await supabase.from('condo_leads').update({ customer_id: customerId }).eq('id', lead.id)
     setAddingId(null)
     load()

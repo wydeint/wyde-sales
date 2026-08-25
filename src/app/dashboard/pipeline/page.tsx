@@ -18,6 +18,7 @@ import { CRM_STAGES, crmStage, PROSPECT_STAGES, cancelOutcome, WORK_TYPES } from
 import PageHeader from '@/components/ui/PageHeader'
 import DateInput from '@/components/ui/DateInput'
 import { bahtShort } from '@/lib/money'
+import { createProspectJob as createProspectJobShared } from '@/lib/prospectJob'
 
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
@@ -1439,20 +1440,13 @@ export default function ProspectsKanbanPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ c: Customer; jobId?: string; hasMultipleJobs: boolean } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  // Thin wrapper over the shared helper — the page's callers pass positional
+  // args and today's date, which is what a prospect opened here means.
   async function createProspectJob(customerId: string, custName: string, projectId: string | null, roomNo: string | null, custType: string, workType: string | null, salesId: string | null, crmStage: string): Promise<string> {
-    const { data: allJobIds } = await supabase.from('jobs').select('id').like('id', 'JOB-%')
-    let baseNum = 1
-    if (allJobIds && allJobIds.length > 0) {
-      const nums = (allJobIds as { id: string }[]).map(j => { const m = j.id.match(/JOB-(\d+)/); return m ? parseInt(m[1], 10) : 0 })
-      baseNum = Math.max(...nums) + 1
-    }
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const jobId = `JOB-${baseNum + attempt}`
-      const { error } = await supabase.from('jobs').insert({ id: jobId, customer_id: customerId, customer_name: custName, project_id: projectId, room_no: roomNo, customer_type: custType, work_type: workType, sales_id: salesId, crm_stage: crmStage, working_status: null, order_date: todayStr() })
-      if (!error) return jobId
-      if (!error.message.includes('duplicate key')) return ''
-    }
-    return ''
+    return createProspectJobShared(supabase, {
+      customerId, customerName: custName, projectId, roomNo,
+      customerType: custType, workType, salesId, crmStage, orderDate: todayStr(),
+    })
   }
 
   const load = useCallback(async () => {

@@ -14,6 +14,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
+import { createProspectJob } from '@/lib/prospectJob'
 
 interface Customer {
   id: string
@@ -579,6 +580,18 @@ export default function CustomersPage() {
       }
       const { error } = await supabase.from('customers').insert({ id: newId, ...payload })
       if (error) { setSaveError(error.message); setSaving(false); return }
+      // Open the job that goes with the customer. Without it the record is
+      // invisible to the Prospect board, Project Summary and everything else
+      // that counts jobs — which is how thirteen customers ended up stranded.
+      await createProspectJob(supabase, {
+        customerId: newId,
+        customerName: String(payload.customer_name || ''),
+        projectId: (payload.project_id as string) || null,
+        roomNo: (payload.interested_room as string) || null,
+        workType: (payload.work_type as string) || null,
+        salesId: (payload.assigned_to as string) || null,
+        crmStage: String(payload.status || 'new'),
+      })
     }
     setSaving(false)
     setOpen(false)

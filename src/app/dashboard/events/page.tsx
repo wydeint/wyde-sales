@@ -8,6 +8,7 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import { baht } from '@/lib/money'
+import { createProspectJob } from '@/lib/prospectJob'
 
 interface Project { id: string; name: string }
 interface Lead { id: number; tower: string; room_no: string; customer_name: string; phone: string }
@@ -381,6 +382,16 @@ export default function EventsPage() {
       source: 'event',
       status: 'interested',
       first_contact_date: c.booked_date || null,
+    })
+    // promoteBooked below already opens a job; this path did not, so an event
+    // guest promoted at สนใจ became a customer with nothing to show on the
+    // Prospect board.
+    await createProspectJob(supabase, {
+      customerId,
+      customerName: c.customer_name,
+      projectId: c.project_id || selectedEvent?.project_id || null,
+      roomNo: c.room_no || null,
+      crmStage: 'interested',
     })
     setPromotedIds(prev => new Set(prev).add(c.id))
   }

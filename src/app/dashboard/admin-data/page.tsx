@@ -97,7 +97,10 @@ const TABLES: TableDef[] = [
       { key: 'phone', label: 'โทร', type: 'text', width: 120 },
       { key: 'email', label: 'Email', type: 'text', width: 160 },
       { key: 'project_name', label: 'โครงการ', type: 'text', width: 140 },
-      { key: 'room_no', label: 'ห้อง', type: 'text', width: 90 },
+      // interested_room, not room_no. customers.room_no was dropped on
+      // 2026-08-25 — it held 2 rows against 936, and the room a customer is
+      // actually interested in has always lived here.
+      { key: 'interested_room', label: 'ห้องที่สนใจ', type: 'text', width: 100 },
       { key: 'status', label: 'สถานะ', type: 'text', width: 110 },
       { key: 'assigned_to', label: 'มอบหมายให้', type: 'text', width: 120 },
       { key: 'source', label: 'แหล่งที่มา', type: 'text', width: 110 },

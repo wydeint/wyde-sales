@@ -28,13 +28,20 @@ export default function NotificationBell() {
   useEffect(() => {
     async function fetchAlerts() {
       const [{ data: handoverData }, { data: paidData }] = await Promise.all([
-        // Handovers: today + last 7 days
-        supabase.from('customers')
-          .select('id, customer_name, room_no, handover_date')
-          .not('handover_date', 'is', null)
-          .gte('handover_date', sevenDaysAgo)
-          .lte('handover_date', today)
-          .order('handover_date', { ascending: false }).limit(10),
+        // Handovers: today + last 7 days.
+        //
+        // Read from jobs, not customers. customers.handover_date is NULL on all
+        // 936 rows and always has been, so this panel had never once shown a
+        // handover — it was querying a column nothing writes to. The room number
+        // came from customers.room_no, which is filled on 2 rows; the real one
+        // is jobs.room_no.
+        supabase.from('jobs')
+          .select('id, customer_name, room_no, actual_deliver_date')
+          .not('actual_deliver_date', 'is', null)
+          .neq('working_status', 'ยกเลิก')
+          .gte('actual_deliver_date', sevenDaysAgo)
+          .lte('actual_deliver_date', today)
+          .order('actual_deliver_date', { ascending: false }).limit(10),
 
         // Paid payments (booking + installments): today + last 7 days
         supabase.from('payments')
@@ -46,8 +53,8 @@ export default function NotificationBell() {
       ])
 
       setHandovers((handoverData || []).map((h: any) => ({
-        id: h.id, customer_name: h.customer_name, room_no: h.room_no || '—',
-        handover_date: h.handover_date, isToday: h.handover_date === today,
+        id: h.id, customer_name: h.customer_name || '—', room_no: h.room_no || '—',
+        handover_date: h.actual_deliver_date, isToday: h.actual_deliver_date === today,
       })))
 
       setPaidToday((paidData || []).map((p: any) => ({

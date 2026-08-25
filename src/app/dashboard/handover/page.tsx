@@ -424,13 +424,13 @@ export default function HandoverPage() {
                 <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--accent-red)' }} />หลุดกำหนด
               </span>
               <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                <span className="w-3 h-0.5 rounded-sm inline-block" style={{ background: 'var(--chart-2)' }} />มูลค่าที่ส่งมอบ
+                <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--chart-2)', opacity: 0.85 }} />มูลค่าที่ส่งมอบ
               </span>
             </div>
           </div>
           {/* Headroom above the bars for the tooltip, which cannot escape the
               scroller — the same fix the Finance chart needed. */}
-          <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: '196px', paddingTop: '38px' }}>
+          <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: '212px', paddingTop: '38px' }}>
             {trend.map(t => {
               const rooms = t.delivered + t.late
               return (
@@ -438,7 +438,7 @@ export default function HandoverPage() {
                   <div style={{ height: '14px', fontSize: '8px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
                     {rooms > 0 && <span style={{ color: 'var(--text-2)' }}>{rooms}</span>}
                   </div>
-                  <div className="w-full relative flex items-end justify-center" style={{ height: '110px' }}>
+                  <div className="w-full relative flex items-end justify-center" style={{ height: '96px' }}>
                     {/* Stacked rooms: delivered under late, so the column height
                         is the period's whole workload. */}
                     <div className="w-full flex flex-col justify-end" style={{ height: '100%' }}>
@@ -449,13 +449,6 @@ export default function HandoverPage() {
                         <div style={{ height: `${(t.delivered / trendMaxRooms) * 100}%`, background: 'var(--chart-1)', borderRadius: t.late > 0 ? 0 : '2px 2px 0 0' }} />
                       )}
                     </div>
-                    {/* Value marker on its own scale — see trendMaxValue. */}
-                    {t.value > 0 && (
-                      <div className="absolute left-1/2 -translate-x-1/2" style={{
-                        bottom: `${(t.value / trendMaxValue) * 100}%`,
-                        width: '60%', height: '2px', background: 'var(--chart-2)', borderRadius: '2px',
-                      }} />
-                    )}
                     {rooms > 0 && (
                       <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-micro whitespace-nowrap px-2 py-1 rounded-[8px] shadow-lg pointer-events-none"
                         style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
@@ -463,6 +456,19 @@ export default function HandoverPage() {
                         {t.late > 0 && <div style={{ color: 'var(--accent-red)' }}>หลุดกำหนด {t.late} ห้อง</div>}
                         {t.value > 0 && <div style={{ color: 'var(--chart-2)' }}>{bahtShort(t.value)}</div>}
                       </div>
+                    )}
+                  </div>
+                  {/* Value, in its own band under a rule. It used to be a marker
+                      floating inside the room bars, and read as part of them —
+                      December is two rooms worth ฿39.58M, so the line sat above
+                      a bar it had nothing to do with. Two measures on two scales
+                      need two bands sharing an axis, not one plot. */}
+                  <div className="w-full flex flex-col justify-start pt-1" style={{ height: '30px', borderTop: '1px solid var(--divider)' }}>
+                    {t.value > 0 && (
+                      <div className="rounded-b-sm" style={{
+                        height: `${Math.max((t.value / trendMaxValue) * 100, 4)}%`,
+                        background: 'var(--chart-2)', opacity: 0.85,
+                      }} />
                     )}
                   </div>
                   <p className="text-micro whitespace-nowrap"
@@ -474,7 +480,7 @@ export default function HandoverPage() {
             })}
           </div>
           <p className="text-micro mt-2" style={{ color: 'var(--text-3)' }}>
-            จำนวนห้องกับมูลค่าใช้สเกลคนละชุด — บางช่วงมีห้องน้อยแต่มูลค่าสูงมาก (งาน RPT ก้อนใหญ่) ถ้าใช้สเกลเดียวกันช่วงอื่นจะแบนราบจนอ่านไม่ได้
+            แถบบน = จำนวนห้อง · แถบล่าง = มูลค่าที่ส่งมอบ — คนละสเกล เพราะบางช่วงมีห้องน้อยแต่มูลค่าสูงมาก (งาน RPT ก้อนใหญ่) เทียบความสูงข้ามแถบไม่ได้
           </p>
         </div>
       </div>

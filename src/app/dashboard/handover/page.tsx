@@ -9,6 +9,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, UNIT_LABELS, type PeriodUnit } from '@/lib/period'
 import { addDays } from '@/lib/delivery'
+import { workCategory } from '@/lib/status'
 import DateInput from '@/components/ui/DateInput'
 import { baht, bahtShort } from '@/lib/money'
 
@@ -22,6 +23,7 @@ interface Job {
   work_days: number | null
   actual_deliver_date: string | null
   working_status: string
+  work_type: string | null
   projects: { name: string } | null
   sales: { name: string } | null
 }
@@ -45,6 +47,8 @@ interface RoomEntry {
   days_overdue: number          // 0 if not overdue
   no_start_date: boolean        // true = ไม่มี work_start_date
   sales_name: string | null
+  /** RPT / N-RPT / unknown — the bars split on this. */
+  cat: ReturnType<typeof workCategory>
 }
 
 // ─── Helpers ───────────────────────────────────────────────
@@ -205,7 +209,7 @@ export default function HandoverPage() {
     setLoading(true)
     const { data } = await supabase
       .from('jobs')
-      .select('id, room_no, project_id, revenue_inc_vat, work_start_date, work_days, actual_deliver_date, working_status, projects(name), sales:users!sales_id(name)')
+      .select('id, room_no, project_id, revenue_inc_vat, work_type, work_start_date, work_days, actual_deliver_date, working_status, projects(name), sales:users!sales_id(name)')
       .neq('working_status', 'ยกเลิก')
       .or('work_start_date.not.is.null,actual_deliver_date.not.is.null')
       .order('project_id')
@@ -258,6 +262,7 @@ export default function HandoverPage() {
         days_overdue: days_over,
         no_start_date,
         sales_name: (j.sales as any)?.name || null,
+        cat: workCategory(j.work_type),
       }
     })
   }, [jobs])
@@ -290,7 +295,7 @@ export default function HandoverPage() {
    *  are always describing the same set of rooms. */
   const trend = useMemo(() => {
     const spans = periodUnit === 'year' ? 4 : periodUnit === 'quarter' ? 8 : 12
-    const out: { key: string; label: string; delivered: number; late: number; value: number; current: boolean }[] = []
+    const out: { key: string; label: string; delivered: number; late: number; value: number; valueRpt: number; valueNrpt: number; current: boolean }[] = []
     for (let i = spans - 1; i >= 0; i--) {
       const b = getPeriodBounds(periodUnit, periodOffset - i)
       const rooms = scoped.filter(e => e.display_date >= b.start && e.display_date <= b.end)
@@ -302,6 +307,11 @@ export default function HandoverPage() {
         // column can be read as more work or as more slipping.
         late: rooms.filter(e => !e.is_delivered && e.is_overdue).length,
         value: rooms.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0),
+        // Split by work type. It explains the shape of the chart without a
+        // caption: Dec 2025 is one ฿39.18M RPT contract, every other period is
+        // ฿0.3–1.4M of RPT under a much larger N-RPT base.
+        valueRpt: rooms.filter(e => e.is_delivered && e.cat === 'RPT').reduce((s, e) => s + e.revenue, 0),
+        valueNrpt: rooms.filter(e => e.is_delivered && e.cat !== 'RPT').reduce((s, e) => s + e.revenue, 0),
         current: i === 0,
       })
     }
@@ -416,12 +426,15 @@ export default function HandoverPage() {
               แนวโน้มการส่งมอบ · {trend.length} {UNIT_LABELS[periodUnit]}ล่าสุด
             </h2>
             <div className="flex gap-4 text-xs">
-              {/* One measure, one colour. The bars carry value only now; the
-                  room count is a number under each column and the split between
-                  delivered and late lives in the tooltip, where it does not have
-                  to share a scale with baht. */}
+              {/* One measure — baht — split by work type. Two colours here
+                  encode a real division in the data, not decoration: without it
+                  the December column is an unexplained spike and the chart needs
+                  a caption to apologise for itself. */}
               <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--chart-1)' }} />มูลค่าที่ส่งมอบ
+                <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--chart-1)' }} />N-RPT
+              </span>
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--chart-2)' }} />RPT
               </span>
             </div>
           </div>
@@ -437,12 +450,20 @@ export default function HandoverPage() {
                   </div>
                   <div className="w-full relative flex items-end justify-center" style={{ height: '104px' }}>
                     <div className="w-full flex flex-col justify-end" style={{ height: '100%' }}>
-                      {t.value > 0 && (
-                        // A 2% floor so a period that delivered something small
-                        // still shows a mark rather than reading as nothing.
+                      {/* RPT on top, so the block that makes a column tall is
+                          the one the eye lands on first. A 2% floor keeps a
+                          small period visible rather than reading as nothing. */}
+                      {t.valueRpt > 0 && (
                         <div className="rounded-t-sm" style={{
-                          height: `${Math.max((t.value / trendMaxValue) * 100, 2)}%`,
+                          height: `${Math.max((t.valueRpt / trendMaxValue) * 100, 2)}%`,
+                          background: 'var(--chart-2)',
+                        }} />
+                      )}
+                      {t.valueNrpt > 0 && (
+                        <div style={{
+                          height: `${Math.max((t.valueNrpt / trendMaxValue) * 100, 2)}%`,
                           background: 'var(--chart-1)',
+                          borderRadius: t.valueRpt > 0 ? 0 : '2px 2px 0 0',
                         }} />
                       )}
                     </div>
@@ -451,7 +472,8 @@ export default function HandoverPage() {
                         style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
                         <div style={{ color: 'var(--accent-green)' }}>ส่งมอบ {t.delivered} ห้อง</div>
                         {t.late > 0 && <div style={{ color: 'var(--accent-red)' }}>หลุดกำหนด {t.late} ห้อง</div>}
-                        {t.value > 0 && <div style={{ color: 'var(--chart-1)' }}>{bahtShort(t.value)}</div>}
+                        {t.valueNrpt > 0 && <div style={{ color: 'var(--chart-1)' }}>N-RPT {bahtShort(t.valueNrpt)}</div>}
+                        {t.valueRpt > 0 && <div style={{ color: 'var(--chart-2)' }}>RPT {bahtShort(t.valueRpt)}</div>}
                       </div>
                     )}
                   </div>
@@ -470,7 +492,7 @@ export default function HandoverPage() {
             })}
           </div>
           <p className="text-micro mt-2" style={{ color: 'var(--text-3)' }}>
-            แท่ง = มูลค่าที่ส่งมอบ · ตัวเลขใต้แท่ง = จำนวนห้อง — บางช่วงห้องน้อยแต่มูลค่าสูงมาก (งาน RPT ก้อนใหญ่) ความสูงของแท่งจึงไม่ได้แปรตามจำนวนห้อง
+            แท่ง = มูลค่าที่ส่งมอบ · ตัวเลขใต้แท่ง = จำนวนห้อง
           </p>
         </div>
       </div>

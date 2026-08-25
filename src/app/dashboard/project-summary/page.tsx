@@ -682,8 +682,8 @@ export default function ProjectSummaryPage() {
     async function load() {
       const [projRes, jobRes, custRes, payRes, userRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
-        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date, sales_id, cancel_type, cancel_amount'),
-        supabase.from('customers').select('project_id, status'),
+        supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date, sales_id, cancel_type, cancel_amount, crm_stage, customer_id'),
+        supabase.from('customers').select('id, project_id, status'),
         // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
         // the cash figures come out short with no error to say so.
         fetchAllRows(() => supabase.from('payments')
@@ -841,15 +841,30 @@ export default function ProjectSummaryPage() {
         else                      { cat === 'N-RPT' ? m.b2c_nrpt++ : m.b2c_rpt++ }
       }
 
-      // Aggregate customers
+      // ── Prospect stages: the job decides, not the customer ─────────────
+      // customers.status is a single field, and one customer can hold several
+      // jobs — a room ordered twice shares the record. Every stage move writes
+      // that field, so the last move overwrites what the other job was doing,
+      // and counting customers by it both double-counts and loses stages.
+      //
+      // The rule: a customer's stages are their jobs' stages. customers.status
+      // speaks only for the 13 prospects that have no job row at all — records
+      // predating createProspectJob, 10 of them at จอง, and they would vanish
+      // from this page entirely if the field were ignored outright.
       const custMap = new Map<string, number>()
       const lostMap = new Map<string, number>()
+      const bump = (m: Map<string, number>, pid: string) => m.set(pid, (m.get(pid) || 0) + 1)
+
+      for (const j of jobs as any[]) {
+        if (!j.project_id) continue
+        if (j.crm_stage === 'booked') bump(custMap, j.project_id)
+        else if (j.crm_stage === 'lost') bump(lostMap, j.project_id)
+      }
+      const customersWithJobs = new Set((jobs as any[]).map(j => j.customer_id).filter(Boolean))
       for (const c of customers) {
-        if (!c.project_id) continue
-        if (c.status === 'booked') custMap.set(c.project_id, (custMap.get(c.project_id) || 0) + 1)
-        // A prospect that never became a job is a loss the ยกเลิก count could
-        // never show, because there is no job row to cancel.
-        else if (c.status === 'lost') lostMap.set(c.project_id, (lostMap.get(c.project_id) || 0) + 1)
+        if (!c.project_id || customersWithJobs.has((c as any).id)) continue
+        if (c.status === 'booked') bump(custMap, c.project_id)
+        else if (c.status === 'lost') bump(lostMap, c.project_id)
       }
 
       const result: ProjectRow[] = projects.map(p => {

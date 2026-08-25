@@ -1977,7 +1977,16 @@ export default function ProspectsKanbanPage() {
               <div className="space-y-1.5 max-h-56 overflow-y-auto">
                 {addSearchResults.map(c => {
                   const cJobs = ((c as any).jobs as JobMeta[] | null) || []
-                  const cStage = resolveStage(cJobs[0]?.crm_stage, c.status)
+                  // The newest order, not jobs[0]. This row is the answer to
+                  // "where is this customer now" while someone is about to add
+                  // a repeat order; the first job they ever placed — usually
+                  // long since delivered — is the least useful of the set.
+                  const newestJob = cJobs.length > 0
+                    ? [...cJobs].sort((a, b) =>
+                        (a.order_date || '').localeCompare(b.order_date || '') ||
+                        a.id.localeCompare(b.id, undefined, { numeric: true }))[cJobs.length - 1]
+                    : undefined
+                  const cStage = resolveStage(newestJob?.crm_stage, c.status)
                   return (
                     <button key={c.id} onClick={() => setRepeatConfirm(c)}
                       className="w-full flex items-center gap-3 p-3 rounded-[10px] text-left transition-all"

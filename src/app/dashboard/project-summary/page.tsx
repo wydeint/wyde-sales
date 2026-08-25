@@ -26,6 +26,10 @@ interface ProjectRow {
    *  RPT, which is where it used to land and what inflated that column. */
   unknown_wt: number
   jobs_active: number
+  /** ดำเนินการ / รอส่งมอบ — building. */
+  jobs_wip: number
+  /** จอง or no status yet — sold, not started. */
+  jobs_not_started: number
   jobs_delivered: number
   jobs_total: number
   revenue_total: number
@@ -406,12 +410,24 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
             </p>
             <div className="ds-card p-4 space-y-3">
               <StepBar steps={[
+                // Four steps, and they add up: not started + building + handed
+                // over = total. The old middle step was backlog.n — everything
+                // not yet delivered — under the label กำลังดำเนินการ, so Kathu
+                // read 82 "in progress" against 40 rooms actually being built
+                // and 42 still at จอง. My Deals counts only the 40, which is why
+                // the two pages could never agree.
                 { label: 'งานทั้งหมด', value: row.jobs_total, color: 'var(--text-2)', base: null },
-                { label: 'กำลังดำเนินการ', value: row.backlog.n, color: 'var(--accent-amber)', base: row.jobs_total,
-                  sub: row.backlog.rev > 0 ? fK(row.backlog.rev) : undefined },
+                { label: 'จอง · ยังไม่เริ่มงาน', value: row.jobs_not_started, color: 'var(--accent-blue)', base: row.jobs_total },
+                { label: 'กำลังดำเนินการ', value: row.jobs_wip, color: 'var(--accent-amber)', base: row.jobs_total },
                 { label: 'ส่งมอบแล้ว', value: row.jobs_delivered, color: 'var(--accent-green)', base: row.jobs_total,
                   sub: row.revenue_delivered > 0 ? fK(row.revenue_delivered) : undefined },
               ]} />
+              <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                <span style={{ color: 'var(--text-2)' }}>มูลค่างานที่ยังไม่ส่งมอบ</span>
+                <span className="tabular-nums" style={{ color: 'var(--accent-blue)' }}>
+                  {row.backlog.n} งาน · {fK(row.backlog.rev)}
+                </span>
+              </div>
 
               <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
                 <span style={{ color: 'var(--text-2)' }}>ขาย → ส่งมอบ เฉลี่ย</span>
@@ -717,6 +733,11 @@ export default function ProjectSummaryPage() {
 
       type JobAgg = {
         active: number; delivered: number; total: number
+        /** Work actually under way, and work sold but not yet started. `active`
+         *  lumps the two together, which made the delivery bar read 82
+         *  "กำลังดำเนินการ" on a project with 40 rooms in production and 42 still
+         *  sitting at จอง — a number My Deals could never agree with. */
+        wip: number; not_started: number
         rev_total: number; rev_del: number
         cash_total: number; cash_del: number
         b2c_rpt: number; b2c_nrpt: number; b2b_rpt: number; b2b_nrpt: number
@@ -742,7 +763,7 @@ export default function ProjectSummaryPage() {
         rooms: Set<string>
       }
       const emptyAgg = (): JobAgg => ({
-        active: 0, delivered: 0, total: 0, rev_total: 0, rev_del: 0,
+        active: 0, delivered: 0, total: 0, wip: 0, not_started: 0, rev_total: 0, rev_del: 0,
         cash_total: 0, cash_del: 0,
         b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0,
         cancelled: 0, rev_cancelled: 0,
@@ -784,7 +805,13 @@ export default function ProjectSummaryPage() {
         const isDel = j.working_status === 'ส่งมอบแล้ว'
         m.total++
         if (isDel) { m.delivered++; m.rev_del += rev; m.cash_del += cash }
-        else m.active++
+        else {
+          m.active++
+          // จอง and a null status both mean the room is sold but nobody has
+          // started building; only ดำเนินการ / รอส่งมอบ is work in progress.
+          if (j.working_status === 'ดำเนินการ' || j.working_status === 'รอส่งมอบ') m.wip++
+          else m.not_started++
+        }
         m.rev_total += rev
         m.cash_total += cash
 
@@ -875,7 +902,8 @@ export default function ProjectSummaryPage() {
           b2c_rpt: j.b2c_rpt, b2c_nrpt: j.b2c_nrpt,
           b2b_rpt: j.b2b_rpt, b2b_nrpt: j.b2b_nrpt,
           unknown_wt: j.unknown_wt,
-          jobs_active: j.active, jobs_delivered: j.delivered, jobs_total: j.total,
+          jobs_active: j.active, jobs_wip: j.wip, jobs_not_started: j.not_started,
+          jobs_delivered: j.delivered, jobs_total: j.total,
           revenue_total: j.rev_total, revenue_delivered: j.rev_del,
           jobs_cancelled: j.cancelled, revenue_cancelled: j.rev_cancelled,
           cash_total: j.cash_total, cash_delivered: j.cash_del,

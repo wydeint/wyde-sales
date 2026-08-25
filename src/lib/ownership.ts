@@ -36,10 +36,7 @@ export interface FieldOwnership {
 
 export const FIELD_OWNERSHIP: FieldOwnership[] = [
   // ── jobs owns: properties of an order ────────────────────────────────
-  {
-    field: 'customer_type', owner: 'jobs',
-    why: 'ลูกค้าคนเดียวสั่งได้ทั้งงาน B2C และ B2B — ห้อง A228 มีทั้งสองแบบ',
-  },
+
   {
     field: 'work_type', owner: 'jobs',
     why: 'งานคนละใบเป็นคนละประเภทได้ · customers.work_type ว่าง 917 จาก 959',
@@ -95,6 +92,10 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
   },
 
   // ── customers owns: properties of a person ───────────────────────────
+  {
+    field: 'customer_type', owner: 'customers',
+    why: 'บริษัทคือ B2B คนคือ B2C — เป็นคุณสมบัติของผู้ซื้อ ไม่ใช่ของงาน · jobs ถือสำเนาไว้ให้ 12 หน้าอ่านโดยไม่ต้อง join และ trigger customers→jobs รักษาให้ตรงกัน · กติกาคู่กัน: หนึ่งระเบียนลูกค้า = ผู้ซื้อหนึ่งราย บริษัทแยกระเบียนจากบุคคล (เช่น TOR10-A228-B2B)',
+  },
   {
     field: 'customer_name', owner: 'customers',
     why: 'ชื่อคน/บริษัทที่เป็นลูกค้า — แต่ jobs.customer_name ตั้งใจต่างได้ 21 งาน (บริษัทจ้าง ≠ คนซื้อห้อง) จึงไม่ใช่ข้อมูลซ้ำที่ต้องบังคับให้ตรง',

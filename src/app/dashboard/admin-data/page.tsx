@@ -44,7 +44,10 @@ const TABLES: TableDef[] = [
       { key: 'room_no', label: 'ห้อง', type: 'text', width: 90 },
       { key: 'customer_name', label: 'ลูกค้า', type: 'text', width: 140 },
       { key: 'project_id', label: 'Project ID', type: 'text', width: 120 },
-      { key: 'customer_type', label: 'ประเภท', type: 'select', options: ['B2C', 'B2B'], width: 80 },
+      // Read-only: customers owns customer_type and a trigger pushes it down to
+      // every job. Editing the copy here would disagree with the customer until
+      // someone touched the customer again — change it on the Customers tab.
+      { key: 'customer_type', label: 'ประเภท (แก้ที่ลูกค้า)', type: 'readonly', width: 110 },
       // Free text is how "ม่าน" got into this column, and it is now guarded by a
       // CHECK constraint — a typo would fail the save with a raw database error
       // rather than simply not being offered.

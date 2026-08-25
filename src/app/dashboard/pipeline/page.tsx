@@ -1466,7 +1466,9 @@ export default function ProspectsKanbanPage() {
       supabase.from('jobs')
         .select('id, customer_name, room_no, revenue_inc_vat, sales_id, project_id, customer_type, projects(name), sales:users!jobs_sales_id_fkey(name), payments(status, paid_amount, amount, voucher_amount)')
         .eq('working_status', 'จอง')
-        .neq('customer_type', 'B2B')
+        // B2B used to be filtered out here. One B2B room is booked — Ecrora Spa
+        // at ฿3.8M — and it was the single largest booking on the book, showing
+        // nowhere on this page. A booking is a booking whoever the customer is.
         .order('room_no'),
     ])
     setCustomers((cData as any) || [])
@@ -1672,6 +1674,15 @@ export default function ProspectsKanbanPage() {
 
   const stage = STAGES.find(s => s.value === activeStage) || STAGES[0]
   const allCards = expandCards(customers)
+  /** Prospects at จอง that never got a job row — records predating
+   *  createProspectJob. The จอง tab lists jobs, so these ten (฿1.58M of budget)
+   *  appeared in no tab at all: not here, because they have no job, and not in
+   *  the other tabs, whose filter is the stage they are not at. They render as
+   *  customer cards beside the booked jobs until someone opens a job for them. */
+  const bookedNoJob = customers.filter(c =>
+    c.status === 'booked' && ((((c as any).jobs as JobMeta[] | null) || []).length === 0)
+    && (!filterProject || c.project_id === filterProject)
+    && (!filterSales || c.assigned_to === filterSales))
   const addSearchResults = addSearchQ.length >= 1
     ? customers.filter(c => {
         const q = addSearchQ.toLowerCase()
@@ -1758,6 +1769,7 @@ export default function ProspectsKanbanPage() {
             // the customer's assigned_to.
             const count = s.value === 'booked'
               ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
+                + bookedNoJob.length
               : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value
                   && (!filterProject || card.c.project_id === filterProject)
                   && (!filterSales || card.c.assigned_to === filterSales)).length
@@ -1784,16 +1796,23 @@ export default function ProspectsKanbanPage() {
       </div>
 
       {/* Summary strip */}
-      {(activeStage === 'booked' && !search ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length > 0 : list.length > 0) && (() => {
+      {(activeStage === 'booked' && !search
+        ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length + bookedNoJob.length > 0
+        : list.length > 0) && (() => {
         if (activeStage === 'booked' && !search) {
           const filtered = bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales))
+          // The job-less booked prospects count here too, or the strip reports a
+          // smaller book than the cards below it show.
+          const bookedCount = filtered.length + bookedNoJob.length
           const totalRev = filtered.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+            + bookedNoJob.reduce((s, c) => s + (c.budget || 0), 0)
           const noSales = filtered.filter(j => !j.sales_id).length
+            + bookedNoJob.filter(c => !c.assigned_to).length
           return (
             <div className="mb-3 grid grid-cols-3 gap-2">
               <div className="ds-card-sm text-center">
                 <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>จองอยู่</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{filtered.length}</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{bookedCount}</p>
                 <p className="text-micro" style={{ color: 'var(--text-3)' }}>งาน</p>
               </div>
               <div className="ds-card-sm text-center">
@@ -1837,7 +1856,10 @@ export default function ProspectsKanbanPage() {
             (!filterProject || j.project_id === filterProject) &&
             (!filterSales || j.sales_id === filterSales)
           )
-          if (filtered.length === 0) return (
+          // Empty only when neither list has anything: the ten job-less booked
+          // prospects belong on this tab too, and bailing on `filtered` alone
+          // would hide them behind an "ไม่มีงานในสถานะ จอง" message.
+          if (filtered.length === 0 && bookedNoJob.length === 0) return (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
               <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>
                 <Search size={20} style={{ color: 'var(--text-3)' }} />
@@ -1876,6 +1898,20 @@ export default function ProspectsKanbanPage() {
                   </div>
                 </div>
               ))}
+              {bookedNoJob.length > 0 && (
+                <div>
+                  <p className="text-label font-semibold uppercase tracking-wider mb-2 px-0.5" style={{ color: 'var(--accent-amber)' }}>
+                    จองแล้ว · ยังไม่ได้เปิดงาน <span className="font-normal">({bookedNoJob.length})</span>
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                    {bookedNoJob.map(c => (
+                      <CustomerCard key={c.id} c={c} stage={resolveStage(c.status)}
+                        onClick={() => { setSelectedCustomer(c); setSelectedJobId(null); setSelectedJobWorkingStatus(null); setSelectedJobCrmStage(null) }}
+                        onDelete={() => triggerDelete(c)} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )
         })() : (

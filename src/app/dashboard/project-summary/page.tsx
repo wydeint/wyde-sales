@@ -30,6 +30,10 @@ interface ProjectRow {
   jobs_wip: number
   /** จอง or no status yet — sold, not started. */
   jobs_not_started: number
+  rev_wip: number
+  rev_not_started: number
+  /** Value carried by repeat orders on a room already sold. */
+  rev_repeat: number
   jobs_delivered: number
   jobs_total: number
   revenue_total: number
@@ -319,9 +323,13 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                 // there; a percentage would be fiction.
                 { label: 'ห้องทั้งหมดในโครงการ', value: hasUnitCount ? row.total_units : null, color: 'var(--text-2)', base: null,
                   sub: hasUnitCount ? undefined : 'ยังไม่ได้ระบุจำนวนห้อง' },
-                { label: 'ห้องที่เราขายได้', value: row.rooms_sold, color: 'var(--accent-blue)', base: hasUnitCount ? row.total_units : null },
+                { label: 'ห้องที่เราขายได้', value: row.rooms_sold, color: 'var(--accent-blue)', base: hasUnitCount ? row.total_units : null,
+                  sub: row.revenue_total > 0 ? fK(row.revenue_total) : undefined },
+                // Same money as the row above by construction — every job sits
+                // in a room we sold — so the repeat figure carries its own value
+                // here instead of repeating the total a second time.
                 { label: 'เปิดงาน', value: row.jobs_total, color: 'var(--accent)', base: hasUnitCount ? row.total_units : null,
-                  sub: repeats > 0 ? `ขายซ้ำห้องเดิม ${repeats} งาน` : undefined },
+                  sub: repeats > 0 ? `ขายซ้ำห้องเดิม ${repeats} งาน · ${fK(row.rev_repeat)}` : undefined },
               ]} />
               <div className="flex items-center justify-between text-xs pt-2" style={{ borderTop: '1px solid var(--divider)' }}>
                 <span style={{ color: 'var(--text-2)' }}>ลูกค้าจองแล้ว ยังไม่เปิดงาน</span>
@@ -417,8 +425,10 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                 // and 42 still at จอง. My Deals counts only the 40, which is why
                 // the two pages could never agree.
                 { label: 'งานทั้งหมด', value: row.jobs_total, color: 'var(--text-2)', base: null },
-                { label: 'จอง · ยังไม่เริ่มงาน', value: row.jobs_not_started, color: 'var(--accent-blue)', base: row.jobs_total },
-                { label: 'กำลังดำเนินการ', value: row.jobs_wip, color: 'var(--accent-amber)', base: row.jobs_total },
+                { label: 'จอง · ยังไม่เริ่มงาน', value: row.jobs_not_started, color: 'var(--accent-blue)', base: row.jobs_total,
+                  sub: row.rev_not_started > 0 ? fK(row.rev_not_started) : undefined },
+                { label: 'กำลังดำเนินการ', value: row.jobs_wip, color: 'var(--accent-amber)', base: row.jobs_total,
+                  sub: row.rev_wip > 0 ? fK(row.rev_wip) : undefined },
                 { label: 'ส่งมอบแล้ว', value: row.jobs_delivered, color: 'var(--accent-green)', base: row.jobs_total,
                   sub: row.revenue_delivered > 0 ? fK(row.revenue_delivered) : undefined },
               ]} />
@@ -738,6 +748,10 @@ export default function ProjectSummaryPage() {
          *  "กำลังดำเนินการ" on a project with 40 rooms in production and 42 still
          *  sitting at จอง — a number My Deals could never agree with. */
         wip: number; not_started: number
+        /** Their money, so the delivery bar can show value beside every count. */
+        rev_wip: number; rev_not_started: number
+        /** Value of the repeat orders — jobs beyond the first on a room. */
+        rev_repeat: number
         rev_total: number; rev_del: number
         cash_total: number; cash_del: number
         b2c_rpt: number; b2c_nrpt: number; b2b_rpt: number; b2b_nrpt: number
@@ -763,7 +777,8 @@ export default function ProjectSummaryPage() {
         rooms: Set<string>
       }
       const emptyAgg = (): JobAgg => ({
-        active: 0, delivered: 0, total: 0, wip: 0, not_started: 0, rev_total: 0, rev_del: 0,
+        active: 0, delivered: 0, total: 0, wip: 0, not_started: 0,
+        rev_wip: 0, rev_not_started: 0, rev_repeat: 0, rev_total: 0, rev_del: 0,
         cash_total: 0, cash_del: 0,
         b2c_rpt: 0, b2c_nrpt: 0, b2b_rpt: 0, b2b_nrpt: 0, unknown_wt: 0,
         cancelled: 0, rev_cancelled: 0,
@@ -809,13 +824,19 @@ export default function ProjectSummaryPage() {
           m.active++
           // จอง and a null status both mean the room is sold but nobody has
           // started building; only ดำเนินการ / รอส่งมอบ is work in progress.
-          if (j.working_status === 'ดำเนินการ' || j.working_status === 'รอส่งมอบ') m.wip++
-          else m.not_started++
+          if (j.working_status === 'ดำเนินการ' || j.working_status === 'รอส่งมอบ') { m.wip++; m.rev_wip += rev }
+          else { m.not_started++; m.rev_not_started += rev }
         }
         m.rev_total += rev
         m.cash_total += cash
 
-        if (j.room_no && String(j.room_no).trim()) m.rooms.add(String(j.room_no).trim())
+        // Second and later jobs on a room are the repeat business. Counting the
+        // room before adding it is what tells them apart.
+        if (j.room_no && String(j.room_no).trim()) {
+          const rk = String(j.room_no).trim()
+          if (m.rooms.has(rk)) m.rev_repeat += rev
+          m.rooms.add(rk)
+        }
 
         // ── Sales side ──────────────────────────────────────────────
         // Backlog keys off working_status, not actual_deliver_date, so that
@@ -903,6 +924,7 @@ export default function ProjectSummaryPage() {
           b2b_rpt: j.b2b_rpt, b2b_nrpt: j.b2b_nrpt,
           unknown_wt: j.unknown_wt,
           jobs_active: j.active, jobs_wip: j.wip, jobs_not_started: j.not_started,
+          rev_wip: j.rev_wip, rev_not_started: j.rev_not_started, rev_repeat: j.rev_repeat,
           jobs_delivered: j.delivered, jobs_total: j.total,
           revenue_total: j.rev_total, revenue_delivered: j.rev_del,
           jobs_cancelled: j.cancelled, revenue_cancelled: j.rev_cancelled,

@@ -491,6 +491,12 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
 
   async function loadOrCreateBookedJob() {
     setLoadingBookedJob(true)
+    // Mark the load before doing any of it. The initial value of this flag is
+    // computed when the drawer mounts, so a prospect opened at ใหม่ starts false
+    // and stayed false when the stage moved to จอง — leaving the booked branch
+    // with no job and no loading state, which rendered nothing at all and read
+    // as the whole drawer vanishing the moment the button was pressed.
+    setLoadingBookedJob(true)
     let jobId: string | null = focusJobId || null
     if (!jobId) {
       // Search by customer.id AND by project-room format (jobs may link via either)
@@ -507,9 +513,14 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
     setLoadingBookedJob(false)
   }
 
+  // effectiveStage, not customer.status. The customer record carries one status
+  // for the person, but a repeat order is a second job under the same record —
+  // and that record was already 'booked' from the first job, so moving the new
+  // job to จอง changed nothing this effect was watching and it never fired. The
+  // stage that matters is the job's.
   useEffect(() => {
     if (effectiveStage === 'booked' || focusJobWorkingStatus === 'จอง') { loadOrCreateBookedJob() }
-  }, [customer.id, customer.status]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [customer.id, effectiveStage, focusJobWorkingStatus]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
     setSaving(true)
@@ -585,18 +596,31 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
         )}
       </div>
     )
-    if (loadingBookedJob) return (
+    if (loadingBookedJob || !bookedJob) return (
       <>
         <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-          <div className="text-xs" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</div>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 pt-14 lg:pt-4">
+          <div className="rounded-[18px] px-5 py-4 text-center space-y-2"
+            style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
+            {loadingBookedJob ? (
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
+            ) : (
+              // Never a blank screen: if the job could not be loaded, say so and
+              // leave a way out. Returning null here is what made the drawer
+              // look like it had crashed.
+              <>
+                <p className="text-xs font-semibold" style={{ color: 'var(--accent-orange)' }}>ยังเปิดข้อมูลงานไม่ได้</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>สถานะย้ายเป็นจองแล้ว · ลองปิดแล้วเปิดใหม่อีกครั้ง</p>
+                <button onClick={onClose} className="btn-secondary text-xs px-3 py-1.5">ปิด</button>
+              </>
+            )}
+          </div>
         </div>
       </>
     )
-    if (bookedJob) return (
+    return (
       <DealDrawer job={bookedJob} onClose={onClose} onRefresh={loadOrCreateBookedJob} topSlot={effectiveStage === 'booked' ? stagePills : undefined} />
     )
-    return null
   }
 
   return (

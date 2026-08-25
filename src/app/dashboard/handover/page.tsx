@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, ChevronRight, CheckCircle2, X, Save } from 'lucide-react'
+import { CheckCircle2, X, Save } from 'lucide-react'
 import { PageSpinner } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
+import PeriodPicker from '@/components/ui/PeriodPicker'
+import { getPeriodBounds, UNIT_LABELS, type PeriodUnit } from '@/lib/period'
 import { addDays } from '@/lib/delivery'
 import DateInput from '@/components/ui/DateInput'
-import { baht } from '@/lib/money'
+import { baht, bahtShort } from '@/lib/money'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Job {
@@ -32,32 +34,22 @@ interface RoomEntry {
   revenue: number
   expected_date: string         // YYYY-MM-DD
   actual_date: string | null    // YYYY-MM-DD if delivered
-  display_month: string         // YYYY-MM — month this room appears under
+  /** The date this room is counted under. Delivered rooms use the handover
+   *  date; rooms that are late or have no start date use today, so they follow
+   *  the period that contains today rather than sticking to one month; the rest
+   *  use their expected date. Stored as a date, not a month string, so the same
+   *  field answers month, quarter and year without three sets of rules. */
+  display_date: string          // YYYY-MM-DD
   is_delivered: boolean
   is_overdue: boolean
   days_overdue: number          // 0 if not overdue
   no_start_date: boolean        // true = ไม่มี work_start_date
+  sales_name: string | null
 }
 
 // ─── Helpers ───────────────────────────────────────────────
 const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0)
-const THIS_MONTH = TODAY.toISOString().slice(0, 7)
 
-function monthLabel(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
-  return `${thaiMonths[m - 1]} ${y + 543}`
-}
-
-function prevMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`
-}
-
-function nextMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`
-}
 
 function daysDiff(dateStr: string): number {
   const d = new Date(dateStr); d.setHours(0, 0, 0, 0)
@@ -190,13 +182,11 @@ export default function HandoverPage() {
   const supabase = createClient()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(THIS_MONTH)
+  const [periodUnit, setPeriodUnit] = useState<PeriodUnit>('month')
+  const [periodOffset, setPeriodOffset] = useState(0)
+  const [filterProject, setFilterProject] = useState('')
+  const [filterSales, setFilterSales] = useState('')
   const [editEntry, setEditEntry] = useState<EditState | null>(null)
-
-  useEffect(() => {
-    const m = new URLSearchParams(window.location.search).get('month')
-    if (m) setSelectedMonth(m)
-  }, [])
 
   function openEdit(entry: RoomEntry) {
     const job = jobs.find(j => j.id === entry.id)
@@ -230,27 +220,28 @@ export default function HandoverPage() {
     return jobs.map(j => {
       const no_start_date = !j.work_start_date
       const is_delivered = !!j.actual_deliver_date
-      const actual_month = j.actual_deliver_date?.slice(0, 7) ?? null
 
       // If no work_start_date: can't calculate expected date
       const expected = no_start_date
         ? (j.actual_deliver_date ?? TODAY.toISOString().slice(0, 10))
         : addDays(j.work_start_date!, j.work_days ?? 45)
-      const expected_month = expected.slice(0, 7)
 
       const days_over = (!is_delivered && !no_start_date) ? Math.max(0, daysDiff(expected)) : 0
       const is_overdue = !is_delivered && !no_start_date && expected < TODAY.toISOString().slice(0, 10)
 
       // Which month does this room appear under?
-      let display_month: string
+      const TODAY_ISO = TODAY.toISOString().slice(0, 10)
+      let display_date: string
       if (is_delivered) {
-        display_month = actual_month!
-      } else if (no_start_date) {
-        display_month = THIS_MONTH // no start date → always show in current month
-      } else if (is_overdue) {
-        display_month = THIS_MONTH
+        display_date = j.actual_deliver_date!
+      } else if (no_start_date || is_overdue) {
+        // Neither has a date it belongs to, and both need chasing now, so they
+        // ride with today. Under a month this reproduces the old behaviour
+        // exactly; under a quarter or a year they land in the period containing
+        // today instead of being stranded.
+        display_date = TODAY_ISO
       } else {
-        display_month = expected_month
+        display_date = expected
       }
 
       return {
@@ -261,29 +252,67 @@ export default function HandoverPage() {
         revenue: j.revenue_inc_vat || 0,
         expected_date: expected,
         actual_date: j.actual_deliver_date,
-        display_month,
+        display_date,
         is_delivered,
         is_overdue,
         days_overdue: days_over,
         no_start_date,
+        sales_name: (j.sales as any)?.name || null,
       }
     })
   }, [jobs])
 
-  // Get all available months (sorted desc) for navigation
-  // All months with data, sorted descending
-  const allMonths = useMemo(() => {
-    const set = new Set(entries.map(e => e.display_month))
-    set.add(THIS_MONTH)
-    return Array.from(set).sort((a, b) => b.localeCompare(a))
+  const bounds = useMemo(() => getPeriodBounds(periodUnit, periodOffset), [periodUnit, periodOffset])
+
+  const projectOptions = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const e of entries) m.set(e.project_id, e.project_name)
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], 'th'))
   }, [entries])
+  const salesOptions = useMemo(
+    () => [...new Set(entries.map(e => e.sales_name).filter(Boolean))].sort() as string[],
+    [entries])
 
-  // Jump to nearest available month (skips empty months)
-  const nearestPrev = useMemo(() => allMonths.find(m => m < selectedMonth) ?? null, [allMonths, selectedMonth])
-  const nearestNext = useMemo(() => [...allMonths].reverse().find(m => m > selectedMonth) ?? null, [allMonths, selectedMonth])
+  /** Project and sales filters apply before the period, so the chart below can
+   *  reuse this set and show the same rooms across time that the cards show for
+   *  one period. */
+  const scoped = useMemo(() => entries.filter(e =>
+    (!filterProject || e.project_id === filterProject) &&
+    (!filterSales || e.sales_name === filterSales)), [entries, filterProject, filterSales])
 
-  // Filter to selected month
-  const monthEntries = useMemo(() => entries.filter(e => e.display_month === selectedMonth), [entries, selectedMonth])
+  const monthEntries = useMemo(
+    () => scoped.filter(e => e.display_date >= bounds.start && e.display_date <= bounds.end),
+    [scoped, bounds])
+
+  /** Trend across the periods leading up to the one selected, in the same unit
+   *  the picker is set to — twelve months, eight quarters, or every year that
+   *  has data. Each column is one period of `scoped`, so the chart and the cards
+   *  are always describing the same set of rooms. */
+  const trend = useMemo(() => {
+    const spans = periodUnit === 'year' ? 4 : periodUnit === 'quarter' ? 8 : 12
+    const out: { key: string; label: string; delivered: number; late: number; value: number; current: boolean }[] = []
+    for (let i = spans - 1; i >= 0; i--) {
+      const b = getPeriodBounds(periodUnit, periodOffset - i)
+      const rooms = scoped.filter(e => e.display_date >= b.start && e.display_date <= b.end)
+      out.push({
+        key: b.start,
+        label: periodUnit === 'year' ? b.year : b.name,
+        delivered: rooms.filter(e => e.is_delivered).length,
+        // Not yet handed over and past its date — the bar splits so a rising
+        // column can be read as more work or as more slipping.
+        late: rooms.filter(e => !e.is_delivered && e.is_overdue).length,
+        value: rooms.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0),
+        current: i === 0,
+      })
+    }
+    return out
+  }, [scoped, periodUnit, periodOffset])
+
+  /** Rooms and money are scaled apart on purpose. One quarter holds two rooms
+   *  worth ฿39.58M — a single RPT contract — and a shared scale would flatten
+   *  every other column to nothing. */
+  const trendMaxRooms = Math.max(...trend.map(t => t.delivered + t.late), 1)
+  const trendMaxValue = Math.max(...trend.map(t => t.value), 1)
 
   // Group by project
   const byProject = useMemo(() => {
@@ -304,7 +333,6 @@ export default function HandoverPage() {
   const deliveredValue = monthEntries.filter(e => e.is_delivered).reduce((s, e) => s + e.revenue, 0)
 
   const f = baht
-  const isThisMonth = selectedMonth === THIS_MONTH
 
   if (loading) return <PageSpinner />
 
@@ -326,31 +354,31 @@ export default function HandoverPage() {
           }
         />
 
-        {/* Month navigator — the month IS this page's filter, so it lives in a
-            FilterBar like every other page's controls. The label now uses the
-            same ds-card pill Revenue, Finance and Sales Performance use for
-            their month, instead of a bare bold heading. */}
+        {/* Period + project + sales, in the one FilterBar every other page uses.
+            PeriodPicker is the shared control — same three units, same offset
+            walking, same fixed-width slots — so this page stops having a month
+            stepper of its own design. */}
         <FilterBar className="mb-4">
-          <button onClick={() => nearestPrev && setSelectedMonth(nearestPrev)} disabled={!nearestPrev}
-            aria-label="เดือนก่อนหน้า"
-            className="p-1.5 rounded-[8px] disabled:opacity-30"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-            <ChevronLeft size={16} />
-          </button>
-          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px]" style={{ color: "var(--text-1)", background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-            {monthLabel(selectedMonth)}
-            {isThisMonth && <span className="ml-2 text-xs" style={{ color: 'var(--accent)' }}>▲</span>}
-          </span>
-          <button onClick={() => nearestNext && setSelectedMonth(nearestNext)} disabled={!nearestNext}
-            aria-label="เดือนถัดไป"
-            className="p-1.5 rounded-[8px] disabled:opacity-30"
-            style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-            <ChevronRight size={16} />
-          </button>
-          <button onClick={() => setSelectedMonth(THIS_MONTH)} disabled={isThisMonth}
-            className="btn-util text-xs disabled:opacity-40">
-            ปัจจุบัน
-          </button>
+          <PeriodPicker unit={periodUnit} setUnit={setPeriodUnit}
+            offset={periodOffset} setOffset={setPeriodOffset} />
+          <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
+            className="field-input" style={{ width: 'auto', maxWidth: '12rem' }}>
+            <option value="">ทุกโครงการ</option>
+            {projectOptions.map(([pid, name]) => <option key={pid} value={pid}>{name}</option>)}
+          </select>
+          <select value={filterSales} onChange={e => setFilterSales(e.target.value)}
+            className="field-input" style={{ width: 'auto' }}>
+            <option value="">ทุก Sales</option>
+            {salesOptions.map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+          {(filterProject || filterSales) && (
+            <button onClick={() => { setFilterProject(''); setFilterSales('') }}
+              className="text-xs px-2 py-1.5 rounded-[8px] transition-colors"
+              style={{ color: 'var(--text-3)', background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+              ล้าง
+            </button>
+          )}
+          <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>{monthEntries.length} ห้อง</span>
         </FilterBar>
 
         {/* Summary cards */}
@@ -379,6 +407,75 @@ export default function HandoverPage() {
               <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{noStartRooms} ห้อง</p>
             </div>
           )}
+        </div>
+
+        {/* Trend — same bar-and-tooltip build as the Finance chart, so nothing
+            new has to be learned. Column count follows the picker's unit. */}
+        <div className="ds-card p-5 mt-4">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
+            <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>
+              แนวโน้มการส่งมอบ · {trend.length} {UNIT_LABELS[periodUnit]}ล่าสุด
+            </h2>
+            <div className="flex gap-4 text-xs">
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--chart-1)' }} />ส่งมอบแล้ว
+              </span>
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <span className="w-3 h-2 rounded-sm inline-block" style={{ background: 'var(--accent-red)' }} />หลุดกำหนด
+              </span>
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <span className="w-3 h-0.5 rounded-sm inline-block" style={{ background: 'var(--chart-2)' }} />มูลค่าที่ส่งมอบ
+              </span>
+            </div>
+          </div>
+          {/* Headroom above the bars for the tooltip, which cannot escape the
+              scroller — the same fix the Finance chart needed. */}
+          <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: '196px', paddingTop: '38px' }}>
+            {trend.map(t => {
+              const rooms = t.delivered + t.late
+              return (
+                <div key={t.key} className="flex-shrink-0 flex flex-col items-center gap-0.5 group" style={{ minWidth: '46px' }}>
+                  <div style={{ height: '14px', fontSize: '8px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
+                    {rooms > 0 && <span style={{ color: 'var(--text-2)' }}>{rooms}</span>}
+                  </div>
+                  <div className="w-full relative flex items-end justify-center" style={{ height: '110px' }}>
+                    {/* Stacked rooms: delivered under late, so the column height
+                        is the period's whole workload. */}
+                    <div className="w-full flex flex-col justify-end" style={{ height: '100%' }}>
+                      {t.late > 0 && (
+                        <div className="rounded-t-sm" style={{ height: `${(t.late / trendMaxRooms) * 100}%`, background: 'var(--accent-red)' }} />
+                      )}
+                      {t.delivered > 0 && (
+                        <div style={{ height: `${(t.delivered / trendMaxRooms) * 100}%`, background: 'var(--chart-1)', borderRadius: t.late > 0 ? 0 : '2px 2px 0 0' }} />
+                      )}
+                    </div>
+                    {/* Value marker on its own scale — see trendMaxValue. */}
+                    {t.value > 0 && (
+                      <div className="absolute left-1/2 -translate-x-1/2" style={{
+                        bottom: `${(t.value / trendMaxValue) * 100}%`,
+                        width: '60%', height: '2px', background: 'var(--chart-2)', borderRadius: '2px',
+                      }} />
+                    )}
+                    {rooms > 0 && (
+                      <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-micro whitespace-nowrap px-2 py-1 rounded-[8px] shadow-lg pointer-events-none"
+                        style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)', color: 'var(--text-1)' }}>
+                        <div style={{ color: 'var(--chart-1)' }}>ส่งมอบ {t.delivered} ห้อง</div>
+                        {t.late > 0 && <div style={{ color: 'var(--accent-red)' }}>หลุดกำหนด {t.late} ห้อง</div>}
+                        {t.value > 0 && <div style={{ color: 'var(--chart-2)' }}>{bahtShort(t.value)}</div>}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-micro whitespace-nowrap"
+                    style={{ color: t.current ? 'var(--accent)' : 'var(--text-3)', fontWeight: t.current ? 700 : 400 }}>
+                    {t.label}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+          <p className="text-micro mt-2" style={{ color: 'var(--text-3)' }}>
+            จำนวนห้องกับมูลค่าใช้สเกลคนละชุด — บางช่วงมีห้องน้อยแต่มูลค่าสูงมาก (งาน RPT ก้อนใหญ่) ถ้าใช้สเกลเดียวกันช่วงอื่นจะแบนราบจนอ่านไม่ได้
+          </p>
         </div>
       </div>
 

@@ -2408,6 +2408,41 @@ export default function MyDealsPage() {
         // Three KPI tiles across a phone width — the one place on this page
         // that has to abbreviate. Everything else keeps the full value.
         const fk = bahtShort
+
+        // Filtering to a delivered stage empties activeJobs, and the strip then
+        // reported 0 / ฿0 / ฿0 above a screen full of rooms. Worse on the two
+        // chasing chips: ส่งมอบแล้ว/ค้างรับเงิน means money is owed, and the
+        // ค้างรับ tile read ฿0. When the view is delivered work, the strip
+        // measures delivered work.
+        const deliveredView = filterStage === 'done' || filterStage === 'bill' || filterStage === 'overdue'
+        if (deliveredView) {
+          const doneRev = sumRev(doneJobs), donePaid = sumPaid(doneJobs)
+          const doneDue = Math.max(doneRev - donePaid, 0)
+          const donePct = doneRev > 0 ? Math.round(donePaid / doneRev * 100) : 0
+          const doneOwing = doneJobs.filter(j => j.total_amount - j.paid_amount_total > 1).length
+          return (
+            <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
+              <div className="ds-card-sm text-center">
+                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{doneJobs.length}</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>ห้อง</p>
+              </div>
+              <div className="ds-card-sm text-center">
+                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่าที่ส่งมอบ</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{fk(doneRev)}</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว {donePct}% · {fk(donePaid)}</p>
+              </div>
+              <div className="ds-card-sm text-center">
+                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
+                <p className="text-lg font-bold" style={{ color: doneDue > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(doneDue)}</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>
+                  {doneOwing > 0 ? `${doneOwing} ห้องที่ยังค้าง` : 'เก็บครบทุกห้อง'}
+                </p>
+              </div>
+            </div>
+          )
+        }
+
         return (
           <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">

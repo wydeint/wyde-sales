@@ -211,7 +211,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
 }
 
 // ─── Card expand helper ─────────────────────────────────────
-type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null }
+type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null; work_type?: string | null }
 type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; jobWorkingStatus: string | undefined; jobCrmStage: string | null | undefined; cardKey: string }
 interface BookedJob {
   id: string; customer_name: string; room_no: string; revenue_inc_vat: number
@@ -451,7 +451,11 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
         expectedCustomerId
           ? jobQuery.or(`customer_id.eq.${customer.id},customer_id.eq.${expectedCustomerId}`)
           : jobQuery.eq('customer_id', customer.id),
-        supabase.from('warranties').select('id, warranty_start, warranty_end, warranty_months, status, room')
+        // job_id matters here: a repeat order reuses the customer record, so
+        // fetching by customer alone showed the first job's warranty on the
+        // second job's drawer — a room booked minutes ago appeared to already
+        // carry a warranty from work delivered months earlier.
+        supabase.from('warranties').select('id, warranty_start, warranty_end, warranty_months, status, room, job_id')
           .eq('customer_id', customer.id),
       ])
       if (cancelled) return
@@ -471,7 +475,14 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
       // If a specific job was clicked, show only that job (no cross-job data mixing)
       if (focusJobId) uniqueJobs = uniqueJobs.filter((j: any) => j.id === focusJobId)
       setJobs(uniqueJobs.map((j: any) => ({ ...j, installments: iMap.get(j.id) || [], handover: hMap.get(j.id) || null })))
-      setWarranties((wRaw || []) as DetailWarranty[])
+      // When the drawer is showing one job, show that job's warranty only.
+      // Rows still carrying no job_id are kept: 12 of them belong to customers
+      // with two delivered jobs and cannot be attributed from the data alone,
+      // and hiding a real warranty is worse than showing an unattributed one.
+      const wAll = (wRaw || []) as DetailWarranty[]
+      setWarranties(focusJobId
+        ? wAll.filter(w => !(w as any).job_id || (w as any).job_id === focusJobId)
+        : wAll)
       setLoadingDetail(false)
     }
     load()
@@ -727,7 +738,17 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                     alert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
                     return
                   }
-                  if (s.value === 'booked' && !((customer as any).work_type || '').trim()) {
+                  // Ask the job, not the customer. A repeat order creates a new
+                  // job row carrying its own work type and reuses the existing
+                  // customer record, whose work_type stays as it was — usually
+                  // blank, since it is only written when a customer is created.
+                  // So the second job for a room could never leave ใหม่: the
+                  // guard read a field the repeat flow never touches, and the
+                  // page offers no way to fill it. The job is the right thing to
+                  // ask anyway — one customer can order two different kinds of
+                  // work, and only the job knows which is which.
+                  const workType = (focusJobMeta?.work_type || (customer as any).work_type || '').trim()
+                  if (s.value === 'booked' && !workType) {
                     alert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงานก่อนย้ายสถานะ')
                     return
                   }
@@ -1414,7 +1435,7 @@ export default function ProspectsKanbanPage() {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1506,7 +1527,7 @@ export default function ProspectsKanbanPage() {
     const { data, error } = await supabase.from('customers').insert([{
       id: newId, ...form, project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
       customer_type: form.customer_type || 'B2C', work_type: form.work_type || null,
-    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage)').single()
+    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type)').single()
     if (error) return error.message
     if (data) {
       const crmStage = form.status || 'new'

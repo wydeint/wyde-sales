@@ -50,6 +50,11 @@ const normRoom = (s: string) => s.replace(/-/g, '').toLowerCase()
  *  ฿1.5M and ฿1,600 to ฿2k, which is a lot of precision to lose on a screen
  *  people use to quote customers. */
 const fmtBaht = bahtShort
+
+/** The note moved to the job in the customers/jobs de-duplication. A customer
+ *  can hold several; show the first one that has anything to say. */
+const jobNote = (c: any): string =>
+  ((c.jobs as { notes: string | null }[] | null) || []).find(j => j.notes)?.notes || ''
 const fmtDate = (d: string | null) =>
   d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) : '—'
 
@@ -300,7 +305,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     setLoading(true)
     const { data, error } = await supabase
       .from('customers')
-      .select('id, customer_name, phone, interested_room, status, project_id, notes, created_at')
+      .select('id, customer_name, phone, interested_room, status, project_id, created_at, jobs(notes)')
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,interested_room.ilike.%${q}%`)
       .order('customer_name')
       .limit(12)
@@ -336,7 +341,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 </div>
                 <p className="text-xs" style={t2}>{projectsMap[c.project_id] || '—'} · ห้อง {c.interested_room || '—'}</p>
                 {c.phone && <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}><Phone size={11} strokeWidth={1.75} />{c.phone}</p>}
-                {c.notes && <p className="text-xs mt-1 truncate" style={t3}>{c.notes}</p>}
+                {jobNote(c) && <p className="text-xs mt-1 truncate" style={t3}>{jobNote(c)}</p>}
               </div>
             )
           })}

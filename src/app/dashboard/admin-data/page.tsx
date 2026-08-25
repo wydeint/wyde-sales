@@ -107,9 +107,6 @@ const TABLES: TableDef[] = [
       { key: 'status', label: 'สถานะ', type: 'text', width: 110 },
       { key: 'assigned_to', label: 'มอบหมายให้', type: 'text', width: 120 },
       { key: 'source', label: 'แหล่งที่มา', type: 'text', width: 110 },
-      // customers.work_type has no constraint, but offering the same list keeps
-      // the two tables from drifting apart by hand.
-      { key: 'work_type', label: 'ประเภทงาน', type: 'select', options: [...WORK_TYPES], width: 120 },
       { key: 'customer_type', label: 'ประเภทลูกค้า', type: 'select', options: ['B2C', 'B2B'], width: 110 },
       { key: 'sale_revenue', label: 'มูลค่า', type: 'number', width: 110 },
       { key: 'close_date', label: 'วันปิดงาน', type: 'date', width: 120 },
@@ -490,7 +487,7 @@ function ReconcileCheck() {
       // This screen exists to verify the data is complete, so it must not read a
       // truncated copy of it. payments is already past PostgREST's 1,000-row cap
       // (1,192 rows) and jobs/customers are within a year of crossing it.
-      fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, work_type, interested_room, cancel_type, cancel_amount, cancel_date').order('id')),
+      fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, interested_room').order('id')),
       fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, cancel_type, cancel_amount, cancel_date').order('id')),
       fetchAllRows(() => supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger').order('id')),
     ])

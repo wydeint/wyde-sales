@@ -32,13 +32,15 @@ export interface FieldOwnership {
   /** True when the non-owning copy is empty or meaningless and can be dropped
    *  once no code reads it — the first candidates for removal. */
   legacyIsEmpty?: boolean
+  /** The customers copy is gone. There is one place to read and write it. */
+  droppedFromCustomers?: boolean
 }
 
 export const FIELD_OWNERSHIP: FieldOwnership[] = [
   // ── jobs owns: properties of an order ────────────────────────────────
 
   {
-    field: 'work_type', owner: 'jobs',
+    field: 'work_type', owner: 'jobs', droppedFromCustomers: true,
     why: 'งานคนละใบเป็นคนละประเภทได้ · customers.work_type ว่าง 917 จาก 959',
   },
   {
@@ -54,15 +56,15 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
     why: 'SO ออกต่อใบสั่งงาน', legacyIsEmpty: true,
   },
   {
-    field: 'cancel_type', owner: 'jobs',
+    field: 'cancel_type', owner: 'jobs', droppedFromCustomers: true,
     why: 'ยกเลิกทีละงาน ไม่ใช่ยกเลิกทั้งลูกค้า',
   },
   {
-    field: 'cancel_amount', owner: 'jobs',
+    field: 'cancel_amount', owner: 'jobs', droppedFromCustomers: true,
     why: 'คืนเงิน/ยึดเงิน ผูกกับงานที่ยกเลิก',
   },
   {
-    field: 'cancel_date', owner: 'jobs',
+    field: 'cancel_date', owner: 'jobs', droppedFromCustomers: true,
     why: 'วันที่ยกเลิกของงานใบนั้น',
   },
   {
@@ -87,7 +89,7 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
     why: 'lead ที่กลายมาเป็นงานใบนี้', legacyIsEmpty: true,
   },
   {
-    field: 'notes', owner: 'jobs',
+    field: 'notes', owner: 'jobs', droppedFromCustomers: true,
     why: 'หมายเหตุของงาน — ฝั่งลูกค้ามี 19 แถวที่เป็นหมายเหตุระดับคน ต้องอ่านก่อนลบ',
   },
 
@@ -106,11 +108,16 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
   },
 ]
 
-/** Fields the Reconcile screen compares. Only the ones where a mismatch is a
- *  real defect — customer_name is left out on purpose, since the 21 rows that
- *  differ are deliberate. */
-export const RECONCILE_FIELDS = FIELD_OWNERSHIP
-  .filter(f => f.owner === 'jobs' && !f.legacyIsEmpty && f.field !== 'notes')
+/** Fields the Reconcile screen can still compare — the ones that survive on
+ *  both tables. work_type, cancel_* and notes were dropped from customers on
+ *  2026-08-25, so there is no second copy left to disagree with; room_no and
+ *  customer_type are what remains.
+ *
+ *  customer_name is excluded on purpose: the 21 jobs whose name differs from
+ *  their customer are deliberate (the company that hired us is not the person
+ *  who bought the room). */
+export const RECONCILE_FIELDS = FIELD_OWNERSHIP.filter(f =>
+  f.field === 'room_no' || f.field === 'customer_type')
 
 export function ownerOf(field: string): Owner | null {
   return FIELD_OWNERSHIP.find(f => f.field === field)?.owner ?? null

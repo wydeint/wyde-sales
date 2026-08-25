@@ -97,6 +97,12 @@ const emptyForm = {
 
 const statusInfo = crmStage
 
+/** work_type and notes now live on the job — both columns were dropped from
+ *  customers on 2026-08-25. A customer usually holds one job; take the first
+ *  that carries a value so the drawer and the edit form still show it. */
+const jobField = (c: any, f: 'work_type' | 'notes'): string =>
+  (((c as any)?.jobs as any[]) || []).find(j => j?.[f])?.[f] || ''
+
 function fmt(n: number) {
   return n ? n.toLocaleString('th-TH') : '—'
 }
@@ -246,9 +252,9 @@ function CustomerDetail({
                 <Users size={13} style={{ color: 'var(--text-3)' }} />
                 <span className="text-sm" style={{ color: 'var(--text-2)' }}>{(customer as any).users?.name || '—'}</span>
               </div>
-              {customer.notes && (
+              {jobField(customer, 'notes') && (
                 <div className="col-span-2 text-xs px-3 py-2 rounded-lg" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
-                  {customer.notes}
+                  {jobField(customer, 'notes')}
                 </div>
               )}
             </div>
@@ -523,7 +529,7 @@ export default function CustomersPage() {
       { data: p, error: pErr },
       { data: u, error: uErr },
     ] = await Promise.all([
-      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!assigned_to(name), jobs(revenue_inc_vat, payments(amount, paid_amount, status))').order('customer_name'),
+      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!assigned_to(name), jobs(id, work_type, notes, revenue_inc_vat, payments(amount, paid_amount, status))').order('customer_name'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
@@ -553,14 +559,27 @@ export default function CustomersPage() {
     if (!form.project_id) { setSaveError('กรุณาเลือกโครงการ'); return }
     setSaving(true)
     setSaveError('')
+    // work_type and notes describe the order, so they are written to the job,
+    // not the customer row — the two columns were dropped from customers on
+    // 2026-08-25. Everything else on this form describes the person.
+    const { work_type: formWorkType, notes: formNotes, ...customerFields } = form
     const payload = {
-      ...form,
+      ...customerFields,
       project_id: form.project_id || null,
       assigned_to: form.assigned_to || null,
     }
     if (editing) {
       const { error } = await supabase.from('customers').update(payload).eq('id', editing.id)
       if (error) { setSaveError(error.message); setSaving(false); return }
+      // Push to the job when the customer has exactly one. With several there is
+      // no way to tell which order the note is about, so those are edited on the
+      // job itself from Prospects or Data Entry.
+      const { data: theirJobs } = await supabase.from('jobs').select('id').eq('customer_id', editing.id)
+      if (theirJobs && theirJobs.length === 1) {
+        await supabase.from('jobs')
+          .update({ work_type: formWorkType || null, notes: formNotes || null })
+          .eq('id', (theirJobs[0] as { id: string }).id)
+      }
     } else {
       // ป้องกัน duplicate: ตรวจเบอร์โทรก่อน insert
       if (form.phone) {
@@ -588,7 +607,8 @@ export default function CustomersPage() {
         customerName: String(payload.customer_name || ''),
         projectId: (payload.project_id as string) || null,
         roomNo: (payload.interested_room as string) || null,
-        workType: (payload.work_type as string) || null,
+        workType: formWorkType || null,
+        notes: formNotes || null,
         salesId: (payload.assigned_to as string) || null,
         crmStage: String(payload.status || 'new'),
       })
@@ -770,7 +790,7 @@ export default function CustomersPage() {
                     <div className="flex items-center gap-2">
                       <button onClick={() => {
                         setEditing(c)
-                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: c.notes, customer_type: (c as any).customer_type || 'B2C', work_type: (c as any).work_type || '' })
+                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: jobField(c, 'notes'), customer_type: (c as any).customer_type || 'B2C', work_type: jobField(c, 'work_type') })
                         setOpen(true)
                       }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                         <Pencil size={14} />
@@ -886,9 +906,9 @@ export default function CustomersPage() {
               budget: detailCustomer.budget,
               status: detailCustomer.status,
               assigned_to: detailCustomer.assigned_to,
-              notes: detailCustomer.notes,
+              notes: jobField(detailCustomer, 'notes'),
               customer_type: (detailCustomer as any).customer_type || 'B2C',
-              work_type: (detailCustomer as any).work_type || '',
+              work_type: jobField(detailCustomer, 'work_type'),
             })
             setOpen(true)
           }}

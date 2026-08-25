@@ -415,7 +415,6 @@ export default function LeadsPage() {
       interested_room: room,
       budget: lead.s00_budget || lead.contract_price || 0,
       status: 'new',
-      notes: lead.model_name ? `Model: ${lead.model_name}` : '',
     })
     if (ce) { setAddError(ce.message); setAddingId(null); return }
     // A converted lead is a prospect, and a prospect needs a job — the note this
@@ -428,6 +427,10 @@ export default function LeadsPage() {
       roomNo: room,
       salesId: null,
       crmStage: 'new',
+      // "Model: 1 Bedroom Duo" describes what was ordered, so it belongs to the
+      // job. It used to be written to the customer, where it had no job to
+      // attach to and nothing displayed it.
+      notes: lead.model_name ? `Model: ${lead.model_name}` : null,
     })
     await supabase.from('condo_leads').update({ customer_id: customerId }).eq('id', lead.id)
     setAddingId(null)

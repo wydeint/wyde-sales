@@ -73,6 +73,14 @@ const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
  * customer's own status, and only then to an explicit unknown chip.
  */
 const UNKNOWN_STAGE = { value: '', label: '—', text: 'var(--text-3)', dot: 'var(--text-3)', bg: 'transparent', border: 'var(--divider)', badge: 'var(--hover-bg)', chip: 'var(--hover-bg)' }
+/** Cancellation and the order note live on the job now. A card shows one job,
+ *  the drawer focuses one — but both are handed a customer, so read through to
+ *  the job they are about, falling back to the first when none is in focus. */
+function jobOf(c: any, focusJobId?: string | null): any {
+  const js = ((c?.jobs as any[]) || [])
+  return (focusJobId && js.find(j => j.id === focusJobId)) || js[0] || {}
+}
+
 function resolveStage(...candidates: (string | null | undefined)[]) {
   for (const c of candidates) {
     if (!c) continue
@@ -115,9 +123,11 @@ function CardSkeleton() {
 }
 
 // ─── CustomerCard ───────────────────────────────────────────
-function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: ReturnType<typeof resolveStage>; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
+function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: ReturnType<typeof resolveStage>; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
   const custType = (c as any).customer_type || 'B2C'
-  const workType = (c as any).work_type || ''
+  // The card shows one job, so its own work type — not a customer-level copy,
+  // which no longer exists.
+  const workType = jobOf(c, jobId).work_type || ''
   const prospectCrmStages: string[] = PROSPECT_STAGES
   // multi-job: show this job's revenue; for prospect jobs with no revenue yet, fall back to customer budget
   const displayValue = jobSeqNo != null
@@ -160,10 +170,10 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobWorkin
         ) })()}
         {/* How the cancellation settled — a forfeited booking is money we kept,
             which "หลุด" on its own does not say. */}
-        {(() => { const co = cancelOutcome(c.cancel_type); return co && (
+        {(() => { const cj = jobOf(c, jobId); const co = cancelOutcome(cj.cancel_type); return co && (
           <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: `color-mix(in srgb, ${co.color} 15%, transparent)`, color: co.color, border: `1px solid color-mix(in srgb, ${co.color} 30%, transparent)` }}>
-            {co.label}{c.cancel_amount ? ` ฿${Math.round(c.cancel_amount).toLocaleString('th-TH')}` : ''}
+            {co.label}{cj.cancel_amount ? ` ฿${Math.round(cj.cancel_amount).toLocaleString('th-TH')}` : ''}
           </span>
         ) })()}
       </div>
@@ -772,7 +782,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   // page offers no way to fill it. The job is the right thing to
                   // ask anyway — one customer can order two different kinds of
                   // work, and only the job knows which is which.
-                  const workType = (focusJobMeta?.work_type || (customer as any).work_type || '').trim()
+                  const workType = (focusJobMeta?.work_type || '').trim()
                   if (s.value === 'booked' && !workType) {
                     alert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงานก่อนย้ายสถานะ')
                     return
@@ -877,8 +887,8 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   </span>
                 )}
               </div>
-              {customer.notes && (
-                <div className="p-3 rounded-[8px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{customer.notes}</div>
+              {jobOf(customer, focusJobId).notes && (
+                <div className="p-3 rounded-[8px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>{jobOf(customer, focusJobId).notes}</div>
               )}
             </div>
           )}
@@ -948,12 +958,12 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
 
           {/* Already cancelled — the cancel toggle below is gone once the stage is
               lost, so without this the drawer said nothing about what was settled. */}
-          {(() => { const co = cancelOutcome(customer.cancel_type); return co && (
+          {(() => { const cj = jobOf(customer, focusJobId); const co = cancelOutcome(cj.cancel_type); return co && (
             <div className="rounded-[11px] p-3" style={{ background: `color-mix(in srgb, ${co.color} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${co.color} 25%, transparent)` }}>
               <p className="text-label font-semibold" style={{ color: co.color }}>ยกเลิกสัญญา · {co.label}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
-                {customer.cancel_amount ? `฿${Math.round(customer.cancel_amount).toLocaleString('th-TH')}` : 'ไม่ได้ระบุยอด'}
-                {customer.cancel_date ? ` · ${new Date(customer.cancel_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}` : ''}
+                {cj.cancel_amount ? `฿${Math.round(cj.cancel_amount).toLocaleString('th-TH')}` : 'ไม่ได้ระบุยอด'}
+                {cj.cancel_date ? ` · ${new Date(cj.cancel_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}` : ''}
               </p>
             </div>
           ) })()}
@@ -1010,12 +1020,14 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             // the seven CRM stages, so every cancel written here was silently rejected
             // by the database while the UI optimistically showed it as done. The money
             // outcome is carried by cancel_type/cancel_amount and shown as its own chip.
+            // Only the stage. Cancellation belongs to the job — one order can be
+            // cancelled while another for the same customer goes ahead — and the
+            // job update just below records type, date, amount and notes. The
+            // customer's cancel_* columns were dropped on 2026-08-25, and writing
+            // cancel_notes to a column that no longer exists failed the whole
+            // update, so the cancel button stopped working until this change.
             const { error: cancelErr } = await supabase.from('customers').update({
               status: 'lost',
-              cancel_type: type,
-              cancel_date: date || null,
-              cancel_amount: amount || null,
-              cancel_notes: notes || null,
             }).eq('id', customer.id)
             if (cancelErr) { alert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
             if (focusJobId) {
@@ -1079,7 +1091,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
   // Fetch booking data to pre-fill
   useEffect(() => {
     supabase.from('customers')
-      .select('booking_value,customer_type,work_type,job_type')
+      .select('booking_value,customer_type,job_type')
       .eq('id', customer.id).single()
       .then(({ data }) => {
         if (!data) return
@@ -1453,7 +1465,7 @@ export default function ProspectsKanbanPage() {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, notes, cancel_type, cancel_amount, cancel_date)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1547,7 +1559,7 @@ export default function ProspectsKanbanPage() {
     const { data, error } = await supabase.from('customers').insert([{
       id: newId, ...form, project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
       customer_type: form.customer_type || 'B2C', work_type: form.work_type || null,
-    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, cancel_type, cancel_amount, cancel_date, assigned_to, notes, created_at, customer_type, work_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type)').single()
+    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, notes, cancel_type, cancel_amount, cancel_date)').single()
     if (error) return error.message
     if (data) {
       const crmStage = form.status || 'new'

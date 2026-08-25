@@ -32,6 +32,8 @@ export async function createProspectJob(
     salesId?: string | null
     crmStage: string
     orderDate?: string | null
+    /** Note about the order — owned by the job, never the customer. */
+    notes?: string | null
   },
 ): Promise<string> {
   const { data: allJobIds } = await supabase.from('jobs').select('id').like('id', 'JOB-%')
@@ -59,6 +61,7 @@ export async function createProspectJob(
       crm_stage: args.crmStage,
       working_status: null,
       order_date: args.orderDate ?? null,
+      notes: args.notes ?? null,
     })
     if (!error) return jobId
     if (!error.message.includes('duplicate key')) return ''

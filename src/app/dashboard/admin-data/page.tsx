@@ -8,6 +8,7 @@ import { TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { fetchAllRows } from '@/lib/fetchAll'
+import { RECONCILE_FIELDS } from '@/lib/ownership'
 import { baht } from '@/lib/money'
 
 /** How many rows the table paints at once. Purely a rendering limit — every
@@ -483,13 +484,13 @@ function ReconcileCheck() {
       // This screen exists to verify the data is complete, so it must not read a
       // truncated copy of it. payments is already past PostgREST's 1,000-row cap
       // (1,192 rows) and jobs/customers are within a year of crossing it.
-      fetchAllRows(() => supabase.from('customers').select('id, status').order('id')),
-      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, revenue_inc_vat').order('id')),
+      fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, work_type, interested_room, cancel_type, cancel_amount, cancel_date').order('id')),
+      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, cancel_type, cancel_amount, cancel_date').order('id')),
       fetchAllRows(() => supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger').order('id')),
     ])
 
-    const c = (customers || []) as { id: string; status: string }[]
-    const j = (jobs || []) as { id: string; customer_id: string; working_status: string; revenue_inc_vat: number }[]
+    const c = (customers || []) as Record<string, any>[]
+    const j = (jobs || []) as Record<string, any>[]
     const p = (payments || []) as { id: string; job_id: string; amount: number; paid_amount: number | null; status: string; is_work_trigger: boolean }[]
 
     // Check 1: customers total = all statuses
@@ -521,17 +522,22 @@ function ReconcileCheck() {
       pass: jSum === jTotal,
     }
 
-    // Check 3: jobs ที่ดำเนินการอยู่ต้องมี customers.status='closed'
+    // Check 3: a job that is being built should be at crm_stage 'closed'.
+    //
+    // This used to compare against customers.status. That field holds one value
+    // for a person who can have several jobs, so the moment a repeat order moved
+    // stage it overwrote what the other job was doing — the check would have
+    // started reporting rooms that were perfectly fine. The job's own stage is
+    // the thing that should agree with the job's own working_status.
     const jobsActive = j.filter(x => x.working_status === 'ดำเนินการ')
-    const customerStatusMap = Object.fromEntries(c.map(x => [x.id, x.status]))
-    const mismatchedJobs = jobsActive.filter(x => x.customer_id && customerStatusMap[x.customer_id] !== 'closed')
+    const mismatchedJobs = jobsActive.filter(x => x.crm_stage !== 'closed')
     const check3: CheckItem = {
-      label: 'Sync jobs ↔ customers',
-      desc: 'jobs.working_status=ดำเนินการ ต้องมี customers.status=closed',
+      label: 'Sync สถานะงาน ↔ ขั้น CRM',
+      desc: 'jobs.working_status=ดำเนินการ ต้องมี jobs.crm_stage=closed',
       lhs: { label: 'Jobs ที่ sync แล้ว', value: jobsActive.length - mismatchedJobs.length },
       rhs: { label: 'Jobs ดำเนินการทั้งหมด', value: jobsActive.length },
       pass: mismatchedJobs.length === 0,
-      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ working_status=ดำเนินการ แต่ customer ยังไม่ closed` : undefined,
+      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ทำงานอยู่แต่ขั้น CRM ยังไม่ closed` : undefined,
     }
 
     // Check 4: มูลค่างาน vs ยอดงวดรวม (เฉพาะ jobs ที่ส่งมอบแล้ว หรือ ดำเนินการ)
@@ -570,7 +576,42 @@ function ReconcileCheck() {
       detail: jobsNoTrigger.length > 0 ? `พบ ${jobsNoTrigger.length} jobs ที่ไม่มีงวด trigger ที่จ่ายแล้ว` : undefined,
     }
 
-    setChecks([check1, check2, check3, check4, check5])
+    // Check 6: the same field, stored twice, disagreeing.
+    //
+    // jobs and customers share twenty column names. lib/ownership.ts says which
+    // copy is the real one; this counts the rows where the other copy has
+    // drifted from it. Every mismatch is a page that could answer the same
+    // question two ways depending on which table it happened to read.
+    const custById = new Map(c.map(x => [x.id, x]))
+    const conflicts = RECONCILE_FIELDS.map(f => {
+      const custCol = f.customerColumn ?? f.field
+      const rows = j.filter(job => {
+        const cust = custById.get(job.customer_id)
+        if (!cust) return false
+        const a = job[f.field], b = cust[custCol]
+        if (a === null || a === undefined || a === '') return false
+        if (b === null || b === undefined || b === '') return false
+        // Room numbers are written A-228 in one table and A228 in the other;
+        // that is formatting, not disagreement.
+        const norm = (v: unknown) => String(v).replace(/-/g, '').trim().toLowerCase()
+        return norm(a) !== norm(b)
+      })
+      return { field: f.field, owner: f.owner, n: rows.length }
+    })
+    const totalConflicts = conflicts.reduce((s2, x) => s2 + x.n, 0)
+    const worst = conflicts.filter(x => x.n > 0).sort((a, b) => b.n - a.n)
+    const check6: CheckItem = {
+      label: 'ข้อมูลซ้ำระหว่าง jobs ↔ customers',
+      desc: 'ช่องเดียวกันที่เก็บสองที่ ต้องมีค่าตรงกัน — เจ้าของข้อมูลคือ jobs',
+      lhs: { label: 'ช่องที่ตรงกัน', value: conflicts.length - worst.length },
+      rhs: { label: 'ช่องที่ตรวจทั้งหมด', value: conflicts.length },
+      pass: totalConflicts === 0,
+      detail: worst.length > 0
+        ? worst.map(x => `${x.field} ${fmtN(x.n)} รายการ`).join(' · ')
+        : undefined,
+    }
+
+    setChecks([check1, check2, check3, check4, check5, check6])
     setRan(true)
     setLoading(false)
   }

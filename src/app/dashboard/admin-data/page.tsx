@@ -485,7 +485,7 @@ function ReconcileCheck() {
       // truncated copy of it. payments is already past PostgREST's 1,000-row cap
       // (1,192 rows) and jobs/customers are within a year of crossing it.
       fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, interested_room').order('id')),
-      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, cancel_type, cancel_amount, cancel_date').order('id')),
+      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, payment_plan_type, work_start_date, cancel_type, cancel_amount, cancel_date').order('id')),
       fetchAllRows(() => supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger').order('id')),
     ])
 
@@ -543,37 +543,68 @@ function ReconcileCheck() {
     // Check 4: มูลค่างาน vs ยอดงวดรวม (เฉพาะ jobs ที่ส่งมอบแล้ว หรือ ดำเนินการ)
     const activeJobs = j.filter(x => x.working_status === 'ส่งมอบแล้ว' || x.working_status === 'ดำเนินการ')
     const activeJobIds = new Set(activeJobs.map(x => x.id))
-    const totalJobRevenue = activeJobs.reduce((s, x) => s + (x.revenue_inc_vat || 0), 0)
     const paymentsByJob = p.filter(x => activeJobIds.has(x.job_id))
-    const totalPaymentAmount = paymentsByJob.reduce((s, x) => s + (x.amount || 0), 0)
     // find jobs where sum(payments.amount) != revenue_inc_vat
     const paymentSumByJob: Record<string, number> = {}
     for (const pay of paymentsByJob) {
       paymentSumByJob[pay.job_id] = (paymentSumByJob[pay.job_id] || 0) + (pay.amount || 0)
     }
+    // Two different problems were hiding behind one number, and the guard
+    // `pSum > 0` meant only the smaller one was ever reported. A job with no
+    // instalments at all skipped the comparison entirely — 149 of them, worth
+    // ฿4.4M, and they are most of the gap in the headline sum. Nobody can act on
+    // a single figure that mixes "the plan adds up wrong" with "there is no
+    // plan": the first needs someone to decide which number is right, the second
+    // needs sales to enter one. So they are now two checks.
+    const jobsNoPlan = activeJobs.filter(x => (paymentSumByJob[x.id] || 0) === 0)
     const jobsWithMismatch = activeJobs.filter(x => {
       const pSum = paymentSumByJob[x.id] || 0
       return pSum > 0 && Math.abs(pSum - (x.revenue_inc_vat || 0)) > 1
     })
+    const noPlanValue = jobsNoPlan.reduce((s2, x) => s2 + (x.revenue_inc_vat || 0), 0)
+    const planned = activeJobs.filter(x => (paymentSumByJob[x.id] || 0) > 0)
     const check4: CheckItem = {
+      label: 'งานที่ยังไม่มีแผนงวด',
+      desc: 'ทุก job ที่ดำเนินการ/ส่งมอบแล้ว ต้องมีงวดชำระ',
+      lhs: { label: 'Jobs ที่มีแผนงวด', value: planned.length },
+      rhs: { label: 'Jobs ดำเนินการ/ส่งมอบ', value: activeJobs.length },
+      pass: jobsNoPlan.length === 0,
+      detail: jobsNoPlan.length > 0
+        ? `พบ ${fmtN(jobsNoPlan.length)} jobs ที่ยังไม่มีงวดเลย · มูลค่ารวม ${fmtN(Math.round(noPlanValue))} บ.`
+        : undefined,
+    }
+    // Only jobs that actually have a plan — otherwise the missing ones above
+    // would be counted twice, once as a gap and once as an absence.
+    const plannedRevenue = planned.reduce((s2, x) => s2 + (x.revenue_inc_vat || 0), 0)
+    const plannedPayments = planned.reduce((s2, x) => s2 + (paymentSumByJob[x.id] || 0), 0)
+    const check4b: CheckItem = {
       label: 'มูลค่างาน vs ยอดงวดรวม',
-      desc: 'SUM(jobs.revenue_inc_vat) ≈ SUM(payments.amount) เฉพาะ jobs ที่ดำเนินการ/ส่งมอบแล้ว',
-      lhs: { label: 'SUM(jobs.revenue_inc_vat)', value: totalJobRevenue },
-      rhs: { label: 'SUM(payments.amount)', value: totalPaymentAmount },
-      pass: Math.abs(totalJobRevenue - totalPaymentAmount) < 10,
-      detail: jobsWithMismatch.length > 0 ? `พบ ${jobsWithMismatch.length} jobs ที่ยอดงวดไม่ตรงกับมูลค่างาน` : undefined,
+      desc: 'SUM(jobs.revenue_inc_vat) ≈ SUM(payments.amount) เฉพาะ jobs ที่มีแผนงวดแล้ว',
+      lhs: { label: 'SUM(jobs.revenue_inc_vat)', value: plannedRevenue },
+      rhs: { label: 'SUM(payments.amount)', value: plannedPayments },
+      pass: jobsWithMismatch.length === 0,
+      detail: jobsWithMismatch.length > 0 ? `พบ ${fmtN(jobsWithMismatch.length)} jobs ที่ยอดงวดไม่ตรงกับมูลค่างาน` : undefined,
     }
 
     // Check 5: jobs ดำเนินการ ต้องมี trigger payment ที่ paid
+    // B2B PO / วางบิล is exempt, and always was: receiving the PO is the
+    // contract to do the work, so the job starts — and is often delivered —
+    // before any money arrives, with the single instalment billed afterwards.
+    // Requiring a *paid* trigger of those jobs asked them to prove something the
+    // business deliberately does not do, so 17 live jobs could never pass. What
+    // matters for them is that the PO date was recorded, which is what
+    // work_start_date holds.
+    const isPoBill = (x: Record<string, any>) => x.payment_plan_type === 'po_bill'
     const triggerPaidJobIds = new Set(p.filter(x => x.is_work_trigger && x.status === 'paid').map(x => x.job_id))
-    const jobsNoTrigger = jobsActive.filter(x => !triggerPaidJobIds.has(x.id))
+    const jobsNoTrigger = jobsActive.filter(x =>
+      isPoBill(x) ? !x.work_start_date : !triggerPaidJobIds.has(x.id))
     const check5: CheckItem = {
       label: 'Trigger payment',
-      desc: 'ทุก job ดำเนินการ ต้องมีงวด trigger ที่จ่ายแล้ว',
-      lhs: { label: 'Jobs ที่มี trigger paid', value: jobsActive.length - jobsNoTrigger.length },
+      desc: 'ทุก job ดำเนินการ ต้องมีงวดเริ่มงานที่จ่ายแล้ว — ยกเว้น B2B PO/วางบิล ที่เริ่มงานตอนรับ PO',
+      lhs: { label: 'Jobs ที่เริ่มงานถูกต้อง', value: jobsActive.length - jobsNoTrigger.length },
       rhs: { label: 'Jobs ดำเนินการทั้งหมด', value: jobsActive.length },
       pass: jobsNoTrigger.length === 0,
-      detail: jobsNoTrigger.length > 0 ? `พบ ${jobsNoTrigger.length} jobs ที่ไม่มีงวด trigger ที่จ่ายแล้ว` : undefined,
+      detail: jobsNoTrigger.length > 0 ? `พบ ${fmtN(jobsNoTrigger.length)} jobs ที่ไม่มีงวดเริ่มงานที่จ่ายแล้ว (หรือ PO ที่ยังไม่ระบุวันเริ่มงาน)` : undefined,
     }
 
     // Check 6: the same field, stored twice, disagreeing.
@@ -583,17 +614,42 @@ function ReconcileCheck() {
     // drifted from it. Every mismatch is a page that could answer the same
     // question two ways depending on which table it happened to read.
     const custById = new Map(c.map(x => [x.id, x]))
+    // Room numbers are written A-228 in one table and A228 in the other; that is
+    // formatting, not disagreement.
+    const norm = (v: unknown) => String(v).replace(/-/g, '').trim().toLowerCase()
+    // Every room a customer has a job in. `interested_room` holds one value for
+    // a person who can order for several rooms, so comparing it one-to-one
+    // against each job flagged Origin Phahol 57 — a company with jobs in A608
+    // and B720 — as a conflict, when nothing is wrong. It is a conflict only
+    // when the room the customer is filed under matches *none* of their jobs.
+    // Repeat orders now attach to the existing customer record, so multi-room
+    // customers are about to become normal rather than a curiosity of one row.
+    const roomsByCustomer = new Map<string, Set<string>>()
+    for (const job of j) {
+      if (!job.customer_id || !job.room_no) continue
+      if (!roomsByCustomer.has(job.customer_id)) roomsByCustomer.set(job.customer_id, new Set())
+      roomsByCustomer.get(job.customer_id)!.add(norm(job.room_no))
+    }
     const conflicts = RECONCILE_FIELDS.map(f => {
       const custCol = f.customerColumn ?? f.field
+      if (f.field === 'room_no') {
+        // Counted per customer, not per job — one misfiled room is one problem
+        // however many jobs that customer has.
+        const bad = c.filter(cust => {
+          const room = cust[custCol]
+          if (room === null || room === undefined || room === '') return false
+          const theirRooms = roomsByCustomer.get(cust.id)
+          if (!theirRooms || theirRooms.size === 0) return false
+          return !theirRooms.has(norm(room))
+        })
+        return { field: f.field, owner: f.owner, n: bad.length }
+      }
       const rows = j.filter(job => {
         const cust = custById.get(job.customer_id)
         if (!cust) return false
         const a = job[f.field], b = cust[custCol]
         if (a === null || a === undefined || a === '') return false
         if (b === null || b === undefined || b === '') return false
-        // Room numbers are written A-228 in one table and A228 in the other;
-        // that is formatting, not disagreement.
-        const norm = (v: unknown) => String(v).replace(/-/g, '').trim().toLowerCase()
         return norm(a) !== norm(b)
       })
       return { field: f.field, owner: f.owner, n: rows.length }
@@ -611,7 +667,7 @@ function ReconcileCheck() {
         : undefined,
     }
 
-    setChecks([check1, check2, check3, check4, check5, check6])
+    setChecks([check1, check2, check3, check4, check4b, check5, check6])
     setRan(true)
     setLoading(false)
   }

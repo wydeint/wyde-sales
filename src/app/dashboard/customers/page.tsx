@@ -15,7 +15,7 @@ import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import { createProspectJob } from '@/lib/prospectJob'
-import { showConfirm } from '@/components/ui/dialog'
+import { showAlert, showConfirm } from '@/components/ui/dialog'
 
 interface Customer {
   id: string
@@ -106,6 +106,50 @@ const jobField = (c: any, f: 'work_type' | 'notes'): string =>
 
 function fmt(n: number) {
   return n ? n.toLocaleString('th-TH') : '—'
+}
+
+/**
+ * What this customer has bought from us, counted across every job.
+ *
+ * The page could show a customer's rooms and their money but not the one thing
+ * a register is for — how many times this person has ordered, and where each
+ * order stands. Answering it meant opening customers one at a time; thirty of
+ * them have more than one job.
+ */
+type JobTally = {
+  total: number
+  booked: number
+  working: number
+  delivered: number
+  cancelled: number
+  /** Prospect jobs: opened, but no work booked yet. */
+  prospect: number
+  rooms: string[]
+  revenue: number
+  paid: number
+}
+function tallyJobs(c: any): JobTally {
+  const jobs: any[] = (c?.jobs as any[]) || []
+  const t: JobTally = { total: jobs.length, booked: 0, working: 0, delivered: 0, cancelled: 0, prospect: 0, rooms: [], revenue: 0, paid: 0 }
+  const rooms = new Set<string>()
+  for (const j of jobs) {
+    const ws = j.working_status || ''
+    if (ws === 'ยกเลิก') t.cancelled++
+    else if (ws === 'ส่งมอบแล้ว') t.delivered++
+    else if (ws === 'ดำเนินการ' || ws === 'รอส่งมอบ') t.working++
+    else if (ws === 'จอง') t.booked++
+    // working_status is null until a deal is booked — that is a prospect job,
+    // not an unknown one.
+    else t.prospect++
+    if (j.room_no) rooms.add(String(j.room_no))
+    // Cancelled work is not revenue.
+    if (ws !== 'ยกเลิก') t.revenue += j.revenue_inc_vat || 0
+    t.paid += ((j.payments || []) as any[])
+      .filter(p => p.status === 'paid')
+      .reduce((s, p) => s + (p.paid_amount ?? p.amount ?? 0), 0)
+  }
+  t.rooms = [...rooms]
+  return t
 }
 
 // ── Customer Detail Drawer ──────────────────────────────────────────────────
@@ -266,6 +310,47 @@ function CustomerDetail({
               <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-2" />
               <p className="text-xs">กำลังโหลดข้อมูล...</p>
             </div>
+          )}
+
+          {/* What this customer is worth to us, before the detail of how.
+              The drawer listed every job but never said how many there were or
+              what they came to — the two things you open a customer record for. */}
+          {!loading && jobs.length > 0 && (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>สรุปการซื้อ</p>
+              {(() => {
+                const live = jobs.filter(j => j.working_status !== 'ยกเลิก')
+                const revenue = live.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
+                const paid = jobs.reduce((s, j) => s + j.installments
+                  .filter(i => i.status === 'paid')
+                  .reduce((ps, i) => ps + ((i as any).paid_amount ?? i.amount ?? 0), 0), 0)
+                const delivered = jobs.filter(j => j.working_status === 'ส่งมอบแล้ว').length
+                const cancelled = jobs.length - live.length
+                return (
+                  <div className="ds-card p-4 grid grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>ซื้อทั้งหมด</p>
+                      <p className="text-base font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{jobs.length} งาน</p>
+                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+                        ส่งมอบแล้ว {delivered}{cancelled > 0 ? ` · ยกเลิก ${cancelled}` : ''}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
+                      <p className="text-base font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{fmt(revenue)}</p>
+                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>ไม่รวมงานที่ยกเลิก</p>
+                    </div>
+                    <div>
+                      <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</p>
+                      <p className="text-base font-bold tabular-nums" style={{ color: paid > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>{fmt(paid)}</p>
+                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+                        {revenue > 0 ? `${Math.round((paid / revenue) * 100)}% ของมูลค่า` : '—'}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })()}
+            </section>
           )}
 
           {!loading && (
@@ -518,6 +603,8 @@ export default function CustomersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterRepeat, setFilterRepeat] = useState(false)
+  const [savingTypeId, setSavingTypeId] = useState<string | null>(null)
   const [filterProject, setFilterProject] = useState('')
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null)
   const [page, setPage] = useState(1)
@@ -530,7 +617,7 @@ export default function CustomersPage() {
       { data: p, error: pErr },
       { data: u, error: uErr },
     ] = await Promise.all([
-      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!assigned_to(name), jobs(id, work_type, notes, revenue_inc_vat, payments(amount, paid_amount, status))').order('customer_name'),
+      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!assigned_to(name), jobs(id, work_type, notes, revenue_inc_vat, working_status, room_no, crm_stage, payments(amount, paid_amount, status))').order('customer_name'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
@@ -553,6 +640,21 @@ export default function CustomersPage() {
     }
     const nums = customers.map(c => parseInt(c.id.replace('CST-', ''))).filter(n => !isNaN(n))
     return 'CST-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(4, '0')
+  }
+
+  /** customers owns customer_type; a trigger copies it down to every job. So
+   *  this one write is enough — see lib/ownership.ts. */
+  async function setCustomerType(c: Customer, value: string) {
+    const prev = (c as any).customer_type
+    if (prev === value) return
+    setSavingTypeId(c.id)
+    setCustomers(list => list.map(x => x.id === c.id ? ({ ...x, customer_type: value } as any) : x))
+    const { error } = await supabase.from('customers').update({ customer_type: value }).eq('id', c.id)
+    setSavingTypeId(null)
+    if (error) {
+      setCustomers(list => list.map(x => x.id === c.id ? ({ ...x, customer_type: prev } as any) : x))
+      await showAlert(`เปลี่ยนประเภทลูกค้าไม่สำเร็จ: ${error.message}`)
+    }
   }
 
   async function save() {
@@ -645,12 +747,21 @@ export default function CustomersPage() {
   const baseFiltered = customers.filter(c => {
     const q = search.toLowerCase()
     const qNorm = q.replace(/-/g, '')
-    const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q) || (c.interested_room?.replace(/-/g, '').toLowerCase() || '').includes(qNorm) || (c as any).projects?.name?.toLowerCase().includes(q)
+    // Search the rooms they hold jobs in, not just the one they were filed
+    // under — a repeat buyer's second room was unfindable by room number.
+    const jobRooms = (((c as any).jobs as any[]) || []).map(j => String(j.room_no || '').replace(/-/g, '').toLowerCase())
+    const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q)
+      || (c.interested_room?.replace(/-/g, '').toLowerCase() || '').includes(qNorm)
+      || jobRooms.some(r => r.includes(qNorm))
+      || (c as any).projects?.name?.toLowerCase().includes(q)
     const matchProject = !filterProject || c.project_id === filterProject
     return matchSearch && matchProject
   })
 
-  const filtered = filterStatus ? baseFiltered.filter(c => c.status === filterStatus) : baseFiltered
+  const repeatBuyers = baseFiltered.filter(c => tallyJobs(c).total > 1)
+  const filtered = filterRepeat
+    ? repeatBuyers
+    : filterStatus ? baseFiltered.filter(c => c.status === filterStatus) : baseFiltered
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -688,20 +799,28 @@ export default function CustomersPage() {
 
       {/* Status filter pills */}
       <div className="tab-group mb-4 flex-wrap">
-        <button onClick={() => setFilterStatus('')}
-          className={`tab-btn ${!filterStatus ? 'active' : ''}`}>
+        <button onClick={() => { setFilterStatus(''); setFilterRepeat(false) }}
+          className={`tab-btn ${!filterStatus && !filterRepeat ? 'active' : ''}`}>
           ทั้งหมด {baseFiltered.length}
         </button>
         {STATUS_LIST.map(s => {
           const count = baseFiltered.filter(c => c.status === s.value).length
           if (!count) return null
           return (
-            <button key={s.value} onClick={() => setFilterStatus(filterStatus === s.value ? '' : s.value)}
-              className={`tab-btn ${filterStatus === s.value ? 'active' : ''}`}>
+            <button key={s.value} onClick={() => { setFilterRepeat(false); setFilterStatus(filterStatus === s.value ? '' : s.value) }}
+              className={`tab-btn ${!filterRepeat && filterStatus === s.value ? 'active' : ''}`}>
               {s.label} {count}
             </button>
           )
         })}
+        {/* The register's own question, and the one the CRM stages cannot
+            answer: who has bought from us more than once. */}
+        {repeatBuyers.length > 0 && (
+          <button onClick={() => { setFilterStatus(''); setFilterRepeat(v => !v) }}
+            className={`tab-btn ${filterRepeat ? 'active' : ''}`}>
+            ซื้อซ้ำ {repeatBuyers.length}
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -710,7 +829,9 @@ export default function CustomersPage() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ประเภท</th>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
+              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>งาน</th>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>Sales</th>
               <th scope="col" className="text-right px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>มูลค่า / งบ</th>
@@ -720,10 +841,10 @@ export default function CustomersPage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <TableSpinner colSpan={8} />}
-            {!loading && fetchError && <TableError colSpan={8} message={fetchError} onRetry={load} />}
+            {loading && <TableSpinner colSpan={10} />}
+            {!loading && fetchError && <TableError colSpan={10} message={fetchError} onRetry={load} />}
             {!loading && !fetchError && paginated.length === 0 && (
-              <TableEmpty colSpan={8} icon={Users} message="ไม่พบลูกค้า" sub={search ? 'ลองเปลี่ยนคำค้นหา' : undefined} />
+              <TableEmpty colSpan={10} icon={Users} message="ไม่พบลูกค้า" sub={search ? 'ลองเปลี่ยนคำค้นหา' : undefined} />
             )}
             {paginated.map((c, i) => {
               const st = statusInfo(c.status)
@@ -748,9 +869,63 @@ export default function CustomersPage() {
                       </div>
                     </div>
                   </td>
+                  {/* Editable in place: customer_type is the field most often
+                      found wrong, and it owns the copy every job inherits
+                      through the trigger — so fixing it here fixes it
+                      everywhere, without opening the edit modal. */}
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <select
+                      value={(c as any).customer_type || 'B2C'}
+                      disabled={savingTypeId === c.id}
+                      onChange={e => setCustomerType(c, e.target.value)}
+                      aria-label={`ประเภทลูกค้า ${c.customer_name}`}
+                      className="text-micro font-semibold px-1.5 py-1 rounded-[4px] cursor-pointer disabled:opacity-50"
+                      style={{
+                        background: (c as any).customer_type === 'B2B'
+                          ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)'
+                          : 'color-mix(in srgb, var(--accent-blue) 12%, transparent)',
+                        color: (c as any).customer_type === 'B2B' ? 'var(--accent-amber)' : 'var(--accent-blue)',
+                        border: '1px solid var(--divider)',
+                      }}>
+                      <option value="B2C">B2C</option>
+                      <option value="B2B">B2B</option>
+                    </select>
+                  </td>
                   <td className="px-4 py-3">
                     <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).projects?.name || '-'}</p>
-                    {c.interested_room && <p className="text-xs" style={{ color: 'var(--accent)' }}>ห้อง {c.interested_room}</p>}
+                    {(() => {
+                      // The rooms they actually have jobs in, falling back to the
+                      // room they were filed under. A customer with two orders in
+                      // two rooms was showing only one of them.
+                      const t = tallyJobs(c)
+                      const rooms = t.rooms.length ? t.rooms : (c.interested_room ? [c.interested_room] : [])
+                      if (!rooms.length) return null
+                      return <p className="text-xs" style={{ color: 'var(--accent)' }}>ห้อง {rooms.join(', ')}</p>
+                    })()}
+                  </td>
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const t = tallyJobs(c)
+                      if (!t.total) return <span className="text-xs" style={{ color: 'var(--text-3)' }}>—</span>
+                      const chips: [number, string, string][] = [
+                        [t.prospect, 'Prospect', 'var(--text-3)'],
+                        [t.booked, 'จอง', 'var(--accent-blue)'],
+                        [t.working, 'กำลังทำ', 'var(--accent-amber)'],
+                        [t.delivered, 'ส่งมอบ', 'var(--accent-green)'],
+                        [t.cancelled, 'ยกเลิก', 'var(--accent-red)'],
+                      ]
+                      return (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{t.total}</span>
+                          {chips.filter(([n]) => n > 0).map(([n, label, color]) => (
+                            <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap"
+                              style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
+                              {label} {n}
+                            </span>
+                          ))}
+                        </div>
+                      )
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-sm capitalize" style={{ color: 'var(--text-2)' }}>{c.source || '-'}</td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>

@@ -15,7 +15,7 @@ import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import { createProspectJob } from '@/lib/prospectJob'
-import { showAlert, showConfirm } from '@/components/ui/dialog'
+import { showConfirm } from '@/components/ui/dialog'
 
 interface Customer {
   id: string
@@ -50,6 +50,7 @@ interface DetailJob {
   revenue_inc_vat: number
   voucher: number
   working_status: string
+  customer_name: string
   installments: DetailInstallment[]
   handover: { delivery_date: string | null; work_status: string } | null
 }
@@ -175,7 +176,7 @@ function CustomerDetail({
       const [{ data: jobsRaw }, { data: warrantiesRaw }] = await Promise.all([
         supabase
           .from('jobs')
-          .select('id, po_no, so_no, room_no, work_type, package_type, order_date, revenue_ex_vat, revenue_inc_vat, voucher, working_status')
+          .select('id, po_no, so_no, room_no, work_type, package_type, order_date, revenue_ex_vat, revenue_inc_vat, voucher, working_status, customer_name')
           .eq('customer_id', customer.id)
           .order('order_date', { ascending: false }),
         supabase
@@ -403,6 +404,18 @@ function CustomerDetail({
                               {job.room_no && <span className="font-mono mr-1" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</span>}
                               {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
                             </p>
+                            {/* Eighteen jobs carry a different name from their
+                                customer: the record is the developer who hired
+                                us, the job is the resident of that room. Showing
+                                it is the difference between "this job has no
+                                customer" and "this room belongs to that
+                                company". Not a mismatch to fix — see
+                                lib/ownership.ts on customer_name. */}
+                            {job.customer_name && job.customer_name.trim() !== customer.customer_name.trim() && (
+                              <p className="text-micro mt-0.5" style={{ color: 'var(--text-2)' }}>
+                                ผู้อยู่อาศัย: {job.customer_name}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -604,7 +617,6 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterRepeat, setFilterRepeat] = useState(false)
-  const [savingTypeId, setSavingTypeId] = useState<string | null>(null)
   const [filterProject, setFilterProject] = useState('')
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null)
   const [page, setPage] = useState(1)
@@ -617,7 +629,7 @@ export default function CustomersPage() {
       { data: p, error: pErr },
       { data: u, error: uErr },
     ] = await Promise.all([
-      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!assigned_to(name), jobs(id, work_type, notes, revenue_inc_vat, working_status, room_no, crm_stage, payments(amount, paid_amount, status))').order('customer_name'),
+      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!assigned_to(name), jobs(id, work_type, notes, revenue_inc_vat, working_status, room_no, crm_stage, customer_name, payments(amount, paid_amount, status))').order('customer_name'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
@@ -640,21 +652,6 @@ export default function CustomersPage() {
     }
     const nums = customers.map(c => parseInt(c.id.replace('CST-', ''))).filter(n => !isNaN(n))
     return 'CST-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(4, '0')
-  }
-
-  /** customers owns customer_type; a trigger copies it down to every job. So
-   *  this one write is enough — see lib/ownership.ts. */
-  async function setCustomerType(c: Customer, value: string) {
-    const prev = (c as any).customer_type
-    if (prev === value) return
-    setSavingTypeId(c.id)
-    setCustomers(list => list.map(x => x.id === c.id ? ({ ...x, customer_type: value } as any) : x))
-    const { error } = await supabase.from('customers').update({ customer_type: value }).eq('id', c.id)
-    setSavingTypeId(null)
-    if (error) {
-      setCustomers(list => list.map(x => x.id === c.id ? ({ ...x, customer_type: prev } as any) : x))
-      await showAlert(`เปลี่ยนประเภทลูกค้าไม่สำเร็จ: ${error.message}`)
-    }
   }
 
   async function save() {
@@ -750,9 +747,15 @@ export default function CustomersPage() {
     // Search the rooms they hold jobs in, not just the one they were filed
     // under — a repeat buyer's second room was unfindable by room number.
     const jobRooms = (((c as any).jobs as any[]) || []).map(j => String(j.room_no || '').replace(/-/g, '').toLowerCase())
+    // Also the name written on the job. On eighteen jobs that is the resident,
+    // while the customer record is the developer who hired us — Origin Place
+    // Samut Prakan holds fourteen rooms under one company. Searching the
+    // resident's name found nothing, which reads as "this job has no customer".
+    const jobNames = (((c as any).jobs as any[]) || []).map(j => String(j.customer_name || '').toLowerCase())
     const matchSearch = !q || c.customer_name.toLowerCase().includes(q) || c.phone?.includes(q)
       || (c.interested_room?.replace(/-/g, '').toLowerCase() || '').includes(qNorm)
       || jobRooms.some(r => r.includes(qNorm))
+      || jobNames.some(n => n.includes(q))
       || (c as any).projects?.name?.toLowerCase().includes(q)
     const matchProject = !filterProject || c.project_id === filterProject
     return matchSearch && matchProject
@@ -869,27 +872,19 @@ export default function CustomersPage() {
                       </div>
                     </div>
                   </td>
-                  {/* Editable in place: customer_type is the field most often
-                      found wrong, and it owns the copy every job inherits
-                      through the trigger — so fixing it here fixes it
-                      everywhere, without opening the edit modal. */}
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <select
-                      value={(c as any).customer_type || 'B2C'}
-                      disabled={savingTypeId === c.id}
-                      onChange={e => setCustomerType(c, e.target.value)}
-                      aria-label={`ประเภทลูกค้า ${c.customer_name}`}
-                      className="text-micro font-semibold px-1.5 py-1 rounded-[4px] cursor-pointer disabled:opacity-50"
+                  {/* Read-only. The row already opens the record and the edit
+                      button is right there, so a control here only adds a way to
+                      change a customer by mis-clicking while scanning the list. */}
+                  <td className="px-4 py-3">
+                    <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px]"
                       style={{
                         background: (c as any).customer_type === 'B2B'
                           ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)'
                           : 'color-mix(in srgb, var(--accent-blue) 12%, transparent)',
                         color: (c as any).customer_type === 'B2B' ? 'var(--accent-amber)' : 'var(--accent-blue)',
-                        border: '1px solid var(--divider)',
                       }}>
-                      <option value="B2C">B2C</option>
-                      <option value="B2B">B2B</option>
-                    </select>
+                      {(c as any).customer_type || 'B2C'}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).projects?.name || '-'}</p>
@@ -914,15 +909,21 @@ export default function CustomersPage() {
                         [t.delivered, 'ส่งมอบ', 'var(--accent-green)'],
                         [t.cancelled, 'ยกเลิก', 'var(--accent-red)'],
                       ]
+                      // Number on its own line, chips always beneath it. Letting
+                      // them wrap put the first chip beside the number and the
+                      // rest below, so the column read differently row by row
+                      // depending on how many states a customer happened to have.
                       return (
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex flex-col gap-1 items-start">
                           <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{t.total}</span>
-                          {chips.filter(([n]) => n > 0).map(([n, label, color]) => (
-                            <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap"
-                              style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
-                              {label} {n}
-                            </span>
-                          ))}
+                          <div className="flex gap-1 flex-wrap">
+                            {chips.filter(([n]) => n > 0).map(([n, label, color]) => (
+                              <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap"
+                                style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
+                                {label} {n}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )
                     })()}

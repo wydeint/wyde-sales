@@ -539,9 +539,15 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
       customer_name: form.customer_name, phone: form.phone, email: form.email,
       line_id: form.line_id, source: form.source, project_id: form.project_id || null,
       interested_room: form.interested_room, budget: form.budget || 0,
-      status: form.status, assigned_to: form.assigned_to || null, notes: form.notes,
+      status: form.status, assigned_to: form.assigned_to || null,
     }
     const { error } = await supabase.from('customers').update(payload).eq('id', customer.id)
+    // notes moved to jobs in the step-3 column drop — the customers copy is gone,
+    // and writing it here made every save fail with "Could not find the 'notes'
+    // column". See lib/ownership.ts.
+    if (!error && focusJobId) {
+      await supabase.from('jobs').update({ notes: form.notes || null }).eq('id', focusJobId)
+    }
     if (!error) onUpdate({ ...customer, ...form } as Customer)
     setSaving(false)
     setEditing(false)
@@ -1454,10 +1460,11 @@ export default function ProspectsKanbanPage() {
 
   // Thin wrapper over the shared helper — the page's callers pass positional
   // args and today's date, which is what a prospect opened here means.
-  async function createProspectJob(customerId: string, custName: string, projectId: string | null, roomNo: string | null, custType: string, workType: string | null, salesId: string | null, crmStage: string): Promise<string> {
+  async function createProspectJob(customerId: string, custName: string, projectId: string | null, roomNo: string | null, custType: string, workType: string | null, salesId: string | null, crmStage: string, notes?: string | null): Promise<string> {
     return createProspectJobShared(supabase, {
       customerId, customerName: custName, projectId, roomNo,
       customerType: custType, workType, salesId, crmStage, orderDate: todayStr(),
+      notes: notes || null,
     })
   }
 
@@ -1556,14 +1563,23 @@ export default function ProspectsKanbanPage() {
       newId = 'CST-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(4, '0')
     }
 
+    // `notes` and `work_type` were dropped from customers in the step-3 column
+    // clean-up: they describe an order, not a person, so they live on the job.
+    // Spreading the whole form put them back into the insert and PostgREST
+    // rejected it — no prospect could be created at all. Note they have to be
+    // *deleted*, not set to undefined: supabase-js builds the `columns` query
+    // param from Object.keys, which still lists a key whose value is undefined.
+    // See lib/ownership.ts.
+    const { notes: _formNotes, work_type: _formWorkType, ...customerFields } = form
     const { data, error } = await supabase.from('customers').insert([{
-      id: newId, ...form, project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
-      customer_type: form.customer_type || 'B2C', work_type: form.work_type || null,
+      id: newId, ...customerFields,
+      project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
+      customer_type: form.customer_type || 'B2C',
     }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, notes, cancel_type, cancel_amount, cancel_date)').single()
     if (error) return error.message
     if (data) {
       const crmStage = form.status || 'new'
-      const jobId = await createProspectJob(newId, form.customer_name, form.project_id || null, form.interested_room || null, form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null, crmStage)
+      const jobId = await createProspectJob(newId, form.customer_name, form.project_id || null, form.interested_room || null, form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null, crmStage, form.notes)
       const customerWithJob = { ...data, jobs: jobId ? [{ id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: crmStage }] : [] }
       setCustomers(prev => [customerWithJob as any, ...prev])
       setActiveStage(crmStage)

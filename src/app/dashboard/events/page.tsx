@@ -352,7 +352,9 @@ export default function EventsPage() {
         revenue_ex_vat: exVat,
         revenue_inc_vat: incVat,
         order_date: c.booked_date || null,
-        working_status: 'ดำเนินการ',
+        // Same rule as everywhere else that opens a job: the CRM stage moves
+        // with the working status, or the job belongs to no column on Prospects.
+        working_status: 'ดำเนินการ', crm_stage: 'closed',
       })
     }
 

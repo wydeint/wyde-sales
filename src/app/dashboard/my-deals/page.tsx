@@ -1938,13 +1938,23 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         <CancelModal
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
-            await supabase.from('jobs').update({
+            // The third copy of this cancel. The other two — Prospects and
+            // JobDrawer — both move the stage and the customer with it; this one
+            // changed only working_status, so a deal cancelled from My Deals
+            // stayed wherever it was on the Prospect board. Same omission, found
+            // by auditing every writer instead of the one that was reported.
+            const { error: cancelErr } = await supabase.from('jobs').update({
               working_status: 'ยกเลิก',
+              crm_stage: 'lost',
               cancel_type: type,
               cancel_date: date || null,
               cancel_amount: amount || null,
               cancel_notes: notes || null,
             }).eq('id', job.id)
+            if (cancelErr) { await showAlert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
+            if (job.customer_id) {
+              await supabase.from('customers').update({ status: 'lost' }).eq('id', job.customer_id)
+            }
             if (amount > 0) {
               await supabase.from('finance_entries').insert({
                 type: type === 'forfeit' ? 'income' : 'expense',

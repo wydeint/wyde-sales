@@ -1194,7 +1194,10 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
       customer_name: customer.customer_name, customer_type: custType,
       work_type: workType, package_type: pkgType || null, order_date: orderDate,
       revenue_inc_vat: revenue, revenue_ex_vat: revenueEx,
-      transfer_amount: revenue, working_status: 'ดำเนินการ',
+      // The customer below is set to closed; the job has to say so too, or the
+      // two disagree about the same deal and Prospects, which groups by
+      // crm_stage, loses the card.
+      transfer_amount: revenue, working_status: 'ดำเนินการ', crm_stage: 'closed',
       accounting_status: 'Reserved', sales_id: salesId || null,
     })
 

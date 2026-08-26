@@ -73,6 +73,7 @@ type Job = {
   voucher: number
   cost: number
   working_status: string
+  crm_stage: string
   room_status: string
   expected_finish_date: string
   actual_deliver_date: string
@@ -277,6 +278,9 @@ function SectionDivider({ label, color }: { label: string; color: string }) {
 const emptyJob = (): Partial<Job> => ({
   customer_type: 'B2C',
   working_status: 'ดำเนินการ',
+  // Carried into the insert further down, which spreads this form. Without it a
+  // job added here opens with no CRM stage.
+  crm_stage: 'closed',
   commission_status: 'pending',
   revenue_ex_vat: 0,
   revenue_inc_vat: 0,
@@ -358,7 +362,11 @@ function AddJobModal({
       customer_name: customerName.trim(), customer_type: custType,
       work_type: workType, package_type: pkgType || null, order_date: orderDate,
       revenue_inc_vat: revenue || null, revenue_ex_vat: revenueEx || null,
-      working_status: 'ดำเนินการ', accounting_status: 'Reserved', sales_id: salesId || null,
+      // crm_stage travels with working_status. Prospects groups by the stage, so
+      // a job that opens straight into ดำเนินการ without one sits in no column at
+      // all — the same omission that left ten booked jobs with a null stage.
+      working_status: 'ดำเนินการ', crm_stage: 'closed',
+      accounting_status: 'Reserved', sales_id: salesId || null,
     })
 
     if (jobErr) { setError('เกิดข้อผิดพลาด: ' + jobErr.message); setSaving(false); return }

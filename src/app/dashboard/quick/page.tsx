@@ -1058,7 +1058,8 @@ function DeliverSheet({ open, onClose, jobs }: {
         delivery_file_url: fileUrl || null,
       })
     }
-    await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว' }).eq('id', selectedJob.id)
+    // The fourth handover path, and the last one that was not closing the stage.
+    await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว', crm_stage: 'closed' }).eq('id', selectedJob.id)
     setSaving(false)
     resetAndClose()
     await showAlert('บันทึกส่งมอบเรียบร้อย ✅')

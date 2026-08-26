@@ -529,6 +529,9 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
     const { error: e1 } = await supabase.from('jobs').update({
       actual_deliver_date: deliverDate,
       working_status: 'ส่งมอบแล้ว',
+      // The other two handover paths close the stage; this one did not, so a job
+      // delivered from the single-job page kept whatever stage it had.
+      crm_stage: 'closed',
     }).eq('id', job.id)
     if (e1) { const msg = 'บันทึกไม่สำเร็จ: ' + e1.message; setError(msg); onError?.(msg); setSaving(false); return }
 

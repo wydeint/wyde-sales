@@ -19,6 +19,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import DateInput from '@/components/ui/DateInput'
 import { bahtShort } from '@/lib/money'
 import { createProspectJob as createProspectJobShared } from '@/lib/prospectJob'
+import { appUserId } from '@/lib/currentUser'
 
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
@@ -436,7 +437,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   const effectiveStage = focusJobMeta?.crm_stage || focusJobCrmStage || customer.status
   const stage = focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : resolveStage(effectiveStage, customer.status)
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ ...customer })
+  // notes lives on the job now, so it has to be seeded from the job — spreading
+  // the customer alone leaves the field undefined, and saving an untouched form
+  // would then blank the note the job already had.
+  const [form, setForm] = useState({ ...customer, notes: jobOf(customer, focusJobId).notes || '' })
   const [saving, setSaving] = useState(false)
   const [jobs, setJobs] = useState<DetailJob[]>([])
   const [warranties, setWarranties] = useState<DetailWarranty[]>([])
@@ -1021,7 +1025,6 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
         <CancelModal
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
-            const { data: { session } } = await supabase.auth.getSession()
             // 'lost', not 'cancelled': customers.status has a CHECK constraint listing
             // the seven CRM stages, so every cancel written here was silently rejected
             // by the database while the UI optimistically showed it as done. The money
@@ -1057,7 +1060,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 // and a finance row that sometimes holds one and sometimes the other
                 // cannot be traced back reliably.
                 ref_id: focusJobId || customer.id,
-                created_by: session?.user?.id || null,
+                created_by: await appUserId(supabase),
               })
               if (finErr) alert(`ยกเลิกแล้ว แต่บันทึกรายการเงินไม่สำเร็จ: ${finErr.message}`)
             }

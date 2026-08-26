@@ -13,6 +13,7 @@ import { expectedDeliveryDate, fmtShortDate, type DeliveryJobCtx } from '@/lib/d
 import { generateLineMsg } from '@/lib/lineMessage'
 import DateInput from '@/components/ui/DateInput'
 import { baht } from '@/lib/money'
+import { appUserId } from '@/lib/currentUser'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -1572,23 +1573,33 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
         <JobCancelModal
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
-            const { data: { session } } = await supabase.auth.getSession()
-            await supabase.from('jobs').update({
-              working_status: 'ยกเลิก',
+            // Cancelling is a stage move as much as a money one. Leaving
+            // crm_stage and the customer where they were left a cancelled job
+            // still sitting in the จอง column of Prospects; the pipeline page's
+            // own cancel already moved both, and only booked jobs came through
+            // here, so exactly the deals with money on them were the ones left
+            // in the wrong place.
+            const { error: jobErr } = await supabase.from('jobs').update({
+              working_status: 'ยกเลิก', crm_stage: 'lost',
               cancel_type: type, cancel_date: date || null,
               cancel_amount: amount || null, cancel_notes: notes || null,
             }).eq('id', job.id)
+            if (jobErr) { alert(`บันทึกการยกเลิกไม่สำเร็จ: ${jobErr.message}`); return }
+            await supabase.from('customers').update({ status: 'lost' }).eq('id', job.customer_id)
             // Refund only — a forfeited deposit is money already received and
             // already in รายรับ; booking it again as income double-counted it.
             if (type === 'refund' && amount > 0) {
-              await supabase.from('finance_entries').insert({
+              const { error: finErr } = await supabase.from('finance_entries').insert({
                 type: 'expense',
                 category: 'คืนเงินยกเลิก',
                 amount, entry_date: date,
                 description: `คืนเงินยกเลิก: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
                 ref_id: job.id,
-                created_by: session?.user?.id || null,
+                created_by: await appUserId(supabase),
               })
+              // Say so. This insert failed silently before, and a refund that
+              // never reached Finance is money the books do not know left.
+              if (finErr) alert(`ยกเลิกแล้ว แต่บันทึกรายการคืนเงินไม่สำเร็จ: ${finErr.message}`)
             }
             setShowCancel(false); onClose(); onRefresh()
           }}

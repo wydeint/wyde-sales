@@ -18,6 +18,7 @@ import { generateLineMsg, type LineJob } from '@/lib/lineMessage'
 import { isAwaitingCollection, isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
 import DateInput from '@/components/ui/DateInput'
 import { baht, bahtShort } from '@/lib/money'
+import { appUserId } from '@/lib/currentUser'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -1935,7 +1936,6 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         <CancelModal
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
-            const { data: { session } } = await supabase.auth.getSession()
             await supabase.from('jobs').update({
               working_status: 'ยกเลิก',
               cancel_type: type,
@@ -1951,7 +1951,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                 entry_date: date,
                 description: `${type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงิน'}: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
                 ref_id: job.id,
-                created_by: session?.user?.id || null,
+                created_by: await appUserId(supabase),
               })
             }
             setShowCancel(false)

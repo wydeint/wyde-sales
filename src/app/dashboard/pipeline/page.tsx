@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Plus, X, Phone, Mail, MessageCircle, Building2, Home,
@@ -421,7 +421,20 @@ async function createBookedJob(customer: Customer, supabase: ReturnType<typeof c
     revenue_inc_vat: revInc,
     revenue_ex_vat: revInc ? Math.round(revInc / 1.07) : 0,
     working_status: 'จอง',
-    order_date: customer.created_at ? customer.created_at.slice(0, 10) : null,
+    // crm_stage has to be set with it. Ten jobs opened through here carried a
+    // null stage while their working_status said จอง, and every other booked
+    // job in the database says 'booked' — the Prospect board only placed them
+    // correctly because it falls back to working_status.
+    crm_stage: 'booked',
+    // Not the customer's created_at. That is the day somebody typed the record
+    // in, which for back-filled bookings is months after the sale: the ten jobs
+    // opened this way all read 2 July 2026 because that is when the customer
+    // list was imported, while three of them were booked the previous November.
+    // A wrong sale date is worse than none — it silently moves revenue into the
+    // wrong month on Sales Performance, Revenue and Targets. Left null, the
+    // drawer shows วันรับจอง blank for someone to fill, and recording the first
+    // instalment sets it to the payment date, which is the booking date.
+    order_date: null,
     work_start_date: null,
     sales_id: customer.assigned_to || null,
   }
@@ -470,6 +483,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   const [docsExpanded, setDocsExpanded] = useState<Record<string, boolean>>({})
   const [bookedJob, setBookedJob] = useState<FullJob | null>(null)
   const [loadingBookedJob, setLoadingBookedJob] = useState(effectiveStage === 'booked' || focusJobWorkingStatus === 'จอง')
+  const creatingBookedJob = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -524,6 +538,22 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   }, [customer.id])
 
   async function loadOrCreateBookedJob() {
+    // One run at a time, guarded by a ref rather than the loading state.
+    // setLoadingBookedJob does not take effect until the next render, so two
+    // invocations in the same tick — which is exactly what React does to effects
+    // in development — both saw `false`, both found no job, and both inserted
+    // one. Opening a single booked customer produced two identical empty jobs.
+    // A ref updates synchronously, so the second call turns back here.
+    if (creatingBookedJob.current) return
+    creatingBookedJob.current = true
+    try {
+      await runLoadOrCreateBookedJob()
+    } finally {
+      creatingBookedJob.current = false
+    }
+  }
+
+  async function runLoadOrCreateBookedJob() {
     setLoadingBookedJob(true)
     // Mark the load before doing any of it. The initial value of this flag is
     // computed when the drawer mounts, so a prospect opened at ใหม่ starts false

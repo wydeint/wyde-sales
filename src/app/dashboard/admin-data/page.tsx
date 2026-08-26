@@ -541,51 +541,23 @@ function ReconcileCheck() {
       detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ทำงานอยู่แต่ขั้น CRM ยังไม่ closed` : undefined,
     }
 
-    // Check 4: มูลค่างาน vs ยอดงวดรวม (เฉพาะ jobs ที่ส่งมอบแล้ว หรือ ดำเนินการ)
-    const activeJobs = j.filter(x => x.working_status === 'ส่งมอบแล้ว' || x.working_status === 'ดำเนินการ')
-    const activeJobIds = new Set(activeJobs.map(x => x.id))
-    const paymentsByJob = p.filter(x => activeJobIds.has(x.job_id))
-    // find jobs where sum(payments.amount) != revenue_inc_vat
-    const paymentSumByJob: Record<string, number> = {}
-    for (const pay of paymentsByJob) {
-      paymentSumByJob[pay.job_id] = (paymentSumByJob[pay.job_id] || 0) + (pay.amount || 0)
-    }
-    // Two different problems were hiding behind one number, and the guard
-    // `pSum > 0` meant only the smaller one was ever reported. A job with no
-    // instalments at all skipped the comparison entirely — 149 of them, worth
-    // ฿4.4M, and they are most of the gap in the headline sum. Nobody can act on
-    // a single figure that mixes "the plan adds up wrong" with "there is no
-    // plan": the first needs someone to decide which number is right, the second
-    // needs sales to enter one. So they are now two checks.
-    const jobsNoPlan = activeJobs.filter(x => (paymentSumByJob[x.id] || 0) === 0)
-    const jobsWithMismatch = activeJobs.filter(x => {
-      const pSum = paymentSumByJob[x.id] || 0
-      return pSum > 0 && Math.abs(pSum - (x.revenue_inc_vat || 0)) > 1
-    })
-    const noPlanValue = jobsNoPlan.reduce((s2, x) => s2 + (x.revenue_inc_vat || 0), 0)
-    const planned = activeJobs.filter(x => (paymentSumByJob[x.id] || 0) > 0)
-    const check4: CheckItem = {
-      label: 'งานที่ยังไม่มีแผนงวด',
-      desc: 'ทุก job ที่ดำเนินการ/ส่งมอบแล้ว ต้องมีงวดชำระ',
-      lhs: { label: 'Jobs ที่มีแผนงวด', value: planned.length },
-      rhs: { label: 'Jobs ดำเนินการ/ส่งมอบ', value: activeJobs.length },
-      pass: jobsNoPlan.length === 0,
-      detail: jobsNoPlan.length > 0
-        ? `พบ ${fmtN(jobsNoPlan.length)} jobs ที่ยังไม่มีงวดเลย · มูลค่ารวม ${fmtN(Math.round(noPlanValue))} บ.`
-        : undefined,
-    }
-    // Only jobs that actually have a plan — otherwise the missing ones above
-    // would be counted twice, once as a gap and once as an absence.
-    const plannedRevenue = planned.reduce((s2, x) => s2 + (x.revenue_inc_vat || 0), 0)
-    const plannedPayments = planned.reduce((s2, x) => s2 + (paymentSumByJob[x.id] || 0), 0)
-    const check4b: CheckItem = {
-      label: 'มูลค่างาน vs ยอดงวดรวม',
-      desc: 'SUM(jobs.revenue_inc_vat) ≈ SUM(payments.amount) เฉพาะ jobs ที่มีแผนงวดแล้ว',
-      lhs: { label: 'SUM(jobs.revenue_inc_vat)', value: plannedRevenue },
-      rhs: { label: 'SUM(payments.amount)', value: plannedPayments },
-      pass: jobsWithMismatch.length === 0,
-      detail: jobsWithMismatch.length > 0 ? `พบ ${fmtN(jobsWithMismatch.length)} jobs ที่ยอดงวดไม่ตรงกับมูลค่างาน` : undefined,
-    }
+    // "มูลค่างาน vs ยอดงวดรวม" used to live here and has been removed.
+    //
+    // It asked whether a job's instalment face values add up to its value, and
+    // that question has no right answer in this business: customers pay amounts
+    // that differ from the instalment, and older jobs were split into schedules
+    // this app cannot represent. So it failed 53 jobs of which 13 had already
+    // been paid in full — thirteen warnings about nothing. A check that cries
+    // wolf teaches people to ignore it, and then takes the real problems down
+    // with it.
+    //
+    // What it was groping at splits into two questions that already have better
+    // homes. "Delivered but not collected" is the Payments screen, which shows
+    // it per job with project and sales filters and the instalments one click
+    // away — a total on this screen only tells you a number you cannot act on.
+    // "The plan does not cover the job value" is a real blind spot, because a
+    // page that lists instalments cannot show one that was never created; that
+    // list was handed over to be worked through by hand.
 
     // Check 5: jobs ดำเนินการ ต้องมี trigger payment ที่ paid
     // B2B PO / วางบิล is exempt, and always was: receiving the PO is the
@@ -697,7 +669,7 @@ function ReconcileCheck() {
         : undefined,
     }
 
-    setChecks([check1, check2, check3, check4, check4b, check5, check6, check7])
+    setChecks([check1, check2, check3, check5, check6, check7])
     setRan(true)
     setLoading(false)
   }

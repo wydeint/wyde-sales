@@ -20,6 +20,7 @@ import DateInput from '@/components/ui/DateInput'
 import { baht, bahtShort } from '@/lib/money'
 import { appUserId } from '@/lib/currentUser'
 import { showAlert, showConfirm } from '@/components/ui/dialog'
+import { netReceived } from '@/lib/voucher'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -308,7 +309,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       amount: p.amount,
       status: isSingleB2B ? 'pending' : (i === 0 ? 'paid' : 'pending'),
       paid_date: isSingleB2B ? null : (i === 0 ? paidDate : null),
-      paid_amount: isSingleB2B ? null : (i === 0 ? (firstPaidAmount || p.amount) : null),
+      paid_amount: isSingleB2B ? null : (i === 0 ? netReceived(firstPaidAmount || p.amount, useVoucher ? voucherAmount : 0) : null),
       channel: isSingleB2B ? null : (i === 0 ? (channel || null) : null),
       is_work_trigger: p.trigger,
       is_final: p.final,
@@ -607,7 +608,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
     await supabase.from('payments').update({
       status: 'paid',
       paid_date: paidDate,
-      paid_amount: useVoucher ? netAmount : paidAmount,
+      paid_amount: netReceived(paidAmount, useVoucher ? voucherAmount : 0),
       channel: channel || null,
       slip_url: slipUrl.trim() || (slipPosted ? 'posted' : null),
       receipt_url: receiptUrl.trim() || (receiptPosted ? 'posted' : null),

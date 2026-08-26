@@ -17,6 +17,7 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import { showAlert } from '@/components/ui/dialog'
+import { netReceived } from '@/lib/voucher'
 
 // ─── Types ────────────────────────────────────────────────
 interface WidgetData {
@@ -588,7 +589,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
     const vcCode = useVoucher ? voucherCode : ''
 
     await supabase.from('payments').update({
-      status: 'paid', paid_date: paidDate, paid_amount: paidAmount,
+      status: 'paid', paid_date: paidDate, paid_amount: netReceived(paidAmount, vcAmt),
       channel: channel || null,
       slip_url: slipPosted ? 'posted' : null,
       receipt_url: receiptPosted ? 'posted' : null,

@@ -15,6 +15,7 @@ import DateInput from '@/components/ui/DateInput'
 import { baht } from '@/lib/money'
 import { appUserId } from '@/lib/currentUser'
 import { showAlert, showConfirm } from '@/components/ui/dialog'
+import { netReceived } from '@/lib/voucher'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -220,7 +221,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       amount: p.amount,
       status: isSingleB2B ? 'pending' : (i === 0 ? 'paid' : 'pending'),
       paid_date: isSingleB2B ? null : (i === 0 ? paidDate : null),
-      paid_amount: isSingleB2B ? null : (i === 0 ? (firstPaidAmount || p.amount) : null),
+      paid_amount: isSingleB2B ? null : (i === 0 ? netReceived(firstPaidAmount || p.amount, useVoucher ? voucherAmount : 0) : null),
       channel: isSingleB2B ? null : (i === 0 ? (channel || null) : null),
       is_work_trigger: p.trigger,
       is_final: p.final,
@@ -522,7 +523,9 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
     const vcCode = useVoucher && voucherCode ? voucherCode : null
     const vcAmt = useVoucher && voucherAmount > 0 ? voucherAmount : 0
     await supabase.from('payments').update({
-      status: 'paid', paid_date: paidDate, paid_amount: paidAmount,
+      // The net, not the gross — the preview above already shows this figure as
+      // "ยอดรับจริง" and this line used to save the other one. See lib/voucher.ts.
+      status: 'paid', paid_date: paidDate, paid_amount: netReceived(paidAmount, vcAmt),
       channel: channel || null,
       slip_url: slipPosted ? 'posted' : null,
       receipt_url: receiptPosted ? 'posted' : null,

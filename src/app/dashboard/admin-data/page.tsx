@@ -9,6 +9,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { RECONCILE_FIELDS } from '@/lib/ownership'
+import { sameParty, looksLikeCompany } from '@/lib/personName'
 import { baht } from '@/lib/money'
 import { showAlert } from '@/components/ui/dialog'
 
@@ -484,8 +485,8 @@ function ReconcileCheck() {
       // This screen exists to verify the data is complete, so it must not read a
       // truncated copy of it. payments is already past PostgREST's 1,000-row cap
       // (1,192 rows) and jobs/customers are within a year of crossing it.
-      fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, interested_room').order('id')),
-      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, payment_plan_type, work_start_date, cancel_type, cancel_amount, cancel_date').order('id')),
+      fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, interested_room, customer_name').order('id')),
+      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, customer_name, payment_plan_type, work_start_date, cancel_type, cancel_amount, cancel_date').order('id')),
       fetchAllRows(() => supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger').order('id')),
     ])
 
@@ -667,7 +668,36 @@ function ReconcileCheck() {
         : undefined,
     }
 
-    setChecks([check1, check2, check3, check4, check4b, check5, check6])
+    // Check 7: a customer record filed under a company while the job it holds
+    // was bought by a person.
+    //
+    // Eighteen records were named after the developer — Origin Place Samut
+    // Prakan on fourteen rooms — while the job underneath was the resident's own
+    // order, paid by them in full. Nothing reported it. It surfaced only because
+    // someone searched a resident's name, found nothing, and asked why. Worse,
+    // the wrong name then drove a wrong decision: all eighteen were switched to
+    // B2B in seven minutes because the screen said "บริษัท", and the trigger
+    // carried that onto all eighteen jobs. A field that is wrong and unreported
+    // does not stay a display problem.
+    const nameMismatch = j.filter(job => {
+      const cust = custById.get(job.customer_id)
+      if (!cust || !job.customer_name || !cust.customer_name) return false
+      return looksLikeCompany(cust.customer_name)
+        && !looksLikeCompany(job.customer_name)
+        && !sameParty(job.customer_name, cust.customer_name)
+    })
+    const check7: CheckItem = {
+      label: 'ชื่อลูกค้า vs ชื่อบนงาน',
+      desc: 'ระเบียนที่ชื่อเป็นบริษัท แต่งานเป็นชื่อบุคคล — ผู้ซื้อจริงอาจไม่ใช่บริษัท',
+      lhs: { label: 'Jobs ที่ชื่อสอดคล้อง', value: j.length - nameMismatch.length },
+      rhs: { label: 'Jobs ทั้งหมด', value: j.length },
+      pass: nameMismatch.length === 0,
+      detail: nameMismatch.length > 0
+        ? `พบ ${fmtN(nameMismatch.length)} งานที่ทะเบียนเป็นบริษัท แต่งานเป็นชื่อบุคคล — ตรวจว่าใครเป็นผู้ซื้อก่อนแก้ประเภทลูกค้า`
+        : undefined,
+    }
+
+    setChecks([check1, check2, check3, check4, check4b, check5, check6, check7])
     setRan(true)
     setLoading(false)
   }

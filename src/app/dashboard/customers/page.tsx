@@ -109,17 +109,6 @@ function fmt(n: number) {
   return n ? n.toLocaleString('th-TH') : '—'
 }
 
-/** Same person? "คุณเสาวลักษณ์ พันธ์เรืองวงศ์" and "เสาวลักษณ์ พันธ์เรืองวงศ์"
- *  are, and treating them as different labelled a customer as the resident of
- *  their own room. Honorifics and spacing are how the same name was typed on
- *  two days, not who the name belongs to. */
-function sameParty(a: string, b: string): boolean {
-  const norm = (s: string) => s
-    .replace(/^(คุณ|คุุณ|นาย|นาง|นางสาว|น\.ส\.|K\.|k\.|Mr\.|Mrs\.|Ms\.)\s*/i, '')
-    .replace(/\s+/g, '')
-    .toLowerCase()
-  return norm(a) === norm(b)
-}
 
 /**
  * What this customer has bought from us, counted across every job.
@@ -416,18 +405,20 @@ function CustomerDetail({
                               {job.room_no && <span className="font-mono mr-1" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</span>}
                               {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
                             </p>
-                            {/* Eighteen jobs carry a different name from their
-                                customer: the record is the developer who hired
-                                us, the job is the resident of that room. Showing
-                                it is the difference between "this job has no
-                                customer" and "this room belongs to that
-                                company". Not a mismatch to fix — see
-                                lib/ownership.ts on customer_name. */}
-                            {job.customer_name && sameParty(job.customer_name, customer.customer_name) === false && (
-                              <p className="text-micro mt-0.5" style={{ color: 'var(--text-2)' }}>
-                                ผู้อยู่อาศัย: {job.customer_name}
-                              </p>
-                            )}
+                            {/* A "ผู้อยู่อาศัย" line used to sit here. It was
+                                built on a false premise: those eighteen records
+                                were named after the developer while holding an
+                                order the resident had paid for in full, so the
+                                label said the company owned the work and the
+                                buyer merely lived there — the reverse of the
+                                truth. Worse, it made that reading look official,
+                                and the customer type was then set to B2B on all
+                                eighteen because the screen said "บริษัท". The
+                                records now carry the buyer's own name, so there
+                                is nothing left to explain. If a name ever
+                                genuinely differs again, the Reconcile check
+                                below reports it rather than a label rationalising
+                                it in place. */}
                           </div>
                         </div>
 

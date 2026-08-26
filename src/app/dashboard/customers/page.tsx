@@ -109,6 +109,18 @@ function fmt(n: number) {
   return n ? n.toLocaleString('th-TH') : '—'
 }
 
+/** Same person? "คุณเสาวลักษณ์ พันธ์เรืองวงศ์" and "เสาวลักษณ์ พันธ์เรืองวงศ์"
+ *  are, and treating them as different labelled a customer as the resident of
+ *  their own room. Honorifics and spacing are how the same name was typed on
+ *  two days, not who the name belongs to. */
+function sameParty(a: string, b: string): boolean {
+  const norm = (s: string) => s
+    .replace(/^(คุณ|คุุณ|นาย|นาง|นางสาว|น\.ส\.|K\.|k\.|Mr\.|Mrs\.|Ms\.)\s*/i, '')
+    .replace(/\s+/g, '')
+    .toLowerCase()
+  return norm(a) === norm(b)
+}
+
 /**
  * What this customer has bought from us, counted across every job.
  *
@@ -411,7 +423,7 @@ function CustomerDetail({
                                 customer" and "this room belongs to that
                                 company". Not a mismatch to fix — see
                                 lib/ownership.ts on customer_name. */}
-                            {job.customer_name && job.customer_name.trim() !== customer.customer_name.trim() && (
+                            {job.customer_name && sameParty(job.customer_name, customer.customer_name) === false && (
                               <p className="text-micro mt-0.5" style={{ color: 'var(--text-2)' }}>
                                 ผู้อยู่อาศัย: {job.customer_name}
                               </p>

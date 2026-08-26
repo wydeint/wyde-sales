@@ -15,6 +15,7 @@ import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import { createProspectJob } from '@/lib/prospectJob'
+import { showConfirm } from '@/components/ui/dialog'
 
 interface Customer {
   id: string
@@ -619,7 +620,7 @@ export default function CustomersPage() {
   }
 
   async function deleteCustomer(c: Customer) {
-    if (!confirm(`ลบลูกค้า "${c.customer_name}" ?\nข้อมูลการชำระเงินที่เชื่อมกับลูกค้านี้จะถูกลบด้วย`)) return
+    if (!await showConfirm(`ลบลูกค้า "${c.customer_name}" ?\nข้อมูลการชำระเงินที่เชื่อมกับลูกค้านี้จะถูกลบด้วย`)) return
     setDeletingId(c.id)
     await supabase.from('payments').delete().eq('customer_id', c.id)
     await supabase.from('customers').delete().eq('id', c.id)

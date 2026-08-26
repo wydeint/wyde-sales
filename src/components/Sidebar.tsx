@@ -15,6 +15,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { useEffect, useState } from 'react'
 import NotificationBell from '@/components/NotificationBell'
 import GlobalSearch from '@/components/GlobalSearch'
+import { showConfirm } from '@/components/ui/dialog'
 
 const NAV = [
   {
@@ -110,7 +111,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   }, [])
 
   async function signOut() {
-    if (!window.confirm('ออกจากระบบ?')) return
+    if (!await showConfirm('ออกจากระบบ?', { confirmLabel: 'ออกจากระบบ' })) return
     await supabase.auth.signOut()
     router.push('/login')
   }

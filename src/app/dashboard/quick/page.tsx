@@ -16,6 +16,7 @@ import {
   DollarSign, Zap, Phone, User, Building2, Paperclip,
   type LucideIcon
 } from 'lucide-react'
+import { showAlert } from '@/components/ui/dialog'
 
 // ─── Types ────────────────────────────────────────────────
 interface WidgetData {
@@ -403,7 +404,7 @@ function EventAddSheet({ open, onClose, events }: {
     const existing = await supabase.from('event_customers')
       .select('id').eq('event_id', selectedEvent.id).eq('lead_id', selectedLead.id).maybeSingle()
     if (existing.data) {
-      alert('ลูกค้านี้อยู่ใน Event แล้ว')
+      await showAlert('ลูกค้านี้อยู่ใน Event แล้ว')
     } else {
       const { data: { user } } = await supabase.auth.getUser()
       await supabase.from('event_customers').insert({
@@ -834,7 +835,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
     await supabase.from('jobs').update({ payment_plan_type: 'B2C' }).eq('id', selectedJob.id)
     setSaving(false)
     resetAndClose()
-    alert('ตั้งแผนชำระเรียบร้อย ✅')
+    await showAlert('ตั้งแผนชำระเรียบร้อย ✅')
   }
 
   async function saveB2BInstallments() {
@@ -858,7 +859,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
     await supabase.from('jobs').update({ payment_plan_type: 'B2B' }).eq('id', selectedJob.id)
     setSaving(false)
     resetAndClose()
-    alert('ตั้งแผนชำระเรียบร้อย ✅')
+    await showAlert('ตั้งแผนชำระเรียบร้อย ✅')
   }
 
   function resetAndClose() {
@@ -1038,8 +1039,10 @@ function DeliverSheet({ open, onClose, jobs }: {
       await supabase.from('handovers').update({
         work_status: 'delivered',
         delivery_date: deliveryDate,
+        // commission_triggered was dropped: false on all 580 rows and read by
+        // nothing. Commission is derived from the job's delivery, not a flag
+        // set by whichever screen happened to record it.
         delivery_file_url: fileUrl || null,
-        commission_triggered: true,
       }).eq('job_id', selectedJob.id)
     } else {
       await supabase.from('handovers').insert({
@@ -1048,14 +1051,16 @@ function DeliverSheet({ open, onClose, jobs }: {
         status: 'completed',
         work_status: 'delivered',
         delivery_date: deliveryDate,
+        // commission_triggered was dropped: false on all 580 rows and read by
+        // nothing. Commission is derived from the job's delivery, not a flag
+        // set by whichever screen happened to record it.
         delivery_file_url: fileUrl || null,
-        commission_triggered: true,
       })
     }
     await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว' }).eq('id', selectedJob.id)
     setSaving(false)
     resetAndClose()
-    alert('บันทึกส่งมอบเรียบร้อย ✅')
+    await showAlert('บันทึกส่งมอบเรียบร้อย ✅')
   }
 
   function resetAndClose() {

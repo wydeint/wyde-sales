@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { Paperclip, FileText, ImageIcon, ExternalLink, Loader2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { showConfirm } from '@/components/ui/dialog'
 
 interface JobFile {
   id: string
@@ -93,7 +94,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
   }
 
   async function deleteFile(f: JobFile) {
-    if (!confirm('ลบไฟล์ "' + f.file_name + '" ออกจากระบบและ Google Drive?')) return
+    if (!await showConfirm('ลบไฟล์ "' + f.file_name + '" ออกจากระบบและ Google Drive?')) return
     setDeletingId(f.id)
     const { data: { session } } = await supabase.auth.getSession()
     await fetch('/api/drive/delete', {

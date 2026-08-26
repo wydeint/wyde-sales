@@ -19,6 +19,7 @@ import { isAwaitingCollection, isOverdueCollection, daysSinceDelivery, CHASE_AFT
 import DateInput from '@/components/ui/DateInput'
 import { baht, bahtShort } from '@/lib/money'
 import { appUserId } from '@/lib/currentUser'
+import { showAlert, showConfirm } from '@/components/ui/dialog'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -867,7 +868,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
     // discarded it, which is why a NOT NULL violation on every insert went
     // unnoticed for 578 handovers.
     const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
-    if (eHO) { alert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
+    if (eHO) { await showAlert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
     await supabase.from('warranties').upsert({
       // job_id, not just the customer: a room ordered twice shares one customer
       // record, and a warranty without a job showed up on both jobs.
@@ -1057,7 +1058,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
   const [amountVal, setAmountVal] = useState(String(inst.paid_amount ?? inst.amount ?? ''))
 
   async function deleteInst() {
-    if (!confirm(`ลบงวด "${inst.installment_name}" (${fmtBaht(inst.amount)}) ออกจากระบบ?`)) return
+    if (!await showConfirm(`ลบงวด "${inst.installment_name}" (${fmtBaht(inst.amount)}) ออกจากระบบ?`)) return
     setDeleting(true)
     await supabase.from('payments').delete().eq('id', inst.id)
     setDeleting(false); onDeleted?.()
@@ -1069,7 +1070,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
   }
   async function sendLine(force = false) {
     if (lineNotifiedAt && !force) return
-    if (force && !confirm('ส่ง LINE notification อีกครั้ง?')) return
+    if (force && !await showConfirm('ส่ง LINE notification อีกครั้ง?')) return
     setLineSending(true)
     const msg = generateLineMsg(job, { ...inst, paid_date: dateVal, channel })
     try {
@@ -2171,7 +2172,7 @@ export default function MyDealsPage() {
   useEffect(() => { load() }, [load])
 
   async function deleteJob(job: RoomJob) {
-    if (!confirm(`ลบงาน "${job.room_no}" (${job.customer_name || ''}) ?\nงวดชำระทั้งหมดจะถูกลบด้วย`)) return
+    if (!await showConfirm(`ลบงาน "${job.room_no}" (${job.customer_name || ''}) ?\nงวดชำระทั้งหมดจะถูกลบด้วย`)) return
     await supabase.from('payments').delete().eq('job_id', job.id)
     await supabase.from('jobs').delete().eq('id', job.id)
     setJobs(prev => prev.filter(j => j.id !== job.id))

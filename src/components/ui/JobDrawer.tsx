@@ -14,6 +14,7 @@ import { generateLineMsg } from '@/lib/lineMessage'
 import DateInput from '@/components/ui/DateInput'
 import { baht } from '@/lib/money'
 import { appUserId } from '@/lib/currentUser'
+import { showAlert, showConfirm } from '@/components/ui/dialog'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -195,6 +196,12 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       work_days: workDays,
       work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null),
       working_status: !isBackfill && (isSingleB2B || firstInst?.trigger) ? 'ดำเนินการ' : job.working_status,
+      // crm_stage moves with it. PayModal already did this; setting up the plan
+      // and taking the first payment in one go did not, so a job that had begun
+      // work — even one paid to 100% — kept crm_stage 'booked' and stayed in the
+      // จอง column of Prospects. The customer row below was already being
+      // closed, so the two disagreed about the same deal.
+      ...(isSingleB2B || firstInst?.trigger ? { crm_stage: 'closed' } : {}),
       ...(!job.order_date ? { order_date: isSingleB2B ? b2bPoDate : paidDate } : {}),
     }).eq('id', job.id)
     if ((isSingleB2B || firstInst?.trigger) && job.customer_id) {
@@ -671,7 +678,7 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
     const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
     // See my-deals: id supplied, upsert, and the error actually read.
     const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
-    if (eHO) { alert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
+    if (eHO) { await showAlert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
     await supabase.from('warranties').upsert({
       id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
       room: job.room_no, job_id: job.id, handover_date: deliverDate, warranty_start: deliverDate,
@@ -833,7 +840,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
   const [amountVal, setAmountVal] = useState(String(inst.paid_amount ?? inst.amount ?? ''))
 
   async function deleteInst() {
-    if (!confirm(`ลบงวด "${inst.installment_name}" (${fmtBaht(inst.amount)}) ออกจากระบบ?`)) return
+    if (!await showConfirm(`ลบงวด "${inst.installment_name}" (${fmtBaht(inst.amount)}) ออกจากระบบ?`)) return
     setDeleting(true)
     await supabase.from('payments').delete().eq('id', inst.id)
     setDeleting(false); onDeleted?.()
@@ -845,7 +852,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
   }
   async function sendLine(force = false) {
     if (lineNotifiedAt && !force) return
-    if (force && !confirm('ส่ง LINE notification อีกครั้ง?')) return
+    if (force && !await showConfirm('ส่ง LINE notification อีกครั้ง?')) return
     setLineSending(true)
     const msg = generateLineMsg(job, { ...inst, paid_date: dateVal, channel })
     const result = await sendLineNotify(msg)
@@ -853,7 +860,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
       await supabase.from('payments').update({ line_notified_at: result.ts }).eq('id', inst.id)
       setLineNotifiedAt(result.ts); setLineSent('ok')
     } else {
-      alert(`ส่ง LINE ไม่สำเร็จ: ${result.error}`); setLineSent('err')
+      await showAlert(`ส่ง LINE ไม่สำเร็จ: ${result.error}`); setLineSent('err')
     }
     setLineSending(false); setTimeout(() => setLineSent(null), 3000)
   }
@@ -1584,7 +1591,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
               cancel_type: type, cancel_date: date || null,
               cancel_amount: amount || null, cancel_notes: notes || null,
             }).eq('id', job.id)
-            if (jobErr) { alert(`บันทึกการยกเลิกไม่สำเร็จ: ${jobErr.message}`); return }
+            if (jobErr) { await showAlert(`บันทึกการยกเลิกไม่สำเร็จ: ${jobErr.message}`); return }
             await supabase.from('customers').update({ status: 'lost' }).eq('id', job.customer_id)
             // Refund only — a forfeited deposit is money already received and
             // already in รายรับ; booking it again as income double-counted it.
@@ -1599,7 +1606,7 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
               })
               // Say so. This insert failed silently before, and a refund that
               // never reached Finance is money the books do not know left.
-              if (finErr) alert(`ยกเลิกแล้ว แต่บันทึกรายการคืนเงินไม่สำเร็จ: ${finErr.message}`)
+              if (finErr) await showAlert(`ยกเลิกแล้ว แต่บันทึกรายการคืนเงินไม่สำเร็จ: ${finErr.message}`)
             }
             setShowCancel(false); onClose(); onRefresh()
           }}

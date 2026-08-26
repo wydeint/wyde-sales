@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
+import DialogHost from '@/components/ui/dialog'
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -19,6 +20,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <div className="flex h-screen overflow-hidden">
+      {/* One host for every showAlert/showConfirm in the dashboard. */}
+      <DialogHost />
 
       {/* ── Desktop sidebar — always visible (lg+) ── */}
       <div className="hidden lg:flex flex-shrink-0">

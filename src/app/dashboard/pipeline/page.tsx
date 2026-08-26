@@ -20,6 +20,7 @@ import DateInput from '@/components/ui/DateInput'
 import { bahtShort } from '@/lib/money'
 import { createProspectJob as createProspectJobShared } from '@/lib/prospectJob'
 import { appUserId } from '@/lib/currentUser'
+import { showAlert } from '@/components/ui/dialog'
 
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
@@ -223,7 +224,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
 }
 
 // ─── Card expand helper ─────────────────────────────────────
-type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null; work_type?: string | null }
+type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null; work_type?: string | null; room_no?: string | null; notes?: string | null }
 type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; jobWorkingStatus: string | undefined; jobCrmStage: string | null | undefined; cardKey: string }
 interface BookedJob {
   id: string; customer_name: string; room_no: string; revenue_inc_vat: number
@@ -245,7 +246,25 @@ function expandCards(customers: Customer[]): CardItem[] {
         const nb = parseInt(b.id.match(/\d+/)?.[0] || '0', 10)
         return na - nb
       })
-      sorted.forEach((j, i) => result.push({ c, jobSeqNo: i + 1, jobRev: j.revenue_inc_vat || 0, jobId: j.id, jobWorkingStatus: j.working_status, jobCrmStage: j.crm_stage ?? null, cardKey: `${c.id}-${j.id}` }))
+      // "งานที่ N" counts this person's orders **for this room**, and restarts
+      // per room. Numbering across all their rooms made the badge answer a
+      // question nobody asks — you are looking at one room's card and want to
+      // know how many times this buyer has ordered for it.
+      const seqInRoom = new Map<string, number>()
+      sorted.forEach(j => {
+        const key = (j.room_no || '').trim().toUpperCase()
+        const n = (seqInRoom.get(key) || 0) + 1
+        seqInRoom.set(key, n)
+        result.push({ c, jobSeqNo: n, jobRev: j.revenue_inc_vat || 0, jobId: j.id, jobWorkingStatus: j.working_status, jobCrmStage: j.crm_stage ?? null, cardKey: `${c.id}-${j.id}` })
+      })
+      // A room they ordered for only once needs no badge — the number would be
+      // a permanent "1" that says nothing.
+      for (const item of result) {
+        if (item.c === c && item.jobSeqNo === 1) {
+          const key = (sorted.find(j => j.id === item.jobId)?.room_no || '').trim().toUpperCase()
+          if ((seqInRoom.get(key) || 0) === 1) item.jobSeqNo = undefined
+        }
+      }
     }
   }
   return result
@@ -576,7 +595,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               // only the quote rule applies here — but it has to apply, or the
               // requirement is one button away from being skipped.
               if (s.value === 'quoted' && !(customer.budget > 0)) {
-                alert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
+                await showAlert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
                 return
               }
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
@@ -780,7 +799,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   // 37 of 52 live prospects have no budget precisely because
                   // nobody knew it on day one.
                   if (s.value === 'quoted' && !(customer.budget > 0)) {
-                    alert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
+                    await showAlert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
                     return
                   }
                   // Ask the job, not the customer. A repeat order creates a new
@@ -794,7 +813,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   // work, and only the job knows which is which.
                   const workType = (focusJobMeta?.work_type || '').trim()
                   if (s.value === 'booked' && !workType) {
-                    alert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงานก่อนย้ายสถานะ')
+                    await showAlert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงานก่อนย้ายสถานะ')
                     return
                   }
                   // Reaching จอง has to set working_status too. A prospect's job row
@@ -1038,7 +1057,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             const { error: cancelErr } = await supabase.from('customers').update({
               status: 'lost',
             }).eq('id', customer.id)
-            if (cancelErr) { alert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
+            if (cancelErr) { await showAlert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
             if (focusJobId) {
               await supabase.from('jobs').update({
                 crm_stage: 'lost', working_status: 'ยกเลิก',
@@ -1062,7 +1081,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 ref_id: focusJobId || customer.id,
                 created_by: await appUserId(supabase),
               })
-              if (finErr) alert(`ยกเลิกแล้ว แต่บันทึกรายการเงินไม่สำเร็จ: ${finErr.message}`)
+              if (finErr) await showAlert(`ยกเลิกแล้ว แต่บันทึกรายการเงินไม่สำเร็จ: ${finErr.message}`)
             }
             onUpdate({ ...customer, status: 'lost', cancel_type: type, cancel_amount: amount || null } as any)
             setShowCancel(false)
@@ -1455,7 +1474,8 @@ export default function ProspectsKanbanPage() {
   const [repeatConfirm, setRepeatConfirm] = useState<Customer | null>(null)
   const [repeatAdding, setRepeatAdding] = useState(false)
   const [repeatJobForm, setRepeatJobForm] = useState({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' })
-  const [dupRoomCustomer, setDupRoomCustomer] = useState<{ id: string; customer_name: string; interested_room: string; jobCount: number } | null>(null)
+  const [dupRoomCustomer, setDupRoomCustomer] = useState<{ id: string; customer_name: string; interested_room: string; jobCount: number; isSamePerson: boolean } | null>(null)
+  const [dupRoomAdding, setDupRoomAdding] = useState(false)
   const [pendingAddForm, setPendingAddForm] = useState<typeof emptyForm | null>(null)
   const [startJobCustomer, setStartJobCustomer] = useState<Customer | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ c: Customer; jobId?: string; hasMultipleJobs: boolean } | null>(null)
@@ -1475,7 +1495,7 @@ export default function ProspectsKanbanPage() {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, notes, cancel_type, cancel_amount, cancel_date)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1539,17 +1559,37 @@ export default function ProspectsKanbanPage() {
       if (!skipRoomCheck && form.project_id && form.interested_room) {
         const { data: roomDups } = await supabase
           .from('customers')
-          .select('id, customer_name, interested_room, jobs(id)')
+          .select('id, customer_name, interested_room, jobs(id, room_no)')
           .eq('project_id', form.project_id)
           .eq('interested_room', form.interested_room.trim())
         if (roomDups && roomDups.length > 0) {
-          const totalJobs = roomDups.reduce((sum, c) => sum + (((c as any).jobs as any[])?.length || 0), 0)
-          if (totalJobs >= 2) {
-            return `ห้อง ${form.interested_room.trim()} มีงานอยู่แล้ว 2 งาน ไม่สามารถเพิ่มได้อีก`
-          }
-          const first = roomDups[0]
+          // Two people really can buy work in the same room, and one person
+          // really can order three times for it. There is no cap: the old
+          // `totalJobs >= 2` refused the *next* buyer outright once the first
+          // one had two orders, which is a rule about the room being applied to
+          // a person it has nothing to do with.
+          //
+          // Which record the new job belongs to is the question worth asking, so
+          // the name decides. Same name as someone already in this room and it
+          // is a repeat order — it goes under their existing record, keeping one
+          // person's phone, Line and orders together. A different name is a
+          // different buyer and gets their own record. Twenty rooms in the data
+          // are one person split across two records because this always made a
+          // new one.
+          const typed = form.customer_name.trim().toLowerCase()
+          const sameName = roomDups.find(c => (c.customer_name || '').trim().toLowerCase() === typed)
+          const owner = sameName || roomDups[0]
           setAddModal(false)
-          setDupRoomCustomer({ id: first.id, customer_name: first.customer_name, interested_room: first.interested_room, jobCount: totalJobs })
+          setDupRoomCustomer({
+            id: owner.id,
+            customer_name: owner.customer_name,
+            interested_room: owner.interested_room,
+            // Their orders for this room, not their orders everywhere — the
+            // number the modal offers has to match the badge on the card.
+            jobCount: (((owner as any).jobs as { room_no?: string }[]) || [])
+              .filter(j => (j.room_no || '').trim().toUpperCase() === form.interested_room.trim().toUpperCase()).length,
+            isSamePerson: !!sameName,
+          })
           setPendingAddForm(form)
           return null
         }
@@ -1578,7 +1618,7 @@ export default function ProspectsKanbanPage() {
       id: newId, ...customerFields,
       project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
       customer_type: form.customer_type || 'B2C',
-    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, notes, cancel_type, cancel_amount, cancel_date)').single()
+    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date)').single()
     if (error) return error.message
     if (data) {
       const crmStage = form.status || 'new'
@@ -1595,6 +1635,43 @@ export default function ProspectsKanbanPage() {
     if (!pendingAddForm) return
     setDupRoomCustomer(null)
     await addCustomer(pendingAddForm, true)
+    setPendingAddForm(null)
+  }
+
+  /** The repeat order: a new job on the record this person already has, rather
+   *  than a second record for the same person. Mirrors confirmRepeatPurchase,
+   *  which is what the "ซื้อซ้ำ" search does — this is the same act reached from
+   *  the other direction, by typing a room that turns out to be theirs. */
+  async function confirmAddJobToExisting() {
+    const form = pendingAddForm
+    const owner = dupRoomCustomer
+    if (!form || !owner) return
+    setDupRoomAdding(true)
+    const jobId = await createProspectJob(
+      owner.id, owner.customer_name, form.project_id || null, form.interested_room || null,
+      form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null,
+      form.status || 'new', form.notes,
+    )
+    // Budget belongs to the person, so only fill it in when they had none —
+    // a second order is no reason to overwrite the first one's number.
+    const newBudget = Number(form.budget) || 0
+    if (newBudget > 0) {
+      await supabase.from('customers').update({ budget: newBudget }).eq('id', owner.id)
+    }
+    setDupRoomAdding(false)
+    if (jobId) {
+      setCustomers(prev => prev.map(x => x.id !== owner.id ? x : ({
+        ...x,
+        budget: newBudget > 0 ? newBudget : x.budget,
+        jobs: [...(((x as any).jobs as JobMeta[]) || []), {
+          id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null,
+          crm_stage: form.status || 'new', work_type: form.work_type || null,
+          room_no: form.interested_room || null, notes: form.notes || null,
+        }],
+      } as any)))
+      setActiveStage(form.status || 'new')
+    }
+    setDupRoomCustomer(null)
     setPendingAddForm(null)
   }
 
@@ -2172,18 +2249,37 @@ export default function ProspectsKanbanPage() {
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>
               ห้อง <strong style={{ color: 'var(--text-1)' }}>{dupRoomCustomer.interested_room}</strong> มีลูกค้า <strong style={{ color: 'var(--text-1)' }}>{dupRoomCustomer.customer_name}</strong> อยู่แล้ว {dupRoomCustomer.jobCount} งาน
             </p>
-            <p className="text-sm" style={{ color: 'var(--text-2)' }}>ต้องการสร้างงานที่ {dupRoomCustomer.jobCount + 1} ให้ห้องนี้ไหม?</p>
+            {/* Same name means the same buyer ordering again, so the job goes
+                under the record they already have. The escape hatch below is for
+                the rare two-people-one-name case, and it is the quiet option. */}
+            {dupRoomCustomer.isSamePerson ? (
+              <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+                เป็นลูกค้ารายเดิม — เพิ่มเป็น <strong style={{ color: 'var(--text-1)' }}>งานที่ {dupRoomCustomer.jobCount + 1}</strong> ใต้ระเบียนเดิม ข้อมูลติดต่อและงานทั้งหมดจะอยู่ที่เดียวกัน
+              </p>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+                ชื่อไม่ตรงกับเจ้าของงานเดิม — จะบันทึกเป็นลูกค้ารายใหม่ในห้องนี้
+              </p>
+            )}
             <div className="flex gap-2 pt-1">
               <button onClick={() => { setDupRoomCustomer(null); setPendingAddForm(null) }}
                 className="flex-1 py-2.5 rounded-[8px] text-sm" style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                 ยกเลิก
               </button>
-              <button onClick={confirmAddNewJob}
-                className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white"
+              <button onClick={dupRoomCustomer.isSamePerson ? confirmAddJobToExisting : confirmAddNewJob}
+                disabled={dupRoomAdding}
+                className="flex-1 py-2.5 rounded-[8px] text-sm font-semibold text-white disabled:opacity-50"
                 style={{ background: 'var(--accent)' }}>
-                สร้างงานที่ {dupRoomCustomer.jobCount + 1}
+                {dupRoomAdding ? 'กำลังบันทึก...'
+                  : dupRoomCustomer.isSamePerson ? `เพิ่มงานที่ ${dupRoomCustomer.jobCount + 1} ให้ลูกค้ารายนี้` : 'สร้างเป็นลูกค้ารายใหม่'}
               </button>
             </div>
+            {dupRoomCustomer.isSamePerson && (
+              <button onClick={confirmAddNewJob} disabled={dupRoomAdding}
+                className="w-full text-micro underline disabled:opacity-50" style={{ color: 'var(--text-3)' }}>
+                คนละคนแต่ชื่อเหมือนกัน — สร้างเป็นลูกค้ารายใหม่
+              </button>
+            )}
           </div>
         )}
       </Modal>

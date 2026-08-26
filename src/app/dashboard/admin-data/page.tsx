@@ -10,6 +10,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { RECONCILE_FIELDS } from '@/lib/ownership'
 import { baht } from '@/lib/money'
+import { showAlert } from '@/components/ui/dialog'
 
 /** How many rows the table paints at once. Purely a rendering limit — every
  *  row is loaded and searched, so this can never hide a record from a search. */
@@ -154,30 +155,26 @@ const TABLES: TableDef[] = [
     ],
   },
   {
-    label: 'Handovers', table: 'handovers', orderBy: 'handover_date', group: 'Operations',
+    // Fourteen columns were dropped on 2026-08-26. Eleven had never held a
+    // value in 580 rows, two were flags that were false on every row, and
+    // `handover_date` was a second copy of `delivery_date` — identical on all
+    // 578 rows that had both, and left null by every path in the app, which is
+    // why the notification bell had to be repointed off it. `total_amount`
+    // repeated jobs.revenue_inc_vat, which owns the number. This screen was
+    // the only thing that could still write any of them, and offering a field
+    // nobody reads is how the copies got out of step in the first place.
+    // Snapshot: handovers_backup_20260826.
+    label: 'Handovers', table: 'handovers', orderBy: 'delivery_date', group: 'Operations',
     cols: [
       { key: 'id', label: 'ID', type: 'readonly', width: 150 },
       { key: 'job_id', label: 'Job ID', type: 'text', width: 150 },
       { key: 'customer_id', label: 'Customer ID', type: 'text', width: 140 },
       { key: 'project_id', label: 'Project ID', type: 'text', width: 130 },
       { key: 'room', label: 'ห้อง', type: 'text', width: 90 },
-      { key: 'handover_date', label: 'วันส่งมอบ', type: 'date', width: 120 },
-      { key: 'delivery_date', label: 'Delivery Date', type: 'date', width: 120 },
+      { key: 'delivery_date', label: 'วันส่งมอบ', type: 'date', width: 120 },
       { key: 'status', label: 'สถานะ', type: 'text', width: 100 },
       { key: 'work_status', label: 'สถานะงาน', type: 'text', width: 120 },
-      { key: 'job_start_date', label: 'เริ่มงาน', type: 'date', width: 110 },
-      { key: 'expected_completion', label: 'กำหนดเสร็จ', type: 'date', width: 120 },
-      { key: 'work_days', label: 'วันทำงาน', type: 'number', width: 90 },
-      { key: 'total_amount', label: 'ยอดรวม', type: 'number', width: 120 },
-      { key: 'final_payment_date', label: 'รับเงินสุดท้าย', type: 'date', width: 130 },
-      { key: 'warranty_days', label: 'ประกัน (วัน)', type: 'number', width: 100 },
-      { key: 'warranty_end', label: 'หมดประกัน', type: 'date', width: 120 },
-      { key: 'defect_noted', label: 'มีข้อบกพร่อง', type: 'boolean', width: 110 },
-      { key: 'defect_details', label: 'รายละเอียดข้อบกพร่อง', type: 'text', width: 180 },
-      { key: 'commission_triggered', label: 'Commission', type: 'boolean', width: 110 },
       { key: 'client_type', label: 'ประเภทลูกค้า', type: 'text', width: 120 },
-      { key: 'sales_sign_date', label: 'วันเซ็น (Sales)', type: 'date', width: 130 },
-      { key: 'customer_sign_date', label: 'วันเซ็น (ลูกค้า)', type: 'date', width: 130 },
       { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
     ],
   },
@@ -825,7 +822,7 @@ export default function AdminDataPage() {
     if (updates['working_status'] === 'ส่งมอบแล้ว' && !updates['actual_deliver_date']) {
       const currentRow = rows.find(r => String(r.id) === editingRow)
       if (!currentRow?.actual_deliver_date) {
-        alert('ไม่สามารถตั้งสถานะ "ส่งมอบแล้ว" ได้\nกรุณากรอก "วันส่งมอบ" ก่อน หรือกดปุ่มส่งมอบใน My Deals แทน')
+        await showAlert('ไม่สามารถตั้งสถานะ "ส่งมอบแล้ว" ได้\nกรุณากรอก "วันส่งมอบ" ก่อน หรือกดปุ่มส่งมอบใน My Deals แทน')
         setSaving(false)
         return
       }
@@ -848,7 +845,7 @@ export default function AdminDataPage() {
     if (colKey === 'working_status' && value === 'ส่งมอบแล้ว') {
       const missing = rows.filter(r => ids.includes(String(r.id)) && !r.actual_deliver_date)
       if (missing.length > 0) {
-        alert(`ไม่สามารถตั้งสถานะ "ส่งมอบแล้ว" ได้\nพบ ${missing.length} งานที่ไม่มีวันส่งมอบ: ${missing.map(r => r.room_no).join(', ')}\nกรุณากรอกวันส่งมอบก่อน หรือใช้ปุ่มส่งมอบใน My Deals`)
+        await showAlert(`ไม่สามารถตั้งสถานะ "ส่งมอบแล้ว" ได้\nพบ ${missing.length} งานที่ไม่มีวันส่งมอบ: ${missing.map(r => r.room_no).join(', ')}\nกรุณากรอกวันส่งมอบก่อน หรือใช้ปุ่มส่งมอบใน My Deals`)
         return
       }
     }

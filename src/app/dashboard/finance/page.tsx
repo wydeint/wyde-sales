@@ -14,6 +14,7 @@ import { getPeriodBounds, MONTHS_TH, beYear, UNIT_LABELS as PERIOD_LABELS, type 
 import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 import { baht, bahtShort } from '@/lib/money'
+import { showConfirm } from '@/components/ui/dialog'
 
 // ── Types ──────────────────────────────────────────────────
 interface Payment {
@@ -235,7 +236,7 @@ export default function FinancePage() {
   }
 
   async function deleteEntry(id: number) {
-    if (!confirm('ลบรายการนี้?')) return
+    if (!await showConfirm('ลบรายการนี้?')) return
     await supabase.from('finance_entries').delete().eq('id', id)
     load()
   }

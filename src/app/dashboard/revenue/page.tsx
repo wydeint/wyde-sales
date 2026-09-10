@@ -381,7 +381,7 @@ export default function RevenuePage() {
         return (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {kpis.map(k => (
-              <div key={k.label} className="ds-card p-4">
+              <div key={k.label} className="ds-card">
                 <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>{k.label}</p>
                 <p className="text-kpi-number" style={{ color: k.color }}>{k.value}</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{k.sub}</p>
@@ -393,7 +393,7 @@ export default function RevenuePage() {
 
       {/* Year trend chart */}
       {period === 'year' && monthlyTrend.length > 0 && (
-        <div className="ds-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={14} style={{ color: 'var(--accent)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>
@@ -425,7 +425,7 @@ export default function RevenuePage() {
       {/* ── Summary view ── */}
       {view === 'summary' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="ds-card p-5">
+          <div className="ds-card">
             <h2 className="text-section-title mb-4 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
               <Users size={13} style={{ color: 'var(--accent-blue)' }} />
               {mainTab === 'sales' ? 'ยอดขาย by Sales' : 'Revenue by Sales'}
@@ -449,7 +449,7 @@ export default function RevenuePage() {
             ))}
           </div>
 
-          <div className="ds-card p-5">
+          <div className="ds-card">
             <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>
               {mainTab === 'sales' ? 'สถานะงาน' : 'ประเภทงาน (Accounting Status)'}
             </h2>
@@ -480,13 +480,13 @@ export default function RevenuePage() {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                 {['Sales', 'จำนวนงาน', 'Revenue (Inc.VAT)', ...(mainTab === 'deliver' ? ['Cost', 'Profit (Ex-Cost)', 'GP%'] : [])].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
+                  <th key={h} className="text-left text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {bySales.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-10 text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
+                <tr><td colSpan={6} className="text-center text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
               ) : bySales.map(s => {
                 const salesJobs = periodJobs.filter(j => (j.sales as any)?.name === s.name)
                 const cost = salesJobs.reduce((sum, j) => sum + costOf(j.id), 0)
@@ -507,12 +507,12 @@ export default function RevenuePage() {
                           {s.name}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center" style={{ color: 'var(--text-2)' }}>{s.units}</td>
-                      <td className="px-4 py-3 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(s.revenue)}</td>
+                      <td className=" text-center" style={{ color: 'var(--text-2)' }}>{s.units}</td>
+                      <td className=" font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(s.revenue)}</td>
                       {mainTab === 'deliver' && <>
-                        <td className="px-4 py-3" style={{ color: 'var(--accent-red)' }}>{cost ? f(cost) : '—'}</td>
-                        <td className="px-4 py-3" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{cost ? f(profit) : '—'}</td>
-                        <td className="px-4 py-3" style={{ color: 'var(--text-2)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
+                        <td className="" style={{ color: 'var(--accent-red)' }}>{cost ? f(cost) : '—'}</td>
+                        <td className="" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{cost ? f(profit) : '—'}</td>
+                        <td className="" style={{ color: 'var(--text-2)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
                       </>}
                     </tr>
                     {expanded && (
@@ -524,7 +524,7 @@ export default function RevenuePage() {
                                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                                   {['ห้อง', 'โครงการ', 'ลูกค้า', mainTab === 'sales' ? 'วันจอง' : 'วันส่งมอบ', 'ประเภทงาน',
                                     mainTab === 'sales' ? 'สถานะ' : '', 'Revenue (Inc.VAT)'].filter(Boolean).map(h => (
-                                    <th key={h} className="text-left px-3 py-2 font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                                    <th key={h} className="text-left font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                                   ))}
                                 </tr>
                               </thead>
@@ -533,17 +533,17 @@ export default function RevenuePage() {
                                   const d = mainTab === 'sales' ? (j.order_date || j.work_start_date) : j.actual_deliver_date
                                   return (
                                     <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
-                                      <td className="px-3 py-2 font-semibold" style={{ color: 'var(--accent)' }}>{j.room_no || '—'}</td>
-                                      <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{(j.projects as any)?.name || '—'}</td>
-                                      <td className="px-3 py-2" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
-                                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{d?.slice(0, 10) || '—'}</td>
-                                      <td className="px-3 py-2" style={{ color: 'var(--text-2)' }}>{j.work_type || '—'}</td>
+                                      <td className=" font-semibold" style={{ color: 'var(--accent)' }}>{j.room_no || '—'}</td>
+                                      <td className="" style={{ color: 'var(--text-2)' }}>{(j.projects as any)?.name || '—'}</td>
+                                      <td className="" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
+                                      <td className=" whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{d?.slice(0, 10) || '—'}</td>
+                                      <td className="" style={{ color: 'var(--text-2)' }}>{j.work_type || '—'}</td>
                                       {mainTab === 'sales' && (
                                         <td className="px-3 py-2">
                                           <StatusChip kind="working" status={j.working_status} variant="outline" />
                                         </td>
                                       )}
-                                      <td className="px-3 py-2 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
+                                      <td className=" font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
                                     </tr>
                                   )
                                 })}
@@ -557,13 +557,13 @@ export default function RevenuePage() {
                 )
               })}
               <tr style={{ borderTop: '2px solid var(--accent)', background: 'var(--active-bg)' }}>
-                <td className="px-4 py-3 font-bold" style={{ color: 'var(--text-1)' }}>รวมทั้งหมด</td>
-                <td className="px-4 py-3 text-center font-bold" style={{ color: 'var(--text-1)' }}>{unitCount}</td>
-                <td className="px-4 py-3 font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(totalRevenue)}</td>
+                <td className=" font-bold" style={{ color: 'var(--text-1)' }}>รวมทั้งหมด</td>
+                <td className=" text-center font-bold" style={{ color: 'var(--text-1)' }}>{unitCount}</td>
+                <td className=" font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(totalRevenue)}</td>
                 {mainTab === 'deliver' && <>
-                  <td className="px-4 py-3 font-bold" style={{ color: 'var(--accent-red)' }}>{f(totalCost)}</td>
-                  <td className="px-4 py-3 font-bold" style={{ color: totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{f(totalProfit)}</td>
-                  <td className="px-4 py-3 font-bold" style={{ color: 'var(--text-2)' }}>
+                  <td className=" font-bold" style={{ color: 'var(--accent-red)' }}>{f(totalCost)}</td>
+                  <td className=" font-bold" style={{ color: totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{f(totalProfit)}</td>
+                  <td className=" font-bold" style={{ color: 'var(--text-2)' }}>
                     {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(2) + '%' : '—'}
                   </td>
                 </>}
@@ -615,7 +615,7 @@ export default function RevenuePage() {
                           {['ห้อง', 'ลูกค้า', mainTab === 'sales' ? 'วันจอง' : 'วันส่งมอบ', 'ประเภท', 'Sales',
                             mainTab === 'sales' ? 'สถานะ' : '', 'Revenue (Inc.VAT)',
                             mainTab === 'deliver' ? 'GP%' : ''].filter(Boolean).map(h => (
-                            <th key={h} className="text-left px-4 py-2 font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                            <th key={h} className="text-left font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -625,23 +625,23 @@ export default function RevenuePage() {
                           const gp = j.revenue_ex_vat > 0 ? ((j.revenue_ex_vat - costOf(j.id)) / j.revenue_ex_vat * 100) : null
                           return (
                             <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
-                              <td className="px-4 py-2 font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
-                              <td className="px-4 py-2" style={{ color: 'var(--text-2)' }}>{j.customer_name || '—'}</td>
-                              <td className="px-4 py-2 whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
+                              <td className=" font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</td>
+                              <td className="" style={{ color: 'var(--text-2)' }}>{j.customer_name || '—'}</td>
+                              <td className=" whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                                 {d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                               </td>
-                              <td className="px-4 py-2" style={{ color: 'var(--text-3)' }}>{j.work_type || '—'}</td>
-                              <td className="px-4 py-2" style={{ color: 'var(--text-3)' }}>{(j.sales as any)?.name || '—'}</td>
+                              <td className="" style={{ color: 'var(--text-3)' }}>{j.work_type || '—'}</td>
+                              <td className="" style={{ color: 'var(--text-3)' }}>{(j.sales as any)?.name || '—'}</td>
                               {mainTab === 'sales' && (
                                 <td className="px-4 py-2">
                                   <StatusChip kind="working" status={j.working_status} variant="outline" />
                                 </td>
                               )}
-                              <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(jobRev(j))}</td>
+                              <td className=" font-bold num num-money" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}><span>{f(jobRev(j))}</span></td>
                               {mainTab === 'deliver' && (
-                                <td className="px-4 py-2 text-right" style={{ color: gp !== null ? (gp >= 30 ? 'var(--accent-green)' : gp >= 15 ? 'var(--accent-amber)' : 'var(--accent-red)') : 'var(--text-3)' }}>
+                                <td className=" num num-pct" style={{ color: gp !== null ? (gp >= 30 ? 'var(--accent-green)' : gp >= 15 ? 'var(--accent-amber)' : 'var(--accent-red)') : 'var(--text-3)' }}><span>
                                   {gp !== null ? gp.toFixed(2) + '%' : '—'}
-                                </td>
+                                </span></td>
                               )}
                             </tr>
                           )
@@ -649,8 +649,8 @@ export default function RevenuePage() {
                       </tbody>
                       <tfoot>
                         <tr style={{ background: 'var(--hover-bg)', borderTop: '2px solid var(--divider)' }}>
-                          <td colSpan={mainTab === 'sales' ? 5 : 5} className="px-4 py-2 font-semibold" style={{ color: 'var(--text-2)' }}>รวม {p.units} งาน</td>
-                          <td className="px-4 py-2 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(p.revenue)}</td>
+                          <td colSpan={mainTab === 'sales' ? 5 : 5} className=" font-semibold" style={{ color: 'var(--text-2)' }}>รวม {p.units} งาน</td>
+                          <td className=" font-bold num num-money" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}><span>{f(p.revenue)}</span></td>
                           {mainTab === 'deliver' && <td />}
                         </tr>
                       </tfoot>
@@ -676,23 +676,23 @@ export default function RevenuePage() {
                   mainTab === 'deliver' ? 'GP%' : '',
                   'สถานะ', 'Sales',
                 ].filter(Boolean).map(h => (
-                  <th key={h} className="text-left px-3 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                  <th key={h} className="text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {periodJobs.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-12 text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
+                <tr><td colSpan={9} className="text-center text-sm" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
               ) : periodJobs.map(j => {
                 const d = mainTab === 'sales' ? (j.order_date || j.work_start_date) : j.actual_deliver_date
                 const profit = (j.revenue_ex_vat || 0) - costOf(j.id)
                 const gp = j.revenue_ex_vat > 0 ? (profit / j.revenue_ex_vat * 100).toFixed(0) : '—'
                 return (
                   <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
-                    <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
+                    <td className=" text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                       {d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                     </td>
-                    <td className="px-3 py-2.5" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
+                    <td className="" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
                     <td className="px-3 py-2.5">
                       <div className="text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</div>
                       <div className="font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</div>
@@ -702,31 +702,31 @@ export default function RevenuePage() {
                         {j.work_type || '—'}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>
+                    <td className=" font-bold num num-money" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}><span>
                       {f(jobRev(j))}
-                    </td>
+                    </span></td>
                     {mainTab === 'deliver' && <>
-                      <td className="px-3 py-2.5 text-right" style={{ color: 'var(--accent-red)' }}>{costOf(j.id) ? f(costOf(j.id)) : '—'}</td>
-                      <td className="px-3 py-2.5 text-right" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{gp}{gp !== '—' ? '%' : ''}</td>
+                      <td className=" num num-money" style={{ color: 'var(--accent-red)' }}><span>{costOf(j.id) ? f(costOf(j.id)) : '—'}</span></td>
+                      <td className=" num num-pct" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}><span>{gp}{gp !== '—' ? '%' : ''}</span></td>
                     </>}
                     <td className="px-3 py-2.5">
                       <StatusChip kind="working" status={j.working_status} variant="outline" />
                     </td>
-                    <td className="px-3 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
+                    <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
                   </tr>
                 )
               })}
             </tbody>
             <tfoot>
               <tr style={{ borderTop: '2px solid var(--accent)', background: 'var(--active-bg)' }}>
-                <td colSpan={4} className="px-3 py-2.5 font-bold text-xs" style={{ color: 'var(--text-1)' }}>
+                <td colSpan={4} className=" font-bold text-xs" style={{ color: 'var(--text-1)' }}>
                   รวม {periodJobs.length} รายการ
                 </td>
-                <td className="px-3 py-2.5 font-bold text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{f(totalRevenue)}</td>
+                <td className=" font-bold num num-money" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}><span>{f(totalRevenue)}</span></td>
                 {mainTab === 'deliver' && <>
-                  <td className="px-3 py-2.5 font-bold text-right" style={{ color: 'var(--accent-red)' }}>{f(totalCost)}</td>
-                  <td className="px-3 py-2.5 font-bold text-right" style={{ color: 'var(--text-2)' }}>
-                    {totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(2) + '%' : '—'}
+                  <td className=" font-bold num num-money" style={{ color: 'var(--accent-red)' }}><span>{f(totalCost)}</span></td>
+                  <td className=" font-bold num num-pct" style={{ color: 'var(--text-2)' }}>
+                    <span>{totalRevenueEx > 0 ? (totalProfit / totalRevenueEx * 100).toFixed(2) + '%' : '—'}</span>
                   </td>
                 </>}
                 <td colSpan={2} />

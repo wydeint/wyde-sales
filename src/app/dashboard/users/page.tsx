@@ -125,12 +125,12 @@ export default function UsersPage() {
         <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>ชื่อ</th>
-              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>Email</th>
-              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>Role</th>
-              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>Level</th>
-              <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>แผนก</th>
-              <th className="text-center px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>สถานะ</th>
+              <th className="text-left text-card-title" style={{ color: 'var(--text-2)' }}>ชื่อ</th>
+              <th className="text-left text-card-title" style={{ color: 'var(--text-2)' }}>Email</th>
+              <th className="text-left text-card-title" style={{ color: 'var(--text-2)' }}>Role</th>
+              <th className="text-left text-card-title" style={{ color: 'var(--text-2)' }}>Level</th>
+              <th className="text-left text-card-title" style={{ color: 'var(--text-2)' }}>แผนก</th>
+              <th className="text-center text-card-title" style={{ color: 'var(--text-2)' }}>สถานะ</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -153,14 +153,14 @@ export default function UsersPage() {
                     <span className="text-sm" style={{ color: 'var(--text-1)' }}>{u.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{u.email}</td>
+                <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{u.email}</td>
                 <td className="px-4 py-3">
                   <span className={`${ROLE_COLORS[u.role] || 'badge badge-gray'}`}>
                     {u.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm capitalize" style={{ color: 'var(--text-2)' }}>{u.level}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{u.dept}</td>
+                <td className=" text-sm capitalize" style={{ color: 'var(--text-2)' }}>{u.level}</td>
+                <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{u.dept}</td>
                 <td className="px-4 py-3 text-center">
                   <button onClick={() => toggleActive(u)}>
                     {u.active

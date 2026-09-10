@@ -324,7 +324,7 @@ export default function ExecutivePage() {
           orgTarget is computed from start/end and was already correct for any
           offset. The heading carries the period, so there is nothing to confuse. */}
       {orgTarget && (
-        <div className="ds-card p-4 flex gap-6 flex-wrap">
+        <div className="ds-card flex gap-6 flex-wrap">
           <div className="flex items-center gap-2">
             <Target size={13} style={{ color: 'var(--accent)' }} />
             <span className="text-label-upper" style={{ color: 'var(--text-2)' }}>เป้าองค์กร {label}</span>
@@ -477,7 +477,7 @@ export default function ExecutivePage() {
       )}
 
       {/* Sales Ranking */}
-      <div className="ds-card p-5">
+      <div className="ds-card">
         <div className="flex items-center gap-2 mb-4">
           <Award size={13} style={{ color: 'var(--accent-amber)' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales Ranking — {label}</h2>
@@ -651,7 +651,7 @@ export default function ExecutivePage() {
         const Tile = ({ label: lb, dot, value, sub, color }: {
           label: string; dot?: string; value: string; sub: React.ReactNode; color?: string
         }) => (
-          <div className="ds-card-sm p-3">
+          <div className="ds-card-sm">
             <p className="text-micro uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
               {dot && <i className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dot }} />}
               {lb}
@@ -661,7 +661,7 @@ export default function ExecutivePage() {
           </div>
         )
         const Section = ({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) => (
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <div className="flex items-baseline justify-between gap-3 mb-3">
               <h3 className="font-semibold" style={{ fontSize: 'var(--fs-section)', color: 'var(--text-1)' }}>{title}</h3>
               {note && <span className="text-micro" style={{ color: 'var(--text-3)' }}>{note}</span>}
@@ -839,8 +839,8 @@ export default function ExecutivePage() {
                   <thead>
                     <tr>
                       {['Sales', 'ยอดขาย', '① เก็บไม่ครบ', '② โอกาสเก็บเพิ่ม', '③ Pipeline', 'ส่งมอบ'].map((h, i) => (
-                        <th key={h} className={`px-2.5 py-2 text-micro uppercase tracking-wider font-semibold ${i ? 'text-right' : 'text-left'}`}
-                          style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--divider)' }}>{h}</th>
+                        <th key={h} className={` text-micro uppercase tracking-wider font-semibold ${i ? 'num num-count' : 'text-left'}`}
+                          style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--divider)' }}><span>{h}</span></th>
                       ))}
                     </tr>
                   </thead>
@@ -848,12 +848,12 @@ export default function ExecutivePage() {
                     {holders.map(h => {
                       const p = pipelineFor(scopedJobs, h.id)
                       const on = h.id === me.id
-                      const td = 'px-2.5 py-2 text-right whitespace-nowrap'
+                      const td = 'num num-money whitespace-nowrap'
                       const bd = { borderBottom: '1px solid var(--divider)' }
                       return (
                         <tr key={h.id} onClick={() => setSelectedSales(h.id)} className="cursor-pointer"
                           style={{ background: on ? 'var(--hover-bg)' : 'transparent' }}>
-                          <td className="px-2.5 py-2 whitespace-nowrap"
+                          <td className=" whitespace-nowrap"
                             style={{ ...bd, color: 'var(--text-1)', fontWeight: on ? 700 : 400 }}>{h.name}</td>
                           <td className={td} style={bd}>{fk(h.card.soldValue)}</td>
                           <td className={td} style={{ ...bd, color: 'var(--accent-orange)' }}>{fk(h.card.openValue)}</td>

@@ -319,7 +319,7 @@ export default function TargetsPage() {
               {/* Plain card. This was tinted orange end to end, but nothing here
                   needs attention — it is just the org target summary, and orange
                   means "act on this" everywhere else in the app. */}
-              <div className="ds-card p-5">
+              <div className="ds-card">
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 size={16} style={{ color: 'var(--accent)' }} />
                   <h2 className="text-label-upper" style={{ color: 'var(--text-2)' }}>สรุปเป้าองค์กร ปี {filterYear + 543}</h2>
@@ -361,7 +361,7 @@ export default function TargetsPage() {
 
               {/* Sales team vs Org gap */}
               {orgTotalSales > 0 && salesTeamSalesTarget > 0 && (
-                <div className="ds-card p-4">
+                <div className="ds-card">
                   <p className="text-card-title mb-3" style={{ color: 'var(--text-2)' }}>เปรียบเทียบเป้าองค์กร vs เป้าทีมขาย ({periodLabel})</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -406,7 +406,7 @@ export default function TargetsPage() {
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         {['เดือน','เป้ายอดขาย','จริง (ขาย)','%','เป้าส่งมอบ','จริง (ส่งมอบ)','%',''].map((h, i) => (
-                          <th key={i} className={`py-2 px-4 text-xs font-semibold ${i === 0 ? 'text-left' : 'text-right'}`} style={{ color: 'var(--text-2)' }}>{h}</th>
+                          <th key={i} className={` text-xs font-semibold ${i === 0 ? 'text-left' : 'num num-count'}`} style={{ color: 'var(--text-2)' }}><span>{h}</span></th>
                         ))}
                       </tr>
                     </thead>
@@ -426,25 +426,25 @@ export default function TargetsPage() {
                                 {MONTHS_FULL[m - 1]}
                               </span>
                             </td>
-                            <td className="py-2.5 px-4 text-right text-sm text-success">{ot ? f(ot.target_sales_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
-                            <td className="py-2.5 px-4 text-right text-sm" style={{ color: 'var(--text-1)' }}>{actS > 0 ? f(actS) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
-                            <td className="py-2.5 px-4 text-right text-xs">
-                              {ot && ot.target_sales_value > 0 ? (
+                            <td className=" num num-money text-sm text-success"><span>{ot ? f(ot.target_sales_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</span></td>
+                            <td className=" num num-money text-sm" style={{ color: 'var(--text-1)' }}><span>{actS > 0 ? f(actS) : <span style={{ color: 'var(--text-3)' }}>—</span>}</span></td>
+                            <td className=" num num-pct text-xs">
+                              <span>{ot && ot.target_sales_value > 0 ? (
                                 <span className={pct(actS, ot.target_sales_value) >= 100 ? 'text-success' : ''} style={pct(actS, ot.target_sales_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
                                   {pct(actS, ot.target_sales_value)}%
                                 </span>
-                              ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                              ) : <span style={{ color: 'var(--text-3)' }}>—</span>}</span>
                             </td>
-                            <td className="py-2.5 px-4 text-right text-sm text-info">{ot ? f(ot.target_delivery_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
-                            <td className="py-2.5 px-4 text-right text-sm" style={{ color: 'var(--text-1)' }}>{actD > 0 ? f(actD) : <span style={{ color: 'var(--text-3)' }}>—</span>}</td>
-                            <td className="py-2.5 px-4 text-right text-xs">
-                              {ot && ot.target_delivery_value > 0 ? (
+                            <td className=" num num-money text-sm text-info"><span>{ot ? f(ot.target_delivery_value) : <span style={{ color: 'var(--text-3)' }}>—</span>}</span></td>
+                            <td className=" num num-money text-sm" style={{ color: 'var(--text-1)' }}><span>{actD > 0 ? f(actD) : <span style={{ color: 'var(--text-3)' }}>—</span>}</span></td>
+                            <td className=" num num-pct text-xs">
+                              <span>{ot && ot.target_delivery_value > 0 ? (
                                 <span className={pct(actD, ot.target_delivery_value) >= 100 ? 'text-info' : ''} style={pct(actD, ot.target_delivery_value) >= 100 ? {} : { color: 'var(--text-2)' }}>
                                   {pct(actD, ot.target_delivery_value)}%
                                 </span>
-                              ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
+                              ) : <span style={{ color: 'var(--text-3)' }}>—</span>}</span>
                             </td>
-                            <td className="py-2.5 px-4 text-right">
+                            <td className=" num num-money">
                               <button onClick={() => {
                                 if (ot) { setEditingOrg(ot); setOrgForm({ year: ot.year, month: ot.month, target_sales_value: ot.target_sales_value, target_delivery_value: ot.target_delivery_value }) }
                                 else setOrgForm({ year: filterYear, month: m, target_sales_value: 0, target_delivery_value: 0 })
@@ -461,16 +461,16 @@ export default function TargetsPage() {
                     </tbody>
                     <tfoot>
                       <tr style={{ borderTop: '2px solid var(--divider)' }}>
-                        <td className="py-3 px-4 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวมทั้งปี</td>
-                        <td className="py-3 px-4 text-right text-success font-bold text-sm">{f(orgAllSales)}</td>
-                        <td className="py-3 px-4 text-right font-bold text-sm" style={{ color: 'var(--text-1)' }}>{f(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0))}</td>
-                        <td className="py-3 px-4 text-right text-xs" style={{ color: 'var(--text-2)' }}>
-                          {orgAllSales > 0 ? `${pct(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0), orgAllSales)}%` : '—'}
+                        <td className=" text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวมทั้งปี</td>
+                        <td className=" num num-money text-success font-bold text-sm"><span>{f(orgAllSales)}</span></td>
+                        <td className=" num num-money font-bold text-sm" style={{ color: 'var(--text-1)' }}><span>{f(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0))}</span></td>
+                        <td className=" num num-pct text-xs" style={{ color: 'var(--text-2)' }}>
+                          <span>{orgAllSales > 0 ? `${pct(Object.values(actualSalesByMonth).reduce((s, v) => s + v, 0), orgAllSales)}%` : '—'}</span>
                         </td>
-                        <td className="py-3 px-4 text-right text-info font-bold text-sm">{f(orgAllDeliv)}</td>
-                        <td className="py-3 px-4 text-right font-bold text-sm" style={{ color: 'var(--text-1)' }}>{f(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0))}</td>
-                        <td className="py-3 px-4 text-right text-xs" style={{ color: 'var(--text-2)' }}>
-                          {orgAllDeliv > 0 ? `${pct(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0), orgAllDeliv)}%` : '—'}
+                        <td className=" num num-money text-info font-bold text-sm"><span>{f(orgAllDeliv)}</span></td>
+                        <td className=" num num-money font-bold text-sm" style={{ color: 'var(--text-1)' }}><span>{f(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0))}</span></td>
+                        <td className=" num num-pct text-xs" style={{ color: 'var(--text-2)' }}>
+                          <span>{orgAllDeliv > 0 ? `${pct(Object.values(actualDelivByMonth).reduce((s, v) => s + v, 0), orgAllDeliv)}%` : '—'}</span>
                         </td>
                         <td />
                       </tr>
@@ -592,19 +592,19 @@ export default function TargetsPage() {
                       <table className="w-full text-sm tbl-rows">
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                            <th className="text-left px-4 py-2 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
+                            <th className="text-left text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
                             {teamData.map(t => (
-                              <th key={t.manager.id} colSpan={2} className="text-center px-4 py-2 text-xs font-semibold" style={{ color: t.color }}>
+                              <th key={t.manager.id} colSpan={2} className="text-center text-xs font-semibold" style={{ color: t.color }}>
                                 ทีม {t.manager.name}
                               </th>
                             ))}
                           </tr>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                            <th className="text-left px-4 py-1.5 text-micro" style={{ color: 'var(--text-3)' }}></th>
+                            <th className="text-left text-micro" style={{ color: 'var(--text-3)' }}></th>
                             {teamData.map(t => (
                               <>
-                                <th key={t.manager.id + 's'} className="text-right px-3 py-1.5 text-micro" style={{ color: 'var(--text-3)' }}>ยอดขาย</th>
-                                <th key={t.manager.id + 'd'} className="text-right px-3 py-1.5 text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบ</th>
+                                <th key={t.manager.id + 's'} className="num num-money text-micro" style={{ color: 'var(--text-3)' }}><span>ยอดขาย</span></th>
+                                <th key={t.manager.id + 'd'} className="num num-count text-micro" style={{ color: 'var(--text-3)' }}><span>ส่งมอบ</span></th>
                               </>
                             ))}
                           </tr>
@@ -613,7 +613,7 @@ export default function TargetsPage() {
                           {/* max members rows */}
                           {Array.from({ length: Math.max(...teamData.map(t => t.members.length)) }, (_, i) => (
                             <tr key={i} style={{ borderBottom: '1px solid var(--divider)' }}>
-                              <td className="px-4 py-2 text-xs" style={{ color: 'var(--text-3)' }}>#{i + 1}</td>
+                              <td className=" text-xs" style={{ color: 'var(--text-3)' }}>#{i + 1}</td>
                               {teamData.map(t => {
                                 const u = t.members[i]
                                 if (!u) return <><td key={t.manager.id + 's'} className="px-3 py-2" /><td key={t.manager.id + 'd'} className="px-3 py-2" /></>
@@ -623,7 +623,7 @@ export default function TargetsPage() {
                                       <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{u.name}</p>
                                       <p className="text-micro" style={{ color: 'var(--accent-green)' }}>{f(getUserActual(u.id, 'sales'))}</p>
                                     </td>
-                                    <td key={t.manager.id + 'd'} className="px-3 py-2 text-right">
+                                    <td key={t.manager.id + 'd'} className=" num num-money">
                                       <p className="text-micro" style={{ color: 'var(--accent-blue)' }}>{f(getUserActual(u.id, 'deliv'))}</p>
                                     </td>
                                   </>
@@ -633,14 +633,14 @@ export default function TargetsPage() {
                           ))}
                           {/* team total row */}
                           <tr style={{ borderTop: '2px solid var(--divider)', background: 'var(--hover-bg)' }}>
-                            <td className="px-4 py-2 text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวมทีม</td>
+                            <td className=" text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวมทีม</td>
                             {teamData.map(t => (
                               <>
                                 <td key={t.manager.id + 'ts'} className="px-3 py-2">
                                   <p className="text-xs font-bold" style={{ color: 'var(--accent-green)' }}>{f(t.teamActualSales)}</p>
                                   {t.teamTargetSales > 0 && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualSales, t.teamTargetSales)}%</p>}
                                 </td>
-                                <td key={t.manager.id + 'td'} className="px-3 py-2 text-right">
+                                <td key={t.manager.id + 'td'} className=" num num-money">
                                   <p className="text-xs font-bold" style={{ color: 'var(--accent-blue)' }}>{f(t.teamActualDeliv)}</p>
                                   {t.teamTargetDeliv > 0 && <p className="text-micro" style={{ color: 'var(--text-3)' }}>{pct(t.teamActualDeliv, t.teamTargetDeliv)}%</p>}
                                 </td>
@@ -676,7 +676,7 @@ export default function TargetsPage() {
                     const trend = sparkSales[2] > sparkSales[0] ? '↑' : sparkSales[2] < sparkSales[0] ? '↓' : '→'
                     const trendColor = trend === '↑' ? 'var(--accent-green)' : trend === '↓' ? 'var(--accent-red)' : 'var(--text-3)'
                     return (
-                      <div key={t.user_id} className="ds-card p-4">
+                      <div key={t.user_id} className="ds-card">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--hover-bg)' }}>

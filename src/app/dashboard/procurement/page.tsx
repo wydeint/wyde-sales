@@ -801,7 +801,7 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
         <Tile label="รอเปิด PO" value={String(summary.awaiting)} sub="บรรทัด" />
       </div>
 
-      <div className="ds-card p-0 overflow-hidden mt-4">
+      <div className="ds-card ds-card-flush overflow-hidden mt-4">
         <div className="flex items-baseline justify-between gap-3 flex-wrap p-4 pb-3">
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>สรุปรายโครงการ</h2>
           <span className="text-caption" style={{ color: 'var(--text-3)' }}>
@@ -813,12 +813,12 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
             <thead>
               <tr>
                 <th className="text-left th-muted">โครงการ</th>
-                <th className="text-right th-muted">ห้อง</th>
-                <th className="text-right th-muted">Revenue inc.VAT</th>
-                <th className="text-right th-muted">Revenue exc.VAT</th>
-                <th className="text-right th-muted">ประมาณการณ์</th>
-                <th className="text-right th-muted">จัดจ้างจริง</th>
-                <th className="text-right th-muted">GP% จริง</th>
+                <th className="num num-count th-muted"><span>ห้อง</span></th>
+                <th className="num num-money th-muted"><span>Revenue inc.VAT</span></th>
+                <th className="num num-money th-muted"><span>Revenue exc.VAT</span></th>
+                <th className="num num-money th-muted"><span>ประมาณการณ์</span></th>
+                <th className="num num-money th-muted"><span>จัดจ้างจริง</span></th>
+                <th className="num num-pct th-muted"><span>GP% จริง</span></th>
                 <th className="text-left th-muted">ลงต้นทุนแล้ว</th>
               </tr>
             </thead>
@@ -835,12 +835,12 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
                           style={{ color: 'var(--text-3)' }}>{isOpen ? '▾' : '▸'}</span>
                         {p.name}
                       </td>
-                      <td className="text-right tabular-nums">{p.list.length}</td>
-                      <td className="text-right tabular-nums">{bahtShort(p.revInc)}</td>
-                      <td className="text-right font-semibold tabular-nums">{bahtShort(p.rev)}</td>
-                      <td className="text-right tabular-nums">{p.est ? bahtShort(p.est) : '–'}</td>
-                      <td className="text-right font-semibold tabular-nums">{p.act ? bahtShort(p.act) : '–'}</td>
-                      <td className="text-right font-semibold tabular-nums">{gpText(p.gpv)}</td>
+                      <td className="num num-count tabular-nums"><span>{p.list.length}</span></td>
+                      <td className="num num-money tabular-nums"><span>{bahtShort(p.revInc)}</span></td>
+                      <td className="num num-money font-semibold tabular-nums"><span>{bahtShort(p.rev)}</span></td>
+                      <td className="num num-money tabular-nums"><span>{p.est ? bahtShort(p.est) : '–'}</span></td>
+                      <td className="num num-money font-semibold tabular-nums"><span>{p.act ? bahtShort(p.act) : '–'}</span></td>
+                      <td className="num num-pct font-semibold tabular-nums"><span>{gpText(p.gpv)}</span></td>
                       <td className="text-caption" style={{ color: 'var(--text-3)' }}>
                         {p.priced}/{p.list.length}
                         {p.awaiting > 0 && (
@@ -861,17 +861,17 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
                             </span>
                           </td>
                           <td />
-                          <td className="text-right tabular-nums">
+                          <td className="num num-money tabular-nums"><span>
                             {baht(Number(j.revenue_inc_vat || 0))}
-                          </td>
-                          <td className="text-right tabular-nums">
+                          </span></td>
+                          <td className="num num-money tabular-nums"><span>
                             {baht(revenueBase(j.revenue_inc_vat, j.revenue_ex_vat).value)}
-                          </td>
-                          <td className="text-right tabular-nums">{baht(t.est)}</td>
-                          <td className="text-right tabular-nums">{baht(t.act)}</td>
-                          <td className="text-right tabular-nums">
+                          </span></td>
+                          <td className="num num-money tabular-nums"><span>{baht(t.est)}</span></td>
+                          <td className="num num-money tabular-nums"><span>{baht(t.act)}</span></td>
+                          <td className="num num-pct tabular-nums"><span>
                             {gpText(gpCosted(revenueBase(j.revenue_inc_vat, j.revenue_ex_vat).value, t.act, t.actLines))}
-                          </td>
+                          </span></td>
                           <td><span className={ROOM_STATUS_CLASS[st]}>{st}</span></td>
                         </tr>
                       )
@@ -911,7 +911,7 @@ function WorkTab({ rows, itemsByJob, projById, nameOf, setOpenJob }: {
   setOpenJob: (id: string) => void
 }) {
   return (
-    <div className="ds-card p-0 overflow-hidden">
+    <div className="ds-card ds-card-flush overflow-hidden">
       <div className="tbl-scroll">
         <table className="w-full tbl-rows">
           <thead>
@@ -919,10 +919,10 @@ function WorkTab({ rows, itemsByJob, projById, nameOf, setOpenJob }: {
               <th className="text-left th-muted">ห้อง</th>
               <th className="text-left th-muted">PR</th>
               <th className="text-left th-muted">จัดซื้อรับงาน</th>
-              <th className="text-right th-muted">Revenue exc.VAT</th>
-              <th className="text-right th-muted">ประมาณการณ์</th>
-              <th className="text-right th-muted">จัดจ้างจริง</th>
-              <th className="text-right th-muted">GP%</th>
+              <th className="num num-money th-muted"><span>Revenue exc.VAT</span></th>
+              <th className="num num-money th-muted"><span>ประมาณการณ์</span></th>
+              <th className="num num-money th-muted"><span>จัดจ้างจริง</span></th>
+              <th className="num num-pct th-muted"><span>GP%</span></th>
               <th className="text-left th-muted">KPI เปิด PO</th>
               <th className="text-left th-muted">ผู้รับผิดชอบ</th>
               <th className="text-left th-muted">สถานะ</th>
@@ -952,14 +952,14 @@ function WorkTab({ rows, itemsByJob, projById, nameOf, setOpenJob }: {
                       : <span className="badge badge-gray">ยังไม่มี PR</span>}
                   </td>
                   <td className="text-caption">{fmtDate(j.procurement_received_at)}</td>
-                  <td className="text-right tabular-nums">
+                  <td className="num num-money tabular-nums"><span>
                     {baht(revenueBase(j.revenue_inc_vat, j.revenue_ex_vat).value)}
-                  </td>
-                  <td className="text-right tabular-nums">{baht(t.est)}</td>
-                  <td className="text-right tabular-nums">{baht(t.act)}</td>
-                  <td className="text-right tabular-nums">
+                  </span></td>
+                  <td className="num num-money tabular-nums"><span>{baht(t.est)}</span></td>
+                  <td className="num num-money tabular-nums"><span>{baht(t.act)}</span></td>
+                  <td className="num num-pct tabular-nums"><span>
                     {gpText(gpCosted(revenueBase(j.revenue_inc_vat, j.revenue_ex_vat).value, t.act, t.actLines))}
-                  </td>
+                  </span></td>
                   <td className="text-caption">
                     {days === null
                       ? <span style={{ color: 'var(--text-3)' }}>—</span>
@@ -1077,10 +1077,10 @@ function RoomSheet({
         <ArrowLeft size={15} /> กลับไปรายการห้อง
       </button>
 
-      <div className="ds-card p-4 space-y-2.5">
+      <div className="ds-card space-y-2.5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h2 className="font-bold" style={{ fontSize: 16, lineHeight: 1.3, color: 'var(--text-1)' }}>
+            <h2 className="font-bold" style={{ fontSize: 13, lineHeight: 1.3, color: 'var(--text-1)' }}>
               ห้อง {job.room_no ?? '—'}
               <span className={`ml-2 badge ${job.customer_type === 'B2B' ? 'badge-purple' : 'badge-blue'}`}>
                 {job.customer_type ?? '—'}
@@ -1091,12 +1091,12 @@ function RoomSheet({
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>GP% จริง</p>
+            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>GP% จริง</p>
             <p className="font-bold tabular-nums"
               style={{ fontSize: 20, lineHeight: 1.2, color: 'var(--text-1)' }}>
               {gpText(gpCosted(revEx, t.act, t.actLines))}
             </p>
-            <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>คิดจาก Revenue exc.VAT</p>
+            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>คิดจาก Revenue exc.VAT</p>
           </div>
         </div>
 
@@ -1113,7 +1113,7 @@ function RoomSheet({
           {job.customer_type === 'B2B' && <Field label="PO จากลูกค้า" value={job.po_no ?? '—'} highlight />}
           <Field label="Revenue inc.VAT" value={baht(rev)} />
           <div className="min-w-0">
-            <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>
+            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>
               Revenue exc.VAT
             </p>
             <p className="font-semibold tabular-nums"
@@ -1136,7 +1136,7 @@ function RoomSheet({
           {/* วันที่จัดซื้อรับงานต่อ — จุดเริ่มนับ KPI 14 วัน จัดซื้อกรอกเองได้จาก
               หน้าตัวเอง ไม่ต้องรอใคร */}
           <div className="min-w-0">
-            <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--accent)' }}>จัดซื้อรับงาน</p>
+            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--accent)' }}>จัดซื้อรับงาน</p>
             <Cell v={job.procurement_received_at ?? ''} type="date" w="7.5rem" canWrite={canWrite}
               display={fmtDate(job.procurement_received_at)} placeholder="+ วันรับงาน"
               onSave={v => onSetReceived(v)} />
@@ -1169,7 +1169,7 @@ function RoomSheet({
         </div>
       </div>
 
-      <div className="ds-card p-0 overflow-hidden">
+      <div className="ds-card ds-card-flush overflow-hidden">
         <div className="flex items-baseline justify-between gap-3 flex-wrap p-4 pb-3">
           <div className="min-w-0">
             <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>
@@ -1243,11 +1243,11 @@ function RoomSheet({
                 <th className="text-left th-muted">Supplier</th>
                 {/* กรอกที่ช่องรวม VAT ตัวเดียว (ตรงกับใบเสนอราคา) ส่วน exc.VAT
                     คำนวณให้ ÷ 1.07 — เดิมให้กรอก exc.VAT น้องต้องหารเองทุกบรรทัด */}
-                <th className="text-right th-muted">ราคาขาย inc.VAT</th>
-                <th className="text-right th-muted">ราคาขาย exc.VAT</th>
-                <th className="text-right th-muted">ประมาณการณ์</th>
-                <th className="text-right th-muted">จัดจ้างจริง</th>
-                <th className="text-right th-muted">ส่วนต่าง</th>
+                <th className="num num-money th-muted"><span>ราคาขาย inc.VAT</span></th>
+                <th className="num num-money th-muted"><span>ราคาขาย exc.VAT</span></th>
+                <th className="num num-money th-muted"><span>ประมาณการณ์</span></th>
+                <th className="num num-money th-muted"><span>จัดจ้างจริง</span></th>
+                <th className="num num-money th-muted"><span>ส่วนต่าง</span></th>
                 <th className="text-left th-muted">วันที่ขออนุมัติ</th>
                 {canWrite && <th />}
               </tr>
@@ -1255,7 +1255,7 @@ function RoomSheet({
             <tbody>
               {shown.length === 0 && (
                 <tr>
-                  <td colSpan={cols} className="text-center py-8" style={{ color: 'var(--text-3)' }}>
+                  <td colSpan={cols} className="text-center" style={{ color: 'var(--text-3)' }}>
                     ยังไม่มีรายการต้นทุนในห้องนี้
                     {canWrite && <> — เลือก <b style={{ color: 'var(--accent)' }}>+ เปิดหมวดเพิ่ม</b> ด้านบนเพื่อเริ่ม</>}
                   </td>
@@ -1320,7 +1320,7 @@ function RoomSheet({
                             )
                           ) : <span style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
-                        <td className="text-right">
+                        <td className="num num-money">
                           {/* สามค่า สามความหมาย ห้ามยุบรวมกัน:
                               null = ยังไม่ระบุ · 0 = รวมอยู่ในบรรทัดอื่นแล้ว · >0 = ราคาที่เสนอ
                               ใบเสนอราคาให้ลูกค้ามักมีบรรทัดเดียว ("ม่าน 1 ชุด") แต่ต้นทุนมี
@@ -1337,11 +1337,11 @@ function RoomSheet({
                               onPatch(it.id, { sale_price_inc: inc, sale_price: inc === null ? null : exVatOf(inc) })
                             }} />
                         </td>
-                        <td className="text-right tabular-nums"
-                          style={{ color: it.sale_price === null ? 'var(--text-3)' : 'var(--text-2)' }}>
+                        <td className="num num-money tabular-nums"
+                          style={{ color: it.sale_price === null ? 'var(--text-3)' : 'var(--text-2)' }}><span>
                           {it.sale_price === null ? '—' : it.sale_price === 0 ? 'รวมในบรรทัดอื่น' : baht(it.sale_price)}
-                        </td>
-                        <td className="text-right">
+                        </span></td>
+                        <td className="num num-money">
                           {/* ว่าง = ยังไม่กรอก · 0 = ไม่มีต้นทุน — สองอย่างนี้ต่างกัน ห้ามยุบ
                               เป็นค่าเดียว · ใช้คำกลางๆ เพราะระบบรู้แค่ตัวเลข ไม่รู้เหตุผล
                               (ทำเอง in-house / เบิกสต๊อก / แถมฟรี ล้วนเป็น ฿0 ทั้งนั้น) —
@@ -1351,23 +1351,23 @@ function RoomSheet({
                             placeholder="ยังไม่กรอก"
                             onSave={v => onPatch(it.id, { est_cost: v.trim() === '' ? null : Number(v) || 0 })} />
                         </td>
-                        <td className="text-right">
+                        <td className="num num-money">
                           <Cell v={it.act_cost === null ? '' : String(it.act_cost)} num w="6.5rem" canWrite={canWrite}
                             display={it.act_cost === null ? '—' : it.act_cost === 0 ? 'ไม่มีต้นทุน' : baht(it.act_cost)}
                             placeholder="ยังไม่กรอก"
                             onSave={v => onPatch(it.id, { act_cost: v.trim() === '' ? null : Number(v) || 0 })} />
                         </td>
-                        <td className="text-right tabular-nums"
-                          style={{ color: (it.act_cost ?? 0) > (it.est_cost ?? 0) ? 'var(--accent-red)' : 'var(--text-2)' }}>
+                        <td className="num num-money tabular-nums"
+                          style={{ color: (it.act_cost ?? 0) > (it.est_cost ?? 0) ? 'var(--accent-red)' : 'var(--text-2)' }}><span>
                           {it.act_cost !== null && it.est_cost !== null ? baht(it.act_cost - it.est_cost) : '—'}
-                        </td>
+                        </span></td>
                         <td>
                           <Cell v={it.approved_at ?? ''} type="date" w="7.5rem" canWrite={canWrite}
                             display={fmtDate(it.approved_at)}
                             onSave={v => onPatch(it.id, { approved_at: v || null })} />
                         </td>
                         {canWrite && (
-                          <td className="text-right whitespace-nowrap">
+                          <td className="num num-money whitespace-nowrap">
                             <button onClick={() => onDelete(it.id)} aria-label={`ลบ ${it.item_name}`}
                               style={{ color: 'var(--text-3)' }}><Trash2 size={14} /></button>
                           </td>
@@ -1401,15 +1401,15 @@ function RoomSheet({
                 </td>
                 {/* ต้องมีครบทุกคอลัมน์ ไม่งั้นตัวเลขเลื่อนไปอยู่ใต้หัวคอลัมน์อื่น —
                     เดิมนับขาดไป 1 ช่อง ยอดประมาณการณ์จึงไปอยู่ใต้ "ราคาขาย" */}
-                <td className="text-right font-bold tabular-nums">{baht(split.total)}</td>
-                <td className="text-right font-bold tabular-nums">
-                  {baht(round2(items.reduce((sum, i) => sum + Number(i.sale_price ?? 0), 0)))}
+                <td className="num num-money font-bold tabular-nums"><span>{baht(split.total)}</span></td>
+                <td className="num num-money font-bold tabular-nums">
+                  <span>{baht(round2(items.reduce((sum, i) => sum + Number(i.sale_price ?? 0), 0)))}</span>
                 </td>
-                <td className="text-right font-bold tabular-nums">{baht(t.est)}</td>
-                <td className="text-right font-bold tabular-nums">{baht(t.act)}</td>
-                <td className="text-right font-bold tabular-nums">
+                <td className="num num-money font-bold tabular-nums"><span>{baht(t.est)}</span></td>
+                <td className="num num-money font-bold tabular-nums"><span>{baht(t.act)}</span></td>
+                <td className="num num-money font-bold tabular-nums"><span>
                   {t.act && t.est ? baht(t.act - t.est) : '—'}
-                </td>
+                </span></td>
                 {/* GP คือตัวเลขที่คนกรอกต้นทุนจ้องดู — มันเคยเป็น text-caption
                     สีจาง เท่ากับหมายเหตุข้างๆ ทั้งที่เป็นผลลัพธ์ของทั้งตาราง
                     ตัวที่จริง (หลังจัดจ้าง) หนาและเข้ม ส่วนตัวประมาณการณ์คงจาง
@@ -1434,7 +1434,7 @@ function RoomSheet({
 function Field({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="min-w-0">
-      <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       <p className="font-semibold tabular-nums"
         style={{ fontSize: 12.5, lineHeight: 1.45,
           color: highlight ? 'var(--accent-purple)' : 'var(--text-1)' }}>{value}</p>
@@ -1453,7 +1453,7 @@ function AssignField({ label, value, people, canWrite, canTake, onTake, onPick }
 }) {
   return (
     <div>
-      <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       {canWrite ? (
         <div className="flex items-center gap-2">
           <select
@@ -1576,7 +1576,7 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
   onOpen: (jobId: string) => void
 }) {
   return (
-    <div className="ds-card p-0 overflow-hidden">
+    <div className="ds-card ds-card-flush overflow-hidden">
       <div className="flex items-baseline justify-end gap-3 flex-wrap px-4 pt-3">
         <span className="text-caption" style={{ color: 'var(--text-3)' }}>
           กดที่ช่องเพื่อแก้ · Enter หรือคลิกที่อื่นเพื่อบันทึก · Esc เพื่อยกเลิก · {rows.length} ห้อง
@@ -1593,8 +1593,8 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
               <th className="text-left th-muted" style={{ width: '10%', whiteSpace: 'normal' }}>แอดมินรับงาน</th>
               <th className="text-left th-muted" style={{ width: '10%', whiteSpace: 'normal' }}>จัดซื้อรับงาน</th>
               <th className="text-left th-muted" style={{ width: '11%' }}>แอดมิน</th>
-              <th className="text-right th-muted" style={{ width: '10%', whiteSpace: 'normal' }}>Revenue exc.VAT</th>
-              <th className="text-right th-muted" style={{ width: '7%', whiteSpace: 'normal' }}>PO Supplier</th>
+              <th className="num num-pct th-muted" style={{ width: '10%', whiteSpace: 'normal' }}><span>Revenue exc.VAT</span></th>
+              <th className="num num-pct th-muted" style={{ width: '7%', whiteSpace: 'normal' }}><span>PO Supplier</span></th>
             </tr>
           </thead>
           <tbody>
@@ -1645,7 +1645,7 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
                       </span>
                     )}
                   </td>
-                  <td className="text-right tabular-nums">
+                  <td className="num num-money tabular-nums">
                     {(() => {
                       const b = revenueBase(j.revenue_inc_vat, j.revenue_ex_vat)
                       return (
@@ -1661,7 +1661,7 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
                       )
                     })()}
                   </td>
-                  <td className="text-right">
+                  <td className="num num-money">
                     <button onClick={() => onOpen(j.id)} className="text-xs font-semibold"
                       style={{ color: pos ? 'var(--accent)' : 'var(--text-3)' }}>
                       {pos ? `${pos} ใบ` : 'ยังไม่มี'} ›
@@ -1856,7 +1856,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
   return (
     <>
       {mgr && (
-        <div className="ds-card-sm p-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="ds-card-sm flex flex-wrap items-center gap-x-4 gap-y-1">
           <b className="text-card-title" style={{ color: 'var(--text-1)' }}>{mgr.name}</b>
           <span className="text-caption" style={{ color: 'var(--text-3)' }}>
             ผู้จัดการ คุมจัดซื้อ + QS — เห็นทุกห้อง ไม่นับเป็นผู้รับผิดชอบรายห้อง
@@ -1875,7 +1875,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
           </p>
         )}
         {people.map(p => (
-          <div key={p.userId} className="ds-card-sm p-4">
+          <div key={p.userId} className="ds-card-sm">
             <h3 className="text-card-title" style={{ color: 'var(--text-1)' }}>{nameOf(p.userId)}</h3>
             {/* ขนาดงานเป็นบริบท ไม่ใช่ตัวชี้วัด — เดิมวางเป็นสองแถวหน้าตาเดียวกับ
                 KPI ทำให้ของจริงสองตัวจมหายไปในสี่แถวที่เหมือนกันหมด · เงินเต็ม
@@ -1919,7 +1919,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
           </p>
         )}
         {admins.map(a => (
-          <div key={a.userId} className="ds-card-sm p-4">
+          <div key={a.userId} className="ds-card-sm">
             <h3 className="text-card-title" style={{ color: 'var(--text-1)' }}>{nameOf(a.userId)}</h3>
             <p className="text-caption" style={{ color: 'var(--text-3)' }}>แอดมิน · เอกสาร</p>
             <dl className="mt-3 text-body">
@@ -1993,7 +1993,7 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
 
   return (
     <>
-      <div className="ds-card p-0 overflow-hidden">
+      <div className="ds-card ds-card-flush overflow-hidden">
         <div className="flex items-baseline justify-between gap-3 flex-wrap p-4 pb-3">
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>หมวดงาน</h2>
           <span className="text-caption" style={{ color: 'var(--text-3)' }}>
@@ -2006,7 +2006,7 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
               <tr>
                 <th className="text-left th-muted" style={{ width: '46%' }}>หมวด</th>
                 <th className="text-left th-muted" style={{ width: '22%' }}>ผู้ประมาณการณ์</th>
-                <th className="text-right th-muted" style={{ width: '22%' }}>Supplier ในหมวด</th>
+                <th className="num num-pct th-muted" style={{ width: '22%' }}><span>Supplier ในหมวด</span></th>
                 {canWrite && <th style={{ width: '10%' }} />}
               </tr>
             </thead>
@@ -2019,13 +2019,13 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
                       {c.owner_dept === 'qs' ? 'QS' : 'จัดซื้อ'}
                     </span>
                   </td>
-                  <td className="text-right tabular-nums">
-                    {c.needs_supplier
+                  <td className="num num-count tabular-nums">
+                    <span>{c.needs_supplier
                       ? (supsOfCat.get(c.id)?.length ?? 0) || '—'
-                      : <span className="badge badge-gray">ไม่ต้องมี</span>}
+                      : <span className="badge badge-gray">ไม่ต้องมี</span>}</span>
                   </td>
                   {canWrite && (
-                    <td className="text-right">
+                    <td className="num num-money">
                       <button onClick={() => onEditCategory(c)} aria-label={`แก้ไขหมวด ${c.name}`}
                         style={{ color: 'var(--text-3)' }}><Pencil size={14} /></button>
                     </td>
@@ -2045,7 +2045,7 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
         )}
       </div>
 
-      <div className="ds-card p-0 overflow-hidden mt-4">
+      <div className="ds-card ds-card-flush overflow-hidden mt-4">
         <div className="flex items-baseline justify-between gap-3 flex-wrap p-4 pb-3">
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>
             ทะเบียน Supplier · แยกตามหมวดงาน
@@ -2062,8 +2062,8 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
                 <th className="text-left th-muted" style={{ width: '14%' }}>ผู้ติดต่อ</th>
                 <th className="text-left th-muted" style={{ width: '22%' }}>อีเมล</th>
                 <th className="text-left th-muted" style={{ width: '12%' }}>เบอร์โทร</th>
-                <th className="text-right th-muted" style={{ width: '8%' }}>งานที่จ้าง</th>
-                <th className="text-right th-muted" style={{ width: '10%' }}>มูลค่ารวม</th>
+                <th className="num num-pct th-muted" style={{ width: '8%' }}><span>งานที่จ้าง</span></th>
+                <th className="num num-pct th-muted" style={{ width: '10%' }}><span>มูลค่ารวม</span></th>
                 {canWrite && <th style={{ width: '5%' }} />}
               </tr>
             </thead>
@@ -2138,10 +2138,10 @@ function SupplierRow({ s, i, use, canWrite, onEdit }: {
         textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }} title={s.email ?? ''}>{s.email ?? '—'}</td>
       <td className="text-caption whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{s.phone ?? '—'}</td>
-      <td className="text-right tabular-nums">{u?.n ?? '—'}</td>
-      <td className="text-right tabular-nums">{u ? baht(u.val) : '—'}</td>
+      <td className="num num-count tabular-nums"><span>{u?.n ?? '—'}</span></td>
+      <td className="num num-money tabular-nums"><span>{u ? baht(u.val) : '—'}</span></td>
       {canWrite && (
-        <td className="text-right">
+        <td className="num num-money">
           <button onClick={() => onEdit(s)} aria-label={`แก้ไข ${s.company_name}`}
             style={{ color: 'var(--text-3)' }}><Pencil size={14} /></button>
         </td>

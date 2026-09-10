@@ -1085,10 +1085,10 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
     onUpdated?.(patch); setSaving(false); setEditing(false)
   }
 
-  const fieldLabelStyle: React.CSSProperties = { color: 'var(--text-3)', fontSize: '10px', minWidth: '72px', flexShrink: 0 }
+  const fieldLabelStyle: React.CSSProperties = { color: 'var(--text-3)', fontSize: '12px', minWidth: '72px', flexShrink: 0 }
   const docBtnStyle = (active: boolean, activeColor: string): React.CSSProperties => ({
     display: 'inline-flex', alignItems: 'center', gap: '4px',
-    fontSize: '10px', fontWeight: 500, padding: '2px 0', background: 'none', border: 'none',
+    fontSize: '12px', fontWeight: 500, padding: '2px 0', background: 'none', border: 'none',
     color: active ? activeColor : 'var(--text-3)', cursor: 'pointer',
   })
 
@@ -1211,7 +1211,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
             ) : (
               <button onClick={() => { setDateVal(inst.paid_date || todayStr()); setEditingDate(true) }}
                 className="group flex items-center gap-1.5 px-2 py-1 rounded-[6px]"
-                style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: inst.paid_date ? 'var(--text-2)' : 'var(--accent-orange)', cursor: 'pointer', fontSize: '10px', fontWeight: 500 }}>
+                style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: inst.paid_date ? 'var(--text-2)' : 'var(--accent-orange)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 }}>
                 {inst.paid_date ? fmtDate(inst.paid_date) : '+ เพิ่มวันที่'}
                 <Pencil size={9} className="opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: 'var(--text-3)' }} />
               </button>
@@ -1257,7 +1257,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
             <button onClick={copyLine}
               className="flex items-center gap-1 p-1 rounded active:scale-95"
               title="คัดลอกข้อความโพสต์เองใน LINE"
-              style={{ background: 'none', border: 'none', color: copied ? 'var(--accent-purple)' : 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}>
+              style={{ background: 'none', border: 'none', color: copied ? 'var(--accent-purple)' : 'var(--text-3)', cursor: 'pointer', fontSize: '12px' }}>
               {copied ? <CheckCircle2 size={10} /> : <Copy size={10} />}
               <span>{copied ? 'Copied!' : 'Copy'}</span>
             </button>
@@ -1266,7 +1266,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           <div style={{ marginTop: '8px', borderTop: '1px solid var(--divider)', paddingTop: '8px' }}>
             <button onClick={deleteInst} disabled={deleting}
               className="flex items-center gap-1 px-2 py-1 rounded-[6px] active:scale-95 disabled:opacity-40"
-              style={{ background: 'transparent', border: '1px solid var(--divider)', color: 'var(--text-3)', cursor: 'pointer', fontSize: '10px' }}
+              style={{ background: 'transparent', border: '1px solid var(--divider)', color: 'var(--text-3)', cursor: 'pointer', fontSize: '12px' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent-red)'; (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--accent-red) 30%, transparent)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--divider)' }}>
               {deleting ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
@@ -1972,7 +1972,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
 // ─── Skeleton card ──────────────────────────────────────────
 function CardSkeleton() {
   return (
-    <div className="ds-card p-3 animate-pulse">
+    <div className="ds-card animate-pulse">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: 'var(--hover-bg)' }} />
         <div className="flex-1 min-w-0">
@@ -2063,8 +2063,8 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
       {payPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: barColor }}>{payPct}%</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: barColor }}>{payPct}%</span>
           </div>
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${payPct}%`, borderRadius: '9999px', background: barColor }} />

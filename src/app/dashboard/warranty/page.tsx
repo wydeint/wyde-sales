@@ -254,7 +254,7 @@ export default function WarrantyPage() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {STATUS.map(s => (
-          <div key={s.value} className="ds-card p-4">
+          <div key={s.value} className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>{s.label}</p>
             {/* Counts the filtered set, not every warranty — this sits below the
                 filter bar, so leaving it on the full list made it look stuck. */}
@@ -271,12 +271,12 @@ export default function WarrantyPage() {
             <table className="w-full tbl-rows">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Job / ห้อง</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>เริ่มประกัน</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>หมดประกัน</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>คงเหลือ</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>สถานะ</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>Job / ห้อง</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>เริ่มประกัน</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>หมดประกัน</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>คงเหลือ</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>สถานะ</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -297,9 +297,9 @@ export default function WarrantyPage() {
                         {w.job_id && <p className="text-xs font-mono mb-0.5" style={{ color: 'var(--text-3)' }}>{w.job_id}</p>}
                         <p className="text-accent-blue text-xs">{room}</p>
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_start)}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_end)}</td>
-                      <td className="px-4 py-3">
+                      <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_start)}</td>
+                      <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{dateStr(w.warranty_end)}</td>
+                      <td className="">
                         {days !== null && (
                           <span className={`text-sm font-semibold ${days <= 30 ? 'text-value' : 'text-success'}`}>
                             {days > 0 ? `${days} วัน` : 'หมดแล้ว'}
@@ -342,9 +342,9 @@ export default function WarrantyPage() {
             <table className="w-full tbl-rows">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Job / ห้อง</th>
-                  <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>หมดประกัน</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>Job / ห้อง</th>
+                  <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>หมดประกัน</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -354,12 +354,12 @@ export default function WarrantyPage() {
                   const room = w.room || (w as any).jobs?.room_no || '-'
                   return (
                     <tr key={w.id} className="transition-colors">
-                      <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-1)' }}>{custName}</td>
+                      <td className=" text-sm" style={{ color: 'var(--text-1)' }}>{custName}</td>
                       <td className="px-4 py-3">
                         {w.job_id && <p className="text-xs font-mono mb-0.5" style={{ color: 'var(--text-3)' }}>{w.job_id}</p>}
                         <p className="text-accent-blue text-xs">{room}</p>
                       </td>
-                      <td className="px-4 py-3 text-danger text-sm">{dateStr(w.warranty_end)}</td>
+                      <td className=" text-danger text-sm">{dateStr(w.warranty_end)}</td>
                       <td className="px-4 py-3">
                         <button onClick={() => openEdit(w)} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                           <Pencil size={14} />

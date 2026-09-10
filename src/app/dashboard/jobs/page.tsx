@@ -224,8 +224,8 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
       {payPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: barColor }}>{payPct}%</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: barColor }}>{payPct}%</span>
           </div>
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${payPct}%`, borderRadius: '9999px', background: barColor }} />
@@ -465,7 +465,7 @@ function AddJobModal({
 function ReadField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="min-w-0">
-      <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       <p className="font-semibold tabular-nums truncate"
         style={{ fontSize: 12.5, lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
         {value || '—'}
@@ -922,12 +922,12 @@ export default function JobsPage() {
         }).length
         return (
           <div className="grid grid-cols-3 gap-4">
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
               <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
               <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
               <p className="text-lg font-bold" style={{ color: gpColor }}>
                 {gpPctAvg !== null ? gpPctAvg.toFixed(2) + '%' : '—'}
@@ -936,7 +936,7 @@ export default function JobsPage() {
                 กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
               </p>
             </div>
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
               <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                 {overdueCount} งาน

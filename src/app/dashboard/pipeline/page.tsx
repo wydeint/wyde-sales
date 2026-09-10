@@ -131,7 +131,7 @@ const fdate = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', 
 // ─── Skeleton card ──────────────────────────────────────────
 function CardSkeleton() {
   return (
-    <div className="ds-card p-3 animate-pulse">
+    <div className="ds-card animate-pulse">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: 'var(--hover-bg)' }} />
         <div className="flex-1 min-w-0">
@@ -328,8 +328,8 @@ function BookedJobCard({ job, onClick, onDelete }: { job: BookedJob; onClick: ()
       {barPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: barColor }}>{barPct}%</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: barColor }}>{barPct}%</span>
           </div>
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${barPct}%`, borderRadius: '9999px', background: barColor }} />

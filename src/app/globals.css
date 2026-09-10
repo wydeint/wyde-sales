@@ -524,7 +524,11 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    "header floating away from its column" you spotted. */
 :where(.tbl-scroll) :where(th, td) { text-align: left; }
 .tbl-scroll th.num > span,
-.tbl-scroll td.num > span {
+.tbl-scroll td.num > span,
+/* Cells whose value already arrives wrapped — a coloured span, a badge —
+   use that element as the block instead of gaining a second wrapper. */
+.tbl-scroll th.num > :only-child,
+.tbl-scroll td.num > :only-child {
   display: inline-block;
   text-align: right;
   min-width: var(--num-w, 9ch);
@@ -671,6 +675,13 @@ input[type="date"], input[type="number"] { color-scheme: light; }
   border-radius: var(--radius-lg);
   padding: var(--space-md);
 }
+/* A card whose content reaches its own edge — a table, or a list with its own
+   row padding. Six places wrote `ds-card p-0` for this and none of them got
+   it: .ds-card and the utility have equal specificity and .ds-card is declared
+   later, so the tables inside them have been sitting on a 16px cushion with
+   `overflow-hidden` clipping the corners around it. */
+.ds-card-flush { padding: 0; }
+
 /* Smaller card variant (table section headers, KPI tiles) */
 .ds-card-sm {
   background: var(--card-bg);

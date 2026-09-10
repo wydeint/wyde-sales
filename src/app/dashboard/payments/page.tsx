@@ -442,22 +442,22 @@ export default function PaymentsPage() {
             count loose beside them instead of inside a tile.
             คงเหลือ stays orange: outstanding is a normal state, not an error. */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
             <p className="text-kpi-money" style={{ color: 'var(--text-1)' }}>{f(totalRevenue)}</p>
           </div>
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ชำระแล้ว</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
             <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
               {totalRevenue > 0 ? Math.round(totalPaid / totalRevenue * 100) : 0}% ของมูลค่างาน
             </p>
           </div>
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>คงเหลือ</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
           </div>
-          <div className="ds-card p-4 col-span-2 lg:col-span-1">
+          <div className="ds-card col-span-2 lg:col-span-1">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รายการ</p>
             <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{filtered.length.toLocaleString('th-TH')}</p>
           </div>

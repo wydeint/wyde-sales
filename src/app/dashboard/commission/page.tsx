@@ -159,11 +159,11 @@ function IndividualTab({
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="ds-card-sm p-4">
+        <div className="ds-card-sm">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าคอม {selectedName} · {filtered.length} งาน</p>
           <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(totalComm)}</p>
         </div>
-        <div className="ds-card-sm p-4">
+        <div className="ds-card-sm">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวม</p>
           <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
         </div>
@@ -216,8 +216,8 @@ function IndividualTab({
                     <thead>
                       <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                         {['ลูกค้า / ห้อง', 'โครงการ', ...(isManager ? ['Sales'] : []), 'Revenue', 'Rate', 'Commission', 'สถานะ'].map(h => (
-                          <th key={h} className={`px-4 py-2 text-xs font-semibold ${['ลูกค้า / ห้อง', 'โครงการ', 'Sales', 'สถานะ'].includes(h) ? 'text-left' : 'text-right'}`}
-                            style={{ color: 'var(--text-3)' }}>{h}</th>
+                          <th key={h} className={` text-xs font-semibold ${['ลูกค้า / ห้อง', 'โครงการ', 'Sales', 'สถานะ'].includes(h) ? 'text-left' : 'num num-count'}`}
+                            style={{ color: 'var(--text-3)' }}><span>{h}</span></th>
                         ))}
                       </tr>
                     </thead>
@@ -240,13 +240,13 @@ function IndividualTab({
                                 </p>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</td>
-                            {isManager && <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>}
-                            <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-2)' }}>{f(j.revenue_ex_vat)}</td>
-                            <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-3)' }}>
+                            <td className=" text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</td>
+                            {isManager && <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>}
+                            <td className=" num num-money text-xs" style={{ color: 'var(--text-2)' }}><span>{f(j.revenue_ex_vat)}</span></td>
+                            <td className=" num num-pct text-xs" style={{ color: 'var(--text-3)' }}><span>
                               {rate ? (rate * 100).toFixed(2) + '%' : '—'}
-                            </td>
-                            <td className="px-4 py-3 text-right font-bold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(amount)}</td>
+                            </span></td>
+                            <td className=" num num-money font-bold text-sm" style={{ color: 'var(--accent-amber)' }}><span>{f(amount)}</span></td>
                             <td className="px-4 py-3">
                               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold w-fit"
                                 style={{ background: cfg.bg, color: cfg.color }}>
@@ -259,8 +259,8 @@ function IndividualTab({
                     </tbody>
                     <tfoot>
                       <tr style={{ borderTop: '2px solid var(--divider)', background: 'var(--hover-bg)' }}>
-                        <td colSpan={isManager ? 5 : 4} className="px-4 py-2.5 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวม {monthLabel(month)}</td>
-                        <td className="px-4 py-2.5 text-right font-bold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(monthComm)}</td>
+                        <td colSpan={isManager ? 5 : 4} className=" text-xs font-semibold" style={{ color: 'var(--text-2)' }}>รวม {monthLabel(month)}</td>
+                        <td className=" num num-money font-bold text-sm" style={{ color: 'var(--accent-amber)' }}><span>{f(monthComm)}</span></td>
                         <td />
                       </tr>
                     </tfoot>
@@ -347,7 +347,7 @@ function ReferralTab({
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="ds-card-sm p-4 flex items-center justify-between">
+      <div className="ds-card-sm flex items-center justify-between">
         <div>
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวมทั้งหมด</p>
           <p className="text-2xl font-bold mt-0.5" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
@@ -606,7 +606,7 @@ function StatusTab({
           on a phone that filled half the screen before the table appeared.
           The total leads and names its own split; the three statuses follow. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <div className="ds-card-sm p-4">
+        <div className="ds-card-sm">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รวมทั้งหมด</p>
           <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(periodComm + periodRef)}</p>
           <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
@@ -622,7 +622,7 @@ function StatusTab({
           // periodJobs here left the count frozen while the money moved.
           const cnt = salesJobs.filter(j => getStatus(j) === st).length
           return (
-            <div key={st} className="ds-card-sm p-4">
+            <div key={st} className="ds-card-sm">
               <div className="flex items-center gap-1.5 mb-1">
                 <Icon size={13} style={{ color: cfg.color }} />
                 <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
@@ -659,8 +659,8 @@ function StatusTab({
             <thead>
               <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                 {['ลูกค้า / ห้อง', ...(isManager ? ['Sales'] : []), 'เดือน', 'ค่าคอม', 'ค่าแนะนำ', 'รวม', 'สถานะ'].map(h => (
-                  <th key={h} className={`px-4 py-2.5 text-xs font-semibold ${['ลูกค้า / ห้อง', 'Sales', 'สถานะ'].includes(h) ? 'text-left' : 'text-right'}`}
-                    style={{ color: 'var(--text-3)' }}>{h}</th>
+                  <th key={h} className={` text-xs font-semibold ${['ลูกค้า / ห้อง', 'Sales', 'สถานะ'].includes(h) ? 'text-left' : 'num num-count'}`}
+                    style={{ color: 'var(--text-3)' }}><span>{h}</span></th>
                 ))}
               </tr>
             </thead>
@@ -678,14 +678,14 @@ function StatusTab({
                       <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{j.customer_name}</p>
                       <p className="text-label" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no} · {(j.projects as any)?.name || '—'}</p>
                     </td>
-                    {isManager && <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>}
-                    <td className="px-4 py-3 text-right text-xs" style={{ color: 'var(--text-3)' }}>{monthLabel(getMonth(j))}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-sm" style={{ color: 'var(--accent-amber)' }}>{f(amount)}</td>
-                    <td className="px-4 py-3 text-right text-xs" style={{ color: jobRefTotal > 0 ? 'var(--accent-blue)' : 'var(--text-3)' }}>
-                      {jobRefTotal > 0 ? f(jobRefTotal) : '—'}
+                    {isManager && <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>}
+                    <td className=" num num-count text-xs" style={{ color: 'var(--text-3)' }}><span>{monthLabel(getMonth(j))}</span></td>
+                    <td className=" num num-money font-semibold text-sm" style={{ color: 'var(--accent-amber)' }}><span>{f(amount)}</span></td>
+                    <td className=" num num-money text-xs" style={{ color: jobRefTotal > 0 ? 'var(--accent-blue)' : 'var(--text-3)' }}>
+                      <span>{jobRefTotal > 0 ? f(jobRefTotal) : '—'}</span>
                     </td>
-                    <td className="px-4 py-3 text-right font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{f(amount + jobRefTotal)}</td>
-                    <td className="px-4 py-3">
+                    <td className=" num num-money font-bold text-sm" style={{ color: 'var(--accent-green)' }}><span>{f(amount + jobRefTotal)}</span></td>
+                    <td className="">
                       {canApprove ? (
                         <select
                           disabled={isSaving}

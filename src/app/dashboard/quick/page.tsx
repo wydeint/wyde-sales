@@ -112,7 +112,7 @@ function Sheet({ open, onClose, title, icon: Icon, children }: {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--divider)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {Icon && <Icon size={18} color="var(--accent)" strokeWidth={1.75} />}
-            <h3 style={{ fontWeight: 600, fontSize: 16, color: 'var(--text-1)', margin: 0 }}>{title}</h3>
+            <h3 style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-1)', margin: 0 }}>{title}</h3>
           </div>
           <button onClick={onClose} style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>
             <X size={18} />
@@ -129,7 +129,7 @@ function Sheet({ open, onClose, title, icon: Icon, children }: {
 const sheetInput = "w-full rounded-[8px] pl-9 pr-4 py-3 text-base focus:outline-none"
 const sheetInputStyle: React.CSSProperties = {
   background: 'var(--input-bg)', border: '1px solid var(--divider)',
-  color: 'var(--text-1)', fontSize: 16,
+  color: 'var(--text-1)', fontSize: 13,
 }
 const sheetCard: React.CSSProperties = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', borderRadius: 18, padding: '12px 16px' }
 const sheetCardDark: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 11, padding: '8px 12px' }
@@ -527,7 +527,7 @@ function EventAddSheet({ open, onClose, events }: {
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
               placeholder="บันทึกเพิ่มเติม..."
               className="w-full rounded-[8px] px-4 py-3 text-sm resize-none focus:outline-none"
-              style={{ ...sheetInputStyle, fontSize: 14 }} />
+              style={{ ...sheetInputStyle, fontSize: 13 }} />
           </div>
           <button onClick={save} disabled={saving}
             className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] transition-colors text-base"
@@ -988,7 +988,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
                 <input type="number" value={pct}
                   onChange={e => { const n = [...b2bPcts]; n[i] = Number(e.target.value); setB2bPcts(n) }}
                   className="w-16 rounded-[8px] px-2 py-1.5 text-sm text-center focus:outline-none"
-                  style={{ ...sheetCardDark, color: 'var(--text-1)', fontSize: 14 }} />
+                  style={{ ...sheetCardDark, color: 'var(--text-1)', fontSize: 13 }} />
                 <span className="text-xs" style={t2}>%</span>
                 <span className="text-xs ml-auto" style={t1}>{fmtBaht(Math.round((pct / 100) * selectedJob.revenue))}</span>
               </div>

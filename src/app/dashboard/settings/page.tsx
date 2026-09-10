@@ -123,7 +123,7 @@ export default function SettingsPage() {
       />
 
       {/* Commission Tiers */}
-      <div className="ds-card p-5">
+      <div className="ds-card">
         <div className="flex items-center gap-2 mb-4">
           <Settings2 size={15} style={{ color: 'var(--accent)' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>

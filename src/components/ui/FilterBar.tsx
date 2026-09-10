@@ -59,7 +59,7 @@ export default function FilterBar({
 
   return (
     <div
-      className={`ds-card p-4 ${sticky ? 'sticky top-0 z-20' : ''} ${className}`.trim()}
+      className={`ds-card ${sticky ? 'sticky top-0 z-20' : ''} ${className}`.trim()}
       /*
        * A pinned bar needs its own surface or the rows scrolling underneath show
        * through. --panel-bg alone is not enough: at 96% opacity the remaining 4%

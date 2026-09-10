@@ -1,13 +1,43 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Roboto, Noto_Sans_Thai, Roboto_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import PwaUpdateBanner from '@/components/PwaUpdateBanner'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+/**
+ * Two families, one stack — Roboto first, Noto Sans Thai second.
+ *
+ * Roboto carries no Thai glyphs, so every Thai character falls through to
+ * Noto Sans Thai on its own. Latin and digits therefore render in Roboto and
+ * Thai in Noto, without a single per-element font class anywhere in the app.
+ *
+ * The pair is deliberate: both come from the same design brief at Google, so
+ * their x-heights line up and a mixed line like "ห้อง A419" sits level.
+ *
+ * This replaces Geist, which the app downloaded on every load and then never
+ * used — `body` in globals.css overrode it with the OS stack, so Thai text was
+ * rendering in whatever each machine happened to have (Leelawadee UI on
+ * Windows, Thonburi on macOS, Noto on Android). Same page, three widths.
+ */
+const roboto = Roboto({
+  variable: '--font-roboto',
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+})
+const notoThai = Noto_Sans_Thai({
+  variable: '--font-noto-thai',
+  subsets: ['thai'],
+  weight: ['400', '600', '700'],
+  display: 'swap',
+})
+const robotoMono = Roboto_Mono({
+  variable: '--font-roboto-mono',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Super Sales — WydEInt',
@@ -25,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="th"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`${roboto.variable} ${notoThai.variable} ${robotoMono.variable} h-full`}
     >
       <head>
         {/* Inline script runs BEFORE React hydrates — prevents dark/light flash */}

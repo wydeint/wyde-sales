@@ -691,7 +691,7 @@ export default function ProcurementPage() {
         <div className="space-y-3">
           <Input label="ชื่อหมวด" value={catForm.name}
             onChange={e => setCatForm({ ...catForm, name: e.target.value })} />
-          <Select label="ผู้ประมาณการณ์" value={catForm.owner_dept}
+          <Select label="ผู้ประมาณการ" value={catForm.owner_dept}
             onChange={e => setCatForm({ ...catForm, owner_dept: e.target.value })}
             options={[
               { value: 'procurement', label: 'จัดซื้อ' },
@@ -792,11 +792,11 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
           sub={summary.priced === summary.rooms
             ? `${summary.rooms} ห้อง · ${byProject.length} โครงการ`
             : `GP คิดจาก ${summary.priced} ใน ${summary.rooms} ห้อง`} />
-        <Tile label="ประมาณการณ์" value={bahtShort(summary.est)} sub={`GP ${gpText(estGp)}`} />
+        <Tile label="ประมาณการ" value={bahtShort(summary.est)} sub={`GP ${gpText(estGp)}`} />
         <Tile label="จัดจ้างจริง" value={bahtShort(summary.act)} sub={`GP ${gpText(actGp)}`} />
         <Tile label="GP% จริง" value={gpText(actGp)}
           sub={estGp !== null && actGp !== null
-            ? `${actGp < estGp ? 'ต่ำกว่า' : 'ดีกว่า'}ที่ประมาณการณ์ ${Math.abs((actGp - estGp) * 100).toFixed(2)} จุด`
+            ? `${actGp < estGp ? 'ต่ำกว่า' : 'ดีกว่า'}ที่ประมาณการ ${Math.abs((actGp - estGp) * 100).toFixed(2)} จุด`
             : 'ยังเทียบไม่ได้'} />
         <Tile label="รอเปิด PO" value={String(summary.awaiting)} sub="บรรทัด" />
       </div>
@@ -816,7 +816,7 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
                 <th className="num num-count th-muted"><span>ห้อง</span></th>
                 <th className="num num-money th-muted"><span>Revenue inc.VAT</span></th>
                 <th className="num num-money th-muted"><span>Revenue exc.VAT</span></th>
-                <th className="num num-money th-muted"><span>ประมาณการณ์</span></th>
+                <th className="num num-money th-muted"><span>ประมาณการ</span></th>
                 <th className="num num-money th-muted"><span>จัดจ้างจริง</span></th>
                 <th className="num num-pct th-muted"><span>GP% จริง</span></th>
                 <th className="text-left th-muted">ลงต้นทุนแล้ว</th>
@@ -920,7 +920,7 @@ function WorkTab({ rows, itemsByJob, projById, nameOf, setOpenJob }: {
               <th className="text-left th-muted">PR</th>
               <th className="text-left th-muted">จัดซื้อรับงาน</th>
               <th className="num num-money th-muted"><span>Revenue exc.VAT</span></th>
-              <th className="num num-money th-muted"><span>ประมาณการณ์</span></th>
+              <th className="num num-money th-muted"><span>ประมาณการ</span></th>
               <th className="num num-money th-muted"><span>จัดจ้างจริง</span></th>
               <th className="num num-pct th-muted"><span>GP%</span></th>
               <th className="text-left th-muted">KPI เปิด PO</th>
@@ -1245,7 +1245,7 @@ function RoomSheet({
                     คำนวณให้ ÷ 1.07 — เดิมให้กรอก exc.VAT น้องต้องหารเองทุกบรรทัด */}
                 <th className="num num-money th-muted"><span>ราคาขาย inc.VAT</span></th>
                 <th className="num num-money th-muted"><span>ราคาขาย exc.VAT</span></th>
-                <th className="num num-money th-muted"><span>ประมาณการณ์</span></th>
+                <th className="num num-money th-muted"><span>ประมาณการ</span></th>
                 <th className="num num-money th-muted"><span>จัดจ้างจริง</span></th>
                 <th className="num num-money th-muted"><span>ส่วนต่าง</span></th>
                 <th className="text-left th-muted">วันที่ขออนุมัติ</th>
@@ -1390,7 +1390,7 @@ function RoomSheet({
               })}
             </tbody>
             {/* แถวรวมต้องมีช่องเท่าหัวตารางเป๊ะ (8 ช่อง) ไม่งั้นตัวเลขเลื่อนไป
-                อยู่ใต้คอลัมน์ผิด — ยอดประมาณการณ์เคยไปโผล่ใต้ Supplier */}
+                อยู่ใต้คอลัมน์ผิด — ยอดประมาณการเคยไปโผล่ใต้ Supplier */}
             <tfoot>
               {/* เน้นแถวรวมแบบเดียวกับตารางหน้า Revenue — เส้นสี accent กับพื้น
                   ที่เข้มขึ้น ไม่ใช่เส้น divider จางๆ ที่กลืนไปกับแถวข้อมูล */}
@@ -1400,7 +1400,7 @@ function RoomSheet({
                   Revenue exc.VAT <b style={{ color: 'var(--text-2)' }}>{baht(revEx)}</b>
                 </td>
                 {/* ต้องมีครบทุกคอลัมน์ ไม่งั้นตัวเลขเลื่อนไปอยู่ใต้หัวคอลัมน์อื่น —
-                    เดิมนับขาดไป 1 ช่อง ยอดประมาณการณ์จึงไปอยู่ใต้ "ราคาขาย" */}
+                    เดิมนับขาดไป 1 ช่อง ยอดประมาณการจึงไปอยู่ใต้ "ราคาขาย" */}
                 <td className="num num-money font-bold tabular-nums"><span>{baht(split.total)}</span></td>
                 <td className="num num-money font-bold tabular-nums">
                   <span>{baht(round2(items.reduce((sum, i) => sum + Number(i.sale_price ?? 0), 0)))}</span>
@@ -1412,7 +1412,7 @@ function RoomSheet({
                 </span></td>
                 {/* GP คือตัวเลขที่คนกรอกต้นทุนจ้องดู — มันเคยเป็น text-caption
                     สีจาง เท่ากับหมายเหตุข้างๆ ทั้งที่เป็นผลลัพธ์ของทั้งตาราง
-                    ตัวที่จริง (หลังจัดจ้าง) หนาและเข้ม ส่วนตัวประมาณการณ์คงจาง
+                    ตัวที่จริง (หลังจัดจ้าง) หนาและเข้ม ส่วนตัวประมาณการคงจาง
                     ไว้ เพราะมันคือจุดตั้งต้นที่ใช้เทียบ ไม่ใช่คำตอบ */}
                 <td colSpan={canWrite ? 2 : 1} className="whitespace-nowrap tabular-nums"
                   style={{ color: 'var(--text-3)' }}>
@@ -1887,7 +1887,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
               {/* ทุกแถวบอกฐานที่ใช้คิดไว้ด้วย — คลาด 19.7% จาก 3 ห้อง กับ 52.4%
                   จาก 17 ห้อง คนละน้ำหนักกัน แต่การ์ดเดิมวางเคียงกันเหมือนเทียบ
                   กันได้ตรงๆ · ยังไม่ใส่สีทุกแถวตามที่เจ้าของสั่ง 2026-09-08 */}
-              <Row k="ประมาณการณ์คลาดเฉลี่ย"
+              <Row k="ประมาณการคลาดเฉลี่ย"
                 v={p.accuracy === null ? '—' : `${p.accuracy.toFixed(1)}%`}
                 sub={p.accuracy === null ? 'ยังไม่มีห้องที่เทียบได้' : `จาก ${p.measuredAcc} ห้อง`} />
               <Row k={`เปิด PO ทัน ${PO_KPI_DAYS} วัน`}
@@ -1941,7 +1941,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
       </p>
 
       <p className="text-caption mt-3" style={{ color: 'var(--text-3)' }}>
-        <b style={{ color: 'var(--text-2)' }}>วัด 2 อย่าง ไม่ใช่ GP%</b> — งานจัดซื้อคือประมาณการณ์ให้แม่น
+        <b style={{ color: 'var(--text-2)' }}>วัด 2 อย่าง ไม่ใช่ GP%</b> — งานจัดซื้อคือประมาณการให้แม่น
         (เซลล์เอาไปเสนอราคา ต่ำไปบริษัทขาดทุน) และเปิด PO ให้ทัน
         ส่วน GP% เป็นผลร่วมกับเซลล์ — เซลล์ลดราคา GP ก็ตกทั้งที่จัดซื้อทำดี
         คิดคะแนนจากเฉพาะหมวดที่คนนั้นรับผิดชอบ ไม่ใช่ทั้งห้อง
@@ -2005,7 +2005,7 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
             <thead>
               <tr>
                 <th className="text-left th-muted" style={{ width: '46%' }}>หมวด</th>
-                <th className="text-left th-muted" style={{ width: '22%' }}>ผู้ประมาณการณ์</th>
+                <th className="text-left th-muted" style={{ width: '22%' }}>ผู้ประมาณการ</th>
                 <th className="num num-pct th-muted" style={{ width: '22%' }}><span>Supplier ในหมวด</span></th>
                 {canWrite && <th style={{ width: '10%' }} />}
               </tr>

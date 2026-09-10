@@ -545,7 +545,7 @@ export default function ExecutivePage() {
           </div>
         )
         if (managerIds.length === 0) return (
-          <div className="ds-card"><EmptyState icon={Users} message="ยังไม่มีข้อมูลทีม" sub="ตั้งค่า manager_id ที่หน้า Users" /></div>
+          <div className="ds-card"><EmptyState icon={Users} message="ยังไม่มีข้อมูลทีม" sub="กำหนดหัวหน้าทีมให้พนักงานที่หน้า Users ก่อน" /></div>
         )
         return (
           <div className="space-y-6">
@@ -642,7 +642,7 @@ export default function ExecutivePage() {
           .map(u => ({ ...u, card: buildScorecard(jobsFor(u.id), settled, { from: start, to: end }) }))
           .sort((a, b) => b.card.soldValue - a.card.soldValue)
 
-        if (!holders.length) return <EmptyState message="ยังไม่มีข้อมูลเซลล์" sub="ไม่พบงานที่ผูกกับเซลล์คนใดในระบบ" />
+        if (!holders.length) return <EmptyState message="ยังไม่มีข้อมูลเซลล์" sub="ยังไม่มีงานที่ระบุเซลล์ผู้ดูแล" />
 
         const me = holders.find(h => h.id === selectedSales) ?? holders[0]
         const pipe = pipelineFor(scopedJobs, me.id)

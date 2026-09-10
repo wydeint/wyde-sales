@@ -562,7 +562,7 @@ export default function JobsPage() {
     setReferrals((refData || []) as { job_id: string; referrer_name: string; referral_amount: number }[])
 
     /* ต้นทุนของห้อง = ผลรวมรายการย่อย ใช้ยอดจัดจ้างจริงก่อน ยังไม่จ้างจึงใช้
-       ยอดประมาณการณ์ — กติกาเดียวกับ effectiveCost() ในหน้า Cost & GP% */
+       ยอดประมาณการ — กติกาเดียวกับ effectiveCost() ในหน้า Cost & GP% */
     const cm = new Map<string, number>()
     for (const it of (costItems ?? []) as { job_id: string; est_cost: number; act_cost: number }[]) {
       const v = Number(it.act_cost || 0) > 0 ? Number(it.act_cost) : Number(it.est_cost || 0)

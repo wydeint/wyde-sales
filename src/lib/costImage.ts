@@ -85,7 +85,7 @@ const COLS = [
   // เหลือเท่าไร · max กว้างพอสำหรับข้อความ "รวมในบรรทัดอื่น"
   { key: 'saleInc', label: 'ราคาขาย inc.VAT', min: 120, max: 200, align: 'right' as const },
   { key: 'sale', label: 'ราคาขาย exc.VAT', min: 120, max: 200, align: 'right' as const },
-  { key: 'est', label: 'ประมาณการณ์', min: 120, max: 180, align: 'right' as const },
+  { key: 'est', label: 'ประมาณการ', min: 120, max: 180, align: 'right' as const },
   { key: 'act', label: 'จัดจ้างจริง', min: 120, max: 180, align: 'right' as const },
   { key: 'diff', label: 'ส่วนต่าง', min: 110, max: 180, align: 'right' as const },
   { key: 'approved', label: 'วันที่ขออนุมัติ', min: 110, max: 140, align: 'left' as const },
@@ -221,7 +221,7 @@ export function drawCostTable(input: CostImageInput): HTMLCanvasElement {
     ctx.font = `600 13px ${FONT}`
     const head = `${gi + 1}. ${g.name}`
     ctx.fillText(head, xs[0] + CELL_PAD, y + ROW_H / 2)
-    // ป้ายหลังชื่อหมวด — บนจอมี ภาพก็ต้องมี ไม่งั้นคนอนุมัติไม่รู้ว่าใครประมาณการณ์
+    // ป้ายหลังชื่อหมวด — บนจอมี ภาพก็ต้องมี ไม่งั้นคนอนุมัติไม่รู้ว่าใครประมาณการ
     let bx = xs[0] + CELL_PAD + ctx.measureText(head).width + 8
     ctx.font = `600 11px ${FONT}`
     for (const [text, colour] of [

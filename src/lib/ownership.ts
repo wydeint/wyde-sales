@@ -128,6 +128,19 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
 export const RECONCILE_FIELDS = FIELD_OWNERSHIP.filter(f =>
   f.field === 'room_no' || f.field === 'customer_type' || f.field === 'sales_id')
 
+/** What to call each field on screen. The reconcile panel used to print the
+ *  column name straight out of the database — "room_no 47 รายการ" — which is
+ *  the one place in that report where the reader has to already know the
+ *  schema to understand the answer. */
+export const FIELD_LABEL: Record<string, string> = {
+  room_no: 'เลขห้อง',
+  customer_type: 'ประเภทลูกค้า',
+  sales_id: 'เซลล์ผู้ดูแล',
+  work_type: 'ประเภทงาน',
+  project_id: 'โครงการ',
+  customer_name: 'ชื่อลูกค้า',
+}
+
 export function ownerOf(field: string): Owner | null {
   return FIELD_OWNERSHIP.find(f => f.field === field)?.owner ?? null
 }

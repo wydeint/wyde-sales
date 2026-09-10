@@ -738,7 +738,7 @@ export default function FinancePage() {
             <div className="rounded-[18px] p-5" style={{ background: 'color-mix(in srgb, var(--accent) 7.0%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
               <p className="text-label-upper mb-1" style={{ color: 'var(--accent)' }}>เงินสดรับรวมทั้งบริษัท ({label})</p>
               <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{fk(totalCash)}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ยอดรับจริง (paid_date) ในช่วงเวลานี้</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>เงินที่รับเข้าจริงในช่วงเวลานี้</p>
             </div>
 
             {/* B2C + B2B side-by-side */}

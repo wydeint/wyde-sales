@@ -2489,7 +2489,7 @@ export default function MyDealsPage() {
           {[1, 2, 3, 4, 5].map(i => <CardSkeleton key={i} />)}
         </div>
       ) : grouped.length === 0 ? (
-        <div className="ds-card"><EmptyState icon={Search} message="ไม่พบงาน" sub="ลองปรับ filter หรือตรวจสอบข้อมูล" /></div>
+        <div className="ds-card"><EmptyState icon={Search} message="ไม่พบงาน" sub="ลองเปลี่ยนคำค้นหรือตัวกรอง" /></div>
       ) : (
         <div className="space-y-8">
           {(() => {

@@ -154,7 +154,7 @@ export default function RevenuePage() {
       ])
       if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
 
-      /* ยอดจ้างจริงก่อน ยังไม่จ้างจึงใช้ประมาณการณ์ — กติกาเดียวกับหน้า Cost & GP% */
+      /* ยอดจ้างจริงก่อน ยังไม่จ้างจึงใช้ประมาณการ — กติกาเดียวกับหน้า Cost & GP% */
       const cm = new Map<string, number>()
       for (const it of (costItems ?? []) as { job_id: string; est_cost: number; act_cost: number }[]) {
         const v = Number(it.act_cost || 0) > 0 ? Number(it.act_cost) : Number(it.est_cost || 0)

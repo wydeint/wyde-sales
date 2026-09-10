@@ -8,7 +8,7 @@ import { TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import { fetchAllRows } from '@/lib/fetchAll'
-import { RECONCILE_FIELDS } from '@/lib/ownership'
+import { RECONCILE_FIELDS, FIELD_LABEL } from '@/lib/ownership'
 import { sameParty, looksLikeCompany } from '@/lib/personName'
 import { baht } from '@/lib/money'
 import { showAlert } from '@/components/ui/dialog'
@@ -427,7 +427,7 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-2)' }}>Field ที่ต้องการเปลี่ยน</label>
+            <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-2)' }}>ช่องที่ต้องการเปลี่ยน</label>
             <select value={col} onChange={e => { setCol(e.target.value); setVal('') }}
               className="field-input">
               {editableCols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
@@ -528,7 +528,7 @@ function ReconcileCheck() {
     }).length
     const check1: CheckItem = {
       label: 'จำนวนลูกค้า',
-      desc: 'เคยซื้อ + ยังไม่เคยซื้อ = ทั้งหมด (ส่วนต่างคือระเบียนที่ไม่มีงานผูกอยู่)',
+      desc: 'เคยซื้อ + ยังไม่เคยซื้อ = ทั้งหมด (ส่วนต่างคือลูกค้าที่ยังไม่มีงานสักใบ)',
       lhs: { label: `เคยซื้อ(${cBuyers}) + ยังไม่เคยซื้อ(${cProspects})`, value: cBuyers + cProspects },
       rhs: { label: 'Customers ทั้งหมด', value: cTotal },
       pass: cBuyers + cProspects === cTotal,
@@ -560,12 +560,12 @@ function ReconcileCheck() {
     const jobsActive = j.filter(x => x.working_status === 'ดำเนินการ')
     const mismatchedJobs = jobsActive.filter(x => x.crm_stage !== 'closed')
     const check3: CheckItem = {
-      label: 'Sync สถานะงาน ↔ ขั้น CRM',
-      desc: 'jobs.working_status=ดำเนินการ ต้องมี jobs.crm_stage=closed',
-      lhs: { label: 'Jobs ที่ sync แล้ว', value: jobsActive.length - mismatchedJobs.length },
-      rhs: { label: 'Jobs ดำเนินการทั้งหมด', value: jobsActive.length },
+      label: 'สถานะงาน ตรงกับ ขั้น CRM',
+      desc: 'งานที่กำลังดำเนินการ ต้องอยู่ในขั้น CRM ว่าปิดการขายแล้ว',
+      lhs: { label: 'งานที่ตรงกัน', value: jobsActive.length - mismatchedJobs.length },
+      rhs: { label: 'งานที่ดำเนินการทั้งหมด', value: jobsActive.length },
       pass: mismatchedJobs.length === 0,
-      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} jobs ที่ทำงานอยู่แต่ขั้น CRM ยังไม่ closed` : undefined,
+      detail: mismatchedJobs.length > 0 ? `พบ ${mismatchedJobs.length} งานที่ทำอยู่ แต่ขั้น CRM ยังไม่ปิดการขาย` : undefined,
     }
 
     // "มูลค่างาน vs ยอดงวดรวม" used to live here and has been removed.
@@ -600,7 +600,7 @@ function ReconcileCheck() {
       isPoBill(x) ? !x.work_start_date : !triggerPaidJobIds.has(x.id))
     const check5: CheckItem = {
       label: 'Trigger payment',
-      desc: 'ทุก job ดำเนินการ ต้องมีงวดเริ่มงานที่จ่ายแล้ว — ยกเว้น B2B PO/วางบิล ที่เริ่มงานตอนรับ PO',
+      desc: 'งานที่ดำเนินการทุกใบ ต้องมีงวดเริ่มงานที่รับเงินแล้ว — ยกเว้น B2B แบบ PO/วางบิล ที่เริ่มงานตอนรับ PO',
       lhs: { label: 'Jobs ที่เริ่มงานถูกต้อง', value: jobsActive.length - jobsNoTrigger.length },
       rhs: { label: 'Jobs ดำเนินการทั้งหมด', value: jobsActive.length },
       pass: jobsNoTrigger.length === 0,
@@ -657,13 +657,13 @@ function ReconcileCheck() {
     const totalConflicts = conflicts.reduce((s2, x) => s2 + x.n, 0)
     const worst = conflicts.filter(x => x.n > 0).sort((a, b) => b.n - a.n)
     const check6: CheckItem = {
-      label: 'ข้อมูลซ้ำระหว่าง jobs ↔ customers',
-      desc: 'ช่องเดียวกันที่เก็บสองที่ ต้องมีค่าตรงกัน — เจ้าของข้อมูลคือ jobs',
+      label: 'ข้อมูลที่เก็บซ้ำสองที่',
+      desc: 'ช่องเดียวกันที่เก็บทั้งฝั่งงานและฝั่งลูกค้า ต้องมีค่าตรงกัน — ให้ยึดฝั่งงานเป็นหลัก',
       lhs: { label: 'ช่องที่ตรงกัน', value: conflicts.length - worst.length },
       rhs: { label: 'ช่องที่ตรวจทั้งหมด', value: conflicts.length },
       pass: totalConflicts === 0,
       detail: worst.length > 0
-        ? worst.map(x => `${x.field} ${fmtN(x.n)} รายการ`).join(' · ')
+        ? worst.map(x => `${FIELD_LABEL[x.field] ?? x.field} ${fmtN(x.n)} รายการ`).join(' · ')
         : undefined,
     }
 
@@ -687,7 +687,7 @@ function ReconcileCheck() {
     })
     const check7: CheckItem = {
       label: 'ชื่อลูกค้า vs ชื่อบนงาน',
-      desc: 'ระเบียนที่ชื่อเป็นบริษัท แต่งานเป็นชื่อบุคคล — ผู้ซื้อจริงอาจไม่ใช่บริษัท',
+      desc: 'ลูกค้าที่ชื่อเป็นบริษัท แต่งานเป็นชื่อบุคคล — ผู้ซื้อจริงอาจไม่ใช่บริษัท',
       lhs: { label: 'Jobs ที่ชื่อสอดคล้อง', value: j.length - nameMismatch.length },
       rhs: { label: 'Jobs ทั้งหมด', value: j.length },
       pass: nameMismatch.length === 0,
@@ -730,7 +730,7 @@ function ReconcileCheck() {
       it.supplier_id && !supHasCat.has(it.supplier_id + '|' + it.category_id))
     const check9: CheckItem = {
       label: 'Supplier ไม่ตรงหมวดที่ผูกไว้',
-      desc: 'ซัพที่เลือกไม่ได้อยู่ในหมวดของบรรทัดนั้นแล้ว — มักเกิดหลังแก้ทะเบียนหมวดงาน',
+      desc: 'ซัพพลายเออร์ที่เลือกไว้ ไม่ได้อยู่ในหมวดของบรรทัดนั้นแล้ว — มักเกิดหลังแก้ทะเบียนหมวดงาน',
       lhs: { label: 'บรรทัดที่ไม่ตรง', value: wrongCat.length },
       rhs: { label: 'บรรทัดที่เลือกซัพแล้ว', value: ci.filter(it => it.supplier_id).length },
       pass: wrongCat.length === 0,
@@ -773,7 +773,7 @@ function ReconcileCheck() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Reconcile Check</h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments / ต้นทุน</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>ตรวจว่าข้อมูลฝั่งลูกค้า งาน งวดชำระ และต้นทุน ยังตรงกันอยู่</p>
           </div>
           <button onClick={run} disabled={loading}
             className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"

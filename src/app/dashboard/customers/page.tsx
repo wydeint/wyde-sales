@@ -302,7 +302,7 @@ function CustomerDetail({
             </div>
             <div>
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</h2>
-              <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-3)' }}>{customer.id}</p>
+              <p className="text-xs font-mono mt-1" style={{ color: 'var(--text-3)' }}>{customer.id}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -394,19 +394,19 @@ function CustomerDetail({
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>ซื้อทั้งหมด</p>
                       <p className="text-base font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{jobs.length} งาน</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
                         ส่งมอบแล้ว {delivered}{cancelled > 0 ? ` · ยกเลิก ${cancelled}` : ''}
                       </p>
                     </div>
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
                       <p className="text-base font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{fmt(revenue)}</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>ไม่รวมงานที่ยกเลิก</p>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>ไม่รวมงานที่ยกเลิก</p>
                     </div>
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</p>
                       <p className="text-base font-bold tabular-nums" style={{ color: paid > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>{fmt(paid)}</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
                         {revenue > 0 ? `${Math.round((paid / revenue) * 100)}% ของมูลค่า` : '—'}
                       </p>
                     </div>
@@ -548,7 +548,7 @@ function CustomerDetail({
                                 <tr>
                                   <td colSpan={5} style={{ background: 'var(--hover-bg)', paddingTop: 0 }}>
                                     <div className="ds-card mb-1">
-                                      <div className="grid grid-cols-2 gap-2 mb-3">
+                                      <div className="grid grid-cols-2 gap-2 mb-4">
                                         {[
                                           { label: 'PO No.', value: job.po_no || '—' },
                                           { label: 'SO No.', value: job.so_no || '—' },
@@ -557,12 +557,12 @@ function CustomerDetail({
                                         ].map(f => (
                                           <div key={f.label} className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--card-bg)' }}>
                                             <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
-                                            <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
+                                            <p className="text-xs font-semibold mt-1" style={{ color: 'var(--text-1)' }}>{f.value}</p>
                                           </div>
                                         ))}
                                       </div>
 
-                                      <div className="flex items-center justify-between text-xs mb-3">
+                                      <div className="flex items-center justify-between text-xs mb-4">
                                         <span style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</span>
                                         <span style={{ color: 'var(--text-3)' }}>
                                           ไม่รวม VAT <span className="font-semibold ml-1" style={{ color: 'var(--text-1)' }}>{fmt(job.revenue_ex_vat)} บ.</span>
@@ -570,7 +570,7 @@ function CustomerDetail({
                                       </div>
 
                                       {job.installments.length > 0 && (
-                                        <div className="mb-3">
+                                        <div className="mb-4">
                                           <div className="flex items-center justify-between text-xs mb-1.5">
                                             <span style={{ color: 'var(--text-3)' }}>
                                               <FileText size={10} className="inline mr-1" />การชำระเงิน ({job.installments.filter(i => i.status === 'paid').length}/{job.installments.length} งวด)

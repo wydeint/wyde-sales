@@ -641,10 +641,10 @@ export default function FinancePage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>รายการงวดชำระใน{label}</h2>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{periodPaid.length} งวด · {salesGroups.length} Sales</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{periodPaid.length} งวด · {salesGroups.length} Sales</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs mb-0.5" style={{ color: 'var(--text-3)' }}>รายรับรวม</p>
+                    <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รายรับรวม</p>
                     <p className="text-kpi-number" style={{ color: 'var(--accent-blue)' }}>{f(periodPaidAmount)}</p>
                   </div>
                 </div>
@@ -933,21 +933,21 @@ export default function FinancePage() {
               <AlertCircle size={15} />มี {overdue.length} งวดค้างเก็บเกิน {CHASE_AFTER_DAYS} วันหลังส่งมอบ รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
             </div>
           )}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <div className="ds-card">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ ({label})</p>
               <p className="text-kpi-number text-value">{f(outstanding.filter(p => p.due_date >= start && p.due_date <= end).reduce((s, p) => s + p.amount, 0))}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{outstanding.filter(p => p.due_date >= start && p.due_date <= end).length} งวด</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{outstanding.filter(p => p.due_date >= start && p.due_date <= end).length} งวด</p>
             </div>
             <div className="ds-card">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>ค้างเก็บ {CHASE_AFTER_DAYS}+ วัน</p>
               <p className="text-kpi-number text-danger">{f(overdue.reduce((s, p) => s + p.amount, 0))}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{overdue.length} งวด</p>
             </div>
             <div className="ds-card">
               <p className="text-card-title mb-1" style={{ color: 'var(--text-3)' }}>รับแล้ว ({label})</p>
               <p className="text-kpi-number text-success">{f(paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).reduce((s, p) => s + (p.paid_amount || 0), 0))}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).length} งวด</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{paidPayments.filter(p => p.paid_date >= start && p.paid_date <= end).length} งวด</p>
             </div>
           </div>
           <div className="tab-group w-fit">

@@ -76,7 +76,7 @@ export default function FilterBar({
     >
       {chips && (
         <div
-          className={`filter-row items-center ${hasBottomRow ? 'pb-3 mb-3' : ''}`.trim()}
+          className={`filter-row items-center ${hasBottomRow ? 'pb-3 mb-4' : ''}`.trim()}
           style={hasBottomRow ? { borderBottom: '1px solid var(--divider)' } : undefined}
         >
           {chips}

@@ -110,7 +110,7 @@ function InstallmentBadge({ inst }: { inst: Installment }) {
             <p className="font-semibold">{inst.installment_name}</p>
             <p>{f(inst.amount)}</p>
             {(inst.slip_url || inst.receipt_url) && (
-              <p className="mt-0.5" style={{ opacity: 0.75 }}>{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
+              <p className="mt-1" style={{ opacity: 0.75 }}>{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
             )}
           </div>
         </div>
@@ -136,7 +136,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
         data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1">
-            <p className="text-micro uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
+            <p className="text-micro uppercase tracking-widest mb-1" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
             <p className="font-bold text-lg" style={{ color: 'var(--text-1)' }}>ห้อง {job.room_no}</p>
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>{job.customer_name}</p>
           </div>
@@ -213,7 +213,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
 
           {/* Docs */}
           <div>
-            <p className="text-micro uppercase tracking-widest mb-3 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
+            <p className="text-micro uppercase tracking-widest mb-4 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
             <div className="space-y-2">
               {[
                 { url: job.quotation1_url, label: 'ใบเสนอราคา 1', short: 'Q1', auto: autoCheckedSale(job) },
@@ -406,7 +406,7 @@ export default function PaymentsPage() {
         />
 
         {/* Filters */}
-        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" sticky className="mb-3">
+        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" sticky className="mb-4">
           <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุกโครงการ</option>
@@ -449,7 +449,7 @@ export default function PaymentsPage() {
           <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ชำระแล้ว</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
               {totalRevenue > 0 ? Math.round(totalPaid / totalRevenue * 100) : 0}% ของมูลค่างาน
             </p>
           </div>
@@ -486,7 +486,7 @@ export default function PaymentsPage() {
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-bold" style={{ color: 'var(--text-1)' }}>{job.room_no}</p>
-                    <p className="text-micro mt-0.5 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
+                    <p className="text-micro mt-1 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
                   </td>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>

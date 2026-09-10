@@ -673,12 +673,12 @@ export default function HandoverPage() {
             <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>
               {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
             </p>
-            {deliveredRooms > 0 && <p className="text-micro mt-0.5" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
+            {deliveredRooms > 0 && <p className="text-micro mt-1" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
           </div>
           <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
           </div>
           {overdueRooms > 0 && (
             <div className="ds-card">

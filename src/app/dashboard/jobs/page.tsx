@@ -194,11 +194,11 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
               </span>
             )}
           </div>
-          <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <p className="text-xs truncate mt-1" style={{ color: 'var(--text-3)' }}>
             {displayName || '—'} · {projectName}
           </p>
         </div>
-        <StatusChip kind="working" status={job.working_status} variant="outline" className="flex-shrink-0 mt-0.5" />
+        <StatusChip kind="working" status={job.working_status} variant="outline" className="flex-shrink-0 mt-1" />
       </div>
       {/* work type + phone */}
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -925,14 +925,14 @@ export default function JobsPage() {
             <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
               <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
+              <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
             <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
               <p className="text-lg font-bold" style={{ color: gpColor }}>
                 {gpPctAvg !== null ? gpPctAvg.toFixed(2) + '%' : '—'}
               </p>
-              <p className="text-label mt-0.5" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
+              <p className="text-label mt-1" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
                 กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
               </p>
             </div>
@@ -941,7 +941,7 @@ export default function JobsPage() {
               <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                 {overdueCount} งาน
               </p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
+              <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
             </div>
           </div>
         )
@@ -957,7 +957,7 @@ export default function JobsPage() {
             {groupedJobs.map(({ projectId, projectName, jobs: groupJobs }) => (
               <div key={projectId}>
                 {/* Project header */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-4">
                   <p className="text-xs font-bold uppercase tracking-wider flex-shrink-0" style={{ color: 'var(--accent)' }}>
                     {projectName}
                   </p>
@@ -967,7 +967,7 @@ export default function JobsPage() {
                   </span>
                   <div className="flex-1 h-px" style={{ background: 'var(--divider)' }} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                   {groupJobs.map(j => (
                     <JobCard key={j.id} job={j} paymentMap={paymentMap} progressMap={progressMap} onClick={() => openEdit(j)} seqNo={seqMap[j.id]} />
                   ))}

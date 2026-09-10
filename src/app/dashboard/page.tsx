@@ -269,7 +269,7 @@ export default function DashboardPage() {
             <div className="modal-header">
               <div>
                 <span className="modal-title">งานส่งมอบเดือนนี้</span>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                   นับจาก <code className="px-1 rounded" style={{ background: 'var(--hover-bg)' }}>jobs.actual_deliver_date</code> · {deliveredThisMonth.length} รายการ
                 </p>
               </div>

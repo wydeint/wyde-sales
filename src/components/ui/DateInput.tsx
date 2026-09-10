@@ -20,7 +20,7 @@ export default function DateInput({
       <input type="date" className={className} style={style} {...props} />
       {hint && (
         // Reserved height so showing or clearing a date never nudges the layout.
-        <span className="text-micro mt-0.5" style={{ color: 'var(--text-3)', minHeight: 14 }}>
+        <span className="text-micro mt-1" style={{ color: 'var(--text-3)', minHeight: 14 }}>
           {shown || ' '}
         </span>
       )}

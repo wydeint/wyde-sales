@@ -257,21 +257,21 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="font-semibold" style={t1}>{j.customer_name}</p>
-                    <p className="text-xs mt-0.5" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
+                    <p className="text-xs mt-1" style={t2}>{j.room_no} · {(j.projects as any)?.name}</p>
                   </div>
                   <span className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(j.revenue_ex_vat || 0)}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
-                    <p className="text-micro mb-0.5" style={t3}>สถานะ</p>
+                    <p className="text-micro mb-1" style={t3}>สถานะ</p>
                     <p className="text-xs font-semibold truncate" style={{ color: 'var(--accent-orange)' }}>{j.working_status || '—'}</p>
                   </div>
                   <div className="rounded-xl p-2 text-center" style={sheetCardDark}>
-                    <p className="text-micro mb-0.5" style={t3}>เริ่มงาน</p>
+                    <p className="text-micro mb-1" style={t3}>เริ่มงาน</p>
                     <p className="text-xs" style={t1}>{fmtDate(j.work_start_date)}</p>
                   </div>
                   <div className="rounded-xl p-2 text-center" style={over > 0 ? { ...sheetCardDark, background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-red) 30%, transparent)' } : sheetCardDark}>
-                    <p className="text-micro mb-0.5" style={t3}>ครบสัญญา</p>
+                    <p className="text-micro mb-1" style={t3}>ครบสัญญา</p>
                     <p className={`text-xs font-semibold`} style={{ color: over > 0 ? 'var(--accent-red)' : 'var(--text-1)' }}>
                       {over > 0 ? `เกิน ${over}ว` : fmtDate(end)}
                     </p>
@@ -446,7 +446,7 @@ function EventAddSheet({ open, onClose, events }: {
     <Sheet open={open} onClose={resetAndClose} title="เพิ่มลูกค้า Event" icon={CalendarDays}>
       {step === 'event' && (
         <div className="p-4">
-          <p className="text-xs mb-3" style={t2}>เลือก Event</p>
+          <p className="text-xs mb-4" style={t2}>เลือก Event</p>
           {events.length === 0 ? (
             <p className="text-center py-8 text-sm" style={t3}>ไม่มี Event</p>
           ) : (
@@ -457,7 +457,7 @@ function EventAddSheet({ open, onClose, events }: {
                   style={sheetCard}>
                   <div>
                     <p className="font-semibold text-sm" style={t1}>{ev.eventName}</p>
-                    <p className="text-xs mt-0.5" style={t2}>{ev.projectName} · {fmtDate(ev.eventDate)}</p>
+                    <p className="text-xs mt-1" style={t2}>{ev.projectName} · {fmtDate(ev.eventDate)}</p>
                   </div>
                   <ChevronRight size={16} style={t3} />
                 </button>
@@ -469,10 +469,10 @@ function EventAddSheet({ open, onClose, events }: {
 
       {step === 'search' && selectedEvent && (
         <div className="p-4">
-          <button onClick={() => setStep('event')} className="text-sm mb-3 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
+          <button onClick={() => setStep('event')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selectedEvent.eventName}
           </button>
-          <div className="relative mb-3">
+          <div className="relative mb-4">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => handleSearch(e.target.value)}
               placeholder="ค้นหาชื่อ / เบอร์ / เลขห้อง..."
@@ -506,7 +506,7 @@ function EventAddSheet({ open, onClose, events }: {
           <div style={{ ...sheetCard, borderRadius: 18, padding: '16px' }}>
             <p className="font-semibold" style={t1}>{selectedLead.customer_name}</p>
             <p className="text-xs mt-1" style={t2}>{selectedLead.tower ? `${selectedLead.tower}-` : ''}ห้อง {selectedLead.room_no || '—'} · {selectedLead.phone || '—'}</p>
-            <p className="text-xs mt-0.5" style={t3}>Event: {selectedEvent.eventName}</p>
+            <p className="text-xs mt-1" style={t3}>Event: {selectedEvent.eventName}</p>
           </div>
           <div>
             <label className="text-xs mb-2 block" style={t3}>สถานะ</label>
@@ -631,7 +631,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
     <Sheet open={open} onClose={resetAndClose} title="บันทึกรับเงิน" icon={Receipt}>
       {step === 'job' && (
         <div className="p-4">
-          <div className="relative mb-3">
+          <div className="relative mb-4">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
               placeholder="พิมพ์ชื่อลูกค้า / ห้อง / โครงการ..."
@@ -644,7 +644,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
                 style={sheetCard}>
                 <div>
                   <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
-                  <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName}</p>
+                  <p className="text-xs mt-1" style={t2}>{j.roomNo} · {j.projectName}</p>
                 </div>
                 <ChevronRight size={16} style={t3} />
               </button>
@@ -661,7 +661,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
           <p className="text-sm mb-6" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
           <p className="text-xs mb-6" style={t3}>กรุณาตั้งแผนงวดชำระเงินก่อน จึงจะบันทึกรับเงินได้</p>
           <button onClick={() => setStep('job')}
-            className="w-full py-3 rounded-[8px] mb-3 text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+            className="w-full py-3 rounded-[8px] mb-4 text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
             ← เลือกลูกค้าอื่น
           </button>
           <button onClick={resetAndClose}
@@ -681,14 +681,14 @@ function QuickPaySheet({ open, onClose, jobs }: {
             <div className="text-center py-8 flex items-center justify-center gap-2" style={t2}><CheckCircle2 size={16} style={{ color: 'var(--accent-green)' }} />ชำระครบทุกงวดแล้ว</div>
           ) : (
             <div className="space-y-2">
-              <p className="text-xs mb-3" style={t2}>เลือกงวดที่ต้องการบันทึก</p>
+              <p className="text-xs mb-4" style={t2}>เลือกงวดที่ต้องการบันทึก</p>
               {installments.map((inst: any) => (
                 <button key={inst.id} onClick={() => { setSelectedInst(inst); setPaidAmount(inst.amount || 0); setStep('confirm') }}
                   className="w-full flex items-center justify-between px-4 py-4 rounded-xl transition-colors"
                   style={sheetCard}>
                   <div className="text-left">
                     <p className="font-semibold text-sm" style={t1}>{inst.installment_name}</p>
-                    {inst.is_work_trigger && <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--accent-orange)' }}><Zap size={10} strokeWidth={2} />ชำระแล้วเริ่มงาน</p>}
+                    {inst.is_work_trigger && <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--accent-orange)' }}><Zap size={10} strokeWidth={2} />ชำระแล้วเริ่มงาน</p>}
                   </div>
                   <div className="text-right">
                     <p className="font-bold" style={{ color: 'var(--accent-green)' }}>{fmtBaht(inst.amount)}</p>
@@ -879,7 +879,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
     <Sheet open={open} onClose={resetAndClose} title="ตั้งแผนชำระ" icon={ClipboardList}>
       {step === 'job' && (
         <div className="p-4">
-          <div className="relative mb-3">
+          <div className="relative mb-4">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
               placeholder="ค้นหาลูกค้า Wyde..."
@@ -891,7 +891,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
                 className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
                   <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
-                  <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName} · {fmtBaht(j.revenue)}</p>
+                  <p className="text-xs mt-1" style={t2}>{j.roomNo} · {j.projectName} · {fmtBaht(j.revenue)}</p>
                 </div>
                 <ChevronRight size={16} style={t3} />
               </button>
@@ -910,7 +910,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
             <p className="text-xs mt-1" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
             <p className="font-bold mt-1" style={{ color: 'var(--accent-green)' }}>{fmtBaht(selectedJob.revenue)}</p>
           </div>
-          <p className="text-xs mb-3" style={t2}>ประเภทลูกค้า</p>
+          <p className="text-xs mb-4" style={t2}>ประเภทลูกค้า</p>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setStep('b2c')}
               className="py-5 rounded-[18px] font-semibold text-center border"
@@ -941,7 +941,7 @@ function PlanSetupSheet({ open, onClose, jobs }: {
               const labels: Record<string, string> = { A: 'แผน A — จ่ายครั้งเดียว 100%', B: 'แผน B — 50% + 50%', C: 'แผน C — มัดจำ + 50% + 50%' }
               return (
                 <div key={plan} style={sheetCard}>
-                  <p className="font-semibold mb-3" style={t1}>{labels[plan]}</p>
+                  <p className="font-semibold mb-4" style={t1}>{labels[plan]}</p>
                   <div className="space-y-1 mb-4">
                     {insts.map(i => (
                       <div key={i.no} className="flex justify-between text-xs">
@@ -1077,7 +1077,7 @@ function DeliverSheet({ open, onClose, jobs }: {
     <Sheet open={open} onClose={resetAndClose} title="บันทึกส่งมอบ" icon={ArrowRightLeft}>
       {step === 'job' && (
         <div className="p-4">
-          <div className="relative mb-3">
+          <div className="relative mb-4">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
             <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
               placeholder="ค้นหาลูกค้า..."
@@ -1089,7 +1089,7 @@ function DeliverSheet({ open, onClose, jobs }: {
                 className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
                   <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
-                  <p className="text-xs mt-0.5" style={t2}>{j.roomNo} · {j.projectName}</p>
+                  <p className="text-xs mt-1" style={t2}>{j.roomNo} · {j.projectName}</p>
                   <p className="text-xs" style={t3}>{j.workingStatus}</p>
                 </div>
                 <ChevronRight size={16} style={t3} />
@@ -1194,7 +1194,7 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
   return (
     <Sheet open={open} onClose={() => { setSearch(''); onClose() }} title="อัปเดตสถานะงาน" icon={ClipboardList}>
       <div className="p-4">
-        <div className="relative mb-3">
+        <div className="relative mb-4">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหา..."
             className={sheetInput} style={sheetInputStyle} />
@@ -1264,7 +1264,7 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
         {loading ? <div className="py-8 flex justify-center"><Spinner /></div>
           : items.length === 0 ? (
             <div className="text-center py-8">
-              <CheckCircle2 size={32} className="mx-auto mb-3" style={{ color: 'color-mix(in srgb, var(--accent-green) 50%, transparent)' }} />
+              <CheckCircle2 size={32} className="mx-auto mb-4" style={{ color: 'color-mix(in srgb, var(--accent-green) 50%, transparent)' }} />
               <p style={t2}>ไม่มีงานเกินกำหนด 🎉</p>
             </div>
           ) : items.map((j: any) => (
@@ -1447,7 +1447,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
                 <div>
                   <p className="font-semibold text-sm" style={t1}>{r.name}</p>
-                  <p className="text-xs mt-0.5" style={t2}>{r.room} · {r.projectName}</p>
+                  <p className="text-xs mt-1" style={t2}>{r.room} · {r.projectName}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-micro px-2 py-0.5 rounded-[8px] font-semibold"
@@ -1468,7 +1468,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
             <ArrowLeft size={14} /> {selected.name} · {selected.room}
           </button>
           <div className="rounded-[8px] p-4 mb-4" style={sheetCard}>
-            <p className="font-semibold text-sm mb-0.5" style={t1}>{selected.name}</p>
+            <p className="font-semibold text-sm mb-1" style={t1}>{selected.name}</p>
             <p className="text-xs" style={t2}>{selected.room} · {selected.projectName}</p>
           </div>
           <FileAttach
@@ -1587,12 +1587,12 @@ export default function QuickPage() {
       {/* Greeting — on gradient background */}
       <div className="px-5 pt-5 pb-4">
         <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>{greeting} 👋</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-3)' }}>{todayTH}</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>{todayTH}</p>
       </div>
 
       {/* ── Overview ── */}
       <div className="px-5 mb-6">
-        <p className="text-micro font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-3)' }}>Overview</p>
+        <p className="text-micro font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-3)' }}>Overview</p>
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-[18px] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />)}

@@ -895,7 +895,7 @@ function Tile({ label, value, sub }: { label: string; value: string; sub?: strin
   return (
     <div className="ds-card-sm px-3 py-2.5">
       <p className="text-caption" style={{ color: 'var(--text-3)' }}>{label}</p>
-      <p className="text-kpi-money mt-0.5 tabular-nums" style={{ color: 'var(--text-1)' }}>{value}</p>
+      <p className="text-kpi-money mt-1 tabular-nums" style={{ color: 'var(--text-1)' }}>{value}</p>
       {sub && <p className="text-caption tabular-nums" style={{ color: 'var(--text-3)' }}>{sub}</p>}
     </div>
   )
@@ -1190,7 +1190,7 @@ function RoomSheet({
                 สิ้นเดือน · ยอมต่างได้ ฿1 เป็นเศษการปัดสตางค์ ถ้าเตือนทุกสตางค์
                 เดี๋ยวคนเลิกสนใจคำเตือน (SALE_PRICE_TOLERANCE) */}
             {items.length > 0 && (
-              <p className="text-caption tabular-nums mt-0.5">
+              <p className="text-caption tabular-nums mt-1">
                 {split.filled === 0 ? (
                   <span style={{ color: 'var(--text-3)' }}>ยังไม่ได้ระบุราคาขายรายรายการ</span>
                 ) : !split.complete ? (
@@ -1652,7 +1652,7 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
                         <>
                           <span className="whitespace-nowrap">{baht(b.value)}</span>
                           {b.derived && (
-                            <span className={`badge mt-0.5 ${b.state === 'odd' ? 'badge-red' : 'badge-orange'}`}
+                            <span className={`badge mt-1 ${b.state === 'odd' ? 'badge-red' : 'badge-orange'}`}
                               style={{ display: 'block', width: 'fit-content', marginLeft: 'auto' }}>
                               {b.state === 'odd' ? 'ยอดไม่สอดคล้อง' : 'ระบบถอดให้'}
                             </span>
@@ -1822,7 +1822,7 @@ function PrCell({ job, canWrite, usedBy, onSave }: {
               if (e.key === 'Escape') { setVal(''); setAdding(false) }
             }} />
           {typedElsewhere > 0 && (
-            <span className="text-micro mt-0.5" style={{ color: 'var(--accent)' }}>
+            <span className="text-micro mt-1" style={{ color: 'var(--accent)' }}>
               ใบนี้ใช้กับอีก {typedElsewhere} ห้อง
             </span>
           )}
@@ -1868,7 +1868,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
         </div>
       )}
 
-      <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(240px,100%),1fr))' }}>
+      <div className="grid gap-4 mt-3" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(240px,100%),1fr))' }}>
         {people.length === 0 && (
           <p className="text-body" style={{ color: 'var(--text-3)' }}>
             ยังไม่มีใครถูกมอบหมายห้องในช่วงที่เลือก
@@ -1912,7 +1912,7 @@ function PeopleTab({ people, admins, users, nameOf }: {
           วัดจากห้องที่รับผิดชอบ ไม่ใช่ว่าใครพิมพ์
         </span>
       </h3>
-      <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(240px,100%),1fr))' }}>
+      <div className="grid gap-4 mt-3" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(240px,100%),1fr))' }}>
         {admins.length === 0 && (
           <p className="text-body" style={{ color: 'var(--text-3)' }}>
             ยังไม่มีแอดมินถูกมอบหมายห้องในช่วงที่เลือก — มอบหมายได้ที่หัวห้องในแท็บจัดซื้อจัดจ้าง

@@ -61,7 +61,7 @@ export default function JobNote({ jobId, value, onSaved, disabled }: {
   const empty = !text.trim()
 
   return (
-    <div className="mb-3">
+    <div className="mb-4">
       {editing ? (
         <textarea
           ref={ref}
@@ -94,7 +94,7 @@ export default function JobNote({ jobId, value, onSaved, disabled }: {
             border: `1px ${empty ? 'dashed' : 'solid'} ${empty ? 'var(--divider)' : 'color-mix(in srgb, var(--accent-amber) 35%, transparent)'}`,
             cursor: disabled ? 'default' : 'pointer',
           }}>
-          <StickyNote size={12} className="flex-shrink-0 mt-0.5"
+          <StickyNote size={12} className="flex-shrink-0 mt-1"
             style={{ color: empty ? 'var(--text-3)' : 'var(--accent-amber)' }} />
           <span className="text-xs whitespace-pre-wrap break-words"
             style={{ color: empty ? 'var(--text-3)' : 'var(--text-1)' }}>

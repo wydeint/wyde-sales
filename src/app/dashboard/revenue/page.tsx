@@ -433,7 +433,7 @@ export default function RevenuePage() {
             {bySales.length === 0 ? (
               <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
             ) : bySales.map((s, i) => (
-              <div key={s.name} className="mb-3">
+              <div key={s.name} className="mb-4">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs w-4" style={{ color: 'var(--text-3)' }}>{i + 1}.</span>
@@ -458,7 +458,7 @@ export default function RevenuePage() {
             ) : byStatus.map(s => {
               const wsCfg = WORKING_STATUS_COLORS[s.status]
               return (
-                <div key={s.status} className="flex items-center gap-3 mb-3">
+                <div key={s.status} className="flex items-center gap-3 mb-4">
                   <span className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ background: wsCfg?.color || STATUS_COLORS[s.status] || 'var(--text-3)' }} />
                   <span className="text-sm flex-1" style={{ color: 'var(--text-2)' }}>{s.status}</span>

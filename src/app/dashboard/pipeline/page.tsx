@@ -800,7 +800,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               )}
             </div>
             <p className="font-bold text-sm mt-1 truncate" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</p>
-            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>
+            <p className="text-xs mt-1 truncate" style={{ color: 'var(--text-3)' }}>
               {(customer as any).projects?.name || ''}
               {jobOf(customer, focusJobId).sales?.name ? ` · ${jobOf(customer, focusJobId).sales.name}` : ''}
             </p>
@@ -829,7 +829,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           <div className="rounded-[8px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>{label}</p>
-              <p className="text-xl font-bold mt-0.5" style={{ color: displayVal > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
+              <p className="text-xl font-bold mt-1" style={{ color: displayVal > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
                 {displayVal > 0 ? f(displayVal) : 'ไม่ระบุ'}
               </p>
             </div>
@@ -1152,7 +1152,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           {(() => { const cj = jobOf(customer, focusJobId); const co = cancelOutcome(cj.cancel_type); return co && (
             <div className="rounded-[8px] p-3" style={{ background: `color-mix(in srgb, ${co.color} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${co.color} 25%, transparent)` }}>
               <p className="text-label font-semibold" style={{ color: co.color }}>ยกเลิกสัญญา · {co.label}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>
                 {cj.cancel_amount ? `฿${Math.round(cj.cancel_amount).toLocaleString('th-TH')}` : 'ไม่ได้ระบุยอด'}
                 {cj.cancel_date ? ` · ${new Date(cj.cancel_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}` : ''}
               </p>
@@ -1336,7 +1336,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <h3 className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>เริ่มงาน</h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{customer.customer_name} · {(customer as any).projects?.name || customer.project_id}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{customer.customer_name} · {(customer as any).projects?.name || customer.project_id}</p>
           </div>
           <button onClick={onClose} style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
@@ -1489,7 +1489,7 @@ function DocProspectField({ jobId, field, label, value, onUpdate }: {
 function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-start gap-1.5 text-xs">
-      <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{icon}</span>
+      <span className="mt-1 flex-shrink-0" style={{ color: 'var(--text-3)' }}>{icon}</span>
       <div>
         <p className="text-micro" style={{ color: 'var(--text-3)' }}>{label}</p>
         <p style={{ color: 'var(--text-1)' }}>{value}</p>
@@ -2039,7 +2039,7 @@ export default function ProspectsKanbanPage() {
         search={search}
         onSearchChange={v => { setSearch(v); setSelectedCustomer(null) }}
         searchPlaceholder="ค้นหาห้อง, ลูกค้า..."
-        className="mb-3"
+        className="mb-4"
       >
         <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
           className="field-input" style={{ width: 'auto', maxWidth: '10rem' }}>
@@ -2117,7 +2117,7 @@ export default function ProspectsKanbanPage() {
           const noSales = filtered.filter(j => !j.sales_id).length
             + bookedNoJob.filter(c => !salesIdOf(c)).length
           return (
-            <div className="mb-3">
+            <div className="mb-4">
               <SummaryStrip items={[
                 { label: 'จองอยู่', value: bookedCount, sub: 'งาน' },
                 { label: 'มูลค่ารวม', value: totalRev > 0 ? bahtShort(totalRev) : '—' },
@@ -2134,7 +2134,7 @@ export default function ProspectsKanbanPage() {
         const totalBudget = list.reduce((s, card) => s + cardValue(card.c, card.jobSeqNo, card.jobRev, card.jobCrmStage), 0)
         const noSales = list.filter(card => !jobOf(card.c, card.jobId).sales_id).length
         return (
-          <div className="mb-3">
+          <div className="mb-4">
             <SummaryStrip items={[
               { label: 'ในกลุ่มนี้', value: list.length, sub: 'ราย' },
               { label: 'มูลค่ารวม', value: totalBudget > 0 ? bahtShort(totalBudget) : '—' },
@@ -2357,7 +2357,7 @@ export default function ProspectsKanbanPage() {
                         งานที่ {jobCount + 1}
                       </span>
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>มีงานอยู่แล้ว {jobCount} งาน</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>มีงานอยู่แล้ว {jobCount} งาน</p>
                   </div>
 
                   {/* Project */}

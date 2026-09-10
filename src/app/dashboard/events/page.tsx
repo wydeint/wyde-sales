@@ -594,7 +594,7 @@ export default function EventsPage() {
                   {/* Performance Summary */}
                   {perf && (
                     <div className="px-4 py-4" style={{ background: 'var(--hover-bg)' }}>
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-4">
                         <TrendingUp size={13} className="text-success" />
                         <p className="text-label-upper text-success">Performance</p>
                       </div>
@@ -920,7 +920,7 @@ export default function EventsPage() {
             <span className="text-base leading-none flex-shrink-0">🚫</span>
             <div>
               <p className="font-semibold">ซ้ำในงานนี้ — ไม่สามารถเพิ่มได้</p>
-              <p className="opacity-80 mt-0.5">"{dupCheck.inEvent}" มีอยู่ใน Event นี้แล้ว (เบอร์หรือชื่อตรงกัน)</p>
+              <p className="opacity-80 mt-1">"{dupCheck.inEvent}" มีอยู่ใน Event นี้แล้ว (เบอร์หรือชื่อตรงกัน)</p>
             </div>
           </div>
         )}
@@ -930,7 +930,7 @@ export default function EventsPage() {
               <span className="text-base leading-none flex-shrink-0">⚠️</span>
               <div className="flex-1">
                 <p className="font-semibold">พบในระบบแล้ว ({dupCheck.inSystem.src})</p>
-                <p className="opacity-80 mt-0.5">"{dupCheck.inSystem.name}" มีอยู่ใน {dupCheck.inSystem.src} แล้ว</p>
+                <p className="opacity-80 mt-1">"{dupCheck.inSystem.name}" มีอยู่ใน {dupCheck.inSystem.src} แล้ว</p>
               </div>
             </div>
             {!dupConfirmed && (

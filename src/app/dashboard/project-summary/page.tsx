@@ -283,7 +283,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
         <div className="modal-header">
           <div className="min-w-0">
             <h3 className="modal-title truncate">{row.name}</h3>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
               {row.id}{row.total_units > 0 ? ` · ${row.total_units.toLocaleString()} ห้องในโครงการ` : ''}
             </p>
           </div>
@@ -292,21 +292,21 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
 
         <div className="overflow-y-auto p-5 space-y-5">
           {/* Money first: sold, collected, still owed. */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <div className="ds-card-sm">
               <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
               <p className="text-kpi-money" style={{ color: 'var(--accent)' }}>{fM(row.revenue_total)}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{row.jobs_total} งาน</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>{row.jobs_total} งาน</p>
             </div>
             <div className="ds-card-sm">
               <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>รับเงินแล้ว</p>
               <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{fM(row.cash_total)}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{collected}% ของมูลค่า</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>{collected}% ของมูลค่า</p>
             </div>
             <div className="ds-card-sm">
               <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
               <p className="text-kpi-money" style={{ color: outstanding > 0 ? 'var(--accent-orange)' : 'var(--text-3)' }}>{outstanding > 0 ? fM(outstanding) : '–'}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>มูลค่า − รับแล้ว</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>มูลค่า − รับแล้ว</p>
             </div>
           </div>
 
@@ -517,7 +517,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-xs" style={{ color: 'var(--text-2)' }}>งานที่ยกเลิก</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เปิดงานแล้วแต่ไม่ได้ทำต่อ</p>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>เปิดงานแล้วแต่ไม่ได้ทำต่อ</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-kpi-money" style={{ color: 'var(--accent-red)' }}>{fM(row.revenue_cancelled)}</p>
@@ -1069,7 +1069,7 @@ export default function ProjectSummaryPage() {
           )}
         </FilterBar>
 
-        <div className="flex flex-wrap items-center gap-2 mb-1">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <div className="tab-group flex-wrap">
             {(['all', 'B2C', 'B2B'] as CustFilter[]).map(v => (
               <button key={v} onClick={() => setCustFilter(v)}

@@ -497,7 +497,7 @@ export default function LeadsPage() {
       {/* Import Panel */}
       {showImport && (
         <div className="ds-card mb-5">
-          <h3 className="text-card-title mb-3" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
+          <h3 className="text-card-title mb-4" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
           {importResult ? (
             <div className="text-center py-4">
               {importResult.error ? (
@@ -538,7 +538,7 @@ export default function LeadsPage() {
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                   พบ {importRows.length} แถว &nbsp;·&nbsp;
                   <span className="text-success">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
@@ -632,7 +632,7 @@ export default function LeadsPage() {
       </FilterBar>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
         {[
           { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
           { label: 'ยังไม่ได้ติดต่อ', value: stats.newLead, color: 'var(--accent-orange)' },
@@ -647,7 +647,7 @@ export default function LeadsPage() {
       </div>
 
       {addError && (
-        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
+        <div className="flex items-center gap-2 mb-4 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
           <AlertCircle size={14} />{addError}
         </div>
       )}

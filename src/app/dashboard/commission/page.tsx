@@ -158,7 +158,7 @@ function IndividualTab({
       )}
 
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <div className="ds-card-sm">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ค่าคอม {selectedName} · {filtered.length} งาน</p>
           <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{f(totalComm)}</p>
@@ -191,7 +191,7 @@ function IndividualTab({
                   {isOpen ? <ChevronDown size={15} style={{ color: 'var(--accent)' }} /> : <ChevronRight size={15} style={{ color: 'var(--text-3)' }} />}
                   <div>
                     <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{monthLabel(month)}</p>
-                    <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>{monthJobs.length} งาน</p>
+                    <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>{monthJobs.length} งาน</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ function IndividualTab({
                               <p className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</p>
                               <p className="text-label" style={{ color: 'var(--text-3)' }}>ห้อง {j.room_no}</p>
                               {refTotal > 0 && (
-                                <p className="text-micro mt-0.5" style={{ color: 'var(--accent-blue)' }}>
+                                <p className="text-micro mt-1" style={{ color: 'var(--accent-blue)' }}>
                                   แนะนำ {f(refTotal)}
                                 </p>
                               )}
@@ -350,7 +350,7 @@ function ReferralTab({
       <div className="ds-card-sm flex items-center justify-between">
         <div>
           <p className="text-xs" style={{ color: 'var(--text-3)' }}>ค่าแนะนำรวมทั้งหมด</p>
-          <p className="text-2xl font-bold mt-0.5" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
+          <p className="text-2xl font-bold mt-1" style={{ color: 'var(--accent-blue)' }}>{f(totalRef)}</p>
         </div>
         <Users size={28} style={{ color: 'var(--accent-blue)', opacity: 0.3 }} />
       </div>
@@ -393,7 +393,7 @@ function ReferralTab({
                       {j.room_no}
                     </span>
                   </div>
-                  <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>
                     {(j.projects as any)?.name || '—'} · {(j.sales as any)?.name || '—'} · {j.working_status}
                     {j.actual_deliver_date ? ` · ส่งมอบ ${fDate(j.actual_deliver_date)}` : j.order_date ? ` · จอง ${fDate(j.order_date)}` : ''}
                   </p>
@@ -605,11 +605,11 @@ function StatusTab({
           two figures beside it — seven numbers where four carry the meaning, and
           on a phone that filled half the screen before the table appeared.
           The total leads and names its own split; the three statuses follow. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <div className="ds-card-sm">
           <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รวมทั้งหมด</p>
           <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(periodComm + periodRef)}</p>
-          <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
             ค่าคอม {f(periodComm)} · ค่าแนะนำ {f(periodRef)}
           </p>
         </div>
@@ -628,7 +628,7 @@ function StatusTab({
                 <p className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</p>
               </div>
               <p className="text-kpi-money" style={{ color: 'var(--text-1)' }}>{f(commAmt)}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{cnt} งาน</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>{cnt} งาน</p>
             </div>
           )
         })}

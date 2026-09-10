@@ -336,7 +336,7 @@ export default function ExecutivePage() {
               <div className="mt-1 h-1.5 w-36 rounded-full" style={{ background: 'var(--divider)' }}>
                 <div className="h-1.5 rounded-full transition-all" style={{ background: 'var(--accent-green)', width: `${Math.min(pct(salesRevenue, orgTarget.sales), 100)}%` }} />
               </div>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(salesRevenue)} ({pct(salesRevenue, orgTarget.sales)}%)</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง {f(salesRevenue)} ({pct(salesRevenue, orgTarget.sales)}%)</p>
             </div>
             <div>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
@@ -344,7 +344,7 @@ export default function ExecutivePage() {
               <div className="mt-1 h-1.5 w-36 rounded-full" style={{ background: 'var(--divider)' }}>
                 <div className="h-1.5 rounded-full transition-all" style={{ background: 'var(--accent-blue)', width: `${Math.min(pct(deliveryRevenue, orgTarget.delivery), 100)}%` }} />
               </div>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>จริง {f(deliveryRevenue)} ({pct(deliveryRevenue, orgTarget.delivery)}%)</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง {f(deliveryRevenue)} ({pct(deliveryRevenue, orgTarget.delivery)}%)</p>
             </div>
           </div>
         </div>
@@ -382,7 +382,7 @@ export default function ExecutivePage() {
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.count} งาน</span>
             </div>
             <p className="text-lg font-bold mt-1" style={{ color: 'var(--text-1)' }}>{fk(s.revenue)}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
               {salesRevenue > 0 ? pct(s.revenue, salesRevenue) + '% ของยอดรวม' : '—'}
             </p>
           </div>
@@ -572,7 +572,7 @@ export default function ExecutivePage() {
                         {item.tgt > 0 && <>
                           <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>เป้า {f(item.tgt)}</p>
                           <ProgressBar value={item.val} max={item.tgt} color={item.color} />
-                          <p className="text-micro mt-0.5 text-right" style={{ color: item.color }}>{pct(item.val, item.tgt)}%</p>
+                          <p className="text-micro mt-1 text-right" style={{ color: item.color }}>{pct(item.val, item.tgt)}%</p>
                         </>}
                       </div>
                     ))}
@@ -657,12 +657,12 @@ export default function ExecutivePage() {
               {lb}
             </p>
             <p className="text-kpi-money font-bold mt-1.5" style={{ color: color || 'var(--text-1)' }}>{value}</p>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{sub}</p>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>{sub}</p>
           </div>
         )
         const Section = ({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) => (
           <div className="ds-card">
-            <div className="flex items-baseline justify-between gap-3 mb-3">
+            <div className="flex items-baseline justify-between gap-3 mb-4">
               <h3 className="font-semibold" style={{ fontSize: 'var(--fs-section)', color: 'var(--text-1)' }}>{title}</h3>
               {note && <span className="text-micro" style={{ color: 'var(--text-3)' }}>{note}</span>}
             </div>
@@ -796,7 +796,7 @@ export default function ExecutivePage() {
                           background: 'var(--panel-bg)',
                           border: `1px solid ${t.mine ? 'var(--accent)' : 'var(--divider)'}`,
                         }}>
-                        <div className="flex items-center gap-2.5 mb-3">
+                        <div className="flex items-center gap-2.5 mb-4">
                           <span className="w-7 h-7 rounded-full grid place-items-center text-micro font-bold text-white"
                             style={{ background: 'var(--accent)' }}>{t.manager?.name?.[0] ?? '?'}</span>
                           <span>

@@ -594,7 +594,7 @@ export default function EventsPage() {
                   {/* Performance Summary */}
                   {perf && (
                     <div className="px-4 py-4" style={{ background: 'var(--hover-bg)' }}>
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-4">
                         <TrendingUp size={13} className="text-success" />
                         <p className="text-label-upper text-success">Performance</p>
                       </div>
@@ -662,20 +662,20 @@ export default function EventsPage() {
                       <table className="w-full tbl-rows" style={{ minWidth: 700 }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>#</th>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>โครงการ</th>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>ห้อง</th>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>ชื่อลูกค้า</th>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>SALES</th>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>STATUS</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>#</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>โครงการ</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>ห้อง</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>ชื่อลูกค้า</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>SALES</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>STATUS</th>
                             <th className="text-center px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>
                               <Smartphone size={11} className="inline mr-1" />LINE
                             </th>
-                            <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>วัน BOOKED</th>
-                            <th className="text-right px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>BOOKED VALUE</th>
-                            <th className="text-right px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>มัดจำ</th>
-                            <th className="px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>แก้ไข</th>
-                            <th className="px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>นำเข้าระบบ</th>
+                            <th className="text-left text-xs" style={{ color: 'var(--text-3)' }}>วัน BOOKED</th>
+                            <th className="num num-money text-xs" style={{ color: 'var(--text-3)' }}><span>BOOKED VALUE</span></th>
+                            <th className="num num-money text-xs" style={{ color: 'var(--text-3)' }}><span>มัดจำ</span></th>
+                            <th className=" text-xs" style={{ color: 'var(--text-3)' }}>แก้ไข</th>
+                            <th className=" text-xs" style={{ color: 'var(--text-3)' }}>นำเข้าระบบ</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -684,11 +684,11 @@ export default function EventsPage() {
                             const promoteLabel = getPromoteLabel(c)
                             return (
                               <tr key={c.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)' }}>
-                                <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>{idx + 1}</td>
-                                <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{projects.find(p => p.id === c.project_id)?.name || '—'}</td>
-                                <td className="px-3 py-2 text-accent-blue text-xs font-mono">{c.room_no || '—'}</td>
-                                <td className="px-3 py-2 text-body-strong" style={{ color: 'var(--text-1)' }}>{c.customer_name}</td>
-                                <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{(c.users as any)?.name || '—'}</td>
+                                <td className=" text-xs" style={{ color: 'var(--text-3)' }}>{idx + 1}</td>
+                                <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{projects.find(p => p.id === c.project_id)?.name || '—'}</td>
+                                <td className=" text-accent-blue text-xs font-mono">{c.room_no || '—'}</td>
+                                <td className=" text-body-strong" style={{ color: 'var(--text-1)' }}>{c.customer_name}</td>
+                                <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{(c.users as any)?.name || '—'}</td>
                                 <td className="px-3 py-2">
                                   <select
                                     value={normStatus(c.status)}
@@ -710,9 +710,9 @@ export default function EventsPage() {
                                     {c.line_added ? '✓' : '+'}
                                   </button>
                                 </td>
-                                <td className="px-3 py-2 text-xs" style={{ color: 'var(--text-2)' }}>{dateStr(c.booked_date)}</td>
-                                <td className="px-3 py-2 text-right text-success text-sm font-semibold">{fmtBaht(c.booked_value)}</td>
-                                <td className="px-3 py-2 text-right text-premium text-sm">{fmtBaht(c.deposit_amount)}</td>
+                                <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{dateStr(c.booked_date)}</td>
+                                <td className=" num num-money text-success text-sm font-semibold"><span>{fmtBaht(c.booked_value)}</span></td>
+                                <td className=" num num-money text-premium text-sm"><span>{fmtBaht(c.deposit_amount)}</span></td>
                                 <td className="px-3 py-2">
                                   <button
                                     onClick={() => {
@@ -740,7 +740,7 @@ export default function EventsPage() {
                                     <Pencil size={13} />
                                   </button>
                                 </td>
-                                <td className="px-3 py-2">
+                                <td className="">
                                   {normStatus(c.status) === 'not_interested' ? (
                                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>ไม่โปรโมท</span>
                                   ) : promoted ? (
@@ -920,7 +920,7 @@ export default function EventsPage() {
             <span className="text-base leading-none flex-shrink-0">🚫</span>
             <div>
               <p className="font-semibold">ซ้ำในงานนี้ — ไม่สามารถเพิ่มได้</p>
-              <p className="opacity-80 mt-0.5">"{dupCheck.inEvent}" มีอยู่ใน Event นี้แล้ว (เบอร์หรือชื่อตรงกัน)</p>
+              <p className="opacity-80 mt-1">"{dupCheck.inEvent}" มีอยู่ใน Event นี้แล้ว (เบอร์หรือชื่อตรงกัน)</p>
             </div>
           </div>
         )}
@@ -930,14 +930,14 @@ export default function EventsPage() {
               <span className="text-base leading-none flex-shrink-0">⚠️</span>
               <div className="flex-1">
                 <p className="font-semibold">พบในระบบแล้ว ({dupCheck.inSystem.src})</p>
-                <p className="opacity-80 mt-0.5">"{dupCheck.inSystem.name}" มีอยู่ใน {dupCheck.inSystem.src} แล้ว</p>
+                <p className="opacity-80 mt-1">"{dupCheck.inSystem.name}" มีอยู่ใน {dupCheck.inSystem.src} แล้ว</p>
               </div>
             </div>
             {!dupConfirmed && (
               <div className="px-3 py-2 flex items-center justify-between" style={{ borderTop: '1px solid color-mix(in srgb, var(--accent-orange) 20%, transparent)', background: 'var(--hover-bg)' }}>
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังต้องการเพิ่มในงานนี้หรือไม่?</p>
                 <button onClick={() => setDupConfirmed(true)}
-                  className="text-xs px-3 py-1 rounded-[6px] font-semibold"
+                  className="text-xs px-3 py-1 rounded-[8px] font-semibold"
                   style={{ background: 'color-mix(in srgb, var(--accent-orange) 20%, transparent)', color: 'var(--accent-orange)' }}>
                   ยืนยัน — เพิ่มต่อ
                 </button>

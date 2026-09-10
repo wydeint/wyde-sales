@@ -302,7 +302,7 @@ function CustomerDetail({
             </div>
             <div>
               <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</h2>
-              <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-3)' }}>{customer.id}</p>
+              <p className="text-xs font-mono mt-1" style={{ color: 'var(--text-3)' }}>{customer.id}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -323,7 +323,7 @@ function CustomerDetail({
           {/* Contact Info */}
           <section>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-3)' }}>ข้อมูลติดต่อ</p>
-            <div className="ds-card p-4 grid grid-cols-2 gap-3">
+            <div className="ds-card grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2">
                 <Phone size={13} style={{ color: 'var(--text-3)' }} />
                 <span className="text-sm" style={{ color: 'var(--text-1)' }}>{customer.phone || '—'}</span>
@@ -390,23 +390,23 @@ function CustomerDetail({
                 const delivered = jobs.filter(j => j.working_status === 'ส่งมอบแล้ว').length
                 const cancelled = jobs.length - live.length
                 return (
-                  <div className="ds-card p-4 grid grid-cols-3 gap-3">
+                  <div className="ds-card grid grid-cols-3 gap-3">
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>ซื้อทั้งหมด</p>
                       <p className="text-base font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{jobs.length} งาน</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
                         ส่งมอบแล้ว {delivered}{cancelled > 0 ? ` · ยกเลิก ${cancelled}` : ''}
                       </p>
                     </div>
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
                       <p className="text-base font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{fmt(revenue)}</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>ไม่รวมงานที่ยกเลิก</p>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>ไม่รวมงานที่ยกเลิก</p>
                     </div>
                     <div>
                       <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</p>
                       <p className="text-base font-bold tabular-nums" style={{ color: paid > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>{fmt(paid)}</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
                         {revenue > 0 ? `${Math.round((paid / revenue) * 100)}% ของมูลค่า` : '—'}
                       </p>
                     </div>
@@ -479,12 +479,12 @@ function CustomerDetail({
                 })
 
                 if (jobs.length === 0) return (
-                  <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
+                  <p className="text-xs px-3 py-4 rounded-[8px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
                     ยังไม่มีงาน
                   </p>
                 )
                 if (shown.length === 0) return (
-                  <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
+                  <p className="text-xs px-3 py-4 rounded-[8px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
                     ไม่พบห้องที่ค้นหา
                   </p>
                 )
@@ -496,8 +496,8 @@ function CustomerDetail({
                         <tr>
                           <th className="text-left" style={{ width: '22%' }}>ห้อง</th>
                           <th className="text-left" style={{ width: '20%' }}>สถานะ</th>
-                          <th className="text-right" style={{ width: '20%' }}>มูลค่า</th>
-                          <th className="text-right" style={{ width: '18%' }}>ชำระ</th>
+                          <th className="num num-pct" style={{ width: '20%' }}><span>มูลค่า</span></th>
+                          <th className="num num-pct" style={{ width: '18%' }}><span>ชำระ</span></th>
                           <th className="text-left" style={{ width: '20%' }}>ส่งมอบ</th>
                         </tr>
                       </thead>
@@ -537,9 +537,9 @@ function CustomerDetail({
                                     {job.working_status || 'ดำเนินการ'}
                                   </span>
                                 </td>
-                                <td className="text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{fmt(job.revenue_inc_vat)}</td>
-                                <td className="text-right tabular-nums" style={{ color: pct === 100 ? 'var(--accent-green)' : 'var(--text-2)' }}>
-                                  {total > 0 ? `${pct}%` : '—'}
+                                <td className="num num-money tabular-nums" style={{ color: 'var(--text-1)' }}><span>{fmt(job.revenue_inc_vat)}</span></td>
+                                <td className="num num-pct tabular-nums" style={{ color: pct === 100 ? 'var(--accent-green)' : 'var(--text-2)' }}>
+                                  <span>{total > 0 ? `${pct}%` : '—'}</span>
                                 </td>
                                 <td style={{ color: 'var(--text-2)' }}>{job.handover?.delivery_date?.slice(0, 10) || '—'}</td>
                               </tr>
@@ -547,8 +547,8 @@ function CustomerDetail({
                               {isOpen && (
                                 <tr>
                                   <td colSpan={5} style={{ background: 'var(--hover-bg)', paddingTop: 0 }}>
-                                    <div className="ds-card p-4 mb-1">
-                                      <div className="grid grid-cols-2 gap-2 mb-3">
+                                    <div className="ds-card mb-1">
+                                      <div className="grid grid-cols-2 gap-2 mb-4">
                                         {[
                                           { label: 'PO No.', value: job.po_no || '—' },
                                           { label: 'SO No.', value: job.so_no || '—' },
@@ -557,12 +557,12 @@ function CustomerDetail({
                                         ].map(f => (
                                           <div key={f.label} className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--card-bg)' }}>
                                             <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
-                                            <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
+                                            <p className="text-xs font-semibold mt-1" style={{ color: 'var(--text-1)' }}>{f.value}</p>
                                           </div>
                                         ))}
                                       </div>
 
-                                      <div className="flex items-center justify-between text-xs mb-3">
+                                      <div className="flex items-center justify-between text-xs mb-4">
                                         <span style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</span>
                                         <span style={{ color: 'var(--text-3)' }}>
                                           ไม่รวม VAT <span className="font-semibold ml-1" style={{ color: 'var(--text-1)' }}>{fmt(job.revenue_ex_vat)} บ.</span>
@@ -570,7 +570,7 @@ function CustomerDetail({
                                       </div>
 
                                       {job.installments.length > 0 && (
-                                        <div className="mb-3">
+                                        <div className="mb-4">
                                           <div className="flex items-center justify-between text-xs mb-1.5">
                                             <span style={{ color: 'var(--text-3)' }}>
                                               <FileText size={10} className="inline mr-1" />การชำระเงิน ({job.installments.filter(i => i.status === 'paid').length}/{job.installments.length} งวด)
@@ -890,15 +890,15 @@ export default function CustomersPage() {
         <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ประเภท</th>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>งาน</th>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>Sales</th>
-              <th scope="col" className="text-right px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>มูลค่า / งบ</th>
-              <th scope="col" className="text-right px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>เก็บแล้ว</th>
-              <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>สถานะ</th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>ประเภท</th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>โครงการ / ห้อง</th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>งาน</th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>ช่องทาง</th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>Sales</th>
+              <th scope="col" className="num num-money text-card-title" style={{ color: 'var(--text-3)' }}><span>มูลค่า / งบ</span></th>
+              <th scope="col" className="num num-money text-card-title" style={{ color: 'var(--text-3)' }}><span>เก็บแล้ว</span></th>
+              <th scope="col" className="text-left text-card-title" style={{ color: 'var(--text-3)' }}>สถานะ</th>
               <th scope="col" className="px-4 py-3"><span className="sr-only">แก้ไข</span></th>
             </tr>
           </thead>
@@ -935,7 +935,7 @@ export default function CustomersPage() {
                       button is right there, so a control here only adds a way to
                       change a customer by mis-clicking while scanning the list. */}
                   <td className="px-4 py-3">
-                    <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px]"
+                    <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px]"
                       style={{
                         background: (c as any).customer_type === 'B2B'
                           ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)'
@@ -989,7 +989,7 @@ export default function CustomersPage() {
                           <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{t.total}</span>
                           <div className="flex gap-1 flex-wrap">
                             {chips.filter(([n]) => n > 0).map(([n, label, color]) => (
-                              <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap"
+                              <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] whitespace-nowrap"
                                 style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
                                 {label} {n}
                               </span>
@@ -999,8 +999,8 @@ export default function CustomersPage() {
                       )
                     })()}
                   </td>
-                  <td className="px-4 py-3 text-sm capitalize" style={{ color: 'var(--text-2)' }}>{c.source || '-'}</td>
-                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{salesOf(c).join(' · ') || '-'}</td>
+                  <td className=" text-sm capitalize" style={{ color: 'var(--text-2)' }}>{c.source || '-'}</td>
+                  <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{salesOf(c).join(' · ') || '-'}</td>
                   {(() => {
                     const cJobs: any[] = (c as any).jobs || []
                     const jobRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0)
@@ -1012,11 +1012,11 @@ export default function CustomersPage() {
                       s + ((j.payments || []) as any[]).filter((p: any) => p.status === 'paid').reduce((ps: number, p: any) => ps + (p.paid_amount ?? p.amount ?? 0), 0), 0)
                     return (
                       <>
-                        <td className="px-4 py-3 text-right tabular-nums">
+                        <td className=" num num-money tabular-nums">
                           {totalRev > 0 ? (
                             <div className="flex items-center justify-end gap-1.5">
                               {isBudget && (
-                                <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px]"
+                                <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px]"
                                   style={{ background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)', color: 'var(--accent-amber)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' }}>
                                   งบ
                                 </span>
@@ -1025,8 +1025,8 @@ export default function CustomersPage() {
                             </div>
                           ) : <span className="text-sm font-semibold" style={{ color: 'var(--text-3)' }}>—</span>}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums" style={{ color: totalPaid > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
-                          {totalPaid > 0 ? fmt(totalPaid) : '—'}
+                        <td className=" num num-money text-sm font-semibold tabular-nums" style={{ color: totalPaid > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                          <span>{totalPaid > 0 ? fmt(totalPaid) : '—'}</span>
                         </td>
                       </>
                     )

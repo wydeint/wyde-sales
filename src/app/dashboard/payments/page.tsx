@@ -105,12 +105,12 @@ function InstallmentBadge({ inst }: { inst: Installment }) {
           {inst.installment_no}
         </div>
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 hidden group-hover:block pointer-events-none">
-          <div className="text-micro rounded-[6px] px-2 py-1.5 whitespace-nowrap shadow-lg"
+          <div className="text-micro rounded-[8px] px-2 py-1.5 whitespace-nowrap shadow-lg"
             style={{ background: 'var(--tooltip-bg)', color: 'var(--tooltip-fg)' }}>
             <p className="font-semibold">{inst.installment_name}</p>
             <p>{f(inst.amount)}</p>
             {(inst.slip_url || inst.receipt_url) && (
-              <p className="mt-0.5" style={{ opacity: 0.75 }}>{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
+              <p className="mt-1" style={{ opacity: 0.75 }}>{[inst.slip_url && 'slip', inst.receipt_url && 'ใบเสร็จ'].filter(Boolean).join(', ')} แนบแล้ว</p>
             )}
           </div>
         </div>
@@ -132,11 +132,11 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
     <>
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
+      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[18px] shadow-2xl pointer-events-auto"
         data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1">
-            <p className="text-micro uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
+            <p className="text-micro uppercase tracking-widest mb-1" style={{ color: 'var(--text-3)' }}>{job.project_name}</p>
             <p className="font-bold text-lg" style={{ color: 'var(--text-1)' }}>ห้อง {job.room_no}</p>
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>{job.customer_name}</p>
           </div>
@@ -177,7 +177,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
                 return (
                   <div key={inst.id} className="flex items-center gap-3 p-3 rounded-[8px]"
                     style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                    <div className="w-6 h-6 rounded-[6px] flex items-center justify-center text-micro font-bold flex-shrink-0"
+                    <div className="w-6 h-6 rounded-[8px] flex items-center justify-center text-micro font-bold flex-shrink-0"
                       style={{ background: inst.status === 'paid' ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : inst.status === 'overdue' ? 'color-mix(in srgb, var(--accent-red) 20%, transparent)' : 'var(--card-bg)', color: txtColor }}>
                       {inst.installment_no}
                     </div>
@@ -213,7 +213,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
 
           {/* Docs */}
           <div>
-            <p className="text-micro uppercase tracking-widest mb-3 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
+            <p className="text-micro uppercase tracking-widest mb-4 font-semibold" style={{ color: 'var(--text-3)' }}>เอกสาร</p>
             <div className="space-y-2">
               {[
                 { url: job.quotation1_url, label: 'ใบเสนอราคา 1', short: 'Q1', auto: autoCheckedSale(job) },
@@ -406,7 +406,7 @@ export default function PaymentsPage() {
         />
 
         {/* Filters */}
-        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" sticky className="mb-3">
+        <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหาห้อง / ลูกค้า" sticky className="mb-4">
           <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
             className="field-input" style={{ width: 'auto' }}>
             <option value="">ทุกโครงการ</option>
@@ -442,29 +442,29 @@ export default function PaymentsPage() {
             count loose beside them instead of inside a tile.
             คงเหลือ stays orange: outstanding is a normal state, not an error. */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
             <p className="text-kpi-money" style={{ color: 'var(--text-1)' }}>{f(totalRevenue)}</p>
           </div>
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ชำระแล้ว</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{f(totalPaid)}</p>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
               {totalRevenue > 0 ? Math.round(totalPaid / totalRevenue * 100) : 0}% ของมูลค่างาน
             </p>
           </div>
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>คงเหลือ</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent-orange)' }}>{f(totalUnpaid)}</p>
           </div>
-          <div className="ds-card p-4 col-span-2 lg:col-span-1">
+          <div className="ds-card col-span-2 lg:col-span-1">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>รายการ</p>
             <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>{filtered.length.toLocaleString('th-TH')}</p>
           </div>
         </div>
 
       {/* Table */}
-      <div className="tbl-scroll rounded-[11px]"
+      <div className="tbl-scroll rounded-[8px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         <table className="text-sm tbl-rows" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
@@ -486,7 +486,7 @@ export default function PaymentsPage() {
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-bold" style={{ color: 'var(--text-1)' }}>{job.room_no}</p>
-                    <p className="text-micro mt-0.5 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
+                    <p className="text-micro mt-1 truncate max-w-[140px]" style={{ color: 'var(--accent)' }}>{job.project_name}</p>
                   </td>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>

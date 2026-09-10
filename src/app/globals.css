@@ -9,10 +9,16 @@
    Color lives in the :root / .dark blocks below.
 ══════════════════════════════════════════ */
 :root {
-  /* Radius */
+  /* ── Radius — two values ──────────────────────────────────────────────
+     The rule reads off the screen without opening the code: something that
+     floats on the page background is 18, something sitting inside another
+     box is 8. Five values were in use (4 · 8 · 11 · 16 · 20 plus 18) and a
+     drawer at 20 containing a card at 11 containing a badge at 4 put three
+     different corners on one screen.
+     --radius-md is kept as a name so nothing breaks, but it is 8 now. */
   --radius-none: 0px;
   --radius-sm:   8px;
-  --radius-md:   11px;
+  --radius-md:   8px;
   --radius-lg:   18px;
 
   /* Spacing */
@@ -23,22 +29,40 @@
   --space-lg:  24px;
   --space-xl:  32px;
 
-  /* Typography — size (13–14" MacBook baseline: 1024–1439px) */
+  /* ── Typography — four sizes, nothing else ────────────────────────────
+     The app had ten rendered sizes (8·10·11·12·13·14·15·16·20·28) but the
+     eye only separates five steps: anything closer than ~15% reads as the
+     same level and registers as "something is off" rather than as hierarchy.
+     12·13 and 13·14 and 15·16 were all inside that band.
+
+     What survives: 12 for labels, 13 for everything read, 13/700 with a rule
+     above for headings (weight and a line carry the hierarchy, not size —
+     the way a section header works on a BOQ), and 20 for the page title and
+     KPI figures. KPI keeps its weight and takes --accent for prominence
+     instead of another size.
+
+     Gone: 8 · 10 · 11 · 14 · 15 · 16 · 28. --fs-section, --fs-label and
+     --fs-micro stay declared and point at a surviving size, so the ~320
+     places already using them move without being touched. */
   --fs-page-title: 20px;
-  --fs-section:    15px;
+  --fs-section:    13px;   /* was 15 — heading is body size at weight 700 */
   --fs-card-title: 13px;
   --fs-body:       13px;
   --fs-caption:    12px;
-  --fs-label:      11px;
-  --fs-kpi:        28px;
-  --fs-micro:      10px;
+  --fs-label:      12px;   /* was 11 */
+  --fs-kpi:        20px;   /* was 28 — 13→20→28 was two big jumps in a row */
+  --fs-micro:      12px;   /* was 10 — Thai tone marks touch the vowels there */
 
-  /* Typography — line-height */
-  --lh-page-title: 1.25;
-  --lh-section:    1.3;
-  --lh-body:       1.5;
-  --lh-caption:    1.4;
-  --lh-kpi:        1.1;
+  /* ── Typography — line-height in px, never a ratio ────────────────────
+     13 × 1.5 = 19.5px. Half a pixel per line is why table rows measured
+     41 · 50 · 61 · 64 · 79 instead of one repeating height. Every value
+     below divides by 4, so every line in the app lands on the same grid
+     without anyone tuning a single spot. */
+  --lh-page-title: 28px;
+  --lh-section:    20px;
+  --lh-body:       20px;
+  --lh-caption:    16px;
+  --lh-kpi:        28px;
 
   /* Typography — letter-spacing */
   --ls-page-title: -0.01em;
@@ -54,8 +78,44 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-roboto), var(--font-noto-thai);
+  --font-mono: var(--font-roboto-mono);
+
+  /* ── Tailwind's own size utilities, remapped onto our four sizes ──────
+     `text-sm` is written in 482 places and `text-base` in 29. Both were
+     outside the scale (14px and 16px). Remapping the utility here moves all
+     of them at once and keeps every existing className valid — the
+     alternative was 511 hand edits with 511 chances to miss one.
+
+     text-xs already resolves to 12px, which is our label size, so the 846
+     places using it are correct as they stand and are left alone. */
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 13px;
+  --text-base--line-height: 20px;
+  --text-xs--line-height: 16px;
+
+  /* The larger utilities all land on 20px, the one display size. text-lg (18px)
+     is the KPI figure on My Deals and Prospects; text-xl / 2xl / 3xl appear 15
+     times between them and were never distinguishable from each other in
+     context. 35 places, one value. */
+  --text-lg: 20px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 20px;
+  --text-2xl--line-height: 28px;
+  --text-3xl: 20px;
+  --text-3xl--line-height: 28px;
+
+  /* Tailwind's own radius utilities, onto the same two values. rounded-lg
+     already resolved to 18 through --radius-lg; xl / 2xl / 3xl were still
+     Tailwind's defaults (12 / 16 / 24px) and appear 22 times.
+     rounded-full is left alone — a circle on an avatar or a status dot is a
+     shape, not a corner. */
+  --radius-xl:  18px;
+  --radius-2xl: 18px;
+  --radius-3xl: 18px;
 }
 
 /* ══════════════════════════════════════════
@@ -100,7 +160,7 @@
   --accent-red: #dc2626;
   --accent-amber: #d97706;
   --radius-sm: 8px;
-  --radius-md: 11px;
+  --radius-md: 8px;
   --radius-lg: 18px;
 }
 
@@ -141,7 +201,7 @@
   --accent-red: #f87171;
   --accent-amber: #fbbf24;
   --radius-sm: 8px;
-  --radius-md: 11px;
+  --radius-md: 8px;
   --radius-lg: 18px;
 }
 
@@ -163,7 +223,17 @@ body {
   background: var(--bg-gradient);
   background-attachment: fixed;
   color: var(--text-1);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  /* Roboto first, Noto Sans Thai second — see the comment in layout.tsx for
+     why the order is what makes this work. The OS stack stays at the end as
+     a fallback for the moment before the webfonts land. */
+  font-family: var(--font-roboto), var(--font-noto-thai),
+               -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  /* Money and quantities line up in columns everywhere in this app, so
+     tabular figures are the default rather than something each table opts
+     into — 152 right-aligned cells were missing it. */
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -440,10 +510,47 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .tbl-scroll thead th {
   font-size: var(--fs-caption);
   font-weight: 600;
-  padding: 12px 16px;
+  line-height: var(--lh-caption);
+  padding: 8px 16px;
   white-space: nowrap;
 }
-.tbl-scroll tbody td { padding: 10px 16px; }
+/* 20px line + 4 + 4 = a 28px row, every row, on the 4px grid. Rows measured
+   41 · 50 · 61 · 64 · 79 before this. */
+.tbl-scroll tbody td { padding: 4px 16px; line-height: var(--lh-body); }
+
+/* ── One alignment rule: everything starts on the left ────────────────────
+   Header and cell always take the same side, so their left edges line up in
+   every column with no per-column decision to remember — the previous rule
+   (text left, numbers right) was correct but had six cases, and six cases is
+   how columns drifted apart in the first place.
+
+   Numbers keep their column alignment a different way: `.num` puts the value
+   in a fixed-width block that right-aligns inside itself. The block's left
+   edge sits under the header, and the digits still line up unit-under-unit.
+   Both, with one rule.
+
+   Width by kind, in ch — with tabular figures 1ch is exactly one digit.
+
+   The default is written with :where() so it carries zero specificity. A page
+   that still says `text-right` on a cell keeps winning until phase 3 converts
+   it — otherwise this one rule would strip the alignment off 211 money cells
+   before any of them had a `.num` block to fall back on. What it does change
+   today is the browser's own default for <th>, which is centre: that is the
+   "header floating away from its column" you spotted. */
+:where(.tbl-scroll) :where(th, td) { text-align: left; }
+.tbl-scroll th.num > span,
+.tbl-scroll td.num > span,
+/* Cells whose value already arrives wrapped — a coloured span, a badge —
+   use that element as the block instead of gaining a second wrapper. */
+.tbl-scroll th.num > :only-child,
+.tbl-scroll td.num > :only-child {
+  display: inline-block;
+  text-align: right;
+  min-width: var(--num-w, 9ch);
+}
+.tbl-scroll .num-money { --num-w: 9ch; }   /* 1,065,220 */
+.tbl-scroll .num-pct   { --num-w: 5ch; }   /* 51.9%     */
+.tbl-scroll .num-count { --num-w: 4ch; }   /* 12 · 3/5  */
 
 /* Column headings should sit behind the data, not compete with it. The shared
    rule sets size and weight but no colour, so a bare <th> inherits --text-1 and
@@ -522,23 +629,30 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    Typography scale — uses design tokens so responsive overrides apply automatically
 ══════════════════════════════════════════ */
 .text-page-title    { font-size: var(--fs-page-title); font-weight: 700; line-height: var(--lh-page-title); letter-spacing: var(--ls-page-title); }
-.text-section-title { font-size: var(--fs-section);    font-weight: 600; line-height: var(--lh-section);    letter-spacing: var(--ls-section); }
-.text-card-title    { font-size: var(--fs-card-title); font-weight: 600; line-height: 1.3; }
+/* A section heading is body size at weight 700. Once size stops carrying the
+   hierarchy, something else has to — here it is the weight plus the rule
+   above, which is also what tells you where the section starts. */
+.text-section-title { font-size: var(--fs-section);    font-weight: 700; line-height: var(--lh-section);    letter-spacing: 0; }
+.text-card-title    { font-size: var(--fs-card-title); font-weight: 700; line-height: var(--lh-body); }
 /* The body step had every other class in the scale but its own — so anything
    that wanted 13px reached for Tailwind's text-sm (14px), a size the system
    does not define. That is how the Cost page ended up with card rows 1px
    larger than the tables beside them. */
-.text-body          { font-size: var(--fs-body);       line-height: var(--lh-body, 1.5); }
-.text-body-strong   { font-size: var(--fs-body);       font-weight: 600; line-height: 1.4; }
+.text-body          { font-size: var(--fs-body);       line-height: var(--lh-body); }
+.text-body-strong   { font-size: var(--fs-body);       font-weight: 600; line-height: var(--lh-body); }
 .text-kpi-number    { font-size: var(--fs-kpi);        font-weight: 700; line-height: var(--lh-kpi);        letter-spacing: -0.01em; }
 /* Money inside a KPI card. A baht figure is 3-4x wider than the 2-3 digit count
-   .text-kpi-number was sized for, so at --fs-kpi it overflows a half-width card
-   on a phone and gets clipped mid-number. Shrinks on narrow screens only —
-   from ~560px up it is identical to .text-kpi-number. */
-.text-kpi-money     { font-size: clamp(17px, 5vw, var(--fs-kpi)); font-weight: 700; line-height: var(--lh-kpi); letter-spacing: -0.01em; }
-.text-label-upper   { font-size: var(--fs-label);      font-weight: 600; line-height: 1.3;                  letter-spacing: var(--ls-label); text-transform: uppercase; }
-.text-label         { font-size: var(--fs-label);      line-height: 1.3; }
-.text-micro         { font-size: var(--fs-micro);      line-height: 1.3; }
+   .text-kpi-number was sized for, so on a half-width card on a phone it used to
+   overflow and clip mid-number. At --fs-kpi 20px there is far more room than
+   there was at 28, but the clamp stays for the longest figures (฿150,009,322.31
+   on Payments) on the narrowest phones. */
+.text-kpi-money     { font-size: clamp(16px, 4.5vw, var(--fs-kpi)); font-weight: 700; line-height: var(--lh-kpi); letter-spacing: -0.01em; }
+/* Thai has no capital letters, so an uppercase label transforms nothing and
+   only spaces the Latin out. Kept as an alias so nothing breaks; it now
+   renders identically to .text-label. */
+.text-label-upper   { font-size: var(--fs-label);      font-weight: 600; line-height: var(--lh-caption); }
+.text-label         { font-size: var(--fs-label);      line-height: var(--lh-caption); }
+.text-micro         { font-size: var(--fs-micro);      line-height: var(--lh-caption); }
 /* --fs-caption existed as a token with no class to reach it. A class that does
    not exist sets nothing, and body declares no font-size, so `text-caption`
    silently rendered at the browser default 16px instead of 12 — which is how
@@ -564,17 +678,59 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    Card — single canonical style
    Replaces: glass-card + inline card-bg + inline sidebar-bg mixes
 ══════════════════════════════════════════ */
+/* Card padding is --space-md (16), matching the gap *between* cards. Text sits
+   16 from its own card's edge and 48 from the text of the card beside it, so
+   grouping reads without a single divider being drawn.
+   Note there are ~75 places writing `ds-card p-4` / `p-5` / `p-3`: those
+   utilities never took effect — this rule always won — so they are dead
+   markup, not an override, and get swept in phase 2. */
 .ds-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  padding: var(--space-md);
 }
-/* Smaller card variant (table section headers, KPI tiles) */
+/* A card whose content reaches its own edge — a table, or a list with its own
+   row padding. Six places wrote `ds-card p-0` for this and none of them got
+   it: .ds-card and the utility have equal specificity and .ds-card is declared
+   later, so the tables inside them have been sitting on a 16px cushion with
+   `overflow-hidden` clipping the corners around it. */
+.ds-card-flush { padding: 0; overflow: hidden; }
+
+/* ── Summary strip ────────────────────────────────────────────────────────
+   The figures under the filter bar, in one container divided by hairlines
+   rather than as separate cards. Two columns on a phone, four from 640px.
+   The dividers are drawn per cell and removed on the first cell of each row,
+   so the grid stays correct at either column count without the component
+   knowing which one it is in. See components/ui/SummaryCard.tsx. */
+.summary-strip { display: grid; grid-template-columns: repeat(2, 1fr); }
+.summary-strip > * { padding: var(--space-md); border-left: 1px solid var(--divider); }
+.summary-strip > *:nth-child(2n + 1) { border-left: 0; }
+.summary-strip > *:nth-child(n + 3)  { border-top: 1px solid var(--divider); }
+
+/* Above 640px every figure gets its own column and the row dividers go away.
+   The count comes from the component, because nth-child cannot read a custom
+   property — a fixed repeat(4) left an empty column whenever a page showed
+   three figures, which is most of them. */
+@media (min-width: 640px) {
+  .summary-strip > * { border-top: 0; border-left: 1px solid var(--divider); }
+  .summary-strip > *:first-child { border-left: 0; }
+  .summary-strip.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .summary-strip.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .summary-strip.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .summary-strip.cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .summary-strip.cols-6 { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* .ds-card-sm was the "smaller card" — padding 16, radius 11 — and pages put
+   it side by side with .ds-card at padding 24, radius 18, which is what made
+   Prospects, My Deals, Cost and Sales Performance show two corner sizes in one
+   row. There is one card now: same padding, same corner, whatever the content.
+   The class stays as an alias so the ~30 places using it keep working. */
 .ds-card-sm {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--space-md);
 }
 
@@ -763,31 +919,18 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
    Desktop      : macOS scale (body 13px — tokens stay at :root default)
 ══════════════════════════════════════════ */
 @media (max-width: 1023px) {
-  :root {
-    /* Size — calibrated for data-dense CRM on iPhone (not reading app) */
-    --fs-page-title: 20px;   /* same as desktop — doesn't appear inside dense layouts */
-    --fs-section:    15px;   /* same as desktop — section headers already correct */
-    --fs-card-title: 14px;   /* +1px — touch context warrants it, still dense */
-    --fs-body:       14px;   /* matches native iOS data apps: Stocks, Health, Notes list */
-    --fs-caption:    12px;   /* unchanged */
-    --fs-label:      11px;   /* unchanged — Apple HIG floor */
-    --fs-kpi:        26px;   /* -2px — saves vertical space in KPI cards */
-
-    /* Line-height */
-    --lh-page-title: 1.25;   /* single-line titles, no need for loose leading */
-    --lh-section:    1.27;
-    --lh-body:       1.25;   /* critical for table row height: 14×1.25 = 17.5px */
-
-    /* Letter-spacing */
-    --ls-page-title: -0.018em;
-    --ls-section:    -0.015em;
-    --ls-body:        0em;     /* neutral — 14px small text needs no compression */
-    --ls-label:       0.012em; /* 11px needs slight openness to stay readable */
-  }
+  /* The size table that used to live here is gone, and so is the one that
+     used to sit in the min-width:1440px block below.
+     Between them they redefined all eight size tokens per breakpoint — three
+     different scales in one stylesheet — which is why a 1568px screen still
+     rendered 10px and 28px text after the tokens above had been changed. A
+     scale that is one set of four sizes cannot also be three sets; the tokens
+     at :root now hold at every width.
+     What stays here is the part that is about touch and iOS, not about scale. */
 
   /* ── Form elements (CRITICAL: prevents iOS Safari auto-zoom on focus) ──
-     iOS zooms in when focused input font-size < 16px.
-     --fs-body = 14px on mobile which is still < 16px, so must hardcode 16px. */
+     iOS zooms in when focused input font-size < 16px, and --fs-body is 13px,
+     so this stays hardcoded. It is a browser behaviour, not a type decision. */
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select,
   textarea {
@@ -795,21 +938,9 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
     line-height: var(--lh-body) !important;
   }
 
-  /* ── Scoped text-sm override → iOS body size ──────────────────────────
-     Selector specificity (0,2,0) beats Tailwind's (0,1,0) so no
-     !important needed. Scoped to content containers only so sidebar /
-     shell / badge elements are not affected.                              */
-  .page-content .text-sm,
-  .modal-panel  .text-sm,
-  .ds-card      .text-sm,
-  .ds-card-sm   .text-sm,
-  .glass-card   .text-sm,
-  [data-panel]  .text-sm {
-    font-size:   var(--fs-body);
-    line-height: var(--lh-body);
-  }
-
-  /* text-xs stays at 12px (Caption 1) — badges, timestamps, micro labels */
+  /* The scoped `.text-sm` override that used to sit here is gone too:
+     text-sm is remapped to 13px in @theme, so it already resolves to the body
+     size at every width and no longer needs a per-breakpoint patch. */
 
   /* ── tab-btn touch target ─────────────────────────────────────────────
      Increase tap area on mobile without changing desktop look.            */
@@ -819,33 +950,8 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
   }
 }
 
-/* ══════════════════════════════════════════
-   Large screen — external monitor / 15"+ MacBook
-   Restores full-size tokens above the 1440px threshold.
-   Must stay OUTSIDE the max-width:1023px block above — nesting it there
-   makes the query unsatisfiable (no viewport is both ≤1023 and ≥1440).
-══════════════════════════════════════════ */
-@media (min-width: 1440px) {
-  :root {
-    --fs-page-title: 20px;
-    --fs-section:    15px;
-    --fs-card-title: 13px;
-    --fs-body:       13px;
-    --fs-caption:    12px;
-    --fs-label:      11px;
-    --fs-kpi:        28px;
-    --fs-micro:      10px;
-
-    --lh-page-title: 1.25;
-    --lh-section:    1.30;
-    --lh-body:       1.38;
-    --lh-caption:    1.33;
-    --lh-kpi:        1.10;
-
-    --ls-page-title: -0.018em;
-    --ls-section:    -0.008em;
-    --ls-body:       -0.008em;
-    --ls-label:       0.04em;
-  }
-}
+/* The min-width:1440px block that used to be here restored the old scale in
+   full — 15px sections, 11px labels, 28px KPI, 10px micro — so on any monitor
+   1440px or wider the tokens at :root were being thrown away. Removed with the
+   mobile size table above: one scale, every width. */
 

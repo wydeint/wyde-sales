@@ -203,7 +203,7 @@ export default function DashboardPage() {
       />
 
       {/* Hero KPI Banner */}
-      <div className="ds-card p-5 relative overflow-hidden">
+      <div className="ds-card relative overflow-hidden">
         <p className="text-card-title mb-4" style={{ color: 'var(--text-3)' }}>ผลงาน{currentMonthThai}</p>
         <div className="grid grid-cols-2 gap-6">
           {/* ยอดขาย */}
@@ -244,7 +244,7 @@ export default function DashboardPage() {
           { icon: Wallet, label: 'รายรับเดือนนี้', value: f(monthPayments.reduce((s, p) => s + (p.paid_amount || 0), 0)), sub: `${monthPayments.length} งวด`, color: 'var(--accent-green)', onClick: undefined, money: true },
         ].map(({ icon: Icon, label, value, sub, color, onClick, money }) => (
           <div key={label} onClick={onClick}
-            className="ds-card p-4"
+            className="ds-card"
             style={{ cursor: onClick ? 'pointer' : 'default' }}
             onMouseEnter={e => onClick && (e.currentTarget.style.background = 'var(--active-bg)')}
             onMouseLeave={e => onClick && (e.currentTarget.style.background = '')}>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             <div className="modal-header">
               <div>
                 <span className="modal-title">งานส่งมอบเดือนนี้</span>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                   นับจาก <code className="px-1 rounded" style={{ background: 'var(--hover-bg)' }}>jobs.actual_deliver_date</code> · {deliveredThisMonth.length} รายการ
                 </p>
               </div>
@@ -283,31 +283,31 @@ export default function DashboardPage() {
                   <thead>
                     <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                       {['Job ID', 'ลูกค้า', 'โครงการ / ห้อง', 'Sales', 'วันส่งมอบ (actual)', 'Revenue (Inc.VAT)'].map(h => (
-                        <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        <th key={h} className="text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {deliveredThisMonth.map(j => (
                       <tr key={j.id} style={{ borderBottom: '1px solid var(--divider)' }}>
-                        <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'var(--accent)' }}>{j.id}</td>
-                        <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
+                        <td className=" font-mono text-xs" style={{ color: 'var(--accent)' }}>{j.id}</td>
+                        <td className=" text-xs" style={{ color: 'var(--text-1)' }}>{j.customer_name || '—'}</td>
                         <td className="px-4 py-2.5">
                           <div className="text-xs" style={{ color: 'var(--text-3)' }}>{(j.projects as any)?.name || '—'}</div>
                           <div className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>{j.room_no || '—'}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
-                        <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-2)' }}>
+                        <td className=" text-xs" style={{ color: 'var(--text-2)' }}>{(j.sales as any)?.name || '—'}</td>
+                        <td className=" text-xs" style={{ color: 'var(--text-2)' }}>
                           {j.actual_deliver_date ? new Date(j.actual_deliver_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                         </td>
-                        <td className="px-4 py-2.5 text-xs font-bold text-right" style={{ color: 'var(--accent-green)' }}>{f2(j.revenue_inc_vat || 0)}</td>
+                        <td className=" text-xs font-bold num num-money" style={{ color: 'var(--accent-green)' }}><span>{f2(j.revenue_inc_vat || 0)}</span></td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr style={{ background: 'var(--hover-bg)', borderTop: '2px solid var(--divider)' }}>
-                      <td colSpan={5} className="px-4 py-2.5 text-xs font-bold" style={{ color: 'var(--text-2)' }}>รวม {deliveredThisMonth.length} รายการ</td>
-                      <td className="px-4 py-2.5 text-xs font-bold text-right" style={{ color: 'var(--accent-green)' }}>{f2(actualDeliv)}</td>
+                      <td colSpan={5} className=" text-xs font-bold" style={{ color: 'var(--text-2)' }}>รวม {deliveredThisMonth.length} รายการ</td>
+                      <td className=" text-xs font-bold num num-money" style={{ color: 'var(--accent-green)' }}><span>{f2(actualDeliv)}</span></td>
                     </tr>
                   </tfoot>
                 </table>
@@ -320,7 +320,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Today's sales & delivery */}
-        <div className="ds-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={15} style={{ color: 'var(--accent-orange)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>วันนี้</h2>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Pipeline Funnel */}
-        <div className="ds-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
             <Target size={15} style={{ color: 'var(--accent)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Pipeline</h2>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Sales Leaderboard this month */}
-        <div className="ds-card p-5">
+        <div className="ds-card">
           <div className="flex items-center gap-2 mb-4">
             <Award size={15} style={{ color: 'var(--accent-amber)' }} />
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Sales เดือนนี้</h2>

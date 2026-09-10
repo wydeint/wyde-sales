@@ -138,7 +138,7 @@ export default function FileAttach({ jobId, customerId, projectName, roomNo }: P
       </div>
 
       {error && (
-        <p className="text-xs mb-2 px-2 py-1.5 rounded-[6px]"
+        <p className="text-xs mb-2 px-2 py-1.5 rounded-[8px]"
           style={{ color: 'var(--accent-red)', background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
           {error}
         </p>

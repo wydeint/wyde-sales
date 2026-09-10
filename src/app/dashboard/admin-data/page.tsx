@@ -421,7 +421,7 @@ function BulkEditModal({ cols, count, onApply, onClose }: {
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>Bulk Edit</h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{count} แถวที่เลือก</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{count} แถวที่เลือก</p>
           </div>
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={16} /></button>
         </div>
@@ -773,7 +773,7 @@ function ReconcileCheck() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Reconcile Check</h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments / ต้นทุน</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments / ต้นทุน</p>
           </div>
           <button onClick={run} disabled={loading}
             className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
@@ -785,7 +785,7 @@ function ReconcileCheck() {
 
         {/* Summary badge */}
         {ran && !loading && (
-          <div className="px-4 py-3 rounded-[11px] flex items-center gap-3"
+          <div className="px-4 py-3 rounded-[8px] flex items-center gap-3"
             style={{ background: passCount === checks.length ? 'color-mix(in srgb, var(--accent-green) 8%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: `1px solid ${passCount === checks.length ? 'color-mix(in srgb, var(--accent-green) 30%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 30%, transparent)'}` }}>
             {passCount === checks.length
               ? <CheckCircle2 size={16} className="text-success flex-shrink-0" />
@@ -798,21 +798,21 @@ function ReconcileCheck() {
 
         {/* Check items */}
         {ran && !loading && checks.map((item, i) => (
-          <div key={i} className="rounded-[11px] p-4 space-y-3"
+          <div key={i} className="rounded-[8px] p-4 space-y-3"
             style={{ background: 'var(--card-bg)', border: `1px solid ${item.pass ? 'var(--card-border)' : 'color-mix(in srgb, var(--accent-orange) 40%, transparent)'}` }}>
             <div className="flex items-start gap-2.5">
               {item.pass
-                ? <CheckCircle2 size={15} className="text-success mt-0.5 flex-shrink-0" />
-                : <XCircle size={15} className="text-warning mt-0.5 flex-shrink-0" />}
+                ? <CheckCircle2 size={15} className="text-success mt-1 flex-shrink-0" />
+                : <XCircle size={15} className="text-warning mt-1 flex-shrink-0" />}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{item.label}</span>
-                  <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+                  <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
                     style={{ background: item.pass ? 'color-mix(in srgb, var(--accent-green) 12%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: item.pass ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                     {item.pass ? 'PASS' : 'FAIL'}
                   </span>
                 </div>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>{item.desc}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>{item.desc}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 ml-6">
@@ -858,7 +858,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   }
   return (
     <div className="h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
-      <div className="w-80 rounded-[16px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="w-80 rounded-[18px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-center gap-2 mb-6">
           <AlertTriangle size={18} className="text-value" />
           <h2 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>Admin Data Entry</h2>
@@ -869,10 +869,10 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           onKeyDown={e => e.key === 'Enter' && attempt()}
           placeholder="รหัสผ่าน"
           autoFocus
-          className="w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none"
+          className="w-full px-4 py-2.5 rounded-[8px] text-sm mb-4 outline-none"
           style={{ background: 'var(--input-bg)', border: `1px solid ${err ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
-        {err && <p className="text-xs text-danger mb-3">รหัสผ่านไม่ถูกต้อง</p>}
+        {err && <p className="text-xs text-danger mb-4">รหัสผ่านไม่ถูกต้อง</p>}
         <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
           เข้าสู่ระบบ
         </button>
@@ -1034,7 +1034,7 @@ export default function AdminDataPage() {
 
         {/* Search + project filter — one block, like every other list page */}
         {!isReconcile && (
-          <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา..." sticky className="mb-3">
+          <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="ค้นหา..." sticky className="mb-4">
             {hasProjectFilter && (
               <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
                 className="field-input" style={{ width: 'auto', minWidth: 160 }}>
@@ -1106,7 +1106,7 @@ export default function AdminDataPage() {
           overflow-y compute to `auto`, so this div is a vertical scroll container with
           nothing to scroll. Containing the Y axis too made it swallow every wheel event
           over the table and refuse to chain to the page — the table would not scroll. */}
-      {!isReconcile && <div className="tbl-scroll mb-5 rounded-[11px]"
+      {!isReconcile && <div className="tbl-scroll mb-5 rounded-[8px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         {loading ? (
           <div className="flex items-center justify-center h-48">

@@ -233,9 +233,9 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
         <SubTable side={side}>
           <thead>
             <tr>
-              <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>{firstCol}</th>
+              <th className="text-left font-normal" style={{ color: 'var(--text-3)' }}>{firstCol}</th>
               {cols.map(c => (
-                <th key={c} className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{c}</th>
+                <th key={c} className="num num-count font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}><span>{c}</span></th>
               ))}
             </tr>
           </thead>
@@ -244,23 +244,23 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               const waiting = r.s.n - r.s.del
               return (
                 <tr key={r.label}>
-                  <td className="py-1 font-semibold" style={{ color: r.color }}>{r.label}</td>
-                  <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{r.s.n}</td>
+                  <td className=" font-semibold" style={{ color: r.color }}>{r.label}</td>
+                  <td className=" num num-count tabular-nums" style={{ color: 'var(--text-1)' }}><span>{r.s.n}</span></td>
                   {side === 'sales' ? (
                     <>
-                      <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(r.s.rev)}</td>
-                      <td className="py-1 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(r.s.cash)}</td>
+                      <td className=" num num-money tabular-nums" style={{ color: 'var(--text-2)' }}><span>{fK(r.s.rev)}</span></td>
+                      <td className=" num num-money tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}><span>{fK(r.s.cash)}</span></td>
                     </>
                   ) : (
                     <>
-                      <td className="py-1 text-right tabular-nums" style={{ color: r.s.del > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
-                        {r.s.del > 0 ? `${r.s.del} · ${pct(r.s.del, r.s.n)}%` : '–'}
+                      <td className=" num num-pct tabular-nums" style={{ color: r.s.del > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                        <span>{r.s.del > 0 ? `${r.s.del} · ${pct(r.s.del, r.s.n)}%` : '–'}</span>
                       </td>
-                      <td className="py-1 text-right tabular-nums" style={{ color: waiting > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
-                        {waiting > 0 ? waiting : '–'}
+                      <td className=" num num-count tabular-nums" style={{ color: waiting > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
+                        <span>{waiting > 0 ? waiting : '–'}</span>
                       </td>
-                      <td className="py-1 text-right tabular-nums font-semibold" style={{ color: waiting > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
-                        {waiting > 0 ? fK(r.s.rev - r.s.delRev) : '–'}
+                      <td className=" num num-money tabular-nums font-semibold" style={{ color: waiting > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
+                        <span>{waiting > 0 ? fK(r.s.rev - r.s.delRev) : '–'}</span>
                       </td>
                     </>
                   )}
@@ -268,7 +268,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               )
             })}
             {items.every(r => r.s.n === 0) && (
-              <tr><td colSpan={cols.length + 1} className="py-2 text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีงาน</td></tr>
+              <tr><td colSpan={cols.length + 1} className=" text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีงาน</td></tr>
             )}
           </tbody>
           <TotalRow slices={items.map(r => r.s)} side={side} />
@@ -283,7 +283,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
         <div className="modal-header">
           <div className="min-w-0">
             <h3 className="modal-title truncate">{row.name}</h3>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
               {row.id}{row.total_units > 0 ? ` · ${row.total_units.toLocaleString()} ห้องในโครงการ` : ''}
             </p>
           </div>
@@ -292,21 +292,21 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
 
         <div className="overflow-y-auto p-5 space-y-5">
           {/* Money first: sold, collected, still owed. */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="ds-card-sm p-3">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="ds-card-sm">
               <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
               <p className="text-kpi-money" style={{ color: 'var(--accent)' }}>{fM(row.revenue_total)}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{row.jobs_total} งาน</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>{row.jobs_total} งาน</p>
             </div>
-            <div className="ds-card-sm p-3">
+            <div className="ds-card-sm">
               <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>รับเงินแล้ว</p>
               <p className="text-kpi-money" style={{ color: 'var(--accent-green)' }}>{fM(row.cash_total)}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{collected}% ของมูลค่า</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>{collected}% ของมูลค่า</p>
             </div>
-            <div className="ds-card-sm p-3">
+            <div className="ds-card-sm">
               <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
               <p className="text-kpi-money" style={{ color: outstanding > 0 ? 'var(--accent-orange)' : 'var(--text-3)' }}>{outstanding > 0 ? fM(outstanding) : '–'}</p>
-              <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>มูลค่า − รับแล้ว</p>
+              <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>มูลค่า − รับแล้ว</p>
             </div>
           </div>
 
@@ -316,7 +316,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
             <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
               <TrendingUp size={13} style={{ color: 'var(--accent)' }} /> ฝั่งขาย
             </p>
-            <div className="ds-card p-4 space-y-3">
+            <div className="ds-card space-y-3">
               <StepBar steps={[
                 // Only 38 of 52 projects record a believable unit count — the rest
                 // are one-off work carrying a placeholder 1, or a figure smaller
@@ -344,20 +344,20 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   <SubTable side="sales">
                     <thead>
                       <tr>
-                        <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>งาน</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                        <th className="text-left font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
+                        <th className="num num-count font-normal" style={{ color: 'var(--text-3)' }}><span>งาน</span></th>
+                        <th className="num num-money font-normal" style={{ color: 'var(--text-3)' }}><span>มูลค่า</span></th>
+                        <th className="num num-money font-normal" style={{ color: 'var(--text-3)' }}><span>รับแล้ว</span></th>
                       </tr>
                     </thead>
                     <tbody>
                       {salesYears.map(([year, s]) => (
                         <tr key={year}>
                           {/* Buddhist era, matching every other date in the app */}
-                          <td className="py-1 font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
-                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
-                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(s.rev)}</td>
-                          <td className="py-1 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(s.cash)}</td>
+                          <td className=" font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
+                          <td className=" num num-count tabular-nums" style={{ color: 'var(--text-1)' }}><span>{s.n}</span></td>
+                          <td className=" num num-money tabular-nums" style={{ color: 'var(--text-2)' }}><span>{fK(s.rev)}</span></td>
+                          <td className=" num num-money tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}><span>{fK(s.cash)}</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -390,19 +390,19 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   <SubTable side="sales">
                     <thead>
                       <tr>
-                        <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>เซลล์</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>งาน</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                        <th className="text-left font-normal" style={{ color: 'var(--text-3)' }}>เซลล์</th>
+                        <th className="num num-count font-normal" style={{ color: 'var(--text-3)' }}><span>งาน</span></th>
+                        <th className="num num-money font-normal" style={{ color: 'var(--text-3)' }}><span>มูลค่า</span></th>
+                        <th className="num num-money font-normal" style={{ color: 'var(--text-3)' }}><span>รับแล้ว</span></th>
                       </tr>
                     </thead>
                     <tbody>
                       {salesRows.map(([who, s]) => (
                         <tr key={who}>
-                          <td className="py-1 font-semibold" style={{ color: who === 'ยังไม่ระบุเซลล์' ? 'var(--accent-amber)' : 'var(--text-1)' }}>{who}</td>
-                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
-                          <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(s.rev)}</td>
-                          <td className="py-1 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(s.cash)}</td>
+                          <td className=" font-semibold" style={{ color: who === 'ยังไม่ระบุเซลล์' ? 'var(--accent-amber)' : 'var(--text-1)' }}>{who}</td>
+                          <td className=" num num-count tabular-nums" style={{ color: 'var(--text-1)' }}><span>{s.n}</span></td>
+                          <td className=" num num-money tabular-nums" style={{ color: 'var(--text-2)' }}><span>{fK(s.rev)}</span></td>
+                          <td className=" num num-money tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}><span>{fK(s.cash)}</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -417,7 +417,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
             <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
               <PackageCheck size={13} style={{ color: 'var(--accent)' }} /> ฝั่งส่งมอบ
             </p>
-            <div className="ds-card p-4 space-y-3">
+            <div className="ds-card space-y-3">
               <StepBar steps={[
                 // Four steps, and they add up: not started + building + handed
                 // over = total. The old middle step was backlog.n — everything
@@ -468,11 +468,11 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   <SubTable side="delivery">
                     <thead>
                       <tr>
-                        <th className="text-left py-1 font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
-                        <th className="text-right py-1 font-normal" style={{ color: 'var(--text-3)' }}>งาน</th>
-                        <th className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</th>
-                        <th className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>รอส่งมอบ</th>
-                        <th className="text-right py-1 font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}>มูลค่าที่ค้าง</th>
+                        <th className="text-left font-normal" style={{ color: 'var(--text-3)' }}>ปีที่ขาย</th>
+                        <th className="num num-count font-normal" style={{ color: 'var(--text-3)' }}><span>งาน</span></th>
+                        <th className="num num-count font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}><span>ส่งมอบแล้ว</span></th>
+                        <th className="num num-count font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}><span>รอส่งมอบ</span></th>
+                        <th className="num num-money font-normal whitespace-nowrap" style={{ color: 'var(--text-3)' }}><span>มูลค่าที่ค้าง</span></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -480,16 +480,16 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                         const waiting = s.n - s.del
                         return (
                           <tr key={year}>
-                            <td className="py-1 font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
-                            <td className="py-1 text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{s.n}</td>
-                            <td className="py-1 text-right tabular-nums" style={{ color: s.del > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
-                              {s.del > 0 ? `${s.del} · ${pct(s.del, s.n)}%` : '–'}
+                            <td className=" font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{year + 543}</td>
+                            <td className=" num num-count tabular-nums" style={{ color: 'var(--text-1)' }}><span>{s.n}</span></td>
+                            <td className=" num num-pct tabular-nums" style={{ color: s.del > 0 ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                              <span>{s.del > 0 ? `${s.del} · ${pct(s.del, s.n)}%` : '–'}</span>
                             </td>
-                            <td className="py-1 text-right tabular-nums" style={{ color: waiting > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
-                              {waiting > 0 ? waiting : '–'}
+                            <td className=" num num-count tabular-nums" style={{ color: waiting > 0 ? 'var(--accent-amber)' : 'var(--text-3)' }}>
+                              <span>{waiting > 0 ? waiting : '–'}</span>
                             </td>
-                            <td className="py-1 text-right tabular-nums font-semibold" style={{ color: waiting > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
-                              {waiting > 0 ? fK(s.rev - s.delRev) : '–'}
+                            <td className=" num num-money tabular-nums font-semibold" style={{ color: waiting > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
+                              <span>{waiting > 0 ? fK(s.rev - s.delRev) : '–'}</span>
                             </td>
                           </tr>
                         )
@@ -512,12 +512,12 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
                 <XCircle size={13} style={{ color: 'var(--accent-red)' }} /> งานที่หลุด
               </p>
-              <div className="ds-card p-4 space-y-2.5">
+              <div className="ds-card space-y-2.5">
                 {row.jobs_cancelled > 0 && (
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-xs" style={{ color: 'var(--text-2)' }}>งานที่ยกเลิก</p>
-                      <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>เปิดงานแล้วแต่ไม่ได้ทำต่อ</p>
+                      <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>เปิดงานแล้วแต่ไม่ได้ทำต่อ</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-kpi-money" style={{ color: 'var(--accent-red)' }}>{fM(row.revenue_cancelled)}</p>
@@ -573,23 +573,23 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                   <table className="w-full text-xs tbl-rows">
                     <thead className="sticky top-0" style={{ background: 'var(--card-bg)' }}>
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                        <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ห้อง</th>
-                        <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>สถานะ</th>
-                        <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>วันที่ขาย</th>
-                        <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>มูลค่า</th>
-                        <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>รับแล้ว</th>
+                        <th className="text-left font-semibold" style={{ color: 'var(--text-3)' }}>ห้อง</th>
+                        <th className="text-left font-semibold" style={{ color: 'var(--text-3)' }}>สถานะ</th>
+                        <th className="num num-count font-semibold" style={{ color: 'var(--text-3)' }}><span>วันที่ขาย</span></th>
+                        <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>มูลค่า</span></th>
+                        <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>รับแล้ว</span></th>
                       </tr>
                     </thead>
                     <tbody>
                       {row.jobsList.map(j => (
                         <tr key={j.id} style={{ borderTop: '1px solid var(--divider)' }}>
-                          <td className="px-3 py-1.5 font-semibold" style={{ color: 'var(--text-1)' }}>{j.room}</td>
-                          <td className="px-3 py-1.5" style={{ color: j.delivered ? 'var(--accent-green)' : 'var(--accent-amber)' }}>{j.status}</td>
-                          <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: j.order_date ? 'var(--text-2)' : 'var(--accent-amber)' }}>
+                          <td className=" font-semibold" style={{ color: 'var(--text-1)' }}>{j.room}</td>
+                          <td className="" style={{ color: j.delivered ? 'var(--accent-green)' : 'var(--accent-amber)' }}>{j.status}</td>
+                          <td className=" num num-count tabular-nums" style={{ color: j.order_date ? 'var(--text-2)' : 'var(--accent-amber)' }}><span>
                             {j.order_date ? thaiDate(j.order_date) : 'ไม่มีวันที่'}
-                          </td>
-                          <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: 'var(--text-2)' }}>{fK(j.rev)}</td>
-                          <td className="px-3 py-1.5 text-right tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{fK(j.cash)}</td>
+                          </span></td>
+                          <td className=" num num-money tabular-nums" style={{ color: 'var(--text-2)' }}><span>{fK(j.rev)}</span></td>
+                          <td className=" num num-money tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}><span>{fK(j.cash)}</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -603,7 +603,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               book-wide count that nobody owns. */}
           {missing > 0 && (
             <section>
-              <div className="ds-card p-3" style={{ borderColor: 'var(--accent-amber)' }}>
+              <div className="ds-card" style={{ borderColor: 'var(--accent-amber)' }}>
                 <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--accent-amber)' }}>ข้อมูลที่ยังไม่ครบในโครงการนี้</p>
                 <div className="space-y-0.5 text-xs" style={{ color: 'var(--text-2)' }}>
                   {row.miss_wt > 0 && <p>• {row.miss_wt} งานยังไม่ระบุประเภทงาน (RPT / N-RPT)</p>}
@@ -632,11 +632,11 @@ function TotalRow({ slices, side }: { slices: Slice[]; side: 'sales' | 'delivery
   }), { n: 0, rev: 0, cash: 0, del: 0, delRev: 0 })
   if (t.n === 0) return null
   const waiting = t.n - t.del
-  const cell = 'py-1 text-right tabular-nums font-bold'
+  const cell = 'num num-money tabular-nums font-bold'
   return (
     <tfoot>
       <tr style={{ borderTop: '1px solid var(--divider)' }}>
-        <td className="py-1 font-bold" style={{ color: 'var(--text-2)' }}>รวม</td>
+        <td className=" font-bold" style={{ color: 'var(--text-2)' }}>รวม</td>
         <td className={cell} style={{ color: 'var(--text-1)' }}>{t.n}</td>
         {side === 'sales' ? (
           <>
@@ -680,7 +680,7 @@ function Th({ label, sortKey, current, dir, onSort, right = true }: {
 }) {
   const active = current === sortKey
   return (
-    <th className={`px-3 py-2.5 cursor-pointer select-none whitespace-nowrap ${right ? 'text-right' : 'text-left'}`}
+    <th className={` cursor-pointer select-none whitespace-nowrap ${right ? 'num num-money' : 'text-left'}`}
       onClick={() => onSort(sortKey)}>
       <span className="inline-flex items-center gap-1 text-micro font-semibold uppercase tracking-wider"
         style={{ color: active ? 'var(--accent)' : 'var(--text-3)' }}>
@@ -1069,7 +1069,7 @@ export default function ProjectSummaryPage() {
           )}
         </FilterBar>
 
-        <div className="flex flex-wrap items-center gap-2 mb-1">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <div className="tab-group flex-wrap">
             {(['all', 'B2C', 'B2B'] as CustFilter[]).map(v => (
               <button key={v} onClick={() => setCustFilter(v)}
@@ -1098,7 +1098,7 @@ export default function ProjectSummaryPage() {
           ].map(k => {
             const Icon = k.icon
             return (
-              <div key={k.label} className="ds-card p-4">
+              <div key={k.label} className="ds-card">
                 <div className="flex items-center gap-2 mb-2">
                   <Icon size={13} style={{ color: k.color }} />
                   <span className="text-card-title" style={{ color: 'var(--text-3)' }}>{k.label}</span>
@@ -1157,20 +1157,20 @@ export default function ProjectSummaryPage() {
                     <p className="font-semibold text-xs leading-tight" style={{ color: 'var(--text-1)' }}>{r.name}</p>
                     <p className="text-micro" style={{ color: 'var(--text-3)' }}>{r.id}</p>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className=" num num-money">
                     <span className="text-xs tabular-nums" style={{ color: 'var(--text-2)' }}>
                       {r.total_units > 0 ? r.total_units.toLocaleString() : '–'}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
-                    {r.booked > 0
+                  <td className=" num num-money">
+                    <span>{r.booked > 0
                       ? <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{r.booked}</span>
-                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}</span>
                   </td>
                   {/* Rooms, not jobs. 18 projects have a room that ordered more
                       than once, so the job count overstated how much of the
                       building we have actually reached. Both are shown. */}
-                  <td className="px-3 py-2.5 text-right">
+                  <td className=" num num-money">
                     {r.jobs_total > 0 ? (
                       <>
                         <span className="text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{r.rooms_sold} ห้อง</span>
@@ -1180,27 +1180,27 @@ export default function ProjectSummaryPage() {
                       </>
                     ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-right">
-                    {r.jobs_delivered > 0
+                  <td className=" num num-count">
+                    <span>{r.jobs_delivered > 0
                       ? <span className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-green)' }}>{r.jobs_delivered}</span>
-                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                      : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}</span>
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="">
                     {r.jobs_total > 0
                       ? <FunnelBar delivered={r.jobs_delivered} total={r.jobs_total} />
                       : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className=" num num-money">
                     <span className="text-xs tabular-nums" style={{ color: 'var(--accent)' }}>
                       {r.revenue_total > 0 ? fK(r.revenue_total) : '–'}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className=" num num-money">
                     <span className="text-xs tabular-nums" style={{ color: 'var(--accent-green)' }}>
                       {r.revenue_delivered > 0 ? fK(r.revenue_delivered) : '–'}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className=" num num-money">
                     {(() => {
                       const owed = Math.max(r.revenue_total - r.cash_total, 0)
                       if (owed <= 0) return <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>
@@ -1215,17 +1215,17 @@ export default function ProjectSummaryPage() {
                     })()}
                   </td>
                   {/* รอส่งมอบ — sold, not handed over yet */}
-                  <td className="px-3 py-2.5 text-right">
-                    {r.backlog.n > 0 ? (
+                  <td className=" num num-money">
+                    <span>{r.backlog.n > 0 ? (
                       <>
                         <p className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-blue)' }}>{fK(r.backlog.rev)}</p>
                         <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{r.backlog.n} งาน</p>
                       </>
-                    ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                    ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}</span>
                   </td>
                   {/* Count and value together — "how many did we lose" and "how
                       much was it worth" are the same question here. */}
-                  <td className="px-3 py-2.5 text-right">
+                  <td className=" num num-money">
                     {r.jobs_cancelled > 0 ? (
                       <>
                         <p className="text-xs tabular-nums font-semibold" style={{ color: 'var(--accent-red)' }}>{r.jobs_cancelled}</p>
@@ -1241,42 +1241,42 @@ export default function ProjectSummaryPage() {
 
             {/* Totals row */}
             <tr style={{ background: 'var(--card-bg)', borderTop: '2px solid var(--divider)' }}>
-              <td className="px-3 py-2.5 text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวม {filtered.length} โครงการ</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.units.toLocaleString()}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{totals.booked || '–'}</td>
-              <td className="px-3 py-2.5 text-right">
+              <td className=" text-xs font-bold" style={{ color: 'var(--text-1)' }}>รวม {filtered.length} โครงการ</td>
+              <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}><span>{totals.units.toLocaleString()}</span></td>
+              <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}><span>{totals.booked || '–'}</span></td>
+              <td className=" num num-money">
                 <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--text-1)' }}>{totals.rooms.toLocaleString()} ห้อง</p>
                 {totals.jobs > totals.rooms && (
                   <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{totals.jobs} งาน</p>
                 )}
               </td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{totals.delivered}</td>
+              <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}><span>{totals.delivered}</span></td>
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{fM(totals.rev)}</td>
-              <td className="px-3 py-2.5 text-right text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}>{fM(totals.revDel)}</td>
-              <td className="px-3 py-2.5 text-right">
-                {totals.rev - totals.cash > 0 ? (
+              <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}><span>{fM(totals.rev)}</span></td>
+              <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}><span>{fM(totals.revDel)}</span></td>
+              <td className=" num num-pct">
+                <span>{totals.rev - totals.cash > 0 ? (
                   <>
                     <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-orange)' }}>{fM(totals.rev - totals.cash)}</p>
                     <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>รับแล้ว {pct(totals.cash, totals.rev)}%</p>
                   </>
-                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}</span>
               </td>
-              <td className="px-3 py-2.5 text-right">
-                {totals.backlogN > 0 ? (
+              <td className=" num num-money">
+                <span>{totals.backlogN > 0 ? (
                   <>
                     <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-blue)' }}>{fM(totals.backlogRev)}</p>
                     <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{totals.backlogN} งาน</p>
                   </>
-                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}</span>
               </td>
-              <td className="px-3 py-2.5 text-right">
-                {totals.cancelled > 0 ? (
+              <td className=" num num-money">
+                <span>{totals.cancelled > 0 ? (
                   <>
                     <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-red)' }}>{totals.cancelled}</p>
                     <p className="text-micro tabular-nums" style={{ color: 'var(--text-3)' }}>{fM(totals.revCancelled)}</p>
                   </>
-                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}
+                ) : <span className="text-xs" style={{ color: 'var(--text-3)' }}>–</span>}</span>
               </td>
             </tr>
           </tbody>

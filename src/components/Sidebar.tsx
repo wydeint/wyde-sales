@@ -178,7 +178,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
                   onClick={onClose}
-                  className="flex items-center gap-2.5 rounded-[11px] mb-0.5 relative group transition-colors"
+                  className="flex items-center gap-2.5 rounded-[8px] mb-1 relative group transition-colors"
                   style={{
                     background: isActive ? 'var(--active-bg)' : 'transparent',
                     color: isActive ? 'var(--accent)' : 'var(--text-2)',

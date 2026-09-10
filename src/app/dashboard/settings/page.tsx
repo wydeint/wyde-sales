@@ -18,7 +18,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   }
   return (
     <div className="h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
-      <div className="w-80 rounded-[16px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+      <div className="w-80 rounded-[18px] p-8 shadow-2xl" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-center gap-2 mb-6">
           <AlertTriangle size={18} className="text-value" />
           <h2 className="font-bold text-base" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>
@@ -30,10 +30,10 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           placeholder="รหัสผ่าน"
           autoComplete="current-password"
           autoFocus
-          className={`w-full px-4 py-2.5 rounded-[8px] text-sm mb-3 outline-none ${shake ? 'animate-shake' : ''}`}
+          className={`w-full px-4 py-2.5 rounded-[8px] text-sm mb-4 outline-none ${shake ? 'animate-shake' : ''}`}
           style={{ background: 'var(--input-bg)', border: `1px solid ${err ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }}
         />
-        {err && <p className="text-xs text-danger mb-3">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>}
+        {err && <p className="text-xs text-danger mb-4">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>}
         <button onClick={attempt} className="w-full py-2.5 rounded-[8px] text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
           เข้าสู่ระบบ
         </button>
@@ -115,7 +115,7 @@ export default function SettingsPage() {
         className=""
         actions={isAdmin && (
           <button onClick={save} disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
             style={{ background: saved ? 'color-mix(in srgb, var(--accent-green) 80%, transparent)' : 'linear-gradient(135deg, var(--accent), var(--accent-purple))', opacity: saving ? 0.7 : 1 }}>
             {saved ? <><RefreshCw size={14} /> บันทึกแล้ว!</> : <><Save size={14} /> บันทึก</>}
           </button>
@@ -123,7 +123,7 @@ export default function SettingsPage() {
       />
 
       {/* Commission Tiers */}
-      <div className="ds-card p-5">
+      <div className="ds-card">
         <div className="flex items-center gap-2 mb-4">
           <Settings2 size={15} style={{ color: 'var(--accent)' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>
@@ -190,8 +190,8 @@ export default function SettingsPage() {
         </div>
 
         {/* Preview table */}
-        <div className="mt-6 rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
-          <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>ตัวอย่าง Commission จาก Revenue</p>
+        <div className="mt-6 rounded-[8px] p-4" style={{ background: 'var(--hover-bg)' }}>
+          <p className="text-xs font-semibold mb-4" style={{ color: 'var(--text-3)' }}>ตัวอย่าง Commission จาก Revenue</p>
           <div className="grid grid-cols-3 gap-2">
             {[50000, 100000, 300000, 500000, 1000000, 2000000, 3000000, 5000000].map(rev => {
               const tier = [...tiers].filter(t => t.active).sort((a, b) => a.revenue_min - b.revenue_min)

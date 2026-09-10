@@ -482,11 +482,11 @@ export default function LeadsPage() {
         className="mb-5"
         actions={
           <>
-            <button onClick={() => load()} className="p-2 rounded-[11px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <button onClick={() => load()} className="p-2 rounded-[8px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
               <RefreshCw size={15} />
             </button>
             <button onClick={() => { setShowImport(!showImport); setImportResult(null); setImportRows([]) }}
-              className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
               style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
               <Upload size={15} />นำเข้า xlsx
             </button>
@@ -496,8 +496,8 @@ export default function LeadsPage() {
 
       {/* Import Panel */}
       {showImport && (
-        <div className="ds-card p-5 mb-5">
-          <h3 className="text-card-title mb-3" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
+        <div className="ds-card mb-5">
+          <h3 className="text-card-title mb-4" style={{ color: 'var(--text-1)' }}>นำเข้าจาก Origin CRM (xlsx)</h3>
           {importResult ? (
             <div className="text-center py-4">
               {importResult.error ? (
@@ -538,7 +538,7 @@ export default function LeadsPage() {
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                   พบ {importRows.length} แถว &nbsp;·&nbsp;
                   <span className="text-success">✅ {importRows.filter(r => r._valid).length} ใหม่</span> &nbsp;·&nbsp;
@@ -551,19 +551,19 @@ export default function LeadsPage() {
                   เลือกใหม่
                 </button>
               </div>
-              <div className="overflow-auto max-h-60 rounded-[11px] border text-xs" style={{ borderColor: 'var(--divider)' }}>
+              <div className="overflow-auto max-h-60 rounded-[8px] border text-xs" style={{ borderColor: 'var(--divider)' }}>
                 <table className="w-full tbl-rows">
                   <thead>
                     <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                       {['', 'Tower-ห้อง', 'ชื่อลูกค้า', 'เบอร์', 'ราคาสัญญา', 'S00 (งบตกแต่ง)', 'วันโอน'].map(h => (
-                        <th key={h} className="px-3 py-2 text-left" style={{ color: 'var(--text-3)' }}>{h}</th>
+                        <th key={h} className=" text-left" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {importRows.slice(0, 100).map((r, i) => (
                       <tr key={i} style={{ borderBottom: '1px solid var(--divider)', background: r._dup ? 'rgba(245,158,11,0.05)' : !r._valid ? 'color-mix(in srgb, var(--accent-red) 5%, transparent)' : 'transparent' }}>
-                        <td className="px-3 py-1.5">
+                        <td className="">
                           {r._valid
                             ? <CheckCircle size={11} className="text-success" />
                             : r._dup && r._dupUpdate
@@ -574,12 +574,12 @@ export default function LeadsPage() {
                                   ? <span title={r._error} className="text-xs font-bold" style={{ color: 'var(--accent-blue)' }}>🔵</span>
                                   : <span title={r._error}><XCircle size={11} className="text-danger" /></span>}
                         </td>
-                        <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.room_no}</td>
-                        <td className="px-3 py-1.5" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
-                        <td className="px-3 py-1.5" style={{ color: 'var(--text-2)' }}>{r.phone}</td>
-                        <td className="px-3 py-1.5 text-right" style={{ color: 'var(--text-2)' }}>{fmtBaht(r.contract_price)}</td>
-                        <td className="px-3 py-1.5 text-right font-semibold" style={{ color: r.s00_budget ? 'var(--accent-green)' : 'var(--text-3)' }}>{fmtBaht(r.s00_budget)}</td>
-                        <td className="px-3 py-1.5" style={{ color: 'var(--text-3)' }}>{r.transfer_date || '—'}</td>
+                        <td className="" style={{ color: 'var(--text-2)' }}>{r.room_no}</td>
+                        <td className="" style={{ color: 'var(--text-1)' }}>{r.customer_name}</td>
+                        <td className="" style={{ color: 'var(--text-2)' }}>{r.phone}</td>
+                        <td className=" num num-money" style={{ color: 'var(--text-2)' }}><span>{fmtBaht(r.contract_price)}</span></td>
+                        <td className=" num num-money font-semibold" style={{ color: r.s00_budget ? 'var(--accent-green)' : 'var(--text-3)' }}><span>{fmtBaht(r.s00_budget)}</span></td>
+                        <td className="" style={{ color: 'var(--text-3)' }}>{r.transfer_date || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -632,14 +632,14 @@ export default function LeadsPage() {
       </FilterBar>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
         {[
           { label: 'Lead ทั้งหมด', value: stats.total, color: 'var(--text-1)' },
           { label: 'ยังไม่ได้ติดต่อ', value: stats.newLead, color: 'var(--accent-orange)' },
           { label: 'ติดต่อแล้ว (ในระบบ)', value: stats.contacted, color: 'var(--accent-blue)' },
           { label: 'เข้า Pipeline แล้ว', value: stats.inPipeline, color: 'var(--accent-green)' },
         ].map(s => (
-          <div key={s.label} className="ds-card-sm p-4">
+          <div key={s.label} className="ds-card-sm">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{s.label}</p>
             <p className="text-kpi-number" style={{ color: s.color }}>{s.value.toLocaleString()}</p>
           </div>
@@ -647,7 +647,7 @@ export default function LeadsPage() {
       </div>
 
       {addError && (
-        <div className="flex items-center gap-2 mb-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
+        <div className="flex items-center gap-2 mb-4 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
           <AlertCircle size={14} />{addError}
         </div>
       )}
@@ -659,7 +659,7 @@ export default function LeadsPage() {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                 {['โครงการ', 'ตึก-ห้อง / Model', 'ชื่อลูกค้า', 'เบอร์โทร', 'ราคาสัญญา', 'S00 (งบตกแต่ง)', 'วันโอน', 'สถานะ', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
+                  <th key={h} className="text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -671,7 +671,7 @@ export default function LeadsPage() {
               )}
               {paginated.map((l, i) => (
                 <tr key={l.id} >
-                  <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
+                  <td className=" text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                     {l.projects?.name || l.project_id || '—'}
                   </td>
                   <td className="px-4 py-3">
@@ -682,13 +682,13 @@ export default function LeadsPage() {
                     <p className="text-sm" style={{ color: 'var(--text-2)' }}>{l.customer_name}</p>
                     {l.email && <p className="text-xs truncate max-w-[160px]" style={{ color: 'var(--text-3)' }}>{l.email}</p>}
                   </td>
-                  <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
-                  <td className="px-4 py-3 text-sm text-right whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{fmtBaht(l.contract_price)}</td>
-                  <td className="px-4 py-3 text-sm text-right font-semibold whitespace-nowrap" style={{ color: l.s00_budget ? 'var(--accent-green)' : 'var(--text-3)' }}>
+                  <td className=" text-sm whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{l.phone || '—'}</td>
+                  <td className=" text-sm num num-money whitespace-nowrap" style={{ color: 'var(--text-2)' }}><span>{fmtBaht(l.contract_price)}</span></td>
+                  <td className=" text-sm num num-money font-semibold whitespace-nowrap" style={{ color: l.s00_budget ? 'var(--accent-green)' : 'var(--text-3)' }}><span>
                     {fmtBaht(l.s00_budget)}
-                  </td>
-                  <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>
-                  <td className="px-4 py-3">
+                  </span></td>
+                  <td className=" text-xs whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{l.transfer_date ? l.transfer_date.slice(0, 7) : '—'}</td>
+                  <td className="">
                     {l.customer_id ? (
                       <span className="badge badge-green whitespace-nowrap"><CheckCircle size={10} />เข้า Pipeline แล้ว</span>
                     ) : (
@@ -699,7 +699,7 @@ export default function LeadsPage() {
                       />
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="">
                     {!l.customer_id && (
                       <button
                         onClick={() => addToPipeline(l)}

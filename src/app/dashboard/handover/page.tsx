@@ -83,7 +83,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   const base = "cursor-pointer transition-opacity hover:opacity-70 active:opacity-50"
   if (entry.no_start_date) {
     return (
-      <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)', color: 'var(--accent-amber)' }}
         title="ยังไม่มีวันเริ่มงาน — คลิกเพื่อแก้ไข">
         {entry.room_no}
@@ -92,7 +92,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   }
   if (entry.is_delivered) {
     return (
-      <button onClick={onClick} className={`${base} flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      <button onClick={onClick} className={`${base} flex items-center gap-1 px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
         <CheckCircle2 size={10} />
         {entry.room_no}
@@ -101,7 +101,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   }
   if (entry.is_overdue) {
     return (
-      <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
         {entry.room_no}
         <span className="text-micro font-normal opacity-60">+{entry.days_overdue}d</span>
@@ -109,7 +109,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
     )
   }
   return (
-    <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+    <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
       {entry.room_no}
     </button>
@@ -143,7 +143,7 @@ interface DeliveryDocs { handover: boolean; warranty: boolean; commission: boole
 function Row2({ label, value, tone }: { label: string; value: React.ReactNode; tone?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</span>
+      <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</span>
       <span className="font-semibold text-right"
         style={{ fontSize: 12.5, lineHeight: 1.45, color: tone ?? 'var(--text-1)' }}>{value}</span>
     </div>
@@ -246,7 +246,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
 
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
-          <div className="ds-card-sm p-3 space-y-1.5">
+          <div className="ds-card-sm space-y-1.5">
             <Row2 label="ลูกค้า" value={form.customer_name || '—'} />
             <Row2 label="Sales" value={form.sales_name || '—'} />
             <Row2 label="ประเภทงาน" value={form.work_type || '—'} />
@@ -270,7 +270,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
               วันเริ่มงานมาจากการชำระงวดเริ่มงาน (แก้มือแล้วจะขัดกับเงินที่เก็บ)
               ส่วนจำนวนวันทำงานคือขอบเขตงานที่ตกลงกับลูกค้า ไม่ใช่ความล่าช้า
               งานเลื่อนให้กรอกที่ "วันคาดส่งมอบ" ซึ่งเก็บแผนแรกไว้เทียบให้ด้วย */}
-          <div className="ds-card-sm p-3 space-y-1.5">
+          <div className="ds-card-sm space-y-1.5">
             <Row2 label="วันเริ่มงาน"
               value={form.work_start_date ? fmtShortDate(form.work_start_date) : '—'} />
             <Row2 label="จำนวนวันทำงาน" value={form.work_days ? `${form.work_days} วัน` : '—'} />
@@ -310,7 +310,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
             )}
           </div>
 
-          <div className="ds-card-sm p-3 space-y-2">
+          <div className="ds-card-sm space-y-2">
             <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>การส่งมอบ</p>
             {isDelivered ? (
               <>
@@ -668,26 +668,26 @@ export default function HandoverPage() {
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>จำนวนห้อง</p>
             <p className="text-kpi-number" style={{ color: 'var(--text-1)' }}>
               {deliveredRooms} <span className="text-sm font-normal" style={{ color: 'var(--text-3)' }}>/ {totalRooms} ห้อง</span>
             </p>
-            {deliveredRooms > 0 && <p className="text-micro mt-0.5" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
+            {deliveredRooms > 0 && <p className="text-micro mt-1" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {Math.round(deliveredRooms / totalRooms * 100)}%</p>}
           </div>
-          <div className="ds-card p-4">
+          <div className="ds-card">
             <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างาน</p>
             <p className="text-kpi-money" style={{ color: 'var(--accent)' }}>{f(deliveredValue)}</p>
-            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
+            <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>/ {f(totalValue)}</p>
           </div>
           {overdueRooms > 0 && (
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>หลุดส่งมอบ</p>
               <p className="text-kpi-number" style={{ color: 'var(--accent-red)' }}>{overdueRooms} ห้อง</p>
             </div>
           )}
           {noStartRooms > 0 && (
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มีวันเริ่มงาน</p>
               <p className="text-kpi-number" style={{ color: 'var(--accent-amber)' }}>{noStartRooms} ห้อง</p>
             </div>
@@ -696,7 +696,7 @@ export default function HandoverPage() {
 
         {/* Trend — same bar-and-tooltip build as the Finance chart, so nothing
             new has to be learned. Column count follows the picker's unit. */}
-        <div className="ds-card p-5 mt-4">
+        <div className="ds-card mt-4">
           <div className="flex items-center gap-4 mb-4 flex-wrap">
             <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>
               แนวโน้มการส่งมอบ · {trend.length} {UNIT_LABELS[periodUnit]}ล่าสุด
@@ -721,7 +721,7 @@ export default function HandoverPage() {
               const rooms = t.delivered + t.late
               return (
                 <div key={t.key} className="flex-shrink-0 flex flex-col items-center gap-0.5 group" style={{ minWidth: '52px' }}>
-                  <div style={{ height: '14px', fontSize: '8px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
+                  <div style={{ height: '14px', fontSize: '12px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
                     {t.value > 0 && <span style={{ color: 'var(--chart-1)' }}>{bahtShort(t.value)}</span>}
                   </div>
                   <div className="w-full relative flex items-end justify-center" style={{ height: '104px' }}>
@@ -786,14 +786,14 @@ export default function HandoverPage() {
               const projDelivered = rooms.filter(r => r.is_delivered).length
               const projOverdue = rooms.filter(r => r.is_overdue).length
               return (
-                <div key={name} className="rounded-[11px] overflow-hidden"
+                <div key={name} className="rounded-[8px] overflow-hidden"
                   style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                   {/* Project header */}
                   <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--divider)', background: 'var(--hover-bg)' }}>
                     <p className="font-semibold text-sm flex-1" style={{ color: 'var(--text-1)' }}>{name}</p>
                     <div className="flex items-center gap-3">
                       {projOverdue > 0 && (
-                        <span className="text-label font-semibold px-1.5 py-0.5 rounded-[4px]"
+                        <span className="text-label font-semibold px-1.5 py-0.5 rounded-[8px]"
                           style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
                           {projOverdue} หลุด
                         </span>
@@ -891,7 +891,7 @@ function UndatedLane({ title, hint, tone, rooms, onOpen, showDaysOverdue }: {
   const [open, setOpen] = useState(showDaysOverdue || rooms.length <= 60)
   const value = rooms.reduce((s, r) => s + r.revenue, 0)
   return (
-    <div className="rounded-[11px] overflow-hidden"
+    <div className="rounded-[8px] overflow-hidden"
       style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
       <button onClick={() => setOpen(o => !o)}
         className="w-full px-4 py-3 flex items-center justify-between gap-3 flex-wrap text-left"
@@ -912,7 +912,7 @@ function UndatedLane({ title, hint, tone, rooms, onOpen, showDaysOverdue }: {
         <div className="p-4 flex flex-wrap gap-2">
           {rooms.map(r => (
             <button key={r.id} onClick={() => onOpen(r)}
-              className="px-2.5 py-1 rounded-[6px] text-xs font-semibold transition-opacity hover:opacity-70"
+              className="px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-opacity hover:opacity-70"
               style={{
                 background: `color-mix(in srgb, ${tone} 8%, transparent)`,
                 border: `1px solid color-mix(in srgb, ${tone} 28%, transparent)`,

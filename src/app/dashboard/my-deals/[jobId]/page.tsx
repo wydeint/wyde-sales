@@ -170,7 +170,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>
               {step === 'plan' ? 'ตั้งแผนชำระเงิน' : 'บันทึกรับเงินงวดแรก'}
             </h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{job.room_no} · {job.project_name}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{job.room_no} · {job.project_name}</p>
           </div>
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
@@ -183,8 +183,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
         <div className="p-5 space-y-4">
           {step === 'plan' ? (
             <>
-              <div className="rounded-[11px] p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
-                <p className="text-xs mb-0.5" style={{ color: 'var(--text-2)' }}>มูลค่างาน</p>
+              <div className="rounded-[8px] p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
+                <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>มูลค่างาน</p>
                 <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(total)}</p>
               </div>
               <div>
@@ -192,7 +192,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                 <div className="grid grid-cols-2 gap-2">
                   {(['B2C', 'B2B'] as ClientType[]).map(t => (
                     <button key={t} onClick={() => setClientType(t)}
-                      className="py-2 rounded-[11px] text-sm font-semibold border transition-all"
+                      className="py-2 rounded-[8px] text-sm font-semibold border transition-all"
                       style={clientType === t
                         ? { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }
                         : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -207,12 +207,12 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                   <div className="space-y-2">
                     {B2C_PLANS.map(p => (
                       <button key={p.value} onClick={() => setPlan(p.value)}
-                        className="w-full text-left px-4 py-3 rounded-[11px] border transition-all"
+                        className="w-full text-left px-4 py-3 rounded-[8px] border transition-all"
                         style={plan === p.value
                           ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                           : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                         <p className="text-sm font-semibold">{p.label}</p>
-                        <p className="text-xs opacity-60 mt-0.5">{p.desc}</p>
+                        <p className="text-xs opacity-60 mt-1">{p.desc}</p>
                       </button>
                     ))}
                   </div>
@@ -234,7 +234,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                     <div className="flex gap-2">
                       {[2, 3, 4, 5, 6].map(n => (
                         <button key={n} onClick={() => updateB2bCount(n)}
-                          className="flex-1 py-2 rounded-[11px] text-sm font-semibold border transition-all"
+                          className="flex-1 py-2 rounded-[8px] text-sm font-semibold border transition-all"
                           style={b2bCount === n
                             ? { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }
                             : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -291,14 +291,14 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                 </div>
               </div>
               <button onClick={() => setStep('pay')}
-                className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+                className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
                 style={{ background: 'var(--accent)' }}>
                 ถัดไป → บันทึกงวดแรก
               </button>
             </>
           ) : (
             <>
-              <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[8px] p-4" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>งวดที่ 1 — {firstInstallment?.name}</p>
                 <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(firstInstallment?.amount || 0)}</p>
                 {firstInstallment?.trigger && <p className="text-xs mt-1 text-accent">งวดนี้เป็นงวดเริ่มงาน</p>}
@@ -342,12 +342,12 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
               )}
               <div className="flex gap-2">
                 <button onClick={() => setStep('plan')}
-                  className="flex-1 py-2.5 rounded-[11px] text-sm border"
+                  className="flex-1 py-2.5 rounded-[8px] text-sm border"
                   style={{ border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                   ← ย้อนกลับ
                 </button>
                 <button onClick={save} disabled={saving}
-                  className="flex-1 py-2.5 rounded-[11px] font-semibold text-sm text-white"
+                  className="flex-1 py-2.5 rounded-[8px] font-semibold text-sm text-white"
                   style={{ background: saving ? '#999' : 'var(--accent)' }}>
                   {saving ? 'กำลังบันทึก...' : 'ตั้งค่าและบันทึก'}
                 </button>
@@ -411,7 +411,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>บันทึกรับเงิน</h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{job.room_no} · {job.project_name}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{job.room_no} · {job.project_name}</p>
           </div>
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
@@ -421,7 +421,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
             <div className="space-y-2">
               {allInsts.map(inst => (
                 <button key={inst.id} onClick={() => selectInst(inst)}
-                  className="w-full text-left px-4 py-3 rounded-[11px] border transition-all"
+                  className="w-full text-left px-4 py-3 rounded-[8px] border transition-all"
                   style={selected?.id === inst.id
                     ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                     : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -429,7 +429,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
                     <span className="text-sm font-semibold">{inst.installment_name}</span>
                     <span className="text-sm font-bold">{fmtBaht(inst.paid_amount ?? inst.amount)}</span>
                   </div>
-                  <div className="flex gap-2 mt-0.5">
+                  <div className="flex gap-2 mt-1">
                     {inst.status === 'paid' && <span className="text-micro text-success">รับแล้ว {inst.paid_date ? fmtDate(inst.paid_date) : ''}</span>}
                     {inst.is_work_trigger && <span className="text-micro text-accent">เริ่มงาน</span>}
                     {inst.is_final && <span className="text-micro text-value">งวดสุดท้าย</span>}
@@ -457,7 +457,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
           </div>
 
           {/* Voucher section */}
-          <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-3 px-4 py-3 cursor-pointer" style={{ background: 'var(--hover-bg)' }}>
               <input type="checkbox" checked={useVoucher} onChange={e => { setUseVoucher(e.target.checked); if (!e.target.checked) { setVoucherAmount(0); setVoucherCode('') } }}
                 className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-amber)' }} />
@@ -500,7 +500,7 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
 
           {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving || !selected}
-            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
             {saving ? 'กำลังบันทึก...' : `บันทึกรับเงิน ${selected ? fmtBaht(useVoucher && voucherAmount > 0 ? netAmount : paidAmount) : ''}`}
           </button>
@@ -540,7 +540,7 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>บันทึกส่งมอบ</h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{job.room_no} · {job.project_name}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{job.room_no} · {job.project_name}</p>
           </div>
           <button onClick={onClose} className="p-1" style={{ color: 'var(--text-2)' }}><X size={18} /></button>
         </div>
@@ -566,25 +566,25 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
             </div>
           </div>
           {finalInst && (
-            <div className="rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
+            <div className="rounded-[8px] p-3" style={{ background: 'var(--hover-bg)' }}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={markFinalPaid} onChange={e => setMarkFinalPaid(e.target.checked)} className="w-4 h-4 rounded" />
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                     {job.customer_type === 'B2B' ? 'วางบิลและรับเงินพร้อมส่งมอบ' : 'รับเงินงวดสุดท้าย'}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{finalInst.installment_name} — {fmtBaht(finalInst.amount)}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{finalInst.installment_name} — {fmtBaht(finalInst.amount)}</p>
                 </div>
               </label>
             </div>
           )}
-          <div className="rounded-[11px] p-3" style={{ background: 'color-mix(in srgb, var(--accent) 5%, transparent)', border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3" style={{ background: 'color-mix(in srgb, var(--accent) 5%, transparent)', border: '1px solid var(--divider)' }}>
             <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ประกันรันอัตโนมัติ {warrantyMonths} เดือน</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
           </div>
           {error && <p className="text-xs rounded-[8px] px-3 py-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', color: 'var(--accent-red)' }}>{error}</p>}
           <button onClick={save} disabled={saving}
-            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
           </button>
@@ -761,13 +761,13 @@ export default function JobDetailPage() {
         </div>
 
         {/* Revenue + Stage card */}
-        <div className="rounded-[14px] overflow-hidden mb-4"
+        <div className="rounded-[8px] overflow-hidden mb-4"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           {/* Revenue */}
           <div className="px-4 pt-4 pb-3 flex items-center justify-between">
             <div>
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
-              <p className="text-2xl font-bold mt-0.5" style={{ color: 'var(--text-1)' }}>{fmtBaht(revenue)}</p>
+              <p className="text-2xl font-bold mt-1" style={{ color: 'var(--text-1)' }}>{fmtBaht(revenue)}</p>
             </div>
             <div className="text-right">
               {hasPlan && totalCount > 0 && (
@@ -775,7 +775,7 @@ export default function JobDetailPage() {
                   <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-amber)' }}>
                     {paidCount}/{totalCount} งวด
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                     เก็บแล้ว {fmtBaht(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))}
                   </p>
                 </>
@@ -840,20 +840,20 @@ export default function JobDetailPage() {
           <div className="space-y-2">
             {!hasPlan ? (
               <button onClick={() => setModal('setup')}
-                className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
+                className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
                 style={{ background: 'var(--accent)' }}>
                 + ตั้งแผนชำระเงิน & รับเงินงวดแรก
               </button>
             ) : pendingInstallments.length > 0 ? (
               <div className="flex gap-2">
                 <button onClick={() => setModal('pay')}
-                  className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
+                  className="flex-1 py-3 rounded-[8px] font-semibold text-sm text-white"
                   style={{ background: 'var(--accent)' }}>
                   + บันทึกรับเงิน
                 </button>
                 {(finalPaid || job.customer_type === 'B2B') && (
                   <button onClick={() => setModal('handover')}
-                    className="flex-1 py-3 rounded-[12px] font-semibold text-sm text-white"
+                    className="flex-1 py-3 rounded-[8px] font-semibold text-sm text-white"
                     style={{ background: 'var(--accent-green)' }}>
                     บันทึกส่งมอบ
                   </button>
@@ -861,7 +861,7 @@ export default function JobDetailPage() {
               </div>
             ) : (
               <button onClick={() => setModal('handover')}
-                className="w-full py-3 rounded-[12px] font-semibold text-sm text-white"
+                className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
                 style={{ background: 'var(--accent-green)' }}>
                 + บันทึกส่งมอบ
               </button>
@@ -869,7 +869,7 @@ export default function JobDetailPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="rounded-[12px] p-4 text-center"
+            <div className="rounded-[8px] p-4 text-center"
               style={{ background: 'color-mix(in srgb, var(--accent-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 20%, transparent)' }}>
               <p className="text-sm font-semibold text-success">ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
               {job.warranty_end && (
@@ -883,14 +883,14 @@ export default function JobDetailPage() {
                   before `!hasPlan`, so a delivered room with no instalments only
                   ever saw the collect modal, which has nothing to work on. */}
               <button onClick={() => setModal(hasPlan ? 'pay' : 'setup')}
-                className="flex-1 py-2.5 rounded-[12px] font-semibold text-sm"
+                className="flex-1 py-2.5 rounded-[8px] font-semibold text-sm"
                 style={hasPlan
                   ? { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }
                   : { background: 'var(--accent)', color: '#fff' }}>
                 {hasPlan ? 'แก้ไขงวดเงิน' : '+ ตั้งงวดเงินย้อนหลัง'}
               </button>
               <button onClick={() => setModal('handover')}
-                className="flex-1 py-2.5 rounded-[12px] font-semibold text-sm"
+                className="flex-1 py-2.5 rounded-[8px] font-semibold text-sm"
                 style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
                 แก้ไขวันส่งมอบ
               </button>
@@ -904,7 +904,7 @@ export default function JobDetailPage() {
       {modal === 'handover' && <HandoverModal job={job} onClose={() => setModal(null)} onSaved={load} onError={showToast} />}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] px-4 py-3 rounded-[12px] text-sm font-semibold text-white shadow-xl"
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] px-4 py-3 rounded-[8px] text-sm font-semibold text-white shadow-xl"
           style={{ background: 'color-mix(in srgb, var(--accent-red) 95%, transparent)', backdropFilter: 'blur(8px)' }}>
           ⚠️ {toast}
         </div>

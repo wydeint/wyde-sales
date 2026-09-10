@@ -75,7 +75,7 @@ export default function SearchableSelect({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute z-50 mt-1 rounded-[11px] overflow-hidden shadow-lg"
+          className="absolute z-50 mt-1 rounded-[8px] overflow-hidden shadow-lg"
           style={{
             background: 'var(--panel-bg)',
             border: '1px solid var(--card-border)',

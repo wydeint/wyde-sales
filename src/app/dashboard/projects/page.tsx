@@ -153,13 +153,13 @@ export default function ProjectsPage() {
         <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ID</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ชื่อโครงการ</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>Developer</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ที่ตั้ง</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ตึก</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ห้องทั้งหมด</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>สถานะ</th>
+              <th className="text-left text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ID</th>
+              <th className="text-left text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ชื่อโครงการ</th>
+              <th className="text-left text-xs font-semibold" style={{ color: 'var(--text-2)' }}>Developer</th>
+              <th className="text-left text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ที่ตั้ง</th>
+              <th className="text-center text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ตึก</th>
+              <th className="text-center text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ห้องทั้งหมด</th>
+              <th className="text-center text-xs font-semibold" style={{ color: 'var(--text-2)' }}>สถานะ</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -174,12 +174,12 @@ export default function ProjectsPage() {
             )}
             {filtered.map((p, i) => (
               <tr key={p.id} className="transition-colors">
-                <td className="px-4 py-3 text-accent-blue text-sm font-mono">{p.id}</td>
-                <td className="px-4 py-3 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.developer}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.location}</td>
-                <td className="px-4 py-3 text-sm text-center" style={{ color: 'var(--text-2)' }}>{p.tower_count}</td>
-                <td className="px-4 py-3 text-sm text-center" style={{ color: 'var(--text-2)' }}>{p.total_units?.toLocaleString()}</td>
+                <td className=" text-accent-blue text-sm font-mono">{p.id}</td>
+                <td className=" text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</td>
+                <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{p.developer}</td>
+                <td className=" text-sm" style={{ color: 'var(--text-2)' }}>{p.location}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{p.tower_count}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{p.total_units?.toLocaleString()}</td>
                 <td className="px-4 py-3 text-center">
                   <button onClick={() => toggleActive(p)}>
                     {p.active

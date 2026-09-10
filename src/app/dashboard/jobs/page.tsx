@@ -172,7 +172,7 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left rounded-[11px] p-3 flex flex-col gap-2 transition-all group"
+      className="w-full text-left rounded-[8px] p-3 flex flex-col gap-2 transition-all group"
       style={{
         background: 'var(--card-bg)',
         border: `1px solid ${isOverdue ? 'color-mix(in srgb, var(--accent-red) 35%, transparent)' : 'var(--card-border)'}`,
@@ -188,28 +188,28 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
               {job.room_no || '—'}
             </p>
             {seqNo && seqNo > 0 && (
-              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[8px] flex-shrink-0"
                 style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                 งานที่ {seqNo}
               </span>
             )}
           </div>
-          <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-3)' }}>
+          <p className="text-xs truncate mt-1" style={{ color: 'var(--text-3)' }}>
             {displayName || '—'} · {projectName}
           </p>
         </div>
-        <StatusChip kind="working" status={job.working_status} variant="outline" className="flex-shrink-0 mt-0.5" />
+        <StatusChip kind="working" status={job.working_status} variant="outline" className="flex-shrink-0 mt-1" />
       </div>
       {/* work type + phone */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {job.work_type && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {job.work_type}
           </span>
         )}
         {job.package_type && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
             {job.package_type}
           </span>
@@ -224,8 +224,8 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
       {payPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
-            <span style={{ fontSize: '10px', fontWeight: 700, color: barColor }}>{payPct}%</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: barColor }}>{payPct}%</span>
           </div>
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${payPct}%`, borderRadius: '9999px', background: barColor }} />
@@ -249,14 +249,14 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
             // so this chip stays distinguishable from the เกินกำหนด chip beside it.
             const tone = payment.due_date && payment.due_date < today ? 'var(--accent-red)' : 'var(--accent-orange)'
             return (
-              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+              <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
                 style={{ background: `color-mix(in srgb, ${tone} 12%, transparent)`, color: tone }}>
                 ค้าง {payment.installment_name}
               </span>
             )
           })()}
           {isOverdue && (
-            <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
+            <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
               เกินกำหนด
             </span>
           )}
@@ -447,7 +447,7 @@ function AddJobModal({
           </div>
           {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving}
-            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? '#666' : 'var(--accent)' }}>
             {saving ? 'กำลังสร้างงาน...' : '+ เพิ่มงาน'}
           </button>
@@ -465,7 +465,7 @@ function AddJobModal({
 function ReadField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="min-w-0">
-      <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       <p className="font-semibold tabular-nums truncate"
         style={{ fontSize: 12.5, lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
         {value || '—'}
@@ -922,26 +922,26 @@ export default function JobsPage() {
         }).length
         return (
           <div className="grid grid-cols-3 gap-4">
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
               <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
+              <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
               <p className="text-lg font-bold" style={{ color: gpColor }}>
                 {gpPctAvg !== null ? gpPctAvg.toFixed(2) + '%' : '—'}
               </p>
-              <p className="text-label mt-0.5" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
+              <p className="text-label mt-1" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
                 กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
               </p>
             </div>
-            <div className="ds-card p-4">
+            <div className="ds-card">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>เกินกำหนด</p>
               <p className="text-lg font-bold" style={{ color: overdueCount > 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                 {overdueCount} งาน
               </p>
-              <p className="text-label mt-0.5" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
+              <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ยังไม่ส่งมอบ</p>
             </div>
           </div>
         )
@@ -957,17 +957,17 @@ export default function JobsPage() {
             {groupedJobs.map(({ projectId, projectName, jobs: groupJobs }) => (
               <div key={projectId}>
                 {/* Project header */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-4">
                   <p className="text-xs font-bold uppercase tracking-wider flex-shrink-0" style={{ color: 'var(--accent)' }}>
                     {projectName}
                   </p>
-                  <span className="text-xs px-1.5 py-0.5 rounded-[4px] font-semibold flex-shrink-0"
+                  <span className="text-xs px-1.5 py-0.5 rounded-[8px] font-semibold flex-shrink-0"
                     style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                     {groupJobs.length} งาน
                   </span>
                   <div className="flex-1 h-px" style={{ background: 'var(--divider)' }} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                   {groupJobs.map(j => (
                     <JobCard key={j.id} job={j} paymentMap={paymentMap} progressMap={progressMap} onClick={() => openEdit(j)} seqNo={seqMap[j.id]} />
                   ))}
@@ -987,7 +987,7 @@ export default function JobsPage() {
         <>
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-[20px] p-6 space-y-5 pointer-events-auto"
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-[18px] p-6 space-y-5 pointer-events-auto"
             data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
             {/* Modal header */}
@@ -1063,7 +1063,7 @@ export default function JobsPage() {
                     )}
 
                     {/* B2C: combined info card (ชื่อ + โครงการ + เบอร์) */}
-                    <div className="col-span-2 rounded-[11px] overflow-hidden"
+                    <div className="col-span-2 rounded-[8px] overflow-hidden"
                       style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                       {/* ชื่อลูกค้า */}
                       <div className="flex items-center gap-3 px-4 py-3"
@@ -1079,7 +1079,7 @@ export default function JobsPage() {
                       {/* เลขห้อง + โครงการ */}
                       <div className="px-4 py-2 flex items-center gap-2"
                         style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
-                        <span className="text-xs font-semibold flex-shrink-0 rounded-[5px] px-2 py-0.5"
+                        <span className="text-xs font-semibold flex-shrink-0 rounded-[8px] px-2 py-0.5"
                           style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                           {editing.room_no || '—'}
                         </span>
@@ -1126,7 +1126,7 @@ export default function JobsPage() {
                     )}
 
                     {/* B2B: combined card (ชื่อบริษัท + โครงการ + เบอร์) */}
-                    <div className="col-span-2 rounded-[11px] overflow-hidden"
+                    <div className="col-span-2 rounded-[8px] overflow-hidden"
                       style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                       {/* ชื่อบริษัท */}
                       <div className="flex items-center gap-3 px-4 py-3"
@@ -1142,7 +1142,7 @@ export default function JobsPage() {
                       {/* เลขห้อง + โครงการ */}
                       <div className="px-4 py-2 flex items-center gap-2"
                         style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
-                        <span className="text-xs font-semibold flex-shrink-0 rounded-[5px] px-2 py-0.5"
+                        <span className="text-xs font-semibold flex-shrink-0 rounded-[8px] px-2 py-0.5"
                           style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                           {editing.room_no || '—'}
                         </span>
@@ -1181,7 +1181,7 @@ export default function JobsPage() {
                 {/* PO · SO · PR · ต้นทุน · GP% ย้ายไปกรอกที่หน้า Cost & GP% ทั้งหมด
                     (แท็บเอกสาร = งานแอดมิน · แท็บจัดซื้อจัดจ้าง = ต้นทุน) หน้านี้
                     เหลือแค่แสดงผล — เหลือทางกรอกทางเดียวต่อข้อมูลหนึ่งชุด */}
-                <div className="col-span-2 rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
+                <div className="col-span-2 rounded-[8px] p-3" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>
                       เอกสาร &amp; ต้นทุน
@@ -1338,7 +1338,7 @@ export default function JobsPage() {
                     </span>
                   </div>
                 </div>
-                <div className="rounded-[11px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
+                <div className="rounded-[8px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center gap-1 mb-1">
                     <Calculator size={12} style={{ color: 'var(--text-3)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>Profit / GP%</span>
@@ -1399,7 +1399,7 @@ export default function JobsPage() {
 
             {/* Payment alert */}
             {editing.id && paymentMap[editing.id] && (
-              <div className="rounded-[11px] p-3 flex items-center justify-between"
+              <div className="rounded-[8px] p-3 flex items-center justify-between"
                 style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: 'var(--accent-orange)' }}>มีงวดค้างชำระ</p>

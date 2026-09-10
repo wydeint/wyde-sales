@@ -29,7 +29,7 @@ export default function PageHeader({
       <div className="min-w-0">
         <h1 className="text-page-title" style={{ color: 'var(--text-1)' }}>{title}</h1>
         {subtitle && (
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>{subtitle}</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>{subtitle}</p>
         )}
       </div>
       {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}

@@ -108,7 +108,7 @@ export default function DailyReportPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="ds-card p-5 mb-6">
+        <div className="ds-card mb-6">
           <h2 className="text-section-title mb-4" style={{ color: 'var(--text-1)' }}>บันทึกรายงานวันที่ {new Date(form.date).toLocaleDateString('th-TH', { dateStyle: 'long' })}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <Input label="โทรหาลูกค้า (ครั้ง)" type="number" value={form.calls} onChange={e => setForm({ ...form, calls: Number(e.target.value) })} />
@@ -140,15 +140,15 @@ export default function DailyReportPage() {
         <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>วันที่</th>
-              <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Sales</th>
-              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>โทร</th>
-              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>เยี่ยม</th>
-              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Follow</th>
-              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ใบเสนอ</th>
-              <th className="text-center px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Lead</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>มูลค่าใบเสนอ</th>
-              <th className="text-right px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>Booking</th>
+              <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>วันที่</th>
+              <th className="text-left text-xs" style={{ color: 'var(--text-2)' }}>Sales</th>
+              <th className="text-center text-xs" style={{ color: 'var(--text-2)' }}>โทร</th>
+              <th className="text-center text-xs" style={{ color: 'var(--text-2)' }}>เยี่ยม</th>
+              <th className="text-center text-xs" style={{ color: 'var(--text-2)' }}>Follow</th>
+              <th className="text-center text-xs" style={{ color: 'var(--text-2)' }}>ใบเสนอ</th>
+              <th className="text-center text-xs" style={{ color: 'var(--text-2)' }}>Lead</th>
+              <th className="num num-money text-xs" style={{ color: 'var(--text-2)' }}><span>มูลค่าใบเสนอ</span></th>
+              <th className="num num-money text-xs" style={{ color: 'var(--text-2)' }}><span>Booking</span></th>
             </tr>
           </thead>
           <tbody>
@@ -159,17 +159,17 @@ export default function DailyReportPage() {
             )}
             {reports.map((r, i) => (
               <tr key={r.id} className="transition-colors">
-                <td className="px-4 py-2.5 text-sm" style={{ color: 'var(--text-2)' }}>
+                <td className=" text-sm" style={{ color: 'var(--text-2)' }}>
                   {new Date(r.date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
                 </td>
-                <td className="px-4 py-2.5 text-sm" style={{ color: 'var(--text-1)' }}>{(r as any).users?.name || '-'}</td>
-                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.calls}</td>
-                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.visits}</td>
-                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.follow_ups}</td>
-                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.quotations_sent}</td>
-                <td className="px-4 py-2.5 text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.leads_created}</td>
-                <td className="px-4 py-2.5 text-sm text-right" style={{ color: 'var(--text-2)' }}>{f(r.quotation_value)}</td>
-                <td className="px-4 py-2.5 text-success text-sm text-right font-semibold">{f(r.booking_value)}</td>
+                <td className=" text-sm" style={{ color: 'var(--text-1)' }}>{(r as any).users?.name || '-'}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.calls}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.visits}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.follow_ups}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.quotations_sent}</td>
+                <td className=" text-sm text-center" style={{ color: 'var(--text-2)' }}>{r.leads_created}</td>
+                <td className=" text-sm num num-money" style={{ color: 'var(--text-2)' }}><span>{f(r.quotation_value)}</span></td>
+                <td className=" text-success text-sm num num-money font-semibold"><span>{f(r.booking_value)}</span></td>
               </tr>
             ))}
           </tbody>

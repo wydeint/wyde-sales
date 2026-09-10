@@ -1395,7 +1395,12 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
       supabase.from('customers')
         .select('id, customer_name, interested_room, projects:project_id(name)')
         .or(`customer_name.ilike.%${q}%,interested_room.ilike.%${q}%`)
-        .not('status', 'eq', 'closed')
+        // `customers.status` no longer exists — a person has no status, their
+        // orders do, and the stage moved to jobs.crm_stage. The filter was left
+        // behind pointing at the dropped column, so PostgREST rejected this
+        // whole query and Quick Mode search returned no customers at all, only
+        // jobs. Dropped rather than rewritten: a customer whose orders are all
+        // closed is still someone you would want to find by name here.
         .order('customer_name').limit(8),
     ])
     const jobs: DocTarget[] = (jobsData || []).map((j: any) => ({

@@ -276,13 +276,22 @@ export default function EventsPage() {
 
     // 2. Check system (customers, jobs, condo_leads) — only if phone provided
     if (!inEvent && ph) {
-      const [{ data: cust }, { data: jobs }, { data: leads }] = await Promise.all([
-        supabase.from('customers').select('customer_name').eq('phone', phone).limit(1),
-        supabase.from('jobs').select('customer_name').eq('phone', phone).limit(1),
+      // `jobs` has no phone column — a job belongs to a customer and the phone
+      // lives there. The old query filtered jobs on `phone` directly, so
+      // PostgREST rejected it and the Job Registry arm of this check never
+      // returned anything: a guest who already had a real order still looked
+      // new. Same mistake as the one already fixed in loadCustomers above; this
+      // second copy was missed. Match the customer first, then their jobs.
+      const [{ data: cust }, { data: leads }] = await Promise.all([
+        supabase.from('customers').select('id,customer_name').eq('phone', phone).limit(1),
         supabase.from('condo_leads').select('customer_name').eq('phone', phone).limit(1),
       ])
-      if (cust?.[0]) inSystem = { src: 'Prospects/Pipeline', name: (cust[0] as any).customer_name }
-      else if (jobs?.[0]) inSystem = { src: 'Job Registry', name: (jobs[0] as any).customer_name }
+      const { data: jobs } = cust?.[0]
+        ? await supabase.from('jobs').select('customer_name')
+            .eq('customer_id', (cust[0] as any).id).limit(1)
+        : { data: null }
+      if (jobs?.[0]) inSystem = { src: 'Job Registry', name: (jobs[0] as any).customer_name }
+      else if (cust?.[0]) inSystem = { src: 'Prospects/Pipeline', name: (cust[0] as any).customer_name }
       else if (leads?.[0]) inSystem = { src: 'Origin Pool', name: (leads[0] as any).customer_name }
     }
 
@@ -290,11 +299,19 @@ export default function EventsPage() {
     if (inEvent || inSystem) setDupConfirmed(false)
   }
 
-  // ── Dedup helper: find existing customer by lead_id → phone
+  // ── Dedup helper: find an existing customer by Origin room → phone
+  //
+  // The lead link lives on `jobs.lead_id`. It used to sit on customers too, but
+  // that column was dropped on 2026-08-25 (see _backup_customers_dropped_cols_
+  // 20260825) when the room-level facts moved to the job — one buyer can be
+  // converted for several Origin rooms, and a single lead_id on the person
+  // cannot say which. This query was left pointing at the dropped column, so
+  // PostgREST rejected it and the lead-based half of the dedup never ran.
   async function findExistingCustomer(c: EventCustomer): Promise<string | null> {
     if (c.lead_id) {
-      const { data } = await supabase.from('customers').select('id').eq('lead_id', c.lead_id).maybeSingle()
-      if (data) return data.id
+      const { data } = await supabase.from('jobs')
+        .select('customer_id').eq('lead_id', c.lead_id).limit(1).maybeSingle()
+      if (data?.customer_id) return data.customer_id
     }
     if (c.phone) {
       const { data } = await supabase.from('customers').select('id').eq('phone', c.phone).maybeSingle()
@@ -331,7 +348,7 @@ export default function EventsPage() {
         email: c.email || null,
         project_id: projectId,
         interested_room: c.room_no || null,
-        lead_id: c.lead_id || null,
+        // lead_id is not a customers column — it lives on the job below.
         event_customer_id: c.id,
         source_event_id: selectedEvent?.id || null,
         source: 'event',
@@ -383,7 +400,7 @@ export default function EventsPage() {
       email: c.email || null,
       project_id: c.project_id || selectedEvent?.project_id || null,
       interested_room: c.room_no || null,
-      lead_id: c.lead_id || null,
+      // lead_id is not a customers column — it lives on the job.
       event_customer_id: c.id,
       source_event_id: selectedEvent?.id || null,
       source: 'event',

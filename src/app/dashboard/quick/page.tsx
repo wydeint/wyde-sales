@@ -20,6 +20,7 @@ import {
 import { showAlert } from '@/components/ui/dialog'
 import { netReceived } from '@/lib/voucher'
 import { deliverJob } from '@/lib/jobLifecycle'
+import { todayStr } from '@/lib/today'
 
 // ─── Types ────────────────────────────────────────────────
 interface WidgetData {
@@ -564,7 +565,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
   const [useVoucher, setUseVoucher] = useState(false)
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherAmount, setVoucherAmount] = useState(0)
-  useEffect(() => { setPaidDate(new Date().toISOString().slice(0, 10)) }, [])
+  useEffect(() => { setPaidDate(todayStr()) }, [])
   const [saving, setSaving] = useState(false)
 
   async function selectJob(job: JobOption) {
@@ -1017,7 +1018,7 @@ function DeliverSheet({ open, onClose, jobs }: {
   const [search, setSearch] = useState('')
   const [selectedJob, setSelectedJob] = useState<JobOption | null>(null)
   const [deliveryDate, setDeliveryDate] = useState('')
-  useEffect(() => { setDeliveryDate(new Date().toISOString().slice(0, 10)) }, [])
+  useEffect(() => { setDeliveryDate(todayStr()) }, [])
   const [fileUrl, setFileUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [canDeliver, setCanDeliver] = useState(false)
@@ -1062,7 +1063,7 @@ function DeliverSheet({ open, onClose, jobs }: {
 
   function resetAndClose() {
     setStep('job'); setSearch(''); setSelectedJob(null)
-    setDeliveryDate(new Date().toISOString().slice(0, 10)); setFileUrl(''); onClose()
+    setDeliveryDate(todayStr()); setFileUrl(''); onClose()
   }
 
   const filteredJobs = jobs.filter(j =>

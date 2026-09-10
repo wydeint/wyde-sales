@@ -16,6 +16,7 @@ import { Input, Select } from '@/components/ui/Input'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 import { baht, bahtShort } from '@/lib/money'
 import { showConfirm } from '@/components/ui/dialog'
+import { todayStr } from '@/lib/today'
 
 // ── Types ──────────────────────────────────────────────────
 interface Payment {
@@ -99,7 +100,7 @@ const PAY_STATUS = [
   { value: 'paid', label: 'ชำระแล้ว', color: 'badge badge-green' },
   { value: 'partial', label: 'ชำระบางส่วน', color: 'badge badge-blue' },
 ]
-const emptyEntry = { type: 'expense', category: '', amount: 0, entry_date: new Date().toISOString().slice(0, 10), description: '', ref_id: '' }
+const emptyEntry = { type: 'expense', category: '', amount: 0, entry_date: todayStr(), description: '', ref_id: '' }
 
 // ── Helpers ────────────────────────────────────────────────
 const f = baht
@@ -240,7 +241,7 @@ export default function FinancePage() {
     load()
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayStr()
   const { start, end, label } = getPeriodBounds(period, offset)
 
   const paidPayments = payments.filter(p => p.status === 'paid')

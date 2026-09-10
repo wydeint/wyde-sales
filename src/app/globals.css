@@ -571,8 +571,8 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    they add up. Scoped to .tbl-dense on purpose: the Revenue table sets its own
    padding on the tfoot cells, and this selector would outrank those classes. */
 .tbl-dense tfoot td {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 8px;
+  padding-bottom: 8px;
   vertical-align: middle;
 }
 

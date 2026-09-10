@@ -7,6 +7,7 @@ import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import { Input, TextArea } from '@/components/ui/Input'
 import { MoneyField } from '@/components/ui/MoneyInput'
 import PageHeader from '@/components/ui/PageHeader'
+import { todayStr } from '@/lib/today'
 
 interface DailyReport {
   id: string; date: string; sales_person_id: string
@@ -19,7 +20,7 @@ interface DailyReport {
 interface User { id: string; name: string }
 
 const emptyForm = {
-  date: new Date().toISOString().slice(0, 10),
+  date: todayStr(),
   calls: 0, visits: 0, follow_ups: 0,
   quotations_sent: 0, leads_created: 0,
   quotation_value: 0, booking_value: 0, revenue: 0, notes: ''
@@ -46,7 +47,7 @@ export default function DailyReportPage() {
       if (uErr) { setFetchError(uErr.message); setLoading(false); return }
       if (u) {
         setCurrentUser(u)
-        const today = new Date().toISOString().slice(0, 10)
+        const today = todayStr()
         const { data: reps, error: rErr } = await supabase
           .from('daily_reports')
           .select('*, users(name)')

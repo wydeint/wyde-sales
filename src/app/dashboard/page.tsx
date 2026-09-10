@@ -7,6 +7,7 @@ import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import { crmStage, FUNNEL_ORDER } from '@/lib/status'
 import { baht } from '@/lib/money'
+import { todayStr } from '@/lib/today'
 
 const f = baht
 const fn = (v: number) => (v || 0).toLocaleString()
@@ -155,9 +156,9 @@ export default function DashboardPage() {
 
   const pipelineMax = Math.max(...pipeline.map(p => p.count), 1)
 
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const todaySales = useMemo(() => jobs.filter(j => j.order_date?.slice(0, 10) === todayStr), [jobs, todayStr])
-  const todayDelivered = useMemo(() => jobs.filter(j => j.actual_deliver_date?.slice(0, 10) === todayStr && j.working_status === 'ส่งมอบแล้ว'), [jobs, todayStr])
+  const today = todayStr()
+  const todaySales = useMemo(() => jobs.filter(j => j.order_date?.slice(0, 10) === today), [jobs, today])
+  const todayDelivered = useMemo(() => jobs.filter(j => j.actual_deliver_date?.slice(0, 10) === today && j.working_status === 'ส่งมอบแล้ว'), [jobs, today])
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'อรุณสวัสดิ์' : hour < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น'
   const rankIcon = (i: number) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`

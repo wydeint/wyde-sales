@@ -6,6 +6,7 @@ import { Bell, X, Home, Banknote } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { baht } from '@/lib/money'
+import { todayStr, daysAgoStr } from '@/lib/today'
 
 interface HandoverItem {
   id: string; customer_name: string; room_no: string; handover_date: string; isToday: boolean
@@ -22,8 +23,8 @@ export default function NotificationBell() {
   const [paidToday, setPaidToday] = useState<PaidItem[]>([])
   const ref = useRef<HTMLDivElement>(null)
 
-  const today = new Date().toISOString().slice(0, 10)
-  const sevenDaysAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)
+  const today = todayStr()
+  const sevenDaysAgo = daysAgoStr(7)
 
   useEffect(() => {
     async function fetchAlerts() {
@@ -80,17 +81,23 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
-  const todayCount = handovers.filter(h => h.isToday).length + paidToday.filter(p => p.isToday).length
-  const total = todayCount
+  // No count. The bell used to show how many of these happened "today", and
+  // the number was wrong for the first seven hours of every day because
+  // "today" was computed in UTC (see lib/today.ts). That is fixed, but the
+  // count was never what the bell was for: it answers "has anything happened",
+  // and the list underneath answers "what". A number invites arithmetic that
+  // nobody needs and that the panel cannot back up — it holds the last seven
+  // days, not today.
+  const hasNews = handovers.length > 0 || paidToday.length > 0
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' })
   const fmtBaht = baht
 
-  function SectionHeader({ icon, label, count, color, bg }: { icon: React.ReactNode; label: string; count: number; color: string; bg: string }) {
+  function SectionHeader({ icon, label, color, bg }: { icon: React.ReactNode; label: string; color: string; bg: string }) {
     return (
       <div className="px-4 py-2 flex items-center gap-1.5" style={{ borderBottom: '1px solid var(--divider)', background: bg }}>
         <span style={{ color }}>{icon}</span>
-        <span className="text-micro font-bold uppercase tracking-wider" style={{ color }}>{label} ({count})</span>
+        <span className="text-caption font-bold" style={{ color }}>{label}</span>
       </div>
     )
   }
@@ -131,18 +138,18 @@ export default function NotificationBell() {
         ref={btnRef}
         onClick={openPanel}
         className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 relative"
-        style={{ color: todayCount > 0 ? 'var(--accent)' : 'var(--text-3)' }}
+        style={{ color: hasNews ? 'var(--accent)' : 'var(--text-3)' }}
         onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        aria-label={total > 0 ? `การแจ้งเตือน ${total} รายการ` : 'การแจ้งเตือน'}
+        aria-label={hasNews ? 'การแจ้งเตือน — มีรายการใหม่' : 'การแจ้งเตือน'}
       >
         <Bell size={14} />
-        {total > 0 && (
+        {hasNews && (
+          /* A dot, not a number: it says there is something to look at without
+             claiming how much. */
           <span aria-hidden="true"
-            className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-micro font-bold leading-none flex items-center justify-center text-white"
-            style={{ background: 'var(--accent)' }}>
-            {total > 9 ? '9+' : total}
-          </span>
+            className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+            style={{ background: 'var(--accent)' }} />
         )}
       </button>
 
@@ -153,12 +160,7 @@ export default function NotificationBell() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
             <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>การแจ้งเตือน</span>
-            {total > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-[8px] font-bold"
-                style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
-                {total} รายการ
-              </span>
-            )}
+            <span className="text-caption" style={{ color: 'var(--text-3)' }}>7 วันล่าสุด</span>
             <button onClick={() => setOpen(false)} style={{ color: 'var(--text-3)' }}><X size={14} /></button>
           </div>
 
@@ -174,8 +176,8 @@ export default function NotificationBell() {
                 {paidToday.length > 0 && (
                   <div>
                     <SectionHeader icon={<Banknote size={11} />}
-                      label={paidToday.some(p => p.isToday) ? 'รายรับวันนี้' : 'รายรับล่าสุด'}
-                      count={paidToday.length} color="var(--accent-blue)" bg="color-mix(in srgb, var(--accent-blue) 5%, transparent)" />
+                      label="รายรับล่าสุด"
+                      color="var(--accent-blue)" bg="color-mix(in srgb, var(--accent-blue) 5%, transparent)" />
                     {paidToday.slice(0, 8).map(p => (
                       <ItemRow key={p.id} onClick={() => { router.push('/dashboard/payments'); setOpen(false) }}
                         name={p.customer_name}
@@ -189,8 +191,8 @@ export default function NotificationBell() {
                 {handovers.length > 0 && (
                   <div>
                     <SectionHeader icon={<Home size={11} />}
-                      label={handovers.some(h => h.isToday) ? 'ส่งมอบวันนี้' : 'ส่งมอบล่าสุด'}
-                      count={handovers.length} color="var(--accent-orange)" bg="color-mix(in srgb, var(--accent-orange) 5%, transparent)" />
+                      label="ส่งมอบล่าสุด"
+                      color="var(--accent-orange)" bg="color-mix(in srgb, var(--accent-orange) 5%, transparent)" />
                     {handovers.slice(0, 5).map(h => (
                       <ItemRow key={h.id} onClick={() => { router.push('/dashboard/handover'); setOpen(false) }}
                         name={h.customer_name}

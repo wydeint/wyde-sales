@@ -21,6 +21,7 @@ import { compareRoom } from '@/lib/utils'
 import { resolveCustomerId } from '@/lib/customerId'
 import { exVatOf } from '@/lib/procurement'
 import { cleanName } from '@/lib/customerName'
+import { todayStr } from '@/lib/today'
 
 // ─────────────────────────────────────────
 // Constants
@@ -161,7 +162,7 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
   const salesName = (job.sales as any)?.name || ''
   const phone = (job.condo_leads as any)?.phone || null
   const payment = paymentMap[job.id] ?? null
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayStr()
   const paid = progressMap[job.id]?.paid ?? 0
   const rev = job.revenue_inc_vat || 0
   const payPct = rev > 0 ? Math.min(100, Math.round(paid / rev * 100)) : null
@@ -329,7 +330,7 @@ function AddJobModal({
   const [custType, setCustType] = useState<'B2C' | 'B2B'>('B2C')
   const [pkgType, setPkgType] = useState('')
   const [workType, setWorkType] = useState('N-RPT/Event')
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10))
+  const [orderDate, setOrderDate] = useState(todayStr())
   const [salesId, setSalesId] = useState(myId)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -918,7 +919,7 @@ export default function JobsPage() {
         const overdueCount = filtered.filter(j => {
           if (j.working_status === 'ส่งมอบแล้ว' || j.working_status === 'ยกเลิก') return false
           if (!j.expected_finish_date) return false
-          return j.expected_finish_date < new Date().toISOString().slice(0, 10)
+          return j.expected_finish_date < todayStr()
         }).length
         return (
           <div className="grid grid-cols-3 gap-4">

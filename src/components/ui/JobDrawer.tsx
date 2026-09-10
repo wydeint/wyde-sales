@@ -19,6 +19,7 @@ import { showAlert, showConfirm } from '@/components/ui/dialog'
 import { netReceived } from '@/lib/voucher'
 import { cancelJob, deliverJob } from '@/lib/jobLifecycle'
 import { exVatOf, incVatOf } from '@/lib/procurement'
+import { todayStr } from '@/lib/today'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -124,10 +125,10 @@ async function sendLineNotify(message: string): Promise<{ ts: string; error?: un
 export const fmtDate = (d: string | null) => d
   ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
   : '—'
-export const todayStr = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+/** Re-exported so the many call sites in this file keep working. The one
+ *  implementation lives in lib/today.ts — see the note there about why
+ *  `toISOString()` is the wrong tool for "today". */
+export { todayStr }
 
 
 export function getFullStageInfo(job: FullJob) {

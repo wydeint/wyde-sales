@@ -27,6 +27,7 @@ import { cancelJob, deliverJob } from '@/lib/jobLifecycle'
 import { compareRoom } from '@/lib/utils'
 import { exVatOf, incVatOf } from '@/lib/procurement'
 import { SummaryStrip } from '@/components/ui/SummaryCard'
+import { todayStr } from '@/lib/today'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -225,10 +226,6 @@ const fmtBaht = baht
 const fmtDate = (d: string | null) => d
   ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
   : '—'
-const todayStr = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 // ─── Plan helpers ──────────────────────────────────────────
 const B2C_PLANS = [
@@ -1323,7 +1320,7 @@ function CancelModal({ onClose, onConfirm }: {
 }) {
   const [cancelType, setCancelType] = useState<'forfeit' | 'refund'>('forfeit')
   const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(todayStr())
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 

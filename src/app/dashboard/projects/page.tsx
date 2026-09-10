@@ -125,7 +125,7 @@ export default function ProjectsPage() {
         title="Projects"
         subtitle="จัดการข้อมูลโครงการ"
         actions={
-          <button onClick={openNew} className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <button onClick={openNew} className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors">
             <Plus size={16} />เพิ่มโครงการ
           </button>
         }
@@ -150,7 +150,7 @@ export default function ProjectsPage() {
 
       {/* Table */}
       <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
-        <table className="w-full">
+        <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
               <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ID</th>
@@ -173,7 +173,7 @@ export default function ProjectsPage() {
               </td></tr>
             )}
             {filtered.map((p, i) => (
-              <tr key={p.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+              <tr key={p.id} className="transition-colors">
                 <td className="px-4 py-3 text-accent-blue text-sm font-mono">{p.id}</td>
                 <td className="px-4 py-3 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</td>
                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{p.developer}</td>
@@ -244,7 +244,7 @@ export default function ProjectsPage() {
         )}
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.name} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || !form.name} className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

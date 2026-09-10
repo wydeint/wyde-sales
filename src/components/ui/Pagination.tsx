@@ -3,7 +3,7 @@
 /**
  * Table pager — extracted from the Customers page, which was the only screen
  * that had one. The pages without it rendered every row at once: Payments was
- * 908 rows and 82 viewport-heights tall, Origin Pool 1,000, Wyde Clients 968.
+ * 908 rows and 82 viewport-heights tall, Origin Pool 1,000, Job Registry 968.
  *
  * Render it directly under a table, inside the same bordered wrapper, so the
  * count line reads as part of the table rather than as loose page furniture.

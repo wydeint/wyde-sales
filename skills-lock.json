@@ -79,6 +79,12 @@
       "skillPath": "skills/eve/SKILL.md",
       "computedHash": "746945a30f88639247b6dd2b9a1e8f74a7ec3cfedcefc09f3bd13c466b17a04f"
     },
+    "frontend-design": {
+      "source": "anthropics/claude-plugins-official",
+      "sourceType": "github",
+      "skillPath": "plugins/frontend-design/skills/frontend-design/SKILL.md",
+      "computedHash": "106acf230014cbb43ca34e6410371321b56ca742f9ee0442e8ec05bf02eb0384"
+    },
     "knowledge-update": {
       "source": "vercel/vercel-plugin",
       "sourceType": "github",

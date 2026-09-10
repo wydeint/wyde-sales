@@ -77,6 +77,7 @@
   --input-bg: rgba(255, 255, 255, 0.70);
   --hover-bg: rgba(99, 102, 241, 0.07);
   --active-bg: rgba(99, 102, 241, 0.13);
+  --th-bg: rgba(99, 102, 241, 0.11);
   --divider: rgba(199, 210, 254, 0.35);
   --text-1: #1e1b4b;
   --text-2: #4c5a7a;
@@ -103,27 +104,35 @@
   --radius-lg: 18px;
 }
 
-/* Dark — Elevated Dark */
+/* Dark — Neutral Grey
+   Was indigo-tinted throughout (#0e0b1e page, #1a1530 cards, slate-blue text).
+   Every surface and text grey below is the SAME RELATIVE LUMINANCE as the
+   colour it replaced, with the hue taken out — so the elevation ladder and
+   every contrast ratio that was verified against the old palette still hold
+   exactly, and this stays a colour change rather than a legibility change.
+   Accents keep their hue: they mark state and interaction, and greying them
+   would remove meaning, not tint. */
 .dark {
   color-scheme: dark;
-  --bg-gradient: linear-gradient(135deg, #0e0b1e 0%, #090d18 50%, #130b1f 100%);
-  --glass-bg: #221c3a;
+  --bg-gradient: linear-gradient(135deg, #0e0e0e 0%, #0d0d0d 50%, #0f0f0f 100%);
+  --glass-bg: #202020;
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0,0,0,0.3);
-  --sidebar-bg: rgba(10, 8, 20, 0.96);
+  --sidebar-bg: rgba(10, 10, 10, 0.96);
   --sidebar-border: rgba(255, 255, 255, 0.07);
   --input-bg: rgba(255, 255, 255, 0.07);
   --hover-bg: rgba(255, 255, 255, 0.07);
   --active-bg: rgba(99, 102, 241, 0.20);
+  --th-bg: rgba(255, 255, 255, 0.06);
   --divider: rgba(255, 255, 255, 0.09);
-  --text-1: #f1f5f9;
-  --text-2: #94a3b8;
-  --text-3: #7d8fa8;   /* ≥4.5:1 on dark glass — WCAG AA */
+  --text-1: #f4f4f4;
+  --text-2: #a2a2a2;
+  --text-3: #8d8d8d;   /* 5.4:1 on --card-bg — WCAG AA */
   --tooltip-bg: #ffffff;
   --tooltip-fg: #000000;
-  --card-bg: #1a1530;
+  --card-bg: #191919;
   --card-border: rgba(255,255,255,0.10);
-  --panel-bg: #1e1838;
+  --panel-bg: #1d1d1d;
   --accent: #818cf8;
   --accent-green: #34d399;
   --accent-purple: #a78bfa;
@@ -233,8 +242,8 @@ html:not(.dark) .text-\[\#484f58\] { color: var(--text-3) !important; }
 
 /* Text — dark mode: lift near-invisible greys to readable level */
 /* lift near-invisible greys to WCAG AA level on dark glass */
-.dark .text-\[\#484f58\] { color: #7d8fa8 !important; }
-.dark .text-\[\#8b949e\] { color: #94a3b8 !important; }
+.dark .text-\[\#484f58\] { color: #8d8d8d !important; }
+.dark .text-\[\#8b949e\] { color: #a2a2a2 !important; }
 
 /* Table rows */
 html:not(.dark) thead tr {
@@ -287,8 +296,8 @@ html:not(.dark) thead tr {
 /* Native select dark-mode fix — must use solid colors; rgba/transparent fails in OS-rendered dropdown */
 .dark select option,
 .dark .field-input option {
-  background-color: #0e0b1e;
-  color: #f1f5f9;
+  background-color: #101010;
+  color: #f4f4f4;
 }
 
 /* iOS date/number input — force correct color scheme so text is readable */
@@ -320,6 +329,10 @@ input[type="date"], input[type="number"] { color-scheme: light; }
      shape now — the rounded rectangle — so this matches --radius-sm instead. */
   border-radius: var(--radius-sm) !important;
   font-weight: 600 !important;
+  /* ขนาดตัวอักษรของปุ่มอยู่ที่นี่ที่เดียว เหมือน .btn-util ที่กำหนดไว้แต่แรก —
+     ทุก call site เคยเขียน text-sm (14px ของ Tailwind ซึ่งไม่มีในสเกลเรา) ทับไว้
+     24 จุด ทำให้ปุ่มเป็นขนาดเดียวในแอปที่หลุดสเกล · แก้ 2026-09-08 */
+  font-size: var(--fs-body);
 }
 .btn-primary:hover:not(:disabled),
 .btn-green:hover:not(:disabled),
@@ -348,7 +361,9 @@ input[type="date"], input[type="number"] { color-scheme: light; }
      --chart-1  first series (and the only colour a single-series chart uses)
      --chart-2  second series
 
-   Verified with the dataviz validator against surfaces #eef1fc / #1a1530:
+   Verified with the dataviz validator against surfaces #eef1fc / #1a1530.
+   The dark surface is now #191919 — the same luminance with the hue removed,
+   so the measured ratios below carry over unchanged:
    CVD ΔE 32.2, normal-vision ΔE 35.1, both modes. --chart-2 sits at 2.83:1 on
    the light surface, so any chart using it must keep its value labels visible.
 
@@ -395,6 +410,27 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 }
 .tbl-scroll > table { min-width: 640px; }
 
+/* ── Row treatment: one banded header, plain rows, hover ───────────────
+   Zebra striping was doing two jobs badly. It shaded every other row with
+   --hover-bg, which is also the hover colour, so pointing at an odd row
+   changed nothing — half the table had no hover at all. And the stripe is
+   the loudest thing on screen in a table whose real signals are quiet
+   (an overdue tint, a selected row), so those had to shout over it.
+   Two pages had also hardcoded rgba(0,0,0,0.015) as the stripe, which is
+   invisible on a dark ground.
+
+   The header carries the one fill. Rows are the card's own surface, told
+   apart by a divider, and the tint is spent where it means something: the
+   row under the cursor. A row with its own meaning still sets `background`
+   inline — an inline value outranks the hover rule, which is what keeps an
+   overdue or selected row reading as itself while the pointer is on it.
+────────────────────────────────────────────────────────────────────── */
+.tbl-rows thead tr { background: var(--th-bg); }
+.tbl-rows tbody tr { border-bottom: 1px solid var(--divider); }
+.tbl-rows tbody tr:last-child { border-bottom: none; }
+.tbl-rows tbody tr { transition: background 120ms ease; }
+.tbl-rows tbody tr:hover { background: var(--hover-bg); }
+
 /* ── Standard table typography ─────────────────────────────────────────
    Single source of truth for all .tbl-scroll tables.
    Inline text-xs / text-sm classes on individual cells still override
@@ -408,6 +444,36 @@ input[type="date"], input[type="number"] { color-scheme: light; }
   white-space: nowrap;
 }
 .tbl-scroll tbody td { padding: 10px 16px; }
+
+/* Column headings should sit behind the data, not compete with it. The shared
+   rule sets size and weight but no colour, so a bare <th> inherits --text-1 and
+   renders exactly as dark as the numbers underneath it. */
+.th-muted { color: var(--text-3); }
+
+/* Dense variant for data-entry grids. The default 16px side padding is right
+   for a reading table, but on an eight-column entry sheet it spends 256px of
+   the row on padding alone and pushes the last columns off screen. */
+.tbl-dense thead th,
+.tbl-dense tbody td,
+.tbl-dense tfoot td { padding-left: 8px; padding-right: 8px; }
+
+/* The shared padding rule above covers `thead th` and `tbody td` only, so a
+   summary row got no vertical padding at all and its text sat jammed against
+   the border above it while every data row breathed. Give tfoot the same
+   rhythm as the body and centre it, so the totals line up with the numbers
+   they add up. Scoped to .tbl-dense on purpose: the Revenue table sets its own
+   padding on the tfoot cells, and this selector would outrank those classes. */
+.tbl-dense tfoot td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: middle;
+}
+
+/* Vertical counterpart, for a long table inside a drawer. The customer drawer
+   lists one row per room and the largest customer holds 145 of them; at the
+   default 10px top and bottom that table alone runs about 7,700px. */
+.tbl-tight thead th,
+.tbl-tight tbody td { padding-top: 6px; padding-bottom: 6px; }
 
 /* No sticky column headers here, deliberately.
    `position: sticky` on a th anchors to the nearest scrolling ancestor, and for
@@ -458,6 +524,11 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .text-page-title    { font-size: var(--fs-page-title); font-weight: 700; line-height: var(--lh-page-title); letter-spacing: var(--ls-page-title); }
 .text-section-title { font-size: var(--fs-section);    font-weight: 600; line-height: var(--lh-section);    letter-spacing: var(--ls-section); }
 .text-card-title    { font-size: var(--fs-card-title); font-weight: 600; line-height: 1.3; }
+/* The body step had every other class in the scale but its own — so anything
+   that wanted 13px reached for Tailwind's text-sm (14px), a size the system
+   does not define. That is how the Cost page ended up with card rows 1px
+   larger than the tables beside them. */
+.text-body          { font-size: var(--fs-body);       line-height: var(--lh-body, 1.5); }
 .text-body-strong   { font-size: var(--fs-body);       font-weight: 600; line-height: 1.4; }
 .text-kpi-number    { font-size: var(--fs-kpi);        font-weight: 700; line-height: var(--lh-kpi);        letter-spacing: -0.01em; }
 /* Money inside a KPI card. A baht figure is 3-4x wider than the 2-3 digit count
@@ -468,6 +539,11 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .text-label-upper   { font-size: var(--fs-label);      font-weight: 600; line-height: 1.3;                  letter-spacing: var(--ls-label); text-transform: uppercase; }
 .text-label         { font-size: var(--fs-label);      line-height: 1.3; }
 .text-micro         { font-size: var(--fs-micro);      line-height: 1.3; }
+/* --fs-caption existed as a token with no class to reach it. A class that does
+   not exist sets nothing, and body declares no font-size, so `text-caption`
+   silently rendered at the browser default 16px instead of 12 — which is how
+   the team card ended up looking oversized next to every other page. */
+.text-caption       { font-size: var(--fs-caption);    line-height: var(--lh-caption); }
 
 /* ══════════════════════════════════════════
    Page layout

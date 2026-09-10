@@ -4,6 +4,8 @@ import { calcB2BInstallments, calcB2BSingleInstallment, calcB2CInstallments } fr
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
+import JobNote from '@/components/ui/JobNote'
 import {
   Search, X, ChevronRight, ChevronDown, Pencil, Trash2, Loader2, Plus,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart, AlertTriangle, Copy,
@@ -18,9 +20,12 @@ import { generateLineMsg, type LineJob } from '@/lib/lineMessage'
 import { isAwaitingCollection, isOverdueCollection, daysSinceDelivery, CHASE_AFTER_DAYS } from '@/lib/collection'
 import DateInput from '@/components/ui/DateInput'
 import { baht, bahtShort } from '@/lib/money'
-import { appUserId } from '@/lib/currentUser'
 import { showAlert, showConfirm } from '@/components/ui/dialog'
+import { deleteJobCascade } from '@/lib/deleteJob'
 import { netReceived } from '@/lib/voucher'
+import { cancelJob, deliverJob } from '@/lib/jobLifecycle'
+import { compareRoom } from '@/lib/utils'
+import { exVatOf, incVatOf } from '@/lib/procurement'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -111,10 +116,12 @@ interface FullJob {
   actual_deliver_date: string | null
   sales_name: string
   payment_plan_type: string | null
+  work_type: string | null
   work_days: number | null
   order_date: string | null
   contract_date: string | null
   expected_finish_date: string | null
+  notes: string | null
   work_start_date: string | null
   warranty_end: string | null
   installments: Installment[]
@@ -252,7 +259,12 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherAmount, setVoucherAmount] = useState(0)
   const [b2bPlan, setB2bPlan] = useState('po_bill')
-  const [b2bPoDate, setB2bPoDate] = useState(todayStr())
+  // Only B2B+RPT has booking date = PO date = start date. B2B+N-RPT does not:
+  // that work often begins before the PO arrives, so its start date is a real
+  // separate fact and must stay hand-entered. Prefilling from order_date is
+  // right for RPT and would be a guess dressed as data for N-RPT.
+  const [b2bPoDate, setB2bPoDate] = useState(
+    job.work_type === 'RPT' ? (job.order_date || todayStr()) : todayStr())
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(todayStr())
@@ -294,7 +306,19 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
       customer_type: clientType,
       payment_plan_type: clientType === 'B2C' ? plan : isSingleB2B ? 'po_bill' : String(b2bCount),
       work_days: workDays,
-      ...(isBackfill ? {} : { work_start_date: isSingleB2B ? b2bPoDate : (firstInst?.trigger ? paidDate : null) }),
+      // The backfill guard exists because a B2C trigger writes *today's* payment
+      // date, which would be wrong on a room delivered months ago. The PO-date
+      // field is not today's date — the person typed the date work actually
+      // began — so po_bill writes it either way. Skipping it left 134 delivered
+      // B2B rooms with no start date at all, and no payment will ever supply
+      // one: the po_bill instalment carries is_work_trigger = false by design.
+      ...(isSingleB2B
+        ? { work_start_date: b2bPoDate }
+        : isBackfill ? {} : { work_start_date: firstInst?.trigger ? paidDate : null }),
+      // วันจอง = วันรับ PO only on RPT. On N-RPT the field above is the start
+      // date, which can precede the PO, so it must not be copied into order_date.
+      ...(isSingleB2B && job.work_type === 'RPT' && !job.order_date
+        ? { order_date: b2bPoDate } : {}),
     }).eq('id', job.id)
     await supabase.from('payments').delete().eq('job_id', job.id)
     await supabase.from('payments').insert(preview.map((p, i) => ({
@@ -381,7 +405,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                   {plan === 'C' && (
                     <div className="mt-3">
                       <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดมัดจำ (บาท)</label>
-                      <input type="number" value={depositAmount || ''} onChange={e => setDepositAmount(Number(e.target.value))}
+                      <MoneyInput value={depositAmount ? String(depositAmount) : ''} onChange={v => setDepositAmount(Number(v) || 0)} ariaLabel="ยอดมัดจำ" 
                         placeholder={`เช่น ${Math.round(total * 0.1).toLocaleString()}`}
                         className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                     </div>
@@ -486,7 +510,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับจริง (฿)</label>
-                  <input type="number" value={firstPaidAmount || ''} onChange={e => setFirstPaidAmount(+e.target.value)}
+                  <MoneyInput value={firstPaidAmount ? String(firstPaidAmount) : ''} onChange={v => setFirstPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับจริง" 
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle}
                     placeholder={String(firstInst?.amount || 0)} />
                 </div>
@@ -519,8 +543,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                       <input type="text" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
                         placeholder="รหัส Voucher"
                         className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
-                      <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
-                        placeholder="ยอดส่วนลด (บาท)" inputMode="numeric"
+                      <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="ยอดส่วนลด"
+                        placeholder="ยอดส่วนลด (บาท)"
                         className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                       {voucherAmount > 0 && firstInst && (
                         <p className="text-micro" style={{ color: 'var(--text-3)' }}>
@@ -657,7 +681,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับ (฿)</label>
-              <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
+              <MoneyInput value={paidAmount ? String(paidAmount) : ''} onChange={v => setPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับ"
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle} placeholder="0" />
             </div>
             <div>
@@ -693,7 +717,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
                   </div>
                   <div>
                     <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดส่วนลด (฿)</label>
-                    <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
+                    <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="ยอดส่วนลด"
                       placeholder="0"
                       className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold text-value"
                       style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)' }} />
@@ -753,37 +777,9 @@ function QuickDeliverModal({ job, onClose, onSaved }: { job: FullJob; onClose: (
   async function save() {
     if (!deliverDate) return
     setSaving(true); setError('')
-    const wEnd = new Date(deliverDate)
-    wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
-    const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
-    const commissionMonth = deliverDate.slice(0, 7) + '-01'
-
-    const { error: e1 } = await supabase.from('jobs').update({
-      actual_deliver_date: deliverDate,
-      working_status: 'ส่งมอบแล้ว',
-      // Handing a room over closes the deal. Without this the job kept whatever
-      // crm_stage it had — JOB-1107 was delivered while still reading จอง on the
-      // Prospect card, because only working_status moved.
-      crm_stage: 'closed',
-      commission_month: commissionMonth,
-    }).eq('id', job.id)
-    if (e1) { setError(e1.message); setSaving(false); return }
-
-    const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
-    // Upsert on the id we now supply, and read the error. These two call sites
-    // discarded it, which is why a NOT NULL violation on every insert went
-    // unnoticed for 578 handovers.
-    const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
-    if (eHO) { setError('handovers: ' + eHO.message); setSaving(false); return }
-
-    await supabase.from('warranties').upsert({
-      // job_id, not just the customer: a room ordered twice shares one customer
-      // record, and a warranty without a job showed up on both jobs.
-      id: `WAR-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id,
-      room: job.room_no, handover_date: deliverDate, warranty_start: deliverDate,
-      warranty_end: wEndStr, warranty_months: warrantyMonths, status: 'active',
-    }, { onConflict: 'id' })
-
+    const res = await deliverJob(supabase, job, { deliverDate, warrantyMonths })
+    if (!res.ok) { setError(res.error!); setSaving(false); return }
+    if (res.warning) setError(res.warning)
     setSaving(false); onSaved(); onClose()
   }
 
@@ -848,35 +844,12 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
 
   async function save() {
     setSaving(true)
-    const wEnd = new Date(deliverDate)
-    wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
-    const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
-    const commissionMonth = deliverDate.slice(0, 7) + '-01'
-    await supabase.from('jobs').update({
-      actual_deliver_date: deliverDate,
-      working_status: 'ส่งมอบแล้ว',
-      // Handing a room over closes the deal. Without this the job kept whatever
-      // crm_stage it had — JOB-1107 was delivered while still reading จอง on the
-      // Prospect card, because only working_status moved.
-      crm_stage: 'closed',
-      commission_month: commissionMonth,
-    }).eq('id', job.id)
-    if (markFinalPaid && finalInst) {
-      await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate, paid_amount: finalPaidAmount }).eq('id', finalInst.id)
-    }
-    const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
-    // Upsert on the id we now supply, and read the error. These two call sites
-    // discarded it, which is why a NOT NULL violation on every insert went
-    // unnoticed for 578 handovers.
-    const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
-    if (eHO) { await showAlert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
-    await supabase.from('warranties').upsert({
-      // job_id, not just the customer: a room ordered twice shares one customer
-      // record, and a warranty without a job showed up on both jobs.
-      id: `WAR-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id,
-      room: job.room_no, handover_date: deliverDate, warranty_start: deliverDate,
-      warranty_end: wEndStr, warranty_months: warrantyMonths, status: 'active',
-    }, { onConflict: 'id' })
+    const res = await deliverJob(supabase, job, {
+      deliverDate, warrantyMonths,
+      finalInstalment: markFinalPaid && finalInst ? { id: finalInst.id, paidAmount: finalPaidAmount } : null,
+    })
+    if (!res.ok) { await showAlert(res.error!); setSaving(false); return }
+    if (res.warning) await showAlert(res.warning)
     setSaving(false); onSaved(); onClose()
   }
 
@@ -921,7 +894,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
               {markFinalPaid && (
                 <div>
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับจริง (฿)</label>
-                  <input type="number" value={finalPaidAmount || ''} onChange={e => setFinalPaidAmount(+e.target.value)}
+                  <MoneyInput value={finalPaidAmount ? String(finalPaidAmount) : ''} onChange={v => setFinalPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับจริง"
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold"
                     style={inputStyle} placeholder="0" />
                 </div>
@@ -962,14 +935,14 @@ function RevenueCard({ job, onUpdated }: {
   function handleExChange(v: string) {
     setExVat(v)
     const n = parseFloat(v)
-    if (!isNaN(n) && n > 0) setIncVat(String(Math.round(n * 1.07)))
+    if (!isNaN(n) && n > 0) setIncVat(String(incVatOf(n)))
     else setIncVat('')
   }
 
   function handleIncChange(v: string) {
     setIncVat(v)
     const n = parseFloat(v)
-    if (!isNaN(n) && n > 0) setExVat(String(Math.round(n / 1.07)))
+    if (!isNaN(n) && n > 0) setExVat(String(exVatOf(n)))
     else setExVat('')
   }
 
@@ -992,13 +965,13 @@ function RevenueCard({ job, onUpdated }: {
         <div className="space-y-2">
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา ex. VAT (บาท)</label>
-            <input type="number" value={exVat} onChange={e => handleExChange(e.target.value)}
+            <MoneyInput value={exVat} onChange={handleExChange} ariaLabel="ราคา ex VAT"
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={inputStyle} placeholder="0" />
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา inc. VAT (บาท)</label>
-            <input type="number" value={incVat} onChange={e => handleIncChange(e.target.value)}
+            <MoneyInput value={incVat} onChange={handleIncChange} ariaLabel="ราคา inc VAT"
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={inputStyle} placeholder="0" />
           </div>
@@ -1125,7 +1098,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
         className="w-full px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
         style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       <div className="flex gap-2">
-        <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="ยอด"
+        <MoneyInput value={editAmount} onChange={setEditAmount} ariaLabel="ยอด" placeholder="ยอด"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
         <DateInput value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
@@ -1163,7 +1136,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
         {/* Amount chip */}
         {inst.status === 'paid' && editingAmount ? (
           <div className="flex items-center gap-1">
-            <input type="number" value={amountVal} onChange={e => setAmountVal(e.target.value)}
+            <MoneyInput value={amountVal} onChange={setAmountVal} ariaLabel="ยอด"
               onKeyDown={e => { if (e.key === 'Enter') saveAmount(); if (e.key === 'Escape') setEditingAmount(false) }}
               autoFocus className="text-xs font-semibold w-24 px-2 py-0.5 rounded-[6px] focus:outline-none text-right"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--accent)', color: 'var(--accent-green)' }} />
@@ -1381,7 +1354,7 @@ function CancelModal({ onClose, onConfirm }: {
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>
               {cancelType === 'forfeit' ? 'ยอดที่ยึด (บาท)' : 'ยอดคืน (บาท)'}
             </label>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
+            <MoneyInput value={amount} onChange={setAmount} ariaLabel="ยอด" placeholder="0"
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
           </div>
@@ -1454,7 +1427,7 @@ function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo, onAdd
         className="w-full px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
         style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       <div className="flex gap-2">
-        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="ยอด (บาท)"
+        <MoneyInput value={amount} onChange={setAmount} ariaLabel="ยอด" placeholder="ยอด (บาท)"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
         <DateInput value={dueDate} onChange={e => setDueDate(e.target.value)}
@@ -1486,15 +1459,17 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
   const [cancelConfirmed, setCancelConfirmed] = useState(false)
   const [contractDateVal, setContractDateVal] = useState(initialJob.contract_date || '')
   const [expectedDateVal, setExpectedDateVal] = useState(initialJob.expected_finish_date || '')
+  const [editingOrder, setEditingOrder] = useState(false)
+  const [orderDateVal, setOrderDateVal] = useState(initialJob.order_date || '')
   const [editingContract, setEditingContract] = useState(false)
   const [editingExpected, setEditingExpected] = useState(false)
   useEffect(() => {
     setJob(initialJob)
     setContractDateVal(initialJob.contract_date || '')
-    setExpectedDateVal(initialJob.expected_finish_date || '')
+    setExpectedDateVal(initialJob.expected_finish_date || ''); setOrderDateVal(initialJob.order_date || '')
   }, [initialJob])
 
-  async function saveDateField(field: 'contract_date' | 'expected_finish_date', val: string) {
+  async function saveDateField(field: 'order_date' | 'contract_date' | 'expected_finish_date', val: string) {
     const v = val || null
     await supabase.from('jobs').update({ [field]: v }).eq('id', job.id)
     setJob(prev => ({ ...prev, [field]: v }))
@@ -1512,7 +1487,12 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
       const paidSorted = installments
         .filter(i => i.status === 'paid' && i.paid_date)
         .sort((a, b) => (a.paid_date || '').localeCompare(b.paid_date || ''))
-      const orderDate = paidSorted[0]?.paid_date || null
+      // วันขายเป็นค่าที่เซลล์กรอกเอง งานเก่าที่เพิ่งลงระบบขายไปตั้งนานแล้ว
+      // การเดาจากวันรับเงินงวดแรกจึงผิดตั้งแต่ต้น — และตัวที่แย่กว่าคือมัน
+      // **เขียนทับ**ทุกครั้งที่เปิดการ์ด ใครแก้ที่ Prospects ก็ถูกลบทิ้งเงียบๆ
+      // ตอนมีคนเปิดดูห้องนั้น (ห้องที่ยังไม่มีงวดจ่ายจะถูกลบเป็น null ด้วยซ้ำ)
+      // เดาให้ได้เฉพาะตอนที่ยังว่างจริงๆ เท่านั้น
+      const orderDate = raw.order_date || paidSorted[0]?.paid_date || null
       const revenue = raw.revenue_inc_vat || raw.revenue_ex_vat || 0
       let contractDate: string | null = null
       if (raw.customer_type === 'B2B') {
@@ -1595,6 +1575,11 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
+          {/* หมายเหตุของงาน — บนสุด เหนือตัวเลข และตำแหน่งเดียวกันทุกหน้า
+              ที่เปิดงานใบนี้ได้ ดู components/ui/JobNote.tsx */}
+          <JobNote jobId={job.id} value={job.notes}
+            onSaved={next => setJob(prev => ({ ...prev, notes: next }))} />
+
           {/* Revenue */}
           <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
 
@@ -1619,12 +1604,24 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
 
           {/* Dates */}
           <div className="grid grid-cols-3 gap-2">
-            {/* วันรับจอง / รับ PO — read-only */}
-            <div className="rounded-[8px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+            {/* วันรับจอง / รับ PO — กดเพื่อแก้
+                งานเก่าที่เพิ่งลงระบบขายไปนานแล้ว ระบบเดาให้ไม่ได้ เซลล์กรอกเอง
+                ทีละงาน และค่าที่กรอกจะไม่ถูกเขียนทับอีก — ดู reloadJob() */}
+            <div className="rounded-[8px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
+              onClick={() => !editingOrder && setEditingOrder(true)}>
               <p className="text-micro" style={{ color: 'var(--text-3)' }}>{job.customer_type === 'B2B' ? 'วันรับ PO' : 'วันรับจอง'}</p>
-              <p className="text-xs font-bold mt-1.5" style={{ color: job.order_date ? 'var(--text-1)' : 'var(--text-3)' }}>
-                {fmtDate(job.order_date)}
-              </p>
+              {editingOrder ? (
+                <DateInput value={orderDateVal} autoFocus
+                  onChange={e => setOrderDateVal(e.target.value)}
+                  onBlur={e => { saveDateField('order_date', e.target.value); setEditingOrder(false) }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('order_date', orderDateVal); setEditingOrder(false) } }}
+                  className="w-full text-xs font-semibold focus:outline-none mt-1"
+                  style={{ background: 'transparent', color: 'var(--text-1)', border: 'none' }} />
+              ) : (
+                <p className="text-xs font-bold mt-1.5" style={{ color: job.order_date ? 'var(--text-1)' : 'var(--text-3)' }}>
+                  {job.order_date ? fmtDate(job.order_date) : '+ ระบุ'}
+                </p>
+              )}
             </div>
             {/* วันทำสัญญา — click to edit */}
             <div className="rounded-[8px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
@@ -1643,10 +1640,12 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                 </p>
               )}
             </div>
-            {/* วันคาดเสร็จ — click to edit */}
+            {/* วันคาดส่งมอบ — click to edit. Was "วันคาดเสร็จ" here and in
+                JobDrawer only; Handover and Job Registry always said
+                วันคาดส่งมอบ, which is the word the team uses. */}
             <div className="rounded-[8px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
               onClick={() => !editingExpected && setEditingExpected(true)}>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันคาดเสร็จ</p>
+              <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันคาดส่งมอบ</p>
               {editingExpected ? (
                 <DateInput value={expectedDateVal} autoFocus
                   onChange={e => setExpectedDateVal(e.target.value)}
@@ -1654,16 +1653,31 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('expected_finish_date', expectedDateVal); setEditingExpected(false) } }}
                   className="w-full text-xs font-semibold focus:outline-none mt-1"
                   style={{ background: 'transparent', color: 'var(--text-1)', border: 'none' }} />
-              ) : (
-                <p className="text-xs font-bold mt-1.5" style={{ color: expectedDateVal ? 'var(--text-1)' : 'var(--text-3)' }}>
-                  {expectedDateVal ? fmtDate(expectedDateVal) : '+ ระบุ'}
-                </p>
-              )}
+              ) : (() => {
+                // Read through the shared formula (start date + work days), the
+                // same way Handover schedules the room — see JobDrawer for the
+                // full note. Showing only expected_finish_date here made the
+                // "60 วัน" choice in the payment-plan step look like it did
+                // nothing. Typing still wins: it writes expected_finish_date,
+                // which the formula prefers.
+                const derived = expectedDeliveryDate(job)
+                const shown = expectedDateVal || derived
+                return (
+                  <p className="text-xs font-bold mt-1.5" style={{ color: shown ? 'var(--text-1)' : 'var(--text-3)' }}>
+                    {shown ? fmtDate(shown) : '+ ระบุ'}
+                    {!expectedDateVal && derived && (
+                      <span className="font-normal ml-1" style={{ color: 'var(--text-3)' }}>
+                        · จาก {job.work_days ?? 60} วัน
+                      </span>
+                    )}
+                  </p>
+                )
+              })()}
             </div>
           </div>
 
           {isB2C && jobValue > 0 && hasPlan && (() => {
-            const fmtDiff = (v: number) => (v >= 0 ? '+' : '') + Math.abs(Math.round(v)).toLocaleString() + ' บาท'
+            const fmtDiff = (v: number) => (v >= 0 ? '+' : '') + baht(Math.abs(v)).slice(1) + ' บาท'
             // Planned mismatch (งวดรวมไม่ตรงมูลค่างาน).
             //
             // Silent once the money is in. A plan that does not sum to the deal
@@ -1690,7 +1704,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                       {over ? `แผนงวดเกินมูลค่างาน ${fmtDiff(plannedDiff)}` : `แผนงวดขาดมูลค่างาน ${fmtDiff(plannedDiff)}`}
                     </p>
                     <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
-                      แผนงวดรวม {Math.round(totalPlannedAmount).toLocaleString()} · มูลค่างาน {Math.round(jobValue).toLocaleString()} บาท · ต้องแก้ไขแผนงวดก่อนส่งมอบ
+                      แผนงวดรวม {baht(totalPlannedAmount).slice(1)} · มูลค่างาน {baht(jobValue).slice(1)} บาท · ต้องแก้ไขแผนงวดก่อนส่งมอบ
                     </p>
                   </div>
                 </div>
@@ -1708,7 +1722,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
                       {over ? `รับเงินเกินมูลค่างาน ${fmtDiff(paymentDiff)}` : `ยังรับเงินไม่ครบ ขาด ${fmtDiff(Math.abs(paymentDiff))}`}
                     </p>
                     <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>
-                      รับแล้ว {Math.round(totalPaidAmount).toLocaleString()} · มูลค่างาน {Math.round(jobValue).toLocaleString()} บาท{!over ? ' · ไม่สามารถส่งมอบได้หากยอดไม่ครบ' : ''}
+                      รับแล้ว {baht(totalPaidAmount).slice(1)} · มูลค่างาน {baht(jobValue).slice(1)} บาท{!over ? ' · ไม่สามารถส่งมอบได้หากยอดไม่ครบ' : ''}
                     </p>
                   </div>
                 </div>
@@ -1938,34 +1952,12 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
         <CancelModal
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
-            // The third copy of this cancel. The other two — Prospects and
-            // JobDrawer — both move the stage and the customer with it; this one
-            // changed only working_status, so a deal cancelled from My Deals
-            // stayed wherever it was on the Prospect board. Same omission, found
-            // by auditing every writer instead of the one that was reported.
-            const { error: cancelErr } = await supabase.from('jobs').update({
-              working_status: 'ยกเลิก',
-              crm_stage: 'lost',
-              cancel_type: type,
-              cancel_date: date || null,
-              cancel_amount: amount || null,
-              cancel_notes: notes || null,
-            }).eq('id', job.id)
-            if (cancelErr) { await showAlert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
-            if (job.customer_id) {
-              await supabase.from('customers').update({ status: 'lost' }).eq('id', job.customer_id)
-            }
-            if (amount > 0) {
-              await supabase.from('finance_entries').insert({
-                type: type === 'forfeit' ? 'income' : 'expense',
-                category: type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงินยกเลิก',
-                amount,
-                entry_date: date,
-                description: `${type === 'forfeit' ? 'ยึดเงินจอง' : 'คืนเงิน'}: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
-                ref_id: job.id,
-                created_by: await appUserId(supabase),
-              })
-            }
+            // One implementation for all three screens — this copy used to book
+            // a forfeited deposit as fresh income, double-counting money that
+            // was already banked when the booking instalment was paid.
+            const res = await cancelJob(supabase, job, { type, amount, date, notes })
+            if (!res.ok) { await showAlert(res.error!); return }
+            if (res.warning) await showAlert(res.warning)
             setShowCancel(false)
             onClose()
             onRefresh()
@@ -2006,10 +1998,13 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
   const planShort = !isDone && !isFullySettled(job)
     && job.revenue_inc_vat > 0 && job.plan_total < job.revenue_inc_vat - 1
 
+  // A delivered card used to be dimmed twice — opacity 0.7 on the whole card AND
+  // --text-3 on the room number — so the one thing you look a card up by was the
+  // least readable thing on it. The muted text colour alone says "finished".
   return (
     <div
       className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
-      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', opacity: isDone ? 0.7 : 1 }}
+      style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
       onClick={onClick}
@@ -2018,7 +2013,13 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="font-bold text-sm truncate" style={{ color: isDone ? 'var(--text-3)' : 'var(--text-1)' }}>{job.room_no}</p>
+            {/* The room number never shrinks. Both chips beside it are
+                flex-shrink-0, so it used to absorb the entire squeeze on its
+                own: in a 152px delivered card it got 10px of the 34px it
+                needed, and a card with a "งานที่ 2" chip got 0px — the number
+                vanished. The subtitle line below truncates instead; a cut
+                project name is still guessable, a cut room number is not. */}
+            <p className="font-bold text-sm flex-shrink-0" style={{ color: isDone ? 'var(--text-2)' : 'var(--text-1)' }}>{job.room_no}</p>
             {seqNo && seqNo > 1 && (
               <span className="text-micro font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
                 style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
@@ -2125,7 +2126,7 @@ export default function MyDealsPage() {
     setLoading(true)
     const { data } = await supabase
       .from('jobs')
-      .select('id, room_no, project_id, customer_name, customer_type, working_status, actual_deliver_date, work_start_date, work_days, order_date, contract_date, expected_finish_date, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount, line_notified_at)')
+      .select('id, room_no, project_id, customer_name, customer_type, work_type, payment_plan_type, working_status, actual_deliver_date, work_start_date, work_days, order_date, contract_date, expected_finish_date, notes, revenue_inc_vat, revenue_ex_vat, projects(name), sales:users!sales_id(name), installments:payments(id, installment_no, installment_name, amount, paid_amount, percentage, status, due_date, paid_date, is_work_trigger, is_final, channel, slip_url, receipt_url, voucher_code, voucher_amount, line_notified_at)')
       // Name the statuses we want rather than the ones we don't. The old pair
       // of .neq() calls became `working_status <> 'ยกเลิก'`, which is NULL —
       // not true — for the 50 prospect stubs that carry no status yet, so they
@@ -2184,8 +2185,11 @@ export default function MyDealsPage() {
 
   async function deleteJob(job: RoomJob) {
     if (!await showConfirm(`ลบงาน "${job.room_no}" (${job.customer_name || ''}) ?\nงวดชำระทั้งหมดจะถูกลบด้วย`)) return
-    await supabase.from('payments').delete().eq('job_id', job.id)
-    await supabase.from('jobs').delete().eq('id', job.id)
+    // ต้องรู้ผลก่อนจึงเอาการ์ดออกจากหน้าจอ — เดิมลบ payments แล้วลบ jobs โดยไม่
+    // เช็ค error แต่ `warranties` เป็น FK แบบ NO ACTION ที่บล็อกการลบ งานจึงยังอยู่
+    // ครบทั้งที่หน้าจอบอกว่าหาย ส่วนงวดชำระถูกลบไปแล้ว ดู lib/deleteJob.ts
+    const res = await deleteJobCascade(supabase, job.id)
+    if (!res.ok) { await showAlert(res.error!); return }
     setJobs(prev => prev.filter(j => j.id !== job.id))
     if (selectedJobId === job.id) { setSelectedJobId(null); setDrawerJob(null) }
   }
@@ -2226,10 +2230,12 @@ export default function MyDealsPage() {
       actual_deliver_date: raw.actual_deliver_date || null,
       sales_name: (raw as any).sales?.name || '',
       payment_plan_type: raw.payment_plan_type || null,
+      work_type: raw.work_type || null,
       work_days: raw.work_days || null,
       order_date: raw.order_date || null,
       contract_date: raw.contract_date || null,
       expected_finish_date: raw.expected_finish_date || null,
+      notes: raw.notes || null,
       work_start_date: raw.work_start_date || null,
       warranty_end: war?.warranty_end || null,
       package_type: raw.package_type || null,
@@ -2277,7 +2283,7 @@ export default function MyDealsPage() {
   const projectOptions = useMemo(() => {
     const seen = new Map<string, string>()
     jobs.forEach(j => { if (j.project_id && !seen.has(j.project_id)) seen.set(j.project_id, j.project_name) })
-    return Array.from(seen.entries()).sort((a, b) => a[1].localeCompare(b[1]))
+    return Array.from(seen.entries()).sort((a, b) => a[1].localeCompare(b[1], 'th'))
   }, [jobs])
 
 
@@ -2323,6 +2329,12 @@ export default function MyDealsPage() {
       if (j.actual_deliver_date) grp.done.push(j)
       else grp.active.push(j)
     }
+    // Rooms inside a project had no order — they arrived however Postgres
+    // returned them, so `.order('room_no')` on the server put 1839 before 222.
+    for (const g of map.values()) {
+      g.active.sort((x, y) => compareRoom(x.room_no, y.room_no))
+      g.done.sort((x, y) => compareRoom(x.room_no, y.room_no))
+    }
     return Array.from(map.entries())
       .map(([pid, g]) => ({ pid, ...g }))
       .sort((a, b) => b.active.length - a.active.length)
@@ -2335,7 +2347,9 @@ export default function MyDealsPage() {
       {/* Header */}
       <PageHeader
         title="My Deals"
-        subtitle={loading ? undefined : `${totalActive} งานที่กำลังดำเนินการ · ${grouped.length} โครงการ`}
+        // Same as Prospects: the counts are in the cards below, so the subtitle
+        // says what the page is for instead of repeating them.
+        subtitle="งานที่ปิดการขายแล้ว · ติดตามการชำระเงินและการส่งมอบ"
         className="mb-5"
       />
 
@@ -2506,9 +2520,14 @@ export default function MyDealsPage() {
                 )}
               </div>
 
-              {/* Active room cards */}
+              {/* Active room cards. A minimum column width, not a fixed column
+                  count: the old md:2 / xl:3 / 2xl:4 ladder kept the column count
+                  and squeezed the cards instead, which is what pushed the room
+                  number out of them. Columns now drop when they no longer fit.
+                  Delivered cards below use the same rule at 200px — still
+                  smaller, since they are done, but never small enough to break. */}
               {active.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]">
                   {active.map(j => (
                     <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} onDelete={() => deleteJob(j)} seqNo={seqMap[j.id]} />
                   ))}
@@ -2519,7 +2538,7 @@ export default function MyDealsPage() {
                   a delivered stage, hiding the only matches behind a collapsed
                   toggle would show an empty project, so open it. */}
               {done.length > 0 && filterStage && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(200px,100%),1fr))]">
                   {done.map(j => (
                     <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} onDelete={() => deleteJob(j)} seqNo={seqMap[j.id]} />
                   ))}
@@ -2535,7 +2554,7 @@ export default function MyDealsPage() {
                     ส่งมอบแล้ว {done.length} ห้อง
                   </button>
                   {doneExpanded[pid] && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-2">
+                    <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(200px,100%),1fr))] mt-2">
                       {done.map(j => (
                         <RoomCard key={j.id} job={j} onClick={() => openDrawer(j.id)} onDelete={() => deleteJob(j)} seqNo={seqMap[j.id]} />
                       ))}

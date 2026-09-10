@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { requireWriter } from '@/lib/serverAuth'
 
 function getDriveClient() {
   const auth = new google.auth.OAuth2(
@@ -30,6 +31,9 @@ export async function DELETE(req: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const denied = await requireWriter()
+    if (denied) return denied
 
     const { job_file_id, drive_file_id } = await req.json()
     if (!job_file_id) return NextResponse.json({ error: 'missing job_file_id' }, { status: 400 })

@@ -4,6 +4,7 @@ import DateInput from '@/components/ui/DateInput'
 import FileAttach from '@/components/ui/FileAttach'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
 import { crmStage } from '@/lib/status'
 import { Spinner, EmptyState } from '@/components/ui/StateUI'
 import { useRouter } from 'next/navigation'
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react'
 import { showAlert } from '@/components/ui/dialog'
 import { netReceived } from '@/lib/voucher'
+import { deliverJob } from '@/lib/jobLifecycle'
 
 // ─── Types ────────────────────────────────────────────────
 interface WidgetData {
@@ -198,7 +200,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
   )
 }
 
-// ─── Wyde Clients Search Sheet ─────────────────────────────
+// ─── Job Registry Search Sheet ─────────────────────────────
 function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const supabase = createClient()
   const [search, setSearch] = useState('')
@@ -237,7 +239,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   return (
-    <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="Wyde Clients" icon={Briefcase}>
+    <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="Job Registry" icon={Briefcase}>
       <div className="p-4">
         <div className="relative mb-4">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
@@ -307,7 +309,9 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
     setLoading(true)
     const { data, error } = await supabase
       .from('customers')
-      .select('id, customer_name, phone, interested_room, status, project_id, created_at, jobs(notes)')
+      // customers.status is gone — stage lives on the job. Asking for it made
+      // PostgREST reject the query and this sheet returned nothing at all.
+      .select('id, customer_name, phone, interested_room, project_id, created_at, jobs(crm_stage, notes)')
       .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%,interested_room.ilike.%${q}%`)
       .order('customer_name')
       .limit(12)
@@ -334,7 +338,9 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
         {loading && <p className="text-center py-4 text-sm" style={t2}>กำลังค้นหา...</p>}
         <div className="space-y-2">
           {results.map((c: any) => {
-            const st = crmStage(c.status)
+            // Stage belongs to the job. A prospect holds one; take the first
+            // that carries a stage, the way the register's drawer does.
+            const st = crmStage((c.jobs as any[] | null)?.find(j => j?.crm_stage)?.crm_stage || 'new')
             return (
               <div key={c.id} style={sheetCard}>
                 <div className="flex justify-between items-start gap-2 mb-1">
@@ -601,7 +607,6 @@ function QuickPaySheet({ open, onClose, jobs }: {
       await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ', crm_stage: 'closed' }).eq('id', selectedJob.id)
       const { data: jobData } = await supabase.from('jobs').select('customer_id').eq('id', selectedJob.id).maybeSingle()
       if (jobData?.customer_id) {
-        await supabase.from('customers').update({ status: 'closed' }).eq('id', jobData.customer_id)
       }
     }
     setSaving(false)
@@ -711,7 +716,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs mb-2 block" style={t3}>ยอดที่รับจริง (฿)</label>
-              <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
+              <MoneyInput value={paidAmount ? String(paidAmount) : ''} onChange={v => setPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับจริง" 
                 className="w-full rounded-[8px] px-4 py-3 text-sm focus:outline-none font-semibold"
                 style={sheetInputStyle} placeholder="0" />
             </div>
@@ -746,7 +751,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
                 </div>
                 <div>
                   <label className="text-xs mb-1 block" style={t3}>มูลค่า (฿)</label>
-                  <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(+e.target.value)}
+                  <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="มูลค่า Voucher" 
                     placeholder="0" className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                     style={sheetInputStyle} />
                 </div>
@@ -1034,35 +1039,25 @@ function DeliverSheet({ open, onClose, jobs }: {
   async function saveDelivery() {
     if (!selectedJob) return
     setSaving(true)
-    const { data: existing } = await supabase.from('handovers')
-      .select('id').eq('job_id', selectedJob.id).maybeSingle()
-    if (existing) {
-      await supabase.from('handovers').update({
-        work_status: 'delivered',
-        delivery_date: deliveryDate,
-        // commission_triggered was dropped: false on all 580 rows and read by
-        // nothing. Commission is derived from the job's delivery, not a flag
-        // set by whichever screen happened to record it.
-        delivery_file_url: fileUrl || null,
-      }).eq('job_id', selectedJob.id)
-    } else {
-      await supabase.from('handovers').insert({
-        id: `HOV-${selectedJob.id}`,
-        job_id: selectedJob.id,
-        status: 'completed',
-        work_status: 'delivered',
-        delivery_date: deliveryDate,
-        // commission_triggered was dropped: false on all 580 rows and read by
-        // nothing. Commission is derived from the job's delivery, not a flag
-        // set by whichever screen happened to record it.
-        delivery_file_url: fileUrl || null,
-      })
-    }
-    // The fourth handover path, and the last one that was not closing the stage.
-    await supabase.from('jobs').update({ working_status: 'ส่งมอบแล้ว', crm_stage: 'closed' }).eq('id', selectedJob.id)
+    // JobOption carries only what the picker shows; the shared writer needs the
+    // customer and project to stamp on the handover and warranty rows.
+    const { data: jobRow } = await supabase.from('jobs')
+      .select('id, customer_id, project_id, room_no, customer_name')
+      .eq('id', selectedJob.id).maybeSingle()
+
+    // Quick Mode used to write neither actual_deliver_date, commission_month nor
+    // a warranty, and used its own `HOV-` id — a room delivered here dropped out
+    // of Warranty and Commission entirely. Same writer as every other screen now;
+    // warranty is created automatically at the standard 6 months, editable later
+    // from the Warranty page, so Quick Mode stays one tap.
+    const res = await deliverJob(supabase, jobRow || { id: selectedJob.id }, {
+      deliverDate: deliveryDate,
+      deliveryFileUrl: fileUrl || null,
+    })
     setSaving(false)
+    if (!res.ok) { await showAlert(res.error!); return }
     resetAndClose()
-    await showAlert('บันทึกส่งมอบเรียบร้อย ✅')
+    await showAlert(res.warning || 'บันทึกส่งมอบเรียบร้อย ✅')
   }
 
   function resetAndClose() {
@@ -1176,11 +1171,15 @@ function QuickHandoverSheet({ open, onClose, jobs }: {
 
   async function updateStatus(jobId: string, status: string) {
     setSaving(jobId)
+    // `HO-`, same id scheme as deliverJob — with `HOV-` this row and the one
+    // written at delivery were two different rows for the same job. Insert only
+    // when there is nothing there: a plain upsert would reset `status` back to
+    // 'scheduled' on a job that has already been handed over.
     const { data: ex } = await supabase.from('handovers').select('id').eq('job_id', jobId).maybeSingle()
     if (ex) {
-      await supabase.from('handovers').update({ work_status: status }).eq('job_id', jobId)
+      await supabase.from('handovers').update({ work_status: status }).eq('id', ex.id)
     } else {
-      await supabase.from('handovers').insert({ id: `HOV-${jobId}`, job_id: jobId, work_status: status, status: 'scheduled' })
+      await supabase.from('handovers').insert({ id: `HO-${jobId}`, job_id: jobId, work_status: status, status: 'scheduled' })
     }
     setJobStatuses(prev => ({ ...prev, [jobId]: status }))
     setSaving(null)
@@ -1300,17 +1299,25 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
       if (!user) return
       const { data: userData } = await supabase.from('users').select('id').eq('email', user.email!).maybeSingle()
       if (!userData) { setLoading(false); return }
-      const { data } = await supabase.from('commissions')
-        .select('id, job_id, amount, status, created_at, jobs:job_id(customer_name, room_no, projects:project_id(name))')
+      // Commission lives on the job — jobs.commission_amount / _status — and is
+      // what the Commission page reads. This sheet used to query a `commissions`
+      // table with columns it does not have (job_id, amount, sales_id), so
+      // PostgREST rejected it; the table also holds zero rows, so even a
+      // corrected query against it would have shown an empty sheet forever.
+      const { data } = await supabase.from('jobs')
+        .select('id, customer_name, room_no, commission_amount, commission_status, order_date, projects(name)')
         .eq('sales_id', userData.id)
-        .order('created_at', { ascending: false })
+        .neq('working_status', 'ยกเลิก')
+        .gt('commission_amount', 0)
+        .order('order_date', { ascending: false })
         .limit(20)
       const list = data || []
       setItems(list)
+      const amt = (c: any) => c.commission_amount || 0
       setSummary({
-        total: list.reduce((s: number, c: any) => s + (c.amount || 0), 0),
-        pending: list.filter((c: any) => c.status === 'pending').reduce((s: number, c: any) => s + (c.amount || 0), 0),
-        approved: list.filter((c: any) => c.status === 'approved').reduce((s: number, c: any) => s + (c.amount || 0), 0),
+        total: list.reduce((s: number, c: any) => s + amt(c), 0),
+        pending: list.filter((c: any) => (c.commission_status || 'pending') === 'pending').reduce((s: number, c: any) => s + amt(c), 0),
+        approved: list.filter((c: any) => c.commission_status === 'approved').reduce((s: number, c: any) => s + amt(c), 0),
       })
       setLoading(false)
     }
@@ -1345,12 +1352,12 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                 <div key={c.id} className="rounded-xl p-3" style={sheetCard}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-semibold" style={t1}>{(c.jobs as any)?.customer_name || '—'}</p>
-                      <p className="text-xs" style={t2}>{(c.jobs as any)?.room_no} · {((c.jobs as any)?.projects as any)?.name}</p>
+                      <p className="text-sm font-semibold" style={t1}>{c.customer_name || '—'}</p>
+                      <p className="text-xs" style={t2}>{c.room_no} · {(c.projects as any)?.name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-sm" style={t1}>{fmtBaht(c.amount || 0)}</p>
-                      <p className="text-xs" style={{ color: STATUS_STYLE[c.status] || 'var(--text-2)' }}>{c.status}</p>
+                      <p className="font-semibold text-sm" style={t1}>{fmtBaht(c.commission_amount || 0)}</p>
+                      <p className="text-xs" style={{ color: STATUS_STYLE[c.commission_status || 'pending'] || 'var(--text-2)' }}>{c.commission_status || 'pending'}</p>
                     </div>
                   </div>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { WORK_TYPES } from '@/lib/status'
+import { WORK_TYPES, CRM_STAGES } from '@/lib/status'
 import { Search, Save, X, Edit2, Layers, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react'
 import { TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
@@ -58,8 +58,11 @@ const TABLES: TableDef[] = [
       { key: 'order_date', label: 'วันขาย', type: 'date', width: 120 },
       { key: 'revenue_ex_vat', label: 'มูลค่า (ex VAT)', type: 'number', width: 130 },
       { key: 'revenue_inc_vat', label: 'มูลค่า (inc VAT)', type: 'number', width: 130 },
-      { key: 'cost', label: 'ต้นทุน', type: 'number', width: 110 },
       { key: 'working_status', label: 'สถานะงาน', type: 'select', options: ['จอง', 'ดำเนินการ', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก'], width: 140 },
+      // crm_stage is the only place a stage lives now — customers.status was
+      // dropped on 2026-08-27. The Prospects card can move most stages, but not
+      // every job appears there, so this is the escape hatch when one is wrong.
+      { key: 'crm_stage', label: 'ขั้น CRM', type: 'select', options: CRM_STAGES.map(s2 => s2.value), width: 130 },
       { key: 'actual_deliver_date', label: 'วันส่งมอบ', type: 'date', width: 120 },
       { key: 'expected_finish_date', label: 'กำหนดเสร็จ', type: 'date', width: 120 },
       { key: 'sales_id', label: 'Sales ID', type: 'text', width: 100 },
@@ -101,18 +104,17 @@ const TABLES: TableDef[] = [
       { key: 'customer_name', label: 'ชื่อลูกค้า', type: 'text', width: 150 },
       { key: 'phone', label: 'โทร', type: 'text', width: 120 },
       { key: 'email', label: 'Email', type: 'text', width: 160 },
-      { key: 'project_name', label: 'โครงการ', type: 'text', width: 140 },
       // interested_room, not room_no. customers.room_no was dropped on
       // 2026-08-25 — it held 2 rows against 936, and the room a customer is
       // actually interested in has always lived here.
       { key: 'interested_room', label: 'ห้องที่สนใจ', type: 'text', width: 100 },
-      { key: 'status', label: 'สถานะ', type: 'text', width: 110 },
-      { key: 'assigned_to', label: 'มอบหมายให้', type: 'text', width: 120 },
+      // assigned_to dropped 2026-08-27 — the seller lives on the job.
+      // Change it on the Jobs tab (sales_id) or from a Prospects card.
       { key: 'source', label: 'แหล่งที่มา', type: 'text', width: 110 },
       { key: 'customer_type', label: 'ประเภทลูกค้า', type: 'select', options: ['B2C', 'B2B'], width: 110 },
-      { key: 'sale_revenue', label: 'มูลค่า', type: 'number', width: 110 },
-      { key: 'close_date', label: 'วันปิดงาน', type: 'date', width: 120 },
-      { key: 'notes', label: 'หมายเหตุ', type: 'text', width: 180 },
+      // notes is not a customers column — it was dropped on 2026-08-25 and now
+      // lives on the job. Leaving it here meant this editor wrote a column that
+      // no longer exists.
     ],
   },
   {
@@ -481,30 +483,55 @@ function ReconcileCheck() {
       { data: customers },
       { data: jobs },
       { data: payments },
+      { data: costItems },
+      { data: costCats },
+      { data: supCats },
     ] = await Promise.all([
       // This screen exists to verify the data is complete, so it must not read a
       // truncated copy of it. payments is already past PostgREST's 1,000-row cap
       // (1,192 rows) and jobs/customers are within a year of crossing it.
-      fetchAllRows(() => supabase.from('customers').select('id, status, customer_type, interested_room, customer_name').order('id')),
-      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, customer_name, payment_plan_type, work_start_date, cancel_type, cancel_amount, cancel_date').order('id')),
+      fetchAllRows(() => supabase.from('customers').select('id, customer_type, interested_room, customer_name').order('id')),
+      fetchAllRows(() => supabase.from('jobs').select('id, customer_id, working_status, crm_stage, revenue_inc_vat, customer_type, work_type, room_no, customer_name, payment_plan_type, work_start_date, cancel_type, cancel_amount, cancel_date, sales_id').order('id')),
       fetchAllRows(() => supabase.from('payments').select('id, job_id, amount, paid_amount, status, is_work_trigger').order('id')),
+      fetchAllRows(() => supabase.from('job_cost_items')
+        .select('id, job_id, category_id, supplier_id, po_no, is_stock, est_cost, act_cost, approved_at').order('id')),
+      supabase.from('cost_categories').select('id, name, needs_supplier'),
+      supabase.from('supplier_categories').select('supplier_id, category_id'),
     ])
 
     const c = (customers || []) as Record<string, any>[]
     const j = (jobs || []) as Record<string, any>[]
     const p = (payments || []) as { id: string; job_id: string; amount: number; paid_amount: number | null; status: string; is_work_trigger: boolean }[]
+    const ci = (costItems || []) as {
+      id: string; job_id: string; category_id: string; supplier_id: string | null
+      po_no: string | null; is_stock: boolean; est_cost: number; act_cost: number; approved_at: string | null
+    }[]
+    const cats = (costCats || []) as { id: string; name: string; needs_supplier: boolean }[]
+    const supLinks = (supCats || []) as { supplier_id: string; category_id: string }[]
 
-    // Check 1: customers total = all statuses
+    // Check 1: every customer is either someone who has ordered or someone who
+    // has not — counted from their jobs, because customers no longer carry a
+    // stage of their own. A customer with no job at all would fall through both
+    // and is exactly what this check is for: the register must not hold anyone
+    // the job table has never heard of.
+    const jobsByCustomer = new Map<string, Record<string, any>[]>()
+    for (const job of j) {
+      if (!job.customer_id) continue
+      if (!jobsByCustomer.has(job.customer_id)) jobsByCustomer.set(job.customer_id, [])
+      jobsByCustomer.get(job.customer_id)!.push(job)
+    }
     const cTotal = c.length
-    const cLost = c.filter(x => x.status === 'lost').length
-    const cCancelled = c.filter(x => x.status === 'cancelled').length
-    const cActive = c.filter(x => !['lost', 'cancelled'].includes(x.status)).length
+    const cBuyers = c.filter(x => (jobsByCustomer.get(x.id) ?? []).some(job => !!job.working_status)).length
+    const cProspects = c.filter(x => {
+      const theirs = jobsByCustomer.get(x.id) ?? []
+      return theirs.length > 0 && !theirs.some(job => !!job.working_status)
+    }).length
     const check1: CheckItem = {
       label: 'จำนวนลูกค้า',
-      desc: 'Active + Lost + Cancelled = ทั้งหมด',
-      lhs: { label: 'Active + Lost + Cancelled', value: cActive + cLost + cCancelled },
+      desc: 'เคยซื้อ + ยังไม่เคยซื้อ = ทั้งหมด (ส่วนต่างคือระเบียนที่ไม่มีงานผูกอยู่)',
+      lhs: { label: `เคยซื้อ(${cBuyers}) + ยังไม่เคยซื้อ(${cProspects})`, value: cBuyers + cProspects },
       rhs: { label: 'Customers ทั้งหมด', value: cTotal },
-      pass: cActive + cLost + cCancelled === cTotal,
+      pass: cBuyers + cProspects === cTotal,
     }
 
     // Check 2: jobs working_status breakdown = total
@@ -669,7 +696,70 @@ function ReconcileCheck() {
         : undefined,
     }
 
-    setChecks([check1, check2, check3, check5, check6, check7])
+    /* ── เช็คฝั่งต้นทุน ────────────────────────────────────────
+       เก็บเฉพาะสิ่งที่หน้าอื่นตอบไม่ได้ — ดู reference_reconcile_scope
+       "ยังไม่ลงต้นทุน" ไม่ใช่ความผิดพลาด หน้า Cost & GP% บอกอยู่แล้ว
+       ที่นี่จับเฉพาะรายการที่ **ขัดกันเอง** จนตัวเลขเชื่อไม่ได้ */
+    const jobById = new Map(j.map(x => [x.id, x]))
+    const catById = new Map(cats.map(x => [x.id, x]))
+    const supHasCat = new Set(supLinks.map(l => l.supplier_id + '|' + l.category_id))
+
+    // ต้นทุนที่ผูกกับงานที่ถูกยกเลิกไปแล้ว — เงินก้อนนี้จะโผล่ในยอดรวม
+    // ทั้งที่งานไม่มีอยู่จริง
+    const onCancelled = ci.filter(it => {
+      const job = jobById.get(it.job_id)
+      return job && job.working_status === 'ยกเลิก'
+    })
+    const check8: CheckItem = {
+      label: 'รายการต้นทุนบนงานที่ยกเลิกแล้ว',
+      desc: 'งานยกเลิกไม่ควรมีต้นทุนค้างอยู่ — ยอดจะไปโผล่ในสรุป GP% ทั้งที่งานไม่มีจริง',
+      lhs: { label: 'รายการที่ติดงานยกเลิก', value: onCancelled.length },
+      rhs: { label: 'รายการต้นทุนทั้งหมด', value: ci.length },
+      pass: onCancelled.length === 0,
+      detail: onCancelled.length > 0
+        ? onCancelled.slice(0, 5).map(it => {
+            const job = jobById.get(it.job_id)
+            return `ห้อง ${job?.room_no ?? it.job_id}`
+          }).join(' · ')
+        : undefined,
+    }
+
+    // Supplier ที่เลือกไว้ ไม่ได้อยู่ในหมวดของบรรทัดนั้น — เกิดได้เมื่อมีคน
+    // ถอดหมวดออกจากทะเบียนหลังผูกไปแล้ว ดรอปดาวจึงไม่มีวันเสนอชื่อนี้อีก
+    const wrongCat = ci.filter(it =>
+      it.supplier_id && !supHasCat.has(it.supplier_id + '|' + it.category_id))
+    const check9: CheckItem = {
+      label: 'Supplier ไม่ตรงหมวดที่ผูกไว้',
+      desc: 'ซัพที่เลือกไม่ได้อยู่ในหมวดของบรรทัดนั้นแล้ว — มักเกิดหลังแก้ทะเบียนหมวดงาน',
+      lhs: { label: 'บรรทัดที่ไม่ตรง', value: wrongCat.length },
+      rhs: { label: 'บรรทัดที่เลือกซัพแล้ว', value: ci.filter(it => it.supplier_id).length },
+      pass: wrongCat.length === 0,
+      detail: wrongCat.length > 0
+        ? wrongCat.slice(0, 5).map(it => {
+            const job = jobById.get(it.job_id)
+            return `ห้อง ${job?.room_no ?? it.job_id} · ${catById.get(it.category_id)?.name ?? it.category_id}`
+          }).join(' · ')
+        : undefined,
+    }
+
+    // มี PO แล้วแต่ไม่มีวันขออนุมัติ — KPI เปิด PO นับจากวันนี้ ถ้าไม่มี
+    // ห้องนั้นจะหลุดจากการวัดเงียบ ๆ โดยไม่มีอะไรฟ้อง
+    const poNoDate = ci.filter(it => it.po_no && !it.approved_at)
+    const check10: CheckItem = {
+      label: 'มี PO แล้วแต่ไม่มีวันที่ขออนุมัติ',
+      desc: 'KPI เปิด PO นับจากวันที่ขออนุมัติ — ไม่มีวัน ห้องนั้นหลุดจากการวัดโดยไม่มีใครรู้',
+      lhs: { label: 'บรรทัดที่ขาดวันที่', value: poNoDate.length },
+      rhs: { label: 'บรรทัดที่มี PO', value: ci.filter(it => it.po_no).length },
+      pass: poNoDate.length === 0,
+      detail: poNoDate.length > 0
+        ? poNoDate.slice(0, 5).map(it => {
+            const job = jobById.get(it.job_id)
+            return `ห้อง ${job?.room_no ?? it.job_id} · ${it.po_no}`
+          }).join(' · ')
+        : undefined,
+    }
+
+    setChecks([check1, check2, check3, check5, check6, check7, check8, check9, check10])
     setRan(true)
     setLoading(false)
   }
@@ -683,7 +773,7 @@ function ReconcileCheck() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold" style={{ color: 'var(--text-1)' }}>Reconcile Check</h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>ตรวจความสอดคล้องของข้อมูลระหว่าง customers / jobs / payments / ต้นทุน</p>
           </div>
           <button onClick={run} disabled={loading}
             className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
@@ -1023,7 +1113,7 @@ export default function AdminDataPage() {
             <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
           </div>
         ) : (
-          <table className="text-xs" style={{ borderCollapse: 'collapse', width: 'max-content', minWidth: '100%' }}>
+          <table className="text-xs tbl-rows" style={{ borderCollapse: 'collapse', width: 'max-content', minWidth: '100%' }}>
             <thead>
               <tr style={{ background: 'var(--hover-bg)', position: 'sticky', top: 0, zIndex: 10 }}>
                 {/* Checkbox */}
@@ -1052,10 +1142,14 @@ export default function AdminDataPage() {
                 const isEditing = editingRow === id
                 const isSelected = selectedIds.has(id)
                 const wasSaved = savedRows.has(id)
-                const rowBg = wasSaved ? 'color-mix(in srgb, var(--accent-green) 6%, transparent)' : isEditing ? 'color-mix(in srgb, var(--accent) 5%, transparent)' : isSelected ? 'color-mix(in srgb, var(--accent) 4%, transparent)' : ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)'
+                // Saved / editing / selected still colour the row. Everything else stays on
+                // the card's own surface and gets the shared hover — the sticky first
+                // cell has to repeat whatever the row resolved to, so `undefined`
+                // there means "inherit the row", not "paint white".
+                const rowBg = wasSaved ? 'color-mix(in srgb, var(--accent-green) 6%, transparent)' : isEditing ? 'color-mix(in srgb, var(--accent) 5%, transparent)' : isSelected ? 'color-mix(in srgb, var(--accent) 4%, transparent)' : undefined
 
                 return (
-                  <tr key={id} style={{ background: rowBg, borderBottom: '1px solid var(--divider)' }}>
+                  <tr key={id} style={{ background: rowBg }}>
                     {/* Checkbox */}
                     <td style={{ padding: '6px 10px', textAlign: 'center', position: 'sticky', left: 0, background: rowBg }}>
                       <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(id)} style={{ cursor: 'pointer' }} />

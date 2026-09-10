@@ -1,7 +1,8 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { MoneyField } from '@/components/ui/MoneyInput'
 import {
   Plus, Users, Pencil, AlertCircle, Trash2, X,
   Phone, Mail, MessageCircle, Building2, Home, Banknote,
@@ -12,10 +13,13 @@ import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
-import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES } from '@/lib/status'
+import { CRM_STAGES, crmStage, isProspectStage, WORK_TYPES, summariseCustomer, customerKind, CUSTOMER_KINDS } from '@/lib/status'
 import { Input, Select, TextArea } from '@/components/ui/Input'
 import { createProspectJob } from '@/lib/prospectJob'
 import { showConfirm } from '@/components/ui/dialog'
+import { compareRoom, sameRoom } from '@/lib/utils'
+import { nextCustomerId } from '@/lib/customerId'
+import { cleanName } from '@/lib/customerName'
 
 interface Customer {
   id: string
@@ -26,9 +30,6 @@ interface Customer {
   source: string
   project_id: string
   interested_room: string
-  budget: number
-  status: string
-  assigned_to: string
   notes: string
   created_at: string
   projects?: { name: string }
@@ -48,7 +49,7 @@ interface DetailJob {
   order_date: string | null
   revenue_ex_vat: number
   revenue_inc_vat: number
-  voucher: number
+  payments?: { voucher_amount: number | null }[] | null
   working_status: string
   customer_name: string
   installments: DetailInstallment[]
@@ -73,6 +74,7 @@ interface DetailWarranty {
   warranty_months: number
   status: string
   room: string
+  job_id: string | null
   handover_date: string | null
   notes: string
 }
@@ -93,7 +95,7 @@ const SOURCE_OPTIONS = [
 const emptyForm = {
   customer_name: '', phone: '', email: '', line_id: '', source: '',
   project_id: '', interested_room: '', budget: 0,
-  status: 'new', assigned_to: '', notes: '',
+  assigned_to: '', notes: '',
   customer_type: 'B2C', work_type: '',
 }
 
@@ -105,8 +107,17 @@ const statusInfo = crmStage
 const jobField = (c: any, f: 'work_type' | 'notes'): string =>
   (((c as any)?.jobs as any[]) || []).find(j => j?.[f])?.[f] || ''
 
+/** ทศนิยม 2 ตำแหน่งเหมือน baht() ทั้งระบบ ต่างแค่ไม่มีสัญลักษณ์ ฿ เพราะ
+ *  ลิ้นชักนี้เขียน "บ." ต่อท้ายเอง */
+/* Voucher ของงานหนึ่งใบ = ผลรวม voucher_amount ของทุกงวด · `jobs.voucher` เป็น
+   ช่องเก่าที่กรอกคนละทางและตัวเลขไม่ตรงกัน (39 ห้อง ฿1,515,000 กับ 32 ห้อง
+   ฿932,697 เมื่อ 2026-09-08) เจ้าของสั่งให้ยึดฝั่ง payments · ดู lib/voucher.ts */
+function voucherOfJob(job: { payments?: { voucher_amount: number | null }[] | null }): number {
+  return (job.payments ?? []).reduce((s, p) => s + Number(p.voucher_amount || 0), 0)
+}
+
 function fmt(n: number) {
-  return n ? n.toLocaleString('th-TH') : '—'
+  return n ? n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'
 }
 
 
@@ -130,6 +141,32 @@ type JobTally = {
   revenue: number
   paid: number
 }
+/**
+ * Every sales person who has sold this customer something, in the order the
+ * jobs were opened.
+ *
+ * A customer record used to carry one assigned_to, so a repeat buyer served by
+ * a second sales showed only the first — and updating the record erased who
+ * sold the earlier job. The seller belongs to the order; 63 customers here have
+ * more than one.
+ */
+/** The sales currently on this customer's jobs — seeds the assign field.
+ *  customers.assigned_to was dropped on 2026-08-27; jobs.sales_id is the only
+ *  copy left. */
+function salesIdOf(c: any): string {
+  for (const j of ((c?.jobs as any[]) || [])) if (j?.sales_id) return j.sales_id
+  return ''
+}
+
+function salesOf(c: any): string[] {
+  const names: string[] = []
+  for (const j of ((c?.jobs as any[]) || [])) {
+    const n = j?.sales?.name
+    if (n && !names.includes(n)) names.push(n)
+  }
+  return names
+}
+
 function tallyJobs(c: any): JobTally {
   const jobs: any[] = (c?.jobs as any[]) || []
   const t: JobTally = { total: jobs.length, booked: 0, working: 0, delivered: 0, cancelled: 0, prospect: 0, rooms: [], revenue: 0, paid: 0 }
@@ -150,7 +187,7 @@ function tallyJobs(c: any): JobTally {
       .filter(p => p.status === 'paid')
       .reduce((s, p) => s + (p.paid_amount ?? p.amount ?? 0), 0)
   }
-  t.rooms = [...rooms]
+  t.rooms = [...rooms].sort(compareRoom)
   return t
 }
 
@@ -167,22 +204,46 @@ function CustomerDetail({
   const [jobs, setJobs] = useState<DetailJob[]>([])
   const [warranties, setWarranties] = useState<DetailWarranty[]>([])
   const [loading, setLoading] = useState(true)
-  const st = statusInfo(customer.status)
+  const [q, setQ] = useState('')
+  const [roomStatus, setRoomStatus] = useState('')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const st = customerKind(summariseCustomer((customer as any).jobs).kind)
+
+  /** A customer with one room should read like a page about that room, not a
+   *  table you have to open first. Opening the only row is a default, not a
+   *  second layout — same table, same code, one row already expanded. */
+  useEffect(() => {
+    setExpanded(jobs.length === 1 ? new Set([jobs[0].id]) : new Set())
+  }, [jobs])
+
+  /** warranties.room is written in the old sheet's notation ("Z-809") while
+   *  jobs.room_no has been cleaned ("809"), so job_id is the reliable link and
+   *  the room match only covers the six rows that have no job_id. */
+  const warrantyOf = (job: DetailJob) =>
+    warranties.find(w => w.job_id === job.id)
+    || warranties.find(w => !w.job_id && sameRoom(w.room, job.room_no))
+
+  const paidOf = (job: DetailJob) => job.installments
+    .filter(i => i.status === 'paid')
+    .reduce((s, i) => s + ((i as any).paid_amount ?? i.amount ?? 0), 0)
 
   useEffect(() => {
     let cancelled = false
+    /* Voucher ของงานหนึ่งใบ = ผลรวม voucher_amount ของทุกงวด — ไม่ใช่
+       jobs.voucher ซึ่งเป็นช่องเก่าที่กรอกคนละทางและไม่ตรงกัน (เจ้าของสั่ง
+       2026-09-08) ดู lib/voucher.ts */
     async function fetchDetail() {
       setLoading(true)
 
       const [{ data: jobsRaw }, { data: warrantiesRaw }] = await Promise.all([
         supabase
           .from('jobs')
-          .select('id, po_no, so_no, room_no, work_type, package_type, order_date, revenue_ex_vat, revenue_inc_vat, voucher, working_status, customer_name')
+          .select('id, po_no, so_no, room_no, work_type, package_type, order_date, revenue_ex_vat, revenue_inc_vat, working_status, customer_name, payments(voucher_amount)')
           .eq('customer_id', customer.id)
           .order('order_date', { ascending: false }),
         supabase
           .from('warranties')
-          .select('id, warranty_start, warranty_end, warranty_months, status, room, handover_date, notes')
+          .select('id, warranty_start, warranty_end, warranty_months, status, room, job_id, handover_date, notes')
           .eq('customer_id', customer.id),
       ])
 
@@ -289,7 +350,7 @@ function CustomerDetail({
                 <Banknote size={13} style={{ color: 'var(--text-3)' }} />
                 {(() => {
                   const jobRev = ((customer as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || 0
-                  const val = jobRev || customer.budget || 0
+                  const val = jobRev
                   return <span className="text-sm font-semibold" style={{ color: val > 0 ? 'var(--accent-green)' : 'var(--text-2)' }}>
                     {val > 0 ? fmt(val) + ' บ.' : '—'}
                   </span>
@@ -297,7 +358,7 @@ function CustomerDetail({
               </div>
               <div className="flex items-center gap-2">
                 <Users size={13} style={{ color: 'var(--text-3)' }} />
-                <span className="text-sm" style={{ color: 'var(--text-2)' }}>{(customer as any).users?.name || '—'}</span>
+                <span className="text-sm" style={{ color: 'var(--text-2)' }}>{salesOf(customer).join(' · ') || '—'}</span>
               </div>
               {jobField(customer, 'notes') && (
                 <div className="col-span-2 text-xs px-3 py-2 rounded-lg" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
@@ -355,247 +416,230 @@ function CustomerDetail({
             </section>
           )}
 
+          {/* One list, whatever the size. A B2C buyer holds a single room; a
+              developer here holds 145 in the same project, and after the
+              duplicate customer records were merged those finally arrive on one
+              screen. Two layouts — cards for the small case, a table for the
+              big one — would have meant two things to keep in step and two
+              different screens for the team to describe a bug against, so this
+              is one table either way and the single row simply opens itself.
+
+              The per-job "Journey" timeline that used to sit above this is
+              gone. End to end it drew four steps per job — about 580 of them
+              for the largest customer — and said what the rows below already
+              say. A journey belongs to a room, not to a customer holding 145 of
+              them, so it now lives inside the room's own expanded row. */}
           {!loading && (
-            <>
-              {/* Journey Timeline */}
-              <section>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-3)' }}>Journey</p>
-                <div className="relative pl-5">
-                  {/* vertical line */}
-                  <div className="absolute left-1.5 top-2 bottom-2 w-px" style={{ background: 'var(--divider)' }} />
+            <section>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                  <Briefcase size={12} />ห้อง ({jobs.length})
+                </p>
+                {jobs.length > 1 && (
+                  <input
+                    value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาห้อง"
+                    className="field-input" style={{ width: 150, padding: '5px 10px', fontSize: 12 }}
+                  />
+                )}
+              </div>
 
-                  {/* Step: Booked / Status */}
-                  {(() => {
-                    const isBooked = ['booked','close_pending','closed'].includes(customer.status)
-                    const st = statusInfo(customer.status)
+              {jobs.length > 1 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {[
+                    { value: '', label: 'ทั้งหมด' },
+                    { value: 'ดำเนินการ', label: 'ดำเนินการ' },
+                    { value: 'ส่งมอบแล้ว', label: 'ส่งมอบแล้ว' },
+                    { value: 'ยกเลิก', label: 'ยกเลิก' },
+                  ].map(s => {
+                    const n = s.value === ''
+                      ? jobs.length
+                      : jobs.filter(j => (j.working_status || 'ดำเนินการ') === s.value).length
+                    if (n === 0) return null
+                    const on = roomStatus === s.value
                     return (
-                      <div className="relative mb-3 flex items-start gap-3">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isBooked ? 'var(--accent-orange)' : 'var(--divider)', borderColor: isBooked ? 'var(--accent-orange)' : 'var(--text-3)' }} />
-                        <div>
-                          <p className="text-xs font-semibold" style={{ color: isBooked ? 'var(--accent-orange)' : 'var(--text-3)' }}>
-                            {isBooked ? '★ Booked' : `สถานะ: ${st.label}`}
-                          </p>
-                          {customer.status === 'lost' && <p className="text-micro" style={{ color: 'var(--accent-red)' }}>หลุดแล้ว</p>}
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  {/* Steps: per job */}
-                  {jobs.length === 0 ? (
-                    <div className="relative mb-3 flex items-start gap-3">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: 'var(--divider)', borderColor: 'var(--text-3)' }} />
-                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังไม่แปลงเป็น Job</p>
-                    </div>
-                  ) : jobs.map(job => {
-                    const paidCount = job.installments.filter(i => i.status === 'paid').length
-                    const totalCount = job.installments.length
-                    const isDelivered = job.working_status === 'ส่งมอบแล้ว'
-                    const warranty = warranties.find(w => w.room === (job as any).room_no)
-                    const warrantDaysLeft = warranty?.warranty_end ? Math.floor((new Date(warranty.warranty_end).getTime() - Date.now()) / 864e5) : null
-
-                    return (
-                      <div key={job.id}>
-                        {/* สั่งงาน */}
-                        <div className="relative mb-3 flex items-start gap-3">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: 'var(--accent)' }} />
-                          <div>
-                            <p className="text-xs font-semibold" style={{ color: 'var(--accent-purple)' }}>📋 สั่งงาน</p>
-                            <p className="text-micro" style={{ color: 'var(--text-3)' }}>
-                              {job.room_no && <span className="font-mono mr-1" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</span>}
-                              {job.work_type} · {job.order_date?.slice(0, 10) || '—'} · {fmt(job.revenue_ex_vat)} บ.
-                            </p>
-                            {/* A "ผู้อยู่อาศัย" line used to sit here. It was
-                                built on a false premise: those eighteen records
-                                were named after the developer while holding an
-                                order the resident had paid for in full, so the
-                                label said the company owned the work and the
-                                buyer merely lived there — the reverse of the
-                                truth. Worse, it made that reading look official,
-                                and the customer type was then set to B2B on all
-                                eighteen because the screen said "บริษัท". The
-                                records now carry the buyer's own name, so there
-                                is nothing left to explain. If a name ever
-                                genuinely differs again, the Reconcile check
-                                below reports it rather than a label rationalising
-                                it in place. */}
-                          </div>
-                        </div>
-
-                        {/* งวดชำระ */}
-                        {totalCount > 0 && (
-                          <div className="relative mb-3 flex items-start gap-3">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-amber)' }} />
-                            <div>
-                              <p className="text-xs font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-amber)' }}>
-                                💰 ชำระ {paidCount}/{totalCount} งวด
-                              </p>
-                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>
-                                {fmt(job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0))} / {fmt(job.installments.reduce((s, i) => s + i.amount, 0))} บ.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* ส่งมอบ */}
-                        <div className="relative mb-3 flex items-start gap-3">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5 border-2" style={{ background: isDelivered ? 'var(--accent-green)' : 'var(--divider)', borderColor: isDelivered ? 'var(--accent-green)' : 'var(--text-3)' }} />
-                          <div>
-                            <p className="text-xs font-semibold" style={{ color: isDelivered ? 'var(--accent-green)' : 'var(--text-3)' }}>
-                              {isDelivered ? '✅ ส่งมอบแล้ว' : '○ รอส่งมอบ'}
-                            </p>
-                            {isDelivered && job.handover?.delivery_date && (
-                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>{job.handover.delivery_date.slice(0, 10)}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* ประกัน */}
-                        {warranty && (
-                          <div className="relative mb-3 flex items-start gap-3">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ background: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? 'var(--text-3)' : warrantDaysLeft !== null && warrantDaysLeft <= 30 ? 'var(--accent-amber)' : 'var(--accent-blue)' }} />
-                            <div>
-                              <p className="text-xs font-semibold" style={{ color: warrantDaysLeft !== null && warrantDaysLeft <= 0 ? 'var(--text-3)' : 'var(--accent-blue)' }}>
-                                🛡️ ประกัน {warranty.warranty_months || ''} เดือน
-                              </p>
-                              <p className="text-micro" style={{ color: 'var(--text-3)' }}>
-                                {warranty.warranty_end?.slice(0, 10)} · {warrantDaysLeft !== null ? (warrantDaysLeft <= 0 ? 'หมดแล้ว' : `เหลือ ${warrantDaysLeft} วัน`) : ''}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <button key={s.value} onClick={() => setRoomStatus(s.value)}
+                        className="text-xs px-2.5 py-1 rounded-[8px] font-medium transition-colors"
+                        style={{
+                          background: on ? 'var(--active-bg)' : 'var(--hover-bg)',
+                          color: on ? 'var(--accent)' : 'var(--text-2)',
+                        }}>
+                        {s.label} {n}
+                      </button>
                     )
                   })}
                 </div>
-              </section>
+              )}
 
-              {/* Jobs */}
-              <section>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                  <Briefcase size={12} />งาน ({jobs.length})
-                </p>
-                {jobs.length === 0 ? (
+              {(() => {
+                const shown = jobs.filter(j => {
+                  const matchStatus = !roomStatus || (j.working_status || 'ดำเนินการ') === roomStatus
+                  const s = q.trim().toLowerCase().replace(/-/g, '')
+                  const matchQ = !s || (j.room_no || '').toLowerCase().replace(/-/g, '').includes(s)
+                  return matchStatus && matchQ
+                })
+
+                if (jobs.length === 0) return (
                   <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
                     ยังไม่มีงาน
                   </p>
-                ) : jobs.map(job => {
-                  const paid = job.installments.filter(i => i.status === 'paid').reduce((s, i) => s + ((i as any).paid_amount ?? i.amount), 0)
-                  const total = job.installments.reduce((s, i) => s + i.amount, 0)
-                  const pct = total > 0 ? Math.round(paid / total * 100) : 0
-                  return (
-                    <div key={job.id} className="ds-card p-4 mb-3">
-                      {/* Job header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          {job.room_no && <p className="text-sm font-semibold font-mono mb-0.5" style={{ color: 'var(--accent)' }}>ห้อง {job.room_no}</p>}
-                          <p className="text-xs" style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</p>
-                        </div>
-                        <span className="text-xs px-2 py-0.5 rounded-[4px] font-semibold" style={{
-                          background: job.working_status === 'ส่งมอบแล้ว' ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'var(--hover-bg)',
-                          color: job.working_status === 'ส่งมอบแล้ว' ? 'var(--accent-green)' : 'var(--text-2)',
-                        }}>{job.working_status || 'ดำเนินการ'}</span>
-                      </div>
-
-                      {/* PO / SO / Date / Voucher */}
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        {[
-                          { label: 'PO No.', value: job.po_no || '—' },
-                          { label: 'SO No.', value: job.so_no || '—' },
-                          { label: 'วันที่รับ PO', value: job.order_date?.slice(0, 10) || '—' },
-                          { label: 'Voucher', value: job.voucher ? fmt(job.voucher) + ' บ.' : '—' },
-                        ].map(f => (
-                          <div key={f.label} className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--hover-bg)' }}>
-                            <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
-                            <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Revenue */}
-                      <div className="flex items-center justify-between text-xs mb-3">
-                        <span style={{ color: 'var(--text-3)' }}>Revenue (excl. VAT)</span>
-                        <span className="font-semibold" style={{ color: 'var(--text-1)' }}>{fmt(job.revenue_ex_vat)} บ.</span>
-                      </div>
-
-                      {/* Payment progress */}
-                      {job.installments.length > 0 && (
-                        <div>
-                          <div className="flex items-center justify-between text-xs mb-1.5">
-                            <span style={{ color: 'var(--text-3)' }}>
-                              <FileText size={10} className="inline mr-1" />การชำระเงิน ({job.installments.filter(i => i.status === 'paid').length}/{job.installments.length} งวด)
-                            </span>
-                            <span style={{ color: pct === 100 ? 'var(--accent-green)' : 'var(--text-2)' }}>{pct}%</span>
-                          </div>
-                          <div className="h-1.5 rounded-full mb-2" style={{ background: 'var(--divider)' }}>
-                            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--accent-green)' : 'var(--accent)' }} />
-                          </div>
-                          <div className="space-y-1">
-                            {job.installments.map(inst => (
-                              <div key={inst.id} className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-1.5">
-                                  {inst.status === 'paid'
-                                    ? <CheckCircle size={10} style={{ color: 'var(--accent-green)' }} className="flex-shrink-0" />
-                                    : inst.status === 'overdue'
-                                    ? <AlertCircle size={10} style={{ color: 'var(--accent-red)' }} className="flex-shrink-0" />
-                                    : <Clock size={10} className="flex-shrink-0" style={{ color: 'var(--text-3)' }} />
-                                  }
-                                  <span style={{ color: 'var(--text-2)' }}>{inst.installment_name}</span>
-                                </div>
-                                <span style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : inst.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-2)' }}>
-                                  {fmt(inst.amount)} บ.
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Handover */}
-                      {job.handover && (
-                        <div className="mt-3 pt-3 flex items-center justify-between text-xs" style={{ borderTop: '1px solid var(--divider)' }}>
-                          <span style={{ color: 'var(--text-3)' }}>ส่งมอบ</span>
-                          {/* handovers.work_status is constrained to English
-                              keys; the Thai label belongs on screen only. */}
-                          <span style={{ color: job.handover.work_status === 'delivered' ? 'var(--accent-green)' : 'var(--text-2)' }}>
-                            {({ delivered: 'ส่งมอบแล้ว', ready_to_deliver: 'รอส่งมอบ', in_progress: 'ดำเนินการ' } as Record<string,string>)[job.handover.work_status] || job.handover.work_status}
-                            {job.handover.delivery_date ? ' · ' + job.handover.delivery_date.slice(0, 10) : ''}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </section>
-
-              {/* Warranty */}
-              {warranties.length > 0 && (
-                <section>
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
-                    <Shield size={12} />ประกัน ({warranties.length})
+                )
+                if (shown.length === 0) return (
+                  <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
+                    ไม่พบห้องที่ค้นหา
                   </p>
-                  {warranties.map(w => (
-                    <div key={w.id} className="ds-card p-4 mb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono" style={{ color: 'var(--accent)' }}>ห้อง {w.room}</span>
-                        <span className={`badge ${w.status === 'active' ? 'badge-green' : w.status === 'expiring_soon' ? 'badge-orange' : 'badge-gray'}`}>
-                          {w.status === 'active' ? 'ยังอยู่ในประกัน' : w.status === 'expiring_soon' ? 'ใกล้หมด' : 'หมดแล้ว'}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <span style={{ color: 'var(--text-3)' }}>เริ่ม</span>
-                        <span style={{ color: 'var(--text-2)' }}>{w.warranty_start?.slice(0, 10) || '—'}</span>
-                        <span style={{ color: 'var(--text-3)' }}>สิ้นสุด</span>
-                        <span style={{ color: 'var(--text-2)' }}>{w.warranty_end?.slice(0, 10) || '—'}</span>
-                        <span style={{ color: 'var(--text-3)' }}>ระยะ</span>
-                        <span style={{ color: 'var(--text-2)' }}>{w.warranty_months} เดือน</span>
-                      </div>
-                      {w.notes && <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{w.notes}</p>}
-                    </div>
-                  ))}
-                </section>
-              )}
-            </>
+                )
+
+                return (
+                  <div className="tbl-scroll">
+                    <table className="w-full tbl-dense tbl-tight tbl-rows">
+                      <thead>
+                        <tr>
+                          <th className="text-left" style={{ width: '22%' }}>ห้อง</th>
+                          <th className="text-left" style={{ width: '20%' }}>สถานะ</th>
+                          <th className="text-right" style={{ width: '20%' }}>มูลค่า</th>
+                          <th className="text-right" style={{ width: '18%' }}>ชำระ</th>
+                          <th className="text-left" style={{ width: '20%' }}>ส่งมอบ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {shown.map(job => {
+                          const isOpen = expanded.has(job.id)
+                          const paid = paidOf(job)
+                          const total = job.installments.reduce((s, i) => s + i.amount, 0)
+                          const pct = total > 0 ? Math.round(paid / total * 100) : 0
+                          const delivered = job.working_status === 'ส่งมอบแล้ว'
+                          const cancelled = job.working_status === 'ยกเลิก'
+                          const warranty = warrantyOf(job)
+                          const daysLeft = warranty?.warranty_end
+                            ? Math.floor((new Date(warranty.warranty_end).getTime() - Date.now()) / 864e5)
+                            : null
+
+                          return (
+                            <Fragment key={job.id}>
+                              <tr
+                                onClick={() => setExpanded(prev => {
+                                  const next = new Set(prev)
+                                  if (next.has(job.id)) next.delete(job.id); else next.add(job.id)
+                                  return next
+                                })}
+                                className="cursor-pointer"
+                                style={{ background: isOpen ? 'var(--hover-bg)' : undefined }}
+                              >
+                                <td>
+                                  <span className="flex items-center gap-1">
+                                    <ChevronRight size={11} className="transition-transform flex-shrink-0"
+                                      style={{ color: 'var(--text-3)', transform: isOpen ? 'rotate(90deg)' : undefined }} />
+                                    <span className="font-mono font-semibold" style={{ color: 'var(--accent)' }}>{job.room_no || '—'}</span>
+                                  </span>
+                                </td>
+                                <td>
+                                  <span className={`badge ${delivered ? 'badge-green' : cancelled ? 'badge-red' : 'badge-gray'}`}>
+                                    {job.working_status || 'ดำเนินการ'}
+                                  </span>
+                                </td>
+                                <td className="text-right tabular-nums" style={{ color: 'var(--text-1)' }}>{fmt(job.revenue_inc_vat)}</td>
+                                <td className="text-right tabular-nums" style={{ color: pct === 100 ? 'var(--accent-green)' : 'var(--text-2)' }}>
+                                  {total > 0 ? `${pct}%` : '—'}
+                                </td>
+                                <td style={{ color: 'var(--text-2)' }}>{job.handover?.delivery_date?.slice(0, 10) || '—'}</td>
+                              </tr>
+
+                              {isOpen && (
+                                <tr>
+                                  <td colSpan={5} style={{ background: 'var(--hover-bg)', paddingTop: 0 }}>
+                                    <div className="ds-card p-4 mb-1">
+                                      <div className="grid grid-cols-2 gap-2 mb-3">
+                                        {[
+                                          { label: 'PO No.', value: job.po_no || '—' },
+                                          { label: 'SO No.', value: job.so_no || '—' },
+                                          { label: 'วันที่รับ PO', value: job.order_date?.slice(0, 10) || '—' },
+                                          { label: 'Voucher', value: voucherOfJob(job) ? fmt(voucherOfJob(job)) + ' บ.' : '—' },
+                                        ].map(f => (
+                                          <div key={f.label} className="px-2 py-1.5 rounded-lg" style={{ background: 'var(--card-bg)' }}>
+                                            <p className="text-micro uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{f.label}</p>
+                                            <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--text-1)' }}>{f.value}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+
+                                      <div className="flex items-center justify-between text-xs mb-3">
+                                        <span style={{ color: 'var(--text-3)' }}>{job.work_type || '—'} · {job.package_type || '—'}</span>
+                                        <span style={{ color: 'var(--text-3)' }}>
+                                          ไม่รวม VAT <span className="font-semibold ml-1" style={{ color: 'var(--text-1)' }}>{fmt(job.revenue_ex_vat)} บ.</span>
+                                        </span>
+                                      </div>
+
+                                      {job.installments.length > 0 && (
+                                        <div className="mb-3">
+                                          <div className="flex items-center justify-between text-xs mb-1.5">
+                                            <span style={{ color: 'var(--text-3)' }}>
+                                              <FileText size={10} className="inline mr-1" />การชำระเงิน ({job.installments.filter(i => i.status === 'paid').length}/{job.installments.length} งวด)
+                                            </span>
+                                            {/* fmt() prints "—" for zero, which read as
+                                                "— / 8,000" on an unpaid room. Nothing is
+                                                missing there; the amount paid is zero. */}
+                                            <span style={{ color: pct === 100 ? 'var(--accent-green)' : 'var(--text-2)' }}>{paid.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / {fmt(total)} บ.</span>
+                                          </div>
+                                          <div className="h-1.5 rounded-full mb-2" style={{ background: 'var(--divider)' }}>
+                                            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--accent-green)' : 'var(--accent)' }} />
+                                          </div>
+                                          <div className="space-y-1">
+                                            {job.installments.map(inst => (
+                                              <div key={inst.id} className="flex items-center justify-between text-xs">
+                                                <div className="flex items-center gap-1.5">
+                                                  {inst.status === 'paid'
+                                                    ? <CheckCircle size={10} style={{ color: 'var(--accent-green)' }} className="flex-shrink-0" />
+                                                    : inst.status === 'overdue'
+                                                    ? <AlertCircle size={10} style={{ color: 'var(--accent-red)' }} className="flex-shrink-0" />
+                                                    : <Clock size={10} className="flex-shrink-0" style={{ color: 'var(--text-3)' }} />
+                                                  }
+                                                  <span style={{ color: 'var(--text-2)' }}>{inst.installment_name}</span>
+                                                </div>
+                                                <span style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : inst.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-2)' }}>
+                                                  {fmt(inst.amount)} บ.
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      <div className="flex items-center justify-between text-xs pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
+                                        <span style={{ color: 'var(--text-3)' }}>ส่งมอบ</span>
+                                        {/* handovers.work_status is constrained to English
+                                            keys; the Thai label belongs on screen only. */}
+                                        <span style={{ color: job.handover?.work_status === 'delivered' ? 'var(--accent-green)' : 'var(--text-2)' }}>
+                                          {job.handover
+                                            ? (({ delivered: 'ส่งมอบแล้ว', ready_to_deliver: 'รอส่งมอบ', in_progress: 'ดำเนินการ' } as Record<string, string>)[job.handover.work_status] || job.handover.work_status)
+                                              + (job.handover.delivery_date ? ' · ' + job.handover.delivery_date.slice(0, 10) : '')
+                                            : 'ยังไม่มีข้อมูลส่งมอบ'}
+                                        </span>
+                                      </div>
+
+                                      {warranty && (
+                                        <div className="flex items-center justify-between text-xs pt-2 mt-2" style={{ borderTop: '1px solid var(--divider)' }}>
+                                          <span className="flex items-center gap-1" style={{ color: 'var(--text-3)' }}>
+                                            <Shield size={10} />ประกัน {warranty.warranty_months || ''} เดือน
+                                          </span>
+                                          <span style={{ color: daysLeft !== null && daysLeft <= 0 ? 'var(--text-3)' : daysLeft !== null && daysLeft <= 30 ? 'var(--accent-amber)' : 'var(--accent-blue)' }}>
+                                            {warranty.warranty_end?.slice(0, 10) || '—'}
+                                            {daysLeft !== null && ' · ' + (daysLeft <= 0 ? 'หมดแล้ว' : `เหลือ ${daysLeft} วัน`)}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              })()}
+            </section>
           )}
         </div>
       </div>
@@ -632,7 +676,7 @@ export default function CustomersPage() {
       { data: p, error: pErr },
       { data: u, error: uErr },
     ] = await Promise.all([
-      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!assigned_to(name), jobs(id, work_type, notes, revenue_inc_vat, working_status, room_no, crm_stage, customer_name, payments(amount, paid_amount, status))').order('customer_name'),
+      supabase.from('customers').select('id, customer_name, phone, email, line_id, source, project_id, interested_room, created_at, customer_type, projects(name), jobs(id, work_type, notes, revenue_inc_vat, working_status, room_no, crm_stage, customer_name, sales_id, sales:users!jobs_sales_id_fkey(name), payments(amount, paid_amount, status))').order('customer_name'),
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
     ])
@@ -649,13 +693,9 @@ export default function CustomersPage() {
 
   useEffect(() => { load() }, [])
 
-  function genId() {
-    if (form.project_id && form.interested_room.trim()) {
-      return `${form.project_id}-${form.interested_room.trim().toUpperCase()}`
-    }
-    const nums = customers.map(c => parseInt(c.id.replace('CST-', ''))).filter(n => !isNaN(n))
-    return 'CST-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(4, '0')
-  }
+  // One scheme for every customer — see lib/customerId.ts for why the room is
+  // no longer part of the code.
+  const genId = () => nextCustomerId(supabase)
 
   async function save() {
     if (!form.customer_name) return
@@ -665,23 +705,38 @@ export default function CustomersPage() {
     // work_type and notes describe the order, so they are written to the job,
     // not the customer row — the two columns were dropped from customers on
     // 2026-08-25. Everything else on this form describes the person.
+    // status left out too: it is a job's stage, not a person's, and the column
+    // is on its way out. A customer added here starts with a job at 'new'.
     const { work_type: formWorkType, notes: formNotes, ...customerFields } = form
+    // assigned_to stays in the form (it is how you pick a seller) but is written
+    // to jobs.sales_id below — the customers column is gone.
+    const { assigned_to: _formSales, budget: _formBudget, ...personFields } = customerFields
+    // budget moved to jobs.revenue_inc_vat — a customer can hold many rooms and
+    // one budget column cannot say which room the number belongs to. Written to
+    // the job below; the column stays until the reads are cleaned up.
+    const revInc = Number(form.budget) || 0
+    const revEx = revInc ? Math.round((revInc / 1.07) * 100) / 100 : 0
     const payload = {
-      ...customerFields,
+      ...personFields,
       project_id: form.project_id || null,
-      assigned_to: form.assigned_to || null,
     }
     if (editing) {
       const { error } = await supabase.from('customers').update(payload).eq('id', editing.id)
       if (error) { setSaveError(error.message); setSaving(false); return }
-      // Push to the job when the customer has exactly one. With several there is
-      // no way to tell which order the note is about, so those are edited on the
-      // job itself from Prospects or Data Entry.
+      // work_type still pushes to the job when the customer has exactly one.
+      // notes no longer does — it is edited on the job, on every screen that
+      // shows a job.
       const { data: theirJobs } = await supabase.from('jobs').select('id').eq('customer_id', editing.id)
       if (theirJobs && theirJobs.length === 1) {
         await supabase.from('jobs')
-          .update({ work_type: formWorkType || null, notes: formNotes || null })
+          .update({ work_type: formWorkType || null, revenue_inc_vat: revInc, revenue_ex_vat: revEx })
           .eq('id', (theirJobs[0] as { id: string }).id)
+      }
+      // The sales owner belongs to the job now — and unlike notes it applies to
+      // all of them (option 1): re-assigning a customer re-assigns their book.
+      if (form.assigned_to !== salesIdOf(editing)) {
+        await supabase.from('jobs')
+          .update({ sales_id: form.assigned_to || null }).eq('customer_id', editing.id)
       }
     } else {
       // ป้องกัน duplicate: ตรวจเบอร์โทรก่อน insert
@@ -694,7 +749,7 @@ export default function CustomersPage() {
           return
         }
       }
-      const newId = genId()
+      const newId = await genId()
       if (customers.some(c => c.id === newId)) {
         setSaveError(`ID "${newId}" มีอยู่แล้วในระบบ — กรุณาตรวจสอบโครงการและห้องอีกครั้ง`)
         setSaving(false)
@@ -707,13 +762,14 @@ export default function CustomersPage() {
       // that counts jobs — which is how thirteen customers ended up stranded.
       await createProspectJob(supabase, {
         customerId: newId,
-        customerName: String(payload.customer_name || ''),
+        customerName: cleanName(String(payload.customer_name || '')),
         projectId: (payload.project_id as string) || null,
         roomNo: (payload.interested_room as string) || null,
         workType: formWorkType || null,
-        notes: formNotes || null,
-        salesId: (payload.assigned_to as string) || null,
-        crmStage: String(payload.status || 'new'),
+        notes: null,
+        salesId: form.assigned_to || null,
+        crmStage: 'new',
+        revenueIncVat: revInc,
       })
     }
     setSaving(false)
@@ -767,14 +823,14 @@ export default function CustomersPage() {
   const repeatBuyers = baseFiltered.filter(c => tallyJobs(c).total > 1)
   const filtered = filterRepeat
     ? repeatBuyers
-    : filterStatus ? baseFiltered.filter(c => c.status === filterStatus) : baseFiltered
+    : filterStatus ? baseFiltered.filter(c => summariseCustomer((c as any).jobs).kind === filterStatus) : baseFiltered
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="page-content">
       {/* Header */}
-      <PageHeader title="Customers" subtitle="รายชื่อลูกค้าและ Pipeline การขาย" />
+      <PageHeader title="Customer Registry" subtitle="ทะเบียนลูกค้าทั้งหมด" />
 
       {/* Filters */}
       <FilterBar
@@ -809,8 +865,8 @@ export default function CustomersPage() {
           className={`tab-btn ${!filterStatus && !filterRepeat ? 'active' : ''}`}>
           ทั้งหมด {baseFiltered.length}
         </button>
-        {STATUS_LIST.map(s => {
-          const count = baseFiltered.filter(c => c.status === s.value).length
+        {CUSTOMER_KINDS.map(s => {
+          const count = baseFiltered.filter(c => summariseCustomer((c as any).jobs).kind === s.value).length
           if (!count) return null
           return (
             <button key={s.value} onClick={() => { setFilterRepeat(false); setFilterStatus(filterStatus === s.value ? '' : s.value) }}
@@ -831,7 +887,7 @@ export default function CustomersPage() {
 
       {/* Table */}
       <div className="ds-card overflow-hidden tbl-scroll">
-        <table className="w-full">
+        <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
               <th scope="col" className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-3)' }}>ลูกค้า</th>
@@ -853,12 +909,12 @@ export default function CustomersPage() {
               <TableEmpty colSpan={10} icon={Users} message="ไม่พบลูกค้า" sub={search ? 'ลองเปลี่ยนคำค้นหา' : undefined} />
             )}
             {paginated.map((c, i) => {
-              const st = statusInfo(c.status)
+              const st = customerKind(summariseCustomer((c as any).jobs).kind)
               return (
                 <tr
                   key={c.id}
                   className="transition-colors cursor-pointer"
-                  style={{ borderBottom: '1px solid var(--divider)', background: detailCustomer?.id === c.id ? 'var(--active-bg)' : i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}
+                  style={{ background: detailCustomer?.id === c.id ? 'var(--active-bg)' : undefined }}
                   onClick={() => setDetailCustomer(detailCustomer?.id === c.id ? null : c)}
                 >
                   <td className="px-4 py-3">
@@ -898,7 +954,19 @@ export default function CustomersPage() {
                       const t = tallyJobs(c)
                       const rooms = t.rooms.length ? t.rooms : (c.interested_room ? [c.interested_room] : [])
                       if (!rooms.length) return null
-                      return <p className="text-xs" style={{ color: 'var(--accent)' }}>ห้อง {rooms.join(', ')}</p>
+                      // Merging the duplicate B2B records gave one developer 145
+                      // rooms on a single row, and printing them all made that
+                      // row about a thousand pixels tall. Past a handful the
+                      // list is not what the column is for — the count is, and
+                      // the drawer has the searchable table.
+                      const shown = rooms.slice(0, 6)
+                      const rest = rooms.length - shown.length
+                      return (
+                        <p className="text-xs" style={{ color: 'var(--accent)' }}>
+                          ห้อง {shown.join(', ')}
+                          {rest > 0 && <span style={{ color: 'var(--text-3)' }}> +อีก {rest} ห้อง</span>}
+                        </p>
+                      )
                     })()}
                   </td>
                   <td className="px-4 py-3">
@@ -932,12 +1000,14 @@ export default function CustomersPage() {
                     })()}
                   </td>
                   <td className="px-4 py-3 text-sm capitalize" style={{ color: 'var(--text-2)' }}>{c.source || '-'}</td>
-                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{(c as any).users?.name || '-'}</td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-2)' }}>{salesOf(c).join(' · ') || '-'}</td>
                   {(() => {
                     const cJobs: any[] = (c as any).jobs || []
                     const jobRev = cJobs.reduce((s: number, j: any) => s + (j.revenue_inc_vat || 0), 0)
-                    const isBudget = jobRev === 0 && (c.budget || 0) > 0 && isProspectStage(c.status)
-                    const totalRev = jobRev || c.budget || 0
+                    // "ประมาณ" now means: a prospect job whose value is the
+                    // sales estimate rather than a signed number.
+                    const isBudget = jobRev > 0 && summariseCustomer((c as any).jobs).kind === 'prospect'
+                    const totalRev = jobRev
                     const totalPaid = cJobs.reduce((s: number, j: any) =>
                       s + ((j.payments || []) as any[]).filter((p: any) => p.status === 'paid').reduce((ps: number, p: any) => ps + (p.paid_amount ?? p.amount ?? 0), 0), 0)
                     return (
@@ -970,7 +1040,7 @@ export default function CustomersPage() {
                     <div className="flex items-center gap-2">
                       <button onClick={() => {
                         setEditing(c)
-                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: c.budget, status: c.status, assigned_to: c.assigned_to, notes: jobField(c, 'notes'), customer_type: (c as any).customer_type || 'B2C', work_type: jobField(c, 'work_type') })
+                        setForm({ customer_name: c.customer_name, phone: c.phone, email: c.email, line_id: c.line_id, source: c.source, project_id: c.project_id, interested_room: c.interested_room, budget: ((c as any).jobs?.[0]?.revenue_inc_vat) || 0, assigned_to: salesIdOf(c), notes: jobField(c, 'notes'), customer_type: (c as any).customer_type || 'B2C', work_type: jobField(c, 'work_type') })
                         setOpen(true)
                       }} className="transition-colors" style={{ color: 'var(--text-2)' }}>
                         <Pencil size={14} />
@@ -1017,12 +1087,11 @@ export default function CustomersPage() {
           </div>
           <Select label="โครงการที่สนใจ *" value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })} options={projectOptions} />
           <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm({ ...form, interested_room: e.target.value })} placeholder="เช่น Z-905" />
-          {!editing && form.project_id && form.interested_room.trim() && (
-            <div className="col-span-2 flex items-center gap-2 px-3 py-2 rounded-[18px] text-xs" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-              <span style={{ color: 'var(--text-3)' }}>Customer ID ที่จะถูกสร้าง:</span>
-              <span className="font-mono font-bold" style={{ color: 'var(--accent)' }}>{form.project_id}-{form.interested_room.trim().toUpperCase()}</span>
-            </div>
-          )}
+          {/* The code the record is about to get used to be previewed here. It
+              could be, because it was built from the project and room on this
+              very form; a CST- number comes from the database instead and is
+              not known until save. Nothing is lost — the code is an internal
+              handle, and the drawer shows it once the record exists. */}
           <div>
             <label className="field-label">ประเภทลูกค้า</label>
             <div className="flex gap-2 mt-1">
@@ -1044,12 +1113,17 @@ export default function CustomersPage() {
             </select>
           </div>
           <Select label="ช่องทาง" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} options={SOURCE_OPTIONS} />
-          <Input label="งบประมาณ (บาท)" type="number" min={0} step={1000} value={form.budget} onChange={e => setForm({ ...form, budget: Number(e.target.value) })} />
-          <Select label="สถานะ" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
-            options={STATUS_LIST.filter(s => s.value !== 'closed' || form.status === 'closed').map(s => ({ value: s.value, label: `${s.icon} ${s.label}` }))} />
+          <MoneyField label="มูลค่างาน (บาท)" value={form.budget ? String(form.budget) : ''}
+            onChange={v => setForm({ ...form, budget: Number(v) || 0 })} />
+          {/* No status field. A customer has no stage of their own — the stage
+              belongs to each job and is moved from the Prospects card. */}
           <Select label="มอบหมายให้ Sales" value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} options={userOptions} />
           <div className="col-span-2">
-            <TextArea label="หมายเหตุ" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="บันทึกเพิ่มเติม..." />
+            {/* No หมายเหตุ here. A note is about an order, not a person: this
+                form could only write it when the customer had exactly one job,
+                so anyone with two rooms typed a note that was silently dropped.
+                It is edited on the job itself — Prospects, My Deals, Job
+                Registry — where it is always clear which room it belongs to. */}
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-5">
@@ -1083,9 +1157,9 @@ export default function CustomersPage() {
               source: detailCustomer.source,
               project_id: detailCustomer.project_id,
               interested_room: detailCustomer.interested_room,
-              budget: detailCustomer.budget,
-              status: detailCustomer.status,
-              assigned_to: detailCustomer.assigned_to,
+              // Seed from the job, not the customer — same reason as the save.
+              budget: ((detailCustomer as any).jobs?.[0]?.revenue_inc_vat) || 0,
+              assigned_to: salesIdOf(detailCustomer),
               notes: jobField(detailCustomer, 'notes'),
               customer_type: (detailCustomer as any).customer_type || 'B2C',
               work_type: jobField(detailCustomer, 'work_type'),

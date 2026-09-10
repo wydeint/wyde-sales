@@ -3,6 +3,8 @@
 import { calcB2BInstallments, calcB2BSingleInstallment, calcB2CInstallments } from '@/lib/paymentPlans'
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
+import JobNote from '@/components/ui/JobNote'
 import {
   X, ChevronRight, ChevronDown, Plus, Pencil,
   CheckCircle2, Circle, Wallet, Package, Wrench, ShoppingCart,
@@ -13,9 +15,10 @@ import { expectedDeliveryDate, fmtShortDate, type DeliveryJobCtx } from '@/lib/d
 import { generateLineMsg } from '@/lib/lineMessage'
 import DateInput from '@/components/ui/DateInput'
 import { baht } from '@/lib/money'
-import { appUserId } from '@/lib/currentUser'
 import { showAlert, showConfirm } from '@/components/ui/dialog'
 import { netReceived } from '@/lib/voucher'
+import { cancelJob, deliverJob } from '@/lib/jobLifecycle'
+import { exVatOf, incVatOf } from '@/lib/procurement'
 
 // ─── Types ────────────────────────────────────────────────
 export type ClientType = 'B2C' | 'B2B'
@@ -54,10 +57,12 @@ export interface FullJob {
   actual_deliver_date: string | null
   sales_name: string
   payment_plan_type: string | null
+  work_type: string | null
   work_days: number | null
   order_date: string | null
   contract_date: string | null
   expected_finish_date: string | null
+  notes: string | null
   work_start_date: string | null
   warranty_end: string | null
   installments: Installment[]
@@ -152,7 +157,10 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
   const [depositAmount, setDepositAmount] = useState(0)
   const [firstPaidAmount, setFirstPaidAmount] = useState(0)
   const [b2bPlan, setB2bPlan] = useState('po_bill')
-  const [b2bPoDate, setB2bPoDate] = useState(todayStr())
+  // Same as the My Deals copy: RPT has booking = PO = start on one day, N-RPT
+  // can start before the PO arrives and must stay hand-entered.
+  const [b2bPoDate, setB2bPoDate] = useState(
+    job.work_type === 'RPT' ? (job.order_date || todayStr()) : todayStr())
   const [b2bCount, setB2bCount] = useState(3)
   const [b2bPcts, setB2bPcts] = useState([30, 40, 30])
   const [paidDate, setPaidDate] = useState(job.order_date || todayStr())
@@ -206,7 +214,6 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
       ...(!job.order_date ? { order_date: isSingleB2B ? b2bPoDate : paidDate } : {}),
     }).eq('id', job.id)
     if ((isSingleB2B || firstInst?.trigger) && job.customer_id) {
-      await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
     }
     await supabase.from('payments').delete().eq('job_id', job.id)
     await supabase.from('payments').insert(preview.map((p, i) => ({
@@ -297,7 +304,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                   {plan === 'C' && (
                     <div className="mt-3">
                       <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดมัดจำ (บาท)</label>
-                      <input type="number" value={depositAmount || ''} onChange={e => setDepositAmount(Number(e.target.value))}
+                      <MoneyInput value={depositAmount ? String(depositAmount) : ''} onChange={v => setDepositAmount(Number(v) || 0)} ariaLabel="เงินมัดจำ"
                         placeholder={`เช่น ${Math.round(total * 0.1).toLocaleString()}`}
                         className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                     </div>
@@ -400,7 +407,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับจริง (฿)</label>
-                  <input type="number" value={firstPaidAmount || ''} onChange={e => setFirstPaidAmount(+e.target.value)}
+                  <MoneyInput value={firstPaidAmount ? String(firstPaidAmount) : ''} onChange={v => setFirstPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับจริง"
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle}
                     placeholder={String(firstInst?.amount || 0)} />
                 </div>
@@ -437,7 +444,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                       </div>
                       <div className="w-32">
                         <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
-                        <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(Number(e.target.value))}
+                        <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="ยอดส่วนลด"
                           placeholder="0"
                           className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                       </div>
@@ -515,7 +522,6 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
         ...(!job.order_date ? { order_date: paidDate } : {}),
       }).eq('id', job.id)
       if (job.customer_id) {
-        await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
       }
     } else if (!job.order_date && selected.installment_no === 1) {
       await supabase.from('jobs').update({ order_date: paidDate }).eq('id', job.id)
@@ -575,7 +581,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับ (฿)</label>
-              <input type="number" value={paidAmount || ''} onChange={e => setPaidAmount(+e.target.value)}
+              <MoneyInput value={paidAmount ? String(paidAmount) : ''} onChange={v => setPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับ"
                 className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle} />
             </div>
             <div>
@@ -608,7 +614,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
                 </div>
                 <div className="w-32">
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
-                  <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(Number(e.target.value))}
+                  <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="ยอดส่วนลด"
                     placeholder="0"
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                 </div>
@@ -666,27 +672,12 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
 
   async function save() {
     setSaving(true)
-    const wEnd = new Date(deliverDate)
-    wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
-    const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
-    const commissionMonth = deliverDate.slice(0, 7) + '-01'
-    await supabase.from('jobs').update({
-      actual_deliver_date: deliverDate, working_status: 'ส่งมอบแล้ว',
-      crm_stage: 'closed',  // delivery closes the deal; see my-deals for why
-      commission_month: commissionMonth,
-    }).eq('id', job.id)
-    if (markFinalPaid && finalInst) {
-      await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate, paid_amount: finalPaidAmount }).eq('id', finalInst.id)
-    }
-    const handoverData = { id: `HO-${job.id}`, job_id: job.id, customer_id: job.customer_id, project_id: job.project_id, room: job.room_no, delivery_date: deliverDate, work_status: 'delivered', status: 'completed' }
-    // See my-deals: id supplied, upsert, and the error actually read.
-    const { error: eHO } = await supabase.from('handovers').upsert(handoverData, { onConflict: 'id' })
-    if (eHO) { await showAlert('บันทึกข้อมูลส่งมอบไม่สำเร็จ: ' + eHO.message); setSaving(false); return }
-    await supabase.from('warranties').upsert({
-      id: `WAR-${job.id}`, customer_id: job.customer_id, project_id: job.project_id,
-      room: job.room_no, job_id: job.id, handover_date: deliverDate, warranty_start: deliverDate,
-      warranty_end: wEndStr, warranty_months: warrantyMonths, status: 'active',
-    }, { onConflict: 'id' })
+    const res = await deliverJob(supabase, job, {
+      deliverDate, warrantyMonths,
+      finalInstalment: markFinalPaid && finalInst ? { id: finalInst.id, paidAmount: finalPaidAmount } : null,
+    })
+    if (!res.ok) { await showAlert(res.error!); setSaving(false); return }
+    if (res.warning) await showAlert(res.warning)
     setSaving(false); onSaved(); onClose()
   }
 
@@ -731,7 +722,7 @@ export function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose
               {markFinalPaid && (
                 <div>
                   <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดที่รับจริง (฿)</label>
-                  <input type="number" value={finalPaidAmount || ''} onChange={e => setFinalPaidAmount(+e.target.value)}
+                  <MoneyInput value={finalPaidAmount ? String(finalPaidAmount) : ''} onChange={v => setFinalPaidAmount(Number(v) || 0)} ariaLabel="ยอดที่รับจริง"
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none font-semibold" style={inputStyle} />
                 </div>
               )}
@@ -764,8 +755,8 @@ export function RevenueCard({ job, onUpdated }: {
   const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
 
   function openEdit() { setExVat(String(job.revenue_ex_vat || '')); setIncVat(String(job.revenue_inc_vat || '')); setEditing(true) }
-  function handleExChange(v: string) { setExVat(v); const n = parseFloat(v); if (!isNaN(n) && n > 0) setIncVat(String(Math.round(n * 1.07))); else setIncVat('') }
-  function handleIncChange(v: string) { setIncVat(v); const n = parseFloat(v); if (!isNaN(n) && n > 0) setExVat(String(Math.round(n / 1.07))); else setExVat('') }
+  function handleExChange(v: string) { setExVat(v); const n = parseFloat(v); if (!isNaN(n) && n > 0) setIncVat(String(incVatOf(n))); else setIncVat('') }
+  function handleIncChange(v: string) { setIncVat(v); const n = parseFloat(v); if (!isNaN(n) && n > 0) setExVat(String(exVatOf(n))); else setExVat('') }
 
   async function save() {
     setSaving(true)
@@ -780,12 +771,12 @@ export function RevenueCard({ job, onUpdated }: {
       <div className="space-y-2">
         <div>
           <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา ex. VAT (บาท)</label>
-          <input type="number" value={exVat} onChange={e => handleExChange(e.target.value)}
+          <MoneyInput value={exVat} onChange={handleExChange} ariaLabel="ราคา ex VAT"
             className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
         </div>
         <div>
           <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา inc. VAT (บาท)</label>
-          <input type="number" value={incVat} onChange={e => handleIncChange(e.target.value)}
+          <MoneyInput value={incVat} onChange={handleIncChange} ariaLabel="ราคา inc VAT"
             className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
         </div>
       </div>
@@ -911,7 +902,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
         className="w-full px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
         style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       <div className="flex gap-2">
-        <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} placeholder="ยอด"
+        <MoneyInput value={editAmount} onChange={setEditAmount} ariaLabel="ยอด" placeholder="ยอด"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
         <DateInput value={editDueDate} onChange={e => setEditDueDate(e.target.value)}
@@ -949,7 +940,7 @@ export function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollec
         {/* Amount chip */}
         {inst.status === 'paid' && editingAmount ? (
           <div className="flex items-center gap-1">
-            <input type="number" value={amountVal} onChange={e => setAmountVal(e.target.value)}
+            <MoneyInput value={amountVal} onChange={setAmountVal} ariaLabel="ยอด"
               onKeyDown={e => { if (e.key === 'Enter') saveAmount(); if (e.key === 'Escape') setEditingAmount(false) }}
               autoFocus className="text-xs font-semibold w-24 px-2 py-0.5 rounded-[6px] focus:outline-none text-right"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--accent)', color: 'var(--accent-green)' }} />
@@ -1145,7 +1136,7 @@ export function AddInstallmentRow({ jobId, customerId, projectId, roomNo, nextNo
         className="w-full px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
         style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
       <div className="flex gap-2">
-        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="ยอด (บาท)"
+        <MoneyInput value={amount} onChange={setAmount} ariaLabel="ยอด" placeholder="ยอด (บาท)"
           className="flex-1 px-3 py-1.5 rounded-[8px] text-xs focus:outline-none"
           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
         <DateInput value={dueDate} onChange={e => setDueDate(e.target.value)}
@@ -1223,7 +1214,7 @@ function JobCancelModal({ onClose, onConfirm }: {
         <div className="space-y-2">
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>{cancelType === 'forfeit' ? 'ยอดที่ยึด (บาท)' : 'ยอดคืน (บาท)'}</label>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
+            <MoneyInput value={amount} onChange={setAmount} ariaLabel="ยอด" placeholder="0"
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: `1px solid ${needsAmount ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }} />
             {needsAmount && (
@@ -1274,14 +1265,30 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
   const [cancelConfirmed, setCancelConfirmed] = useState(false)
   const [contractDateVal, setContractDateVal] = useState(job.contract_date || '')
   const [expectedDateVal, setExpectedDateVal] = useState(job.expected_finish_date || '')
+  const [editingOrder, setEditingOrder] = useState(false)
+  const [orderDateVal, setOrderDateVal] = useState(job.order_date || '')
   const [editingContract, setEditingContract] = useState(false)
   const [editingExpected, setEditingExpected] = useState(false)
-  useEffect(() => { setJob(initialJob); setContractDateVal(initialJob.contract_date || ''); setExpectedDateVal(initialJob.expected_finish_date || '') }, [initialJob])
+  useEffect(() => { setJob(initialJob); setContractDateVal(initialJob.contract_date || ''); setExpectedDateVal(initialJob.expected_finish_date || ''); setOrderDateVal(initialJob.order_date || '') }, [initialJob])
 
-  async function saveDateField(field: 'contract_date' | 'expected_finish_date', val: string) {
+  async function saveDateField(field: 'order_date' | 'contract_date' | 'expected_finish_date', val: string) {
     const v = val || null
-    await supabase.from('jobs').update({ [field]: v }).eq('id', job.id)
-    setJob(prev => ({ ...prev, [field]: v }))
+    // On a PO-billed B2B **RPT** job the PO date is also the start date — the
+    // owner's rule, and what docs/business-logic.md has said since July. Nothing
+    // else can supply it: that plan's single instalment is is_work_trigger =
+    // false, so no payment ever fires the trigger that fills work_start_date.
+    // Left to hand entry it simply did not get filled — 140 rooms had none.
+    //
+    // N-RPT is excluded on purpose: that work can begin before the PO is issued
+    // (5 of the 6 such rooms have the two dates apart), so copying one onto the
+    // other would invent a start date rather than record one. Only ever fills a
+    // blank; a start date someone set deliberately is never overwritten.
+    const alsoStart = field === 'order_date' && v
+      && job.customer_type === 'B2B' && job.payment_plan_type === 'po_bill'
+      && job.work_type === 'RPT' && !job.work_start_date
+    const patch = alsoStart ? { [field]: v, work_start_date: v } : { [field]: v }
+    await supabase.from('jobs').update(patch).eq('id', job.id)
+    setJob(prev => ({ ...prev, ...patch }))
   }
 
   const { hasPlan, finalPaid, delivered, paidCount, totalCount, pendingInstallments, activeStage } = getFullStageInfo(job)
@@ -1324,6 +1331,11 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
           </div>
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
+            {/* หมายเหตุของงาน — บนสุด เหนือตัวเลข และตำแหน่งเดียวกันทุกหน้า
+                ที่เปิดงานใบนี้ได้ ดู components/ui/JobNote.tsx */}
+            <JobNote jobId={job.id} value={job.notes}
+              onSaved={next => setJob(prev => ({ ...prev, notes: next }))} />
+
             {/* Revenue */}
             <RevenueCard job={job} onUpdated={(exVat, incVat) => setJob(prev => ({ ...prev, revenue_ex_vat: exVat, revenue_inc_vat: incVat }))} />
 
@@ -1348,12 +1360,23 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
 
             {/* 3-column date row — same height, same Thai format */}
             <div className="grid grid-cols-3 gap-2">
-              {/* วันรับจอง / รับ PO — read-only */}
-              <div className="rounded-[11px] px-3 py-2.5" style={{ background: 'var(--hover-bg)' }}>
+              {/* วันรับจอง / รับ PO — กดเพื่อแก้ เหตุผลเดียวกับใน My Deals:
+                  งานเก่าที่เพิ่งลงระบบขายไปนานแล้ว ระบบเดาให้ไม่ได้ */}
+              <div className="rounded-[11px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
+                onClick={() => !editingOrder && setEditingOrder(true)}>
                 <p className="text-micro" style={{ color: 'var(--text-3)' }}>{job.customer_type === 'B2B' ? 'วันรับ PO' : 'วันรับจอง'}</p>
-                <p className="text-xs font-bold mt-1.5" style={{ color: job.order_date ? 'var(--text-1)' : 'var(--text-3)' }}>
-                  {job.order_date ? fmtDate(job.order_date) : '—'}
-                </p>
+                {editingOrder ? (
+                  <DateInput value={orderDateVal} autoFocus
+                    onChange={e => setOrderDateVal(e.target.value)}
+                    onBlur={e => { saveDateField('order_date', e.target.value); setEditingOrder(false) }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('order_date', orderDateVal); setEditingOrder(false) } }}
+                    className="w-full text-xs font-semibold focus:outline-none mt-1"
+                    style={{ background: 'transparent', color: 'var(--text-1)', border: 'none' }} />
+                ) : (
+                  <p className="text-xs font-bold mt-1.5" style={{ color: job.order_date ? 'var(--text-1)' : 'var(--text-3)' }}>
+                    {job.order_date ? fmtDate(job.order_date) : '+ ระบุ'}
+                  </p>
+                )}
               </div>
               {/* วันทำสัญญา — click to edit */}
               <div className="rounded-[11px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
@@ -1372,10 +1395,10 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                   </p>
                 )}
               </div>
-              {/* วันคาดเสร็จ — click to edit */}
+              {/* วันคาดส่งมอบ — click to edit. Same rename as the My Deals copy. */}
               <div className="rounded-[11px] px-3 py-2.5 cursor-pointer" style={{ background: 'var(--hover-bg)' }}
                 onClick={() => !editingExpected && setEditingExpected(true)}>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันคาดเสร็จ</p>
+                <p className="text-micro" style={{ color: 'var(--text-3)' }}>วันคาดส่งมอบ</p>
                 {editingExpected ? (
                   <DateInput value={expectedDateVal} autoFocus
                     onChange={e => setExpectedDateVal(e.target.value)}
@@ -1383,11 +1406,27 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { saveDateField('expected_finish_date', expectedDateVal); setEditingExpected(false) } }}
                     className="w-full text-xs font-semibold focus:outline-none mt-1"
                     style={{ background: 'transparent', color: 'var(--text-1)', border: 'none' }} />
-                ) : (
-                  <p className="text-xs font-bold mt-1.5" style={{ color: expectedDateVal ? 'var(--text-1)' : 'var(--text-3)' }}>
-                    {expectedDateVal ? fmtDate(expectedDateVal) : '+ ระบุ'}
-                  </p>
-                )}
+                ) : (() => {
+                  // Read the date the way Handover does, through the shared
+                  // formula — start date + work days. This slot used to show
+                  // only expected_finish_date, so picking "60 วัน" in the
+                  // payment-plan step appeared to do nothing at all: Handover
+                  // scheduled the room from it while this box still said
+                  // "+ ระบุ". Typing here still wins, because saveDateField
+                  // writes expected_finish_date and the formula prefers it.
+                  const derived = expectedDeliveryDate(job as DeliveryJobCtx)
+                  const shown = expectedDateVal || derived
+                  return (
+                    <p className="text-xs font-bold mt-1.5" style={{ color: shown ? 'var(--text-1)' : 'var(--text-3)' }}>
+                      {shown ? fmtDate(shown) : '+ ระบุ'}
+                      {!expectedDateVal && derived && (
+                        <span className="font-normal ml-1" style={{ color: 'var(--text-3)' }}>
+                          · จาก {job.work_days ?? 60} วัน
+                        </span>
+                      )}
+                    </p>
+                  )
+                })()}
               </div>
             </div>
 
@@ -1583,34 +1622,9 @@ export function DealDrawer({ job: initialJob, onClose, onRefresh, topSlot }: {
         <JobCancelModal
           onClose={() => setShowCancel(false)}
           onConfirm={async (type, amount, date, notes) => {
-            // Cancelling is a stage move as much as a money one. Leaving
-            // crm_stage and the customer where they were left a cancelled job
-            // still sitting in the จอง column of Prospects; the pipeline page's
-            // own cancel already moved both, and only booked jobs came through
-            // here, so exactly the deals with money on them were the ones left
-            // in the wrong place.
-            const { error: jobErr } = await supabase.from('jobs').update({
-              working_status: 'ยกเลิก', crm_stage: 'lost',
-              cancel_type: type, cancel_date: date || null,
-              cancel_amount: amount || null, cancel_notes: notes || null,
-            }).eq('id', job.id)
-            if (jobErr) { await showAlert(`บันทึกการยกเลิกไม่สำเร็จ: ${jobErr.message}`); return }
-            await supabase.from('customers').update({ status: 'lost' }).eq('id', job.customer_id)
-            // Refund only — a forfeited deposit is money already received and
-            // already in รายรับ; booking it again as income double-counted it.
-            if (type === 'refund' && amount > 0) {
-              const { error: finErr } = await supabase.from('finance_entries').insert({
-                type: 'expense',
-                category: 'คืนเงินยกเลิก',
-                amount, entry_date: date,
-                description: `คืนเงินยกเลิก: ${job.customer_name} ห้อง ${job.room_no}${notes ? ' — ' + notes : ''}`,
-                ref_id: job.id,
-                created_by: await appUserId(supabase),
-              })
-              // Say so. This insert failed silently before, and a refund that
-              // never reached Finance is money the books do not know left.
-              if (finErr) await showAlert(`ยกเลิกแล้ว แต่บันทึกรายการคืนเงินไม่สำเร็จ: ${finErr.message}`)
-            }
+            const res = await cancelJob(supabase, job, { type, amount, date, notes })
+            if (!res.ok) { await showAlert(res.error!); return }
+            if (res.warning) await showAlert(res.warning)
             setShowCancel(false); onClose(); onRefresh()
           }}
         />
@@ -1649,10 +1663,12 @@ export async function loadFullJob(jobId: string): Promise<FullJob | null> {
     actual_deliver_date: raw.actual_deliver_date || null,
     sales_name: (raw as any).sales?.name || '',
     payment_plan_type: raw.payment_plan_type || null,
+    work_type: raw.work_type || null,
     work_days: raw.work_days || null,
     order_date: raw.order_date || null,
     contract_date: raw.contract_date || null,
     expected_finish_date: raw.expected_finish_date || null,
+    notes: raw.notes || null,
     work_start_date: raw.work_start_date || null,
     warranty_end: war?.warranty_end || null,
     quotation1_url: raw.quotation1_url || null,

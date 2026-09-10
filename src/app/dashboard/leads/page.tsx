@@ -12,6 +12,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { createProspectJob } from '@/lib/prospectJob'
+import { nextCustomerId, findCustomerByRoom } from '@/lib/customerId'
 
 interface Lead {
   id: number
@@ -202,7 +203,11 @@ export default function LeadsPage() {
       supabase.from('projects').select('id,name').eq('active', true).order('name'),
       supabase.from('users').select('id,name').eq('active', true).eq('role', 'sales').order('name'),
       supabase.from('customers').select('phone, project_id, interested_room'),
-      supabase.from('jobs').select('phone, project_id, room_no'),
+      // No `phone` here: jobs has never had that column, so asking for it made
+      // PostgREST reject the whole select and this lookup came back empty — the
+      // "ซ้ำในระบบ" badge silently stopped seeing rooms that already have a job.
+      // Phone numbers come from the customers query above.
+      supabase.from('jobs').select('project_id, room_no'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setLeads((l as any) || [])
@@ -389,22 +394,22 @@ export default function LeadsPage() {
     let customerId: string
 
     if (projId && room) {
-      const candidateId = `${projId}-${room.toUpperCase()}`
-      // Check if customer already exists (e.g. same room already in pipeline)
-      const { data: existing } = await supabase.from('customers').select('id').eq('id', candidateId).maybeSingle()
-      if (existing) {
+      // Is this room already in the pipeline? This used to ask whether a
+      // customer existed whose *id* was `PROJECT-ROOM`. Codes are CST-nnnn now,
+      // so that question can only ever answer no — and the guard it protects is
+      // the one that stops a second record being made for a room that already
+      // has one. Ask about the room itself instead: the record filed under it,
+      // or anyone already holding a job in it.
+      const existingId = await findCustomerByRoom(supabase, projId, room)
+      if (existingId) {
         // Link lead to existing customer instead of creating duplicate
-        await supabase.from('condo_leads').update({ customer_id: existing.id }).eq('id', lead.id)
+        await supabase.from('condo_leads').update({ customer_id: existingId }).eq('id', lead.id)
         setAddingId(null)
         load()
         return
       }
-      customerId = candidateId
-    } else {
-      const { data: last } = await supabase.from('customers').select('id').order('id', { ascending: false }).limit(1)
-      const lastNum = last?.[0]?.id ? parseInt(last[0].id.replace('CST-', '')) : 0
-      customerId = 'CST-' + String(lastNum + 1).padStart(4, '0')
     }
+    customerId = await nextCustomerId(supabase)
 
     const { error: ce } = await supabase.from('customers').insert({
       id: customerId,
@@ -413,8 +418,8 @@ export default function LeadsPage() {
       email: lead.email || '',
       project_id: projId,
       interested_room: room,
-      budget: lead.s00_budget || lead.contract_price || 0,
-      status: 'new',
+      // The Origin budget goes on the job below, not here — one customer can be
+      // converted for several rooms and customers.budget holds only one number.
     })
     if (ce) { setAddError(ce.message); setAddingId(null); return }
     // A converted lead is a prospect, and a prospect needs a job — the note this
@@ -431,6 +436,7 @@ export default function LeadsPage() {
       // job. It used to be written to the customer, where it had no job to
       // attach to and nothing displayed it.
       notes: lead.model_name ? `Model: ${lead.model_name}` : null,
+      revenueIncVat: lead.s00_budget || lead.contract_price || 0,
     })
     await supabase.from('condo_leads').update({ customer_id: customerId }).eq('id', lead.id)
     setAddingId(null)
@@ -546,7 +552,7 @@ export default function LeadsPage() {
                 </button>
               </div>
               <div className="overflow-auto max-h-60 rounded-[11px] border text-xs" style={{ borderColor: 'var(--divider)' }}>
-                <table className="w-full">
+                <table className="w-full tbl-rows">
                   <thead>
                     <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                       {['', 'Tower-ห้อง', 'ชื่อลูกค้า', 'เบอร์', 'ราคาสัญญา', 'S00 (งบตกแต่ง)', 'วันโอน'].map(h => (
@@ -649,7 +655,7 @@ export default function LeadsPage() {
       {/* Table */}
       <div className="ds-card">
         <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: 780 }}>
+          <table className="w-full tbl-rows" style={{ minWidth: 780 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                 {['โครงการ', 'ตึก-ห้อง / Model', 'ชื่อลูกค้า', 'เบอร์โทร', 'ราคาสัญญา', 'S00 (งบตกแต่ง)', 'วันโอน', 'สถานะ', ''].map(h => (
@@ -664,7 +670,7 @@ export default function LeadsPage() {
                 <TableEmpty colSpan={9} icon={Users} message={leads.length === 0 ? 'ยังไม่มีข้อมูล' : 'ไม่พบ lead ที่ตรงกับการค้นหา'} sub={leads.length === 0 ? 'กด "นำเข้า xlsx" เพื่อเริ่มต้น' : undefined} />
               )}
               {paginated.map((l, i) => (
-                <tr key={l.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
+                <tr key={l.id} >
                   <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>
                     {l.projects?.name || l.project_id || '—'}
                   </td>

@@ -10,6 +10,7 @@ import { fetchAllRows } from '@/lib/fetchAll'
 import { thaiDate } from '@/lib/thaiDate'
 import { bahtShortOrDash } from '@/lib/money'
 import { Building2, TrendingUp, CheckCircle2, DollarSign, ChevronUp, ChevronDown, PackageCheck, XCircle } from 'lucide-react'
+import { compareRoom } from '@/lib/utils'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface ProjectRow {
@@ -569,7 +570,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
               </p>
               <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
                 <div className="overflow-y-auto" style={{ maxHeight: 280 }}>
-                  <table className="w-full text-xs">
+                  <table className="w-full text-xs tbl-rows">
                     <thead className="sticky top-0" style={{ background: 'var(--card-bg)' }}>
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--text-3)' }}>ห้อง</th>
@@ -666,7 +667,7 @@ const COLS = {
 } as const
 
 const SubTable = ({ side, children }: { side: 'sales' | 'delivery'; children: React.ReactNode }) => (
-  <table className="w-full text-xs" style={{ tableLayout: 'fixed' }}>
+  <table className="w-full text-xs tbl-rows" style={{ tableLayout: 'fixed' }}>
     <colgroup>{COLS[side].map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
     {children}
   </table>
@@ -709,7 +710,7 @@ export default function ProjectSummaryPage() {
       const [projRes, jobRes, custRes, payRes, userRes] = await Promise.all([
         supabase.from('projects').select('id, name, total_units').order('name'),
         supabase.from('jobs').select('id, project_id, room_no, working_status, revenue_inc_vat, work_type, customer_type, order_date, actual_deliver_date, sales_id, cancel_type, cancel_amount, crm_stage, customer_id'),
-        supabase.from('customers').select('id, project_id, status'),
+        supabase.from('customers').select('id, project_id'),
         // 1,173 instalment rows against PostgREST's 1,000 cap — fetchAllRows or
         // the cash figures come out short with no error to say so.
         fetchAllRows(() => supabase.from('payments')
@@ -803,7 +804,7 @@ export default function ProjectSummaryPage() {
 
         // A cancelled job is not work we hold, so it is kept out of every other
         // figure and counted on its own. This page was the only one still adding
-        // them in: 7 jobs worth ฿1.1M were inflating Wyde Clients and รายได้รวม.
+        // them in: 7 jobs worth ฿1.1M were inflating Job Registry and รายได้รวม.
         if (j.working_status === 'ยกเลิก') {
           m.cancelled++
           m.rev_cancelled += rev
@@ -840,7 +841,7 @@ export default function ProjectSummaryPage() {
 
         // ── Sales side ──────────────────────────────────────────────
         // Backlog keys off working_status, not actual_deliver_date, so that
-        // ส่งมอบแล้ว + รอส่งมอบ adds up to Wyde Clients. Seven jobs carry a
+        // ส่งมอบแล้ว + รอส่งมอบ adds up to Job Registry. Seven jobs carry a
         // handover date while still marked ดำเนินการ; using the date here made
         // the two columns disagree by ฿813K with nothing on screen to explain it.
         // Whichever field is stale, the page has to pick one and stay with it.
@@ -908,12 +909,8 @@ export default function ProjectSummaryPage() {
         if (j.crm_stage === 'booked') bump(custMap, j.project_id)
         else if (j.crm_stage === 'lost') bump(lostMap, j.project_id)
       }
-      const customersWithJobs = new Set((jobs as any[]).map(j => j.customer_id).filter(Boolean))
-      for (const c of customers) {
-        if (!c.project_id || customersWithJobs.has((c as any).id)) continue
-        if (c.status === 'booked') bump(custMap, c.project_id)
-        else if (c.status === 'lost') bump(lostMap, c.project_id)
-      }
+      // The customers-without-a-job fallback is gone: every customer has one
+      // (verified 0 without), so the jobs loop above already counts everybody.
 
       const result: ProjectRow[] = projects.map(p => {
         const j = jobMap.get(p.id) ?? emptyAgg()
@@ -936,9 +933,10 @@ export default function ProjectSummaryPage() {
           lead_sample: j.leadCount,
           rooms_sold: j.rooms.size,
           bySales: j.bySales,
-          // Newest sale first; jobs with no order_date sink to the bottom rather
-          // than sorting as the epoch and heading the list.
-          jobsList: j.jobsList.sort((a, b) => (b.order_date || '').localeCompare(a.order_date || '')),
+          // "รายการห้อง" is a room list, so it reads in room order like every
+          // other room list in the app. It used to be newest-sale-first, which
+          // made looking a specific room up a scan of the whole card.
+          jobsList: j.jobsList.sort((a, b) => compareRoom(a.room, b.room)),
           miss_wt: j.miss_wt, miss_order: j.miss_order, miss_sales: j.miss_sales,
           cancel_refund_n: j.cancel_refund_n, cancel_refund_amt: j.cancel_refund_amt,
           cancel_forfeit_n: j.cancel_forfeit_n, cancel_forfeit_amt: j.cancel_forfeit_amt,
@@ -1042,7 +1040,7 @@ export default function ProjectSummaryPage() {
         {/* Title */}
         <PageHeader
           title="Project Summary"
-          subtitle="ภาพรวมห้อง ยอด Wyde Clients และรายได้ แยกตามโครงการ"
+          subtitle="ภาพรวมห้อง จำนวนงาน และรายได้ แยกตามโครงการ"
           className="mb-4"
           actions={<span className="text-xs" style={{ color: 'var(--text-3)' }}>{filtered.length} โครงการ</span>}
         />
@@ -1095,7 +1093,7 @@ export default function ProjectSummaryPage() {
           {[
             { icon: Building2, label: 'โครงการที่มีงาน', value: `${filtered.length}`, sub: `จากทั้งหมด ${rows.length}`, color: 'var(--accent)' },
             { icon: TrendingUp, label: 'ห้องทั้งหมด', value: totals.units.toLocaleString(), sub: 'ตามที่บันทึก', color: 'var(--accent-blue)' },
-            { icon: CheckCircle2, label: 'Wyde Clients', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: 'var(--accent-green)' },
+            { icon: CheckCircle2, label: 'งานที่ขายได้', value: `${totals.jobs} ห้อง`, sub: `B2C ${totalB2C} · B2B ${totalB2B}`, color: 'var(--accent-green)' },
             { icon: DollarSign, label: 'รายได้รวม', value: fM(totals.rev), sub: `ส่งมอบแล้ว ${fM(totals.revDel)}`, color: 'var(--accent-amber)' },
           ].map(k => {
             const Icon = k.icon
@@ -1116,13 +1114,13 @@ export default function ProjectSummaryPage() {
 
       {/* Table */}
       <div className="tbl-scroll">
-        <table className="w-full text-sm border-collapse" style={{ minWidth: 900 }}>
+        <table className="w-full text-sm border-collapse tbl-rows" style={{ minWidth: 900 }}>
           <thead className="sticky top-0 z-10" style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--divider)' }}>
             <tr>
               <Th label="โครงการ" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} right={false} />
               <Th label="ห้องทั้งหมด" sortKey="total_units" current={sortKey} dir={sortDir} onSort={handleSort} />
               <Th label="สนใจ/จอง" sortKey="booked" current={sortKey} dir={sortDir} onSort={handleSort} />
-              <Th label="Wyde Clients" sortKey="jobs_total" current={sortKey} dir={sortDir} onSort={handleSort} />
+              <Th label="งานที่ขายได้" sortKey="jobs_total" current={sortKey} dir={sortDir} onSort={handleSort} />
               {/* B2C / B2B / RPT / N-RPT / ไม่ระบุ used to sit here. Five columns
                   of bare counts pushed the table to fifteen wide and forced a
                   sideways scroll on every read. They live in the drawer now,
@@ -1154,9 +1152,6 @@ export default function ProjectSummaryPage() {
                 <tr key={r.id}
                   className="cursor-pointer"
                   onClick={() => setOpenRow(r)}
-                  style={{ background: i % 2 === 0 ? 'transparent' : 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--active-bg)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = i % 2 === 0 ? 'transparent' : 'var(--hover-bg)'}
                 >
                   <td className="px-3 py-2.5">
                     <p className="font-semibold text-xs leading-tight" style={{ color: 'var(--text-1)' }}>{r.name}</p>

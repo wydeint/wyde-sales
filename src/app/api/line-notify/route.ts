@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireWriter } from '@/lib/serverAuth'
 
 export async function POST(req: NextRequest) {
   try {
+    // This route had no auth at all: anyone who knew the URL could push a
+    // message into the company LINE group from outside the app.
+    const denied = await requireWriter()
+    if (denied) return denied
+
     const token = process.env.LINE_ACCESS_TOKEN?.replace(/^﻿/, '').trim()
     const groupId = process.env.LINE_GROUP_ID?.trim()
 

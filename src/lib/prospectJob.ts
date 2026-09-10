@@ -31,11 +31,23 @@ export async function createProspectJob(
     workType?: string | null
     salesId?: string | null
     crmStage: string
+    /**
+     * มูลค่างาน (inc. VAT) — what sales expects this room to be worth.
+     *
+     * It used to be written to `customers.budget` instead, which cannot work:
+     * one customer holds up to 147 rooms and has one budget field, so the
+     * number could not say which room it belonged to. Every screen then read it
+     * as `job.revenue || customer.budget`, i.e. as a stand-in for this column —
+     * so it was always this job's value, stored on the wrong row. Owner's call
+     * 2026-09-07. See lib/ownership.ts.
+     */
+    revenueIncVat?: number | null
     orderDate?: string | null
     /** Note about the order — owned by the job, never the customer. */
     notes?: string | null
   },
 ): Promise<string> {
+  const rev = Number(args.revenueIncVat) || 0
   const { data: allJobIds } = await supabase.from('jobs').select('id').like('id', 'JOB-%')
   let baseNum = 1
   if (allJobIds && allJobIds.length > 0) {
@@ -60,6 +72,10 @@ export async function createProspectJob(
       sales_id: args.salesId ?? null,
       crm_stage: args.crmStage,
       working_status: null,
+      revenue_inc_vat: rev,
+      // Written together, always — the rest of the app reads whichever it needs
+      // and a job with inc but no ex reports a GP% off by the VAT rate.
+      revenue_ex_vat: rev ? Math.round((rev / 1.07) * 100) / 100 : 0,
       order_date: args.orderDate ?? null,
       notes: args.notes ?? null,
     })

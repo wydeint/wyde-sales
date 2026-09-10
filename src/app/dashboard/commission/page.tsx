@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
 import { DollarSign, ChevronDown, ChevronRight, CheckCircle, Clock, Banknote, Plus, Trash2, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { PageSpinner, PageError, EmptyState, TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
@@ -10,6 +11,7 @@ import { COMMISSION_STATUSES } from '@/lib/status'
 import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, type PeriodUnit } from '@/lib/period'
 import { baht } from '@/lib/money'
+import { exVatOf, round2 } from '@/lib/procurement'
 
 // ─── Types ────────────────────────────────────────────────
 interface Job {
@@ -210,7 +212,7 @@ function IndividualTab({
 
               {isOpen && (
                 <div className="overflow-x-auto" style={{ borderTop: '1px solid var(--divider)', WebkitOverflowScrolling: 'touch' as any }}>
-                  <table className="w-full text-sm" style={{ minWidth: 560 }}>
+                  <table className="w-full text-sm tbl-rows" style={{ minWidth: 560 }}>
                     <thead>
                       <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                         {['ลูกค้า / ห้อง', 'โครงการ', ...(isManager ? ['Sales'] : []), 'Revenue', 'Rate', 'Commission', 'สถานะ'].map(h => (
@@ -316,7 +318,7 @@ function ReferralTab({
 
   function canEdit(j: Job) { return isManager || j.sales_id === myUserId }
 
-  function calcPctAmount(j: Job) { return Math.round((j.revenue_ex_vat || j.revenue_inc_vat / 1.07) * (newPct / 100)) }
+  function calcPctAmount(j: Job) { return round2((j.revenue_ex_vat || exVatOf(j.revenue_inc_vat)) * (newPct / 100)) }
 
   function openAdd(jobId: string) {
     setAddingFor(jobId); setNewName(''); setNewAmount(''); setNewPct(1); setInputMode('amount')
@@ -459,7 +461,7 @@ function ReferralTab({
                     {inputMode === 'amount' ? (
                       <div className="w-32">
                         <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>ยอดเงิน (฿)</p>
-                        <input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)}
+                        <MoneyInput value={newAmount} onChange={setNewAmount} ariaLabel="ยอดเงิน" 
                           placeholder="0"
                           className="w-full rounded-[8px] px-3 py-2 text-xs focus:outline-none"
                           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
@@ -653,7 +655,7 @@ function StatusTab({
         {filtered.length === 0 ? (
           <EmptyState icon={AlertCircle} message="ไม่พบรายการ" />
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-sm tbl-rows">
             <thead>
               <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                 {['ลูกค้า / ห้อง', ...(isManager ? ['Sales'] : []), 'เดือน', 'ค่าคอม', 'ค่าแนะนำ', 'รวม', 'สถานะ'].map(h => (

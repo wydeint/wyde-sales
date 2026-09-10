@@ -13,15 +13,35 @@
  * the caller picks the function and the whole column stays in one unit.
  */
 
-/** Full value, always. The default for tables, drawers, forms, and anywhere a
- *  figure is read rather than compared. `฿1,000,000` */
+/**
+ * Full value, always, to the satang. The default for tables, drawers, forms,
+ * and anywhere a figure is read rather than compared. `฿1,000,000.00`
+ *
+ * This used to round to whole baht, which was fine while the app only ever
+ * showed sale prices — those are agreed in round amounts, and 96% of
+ * `revenue_inc_vat` has no satang at all.
+ *
+ * `revenue_ex_vat` is the opposite: it is `inc ÷ 1.07` and therefore almost
+ * never round — **689 of 967 jobs carry satang**. Rounding it on screen was
+ * harmless until procurement started entering costs to the satang, because a
+ * GP% is `(ex − cost) ÷ ex`. A room showing ฿7,477 against a cost of ฿6,542.06
+ * cannot be checked by hand: the reader gets 934.94, the app says 934.58, and
+ * neither number is wrong — only the display was. Accounting reconciles this
+ * app against its own sheets, so the figure on screen has to be the figure in
+ * the calculation.
+ *
+ * Two decimals always, including `.00`, so a column lines up on the point
+ * under `tabular-nums` — the same rule `bahtShort` and `bahtMB` already follow.
+ */
 export const baht = (n: number | null | undefined): string =>
-  n ? '฿' + Math.round(n).toLocaleString('th-TH') : '฿0'
+  '฿' + (n || 0).toLocaleString('th-TH', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  })
 
 /** Same, but an em dash for nothing — for cells where `฿0` would read as a
  *  real amount of zero rather than an absence. */
 export const bahtOrDash = (n: number | null | undefined): string =>
-  n ? '฿' + Math.round(n).toLocaleString('th-TH') : '–'
+  n ? baht(n) : '–'
 
 /** One million. Below this the full value is at most nine characters wide
  *  (`฿999,999`), which every slot in the app can take — so there is nothing to
@@ -67,3 +87,12 @@ export const bahtMB = (n: number | null | undefined): string =>
   n ? '฿' + (n / MILLION).toLocaleString('th-TH', {
     minimumFractionDigits: 2, maximumFractionDigits: 2,
   }) + ' MB.' : '฿0'
+
+/**
+ * `bahtExact` used to live here: the same formatter as `baht`, but keeping
+ * satang, on the rule that cost carries satang and sale prices do not.
+ *
+ * That split is gone — `baht` keeps satang now, for every figure in the app,
+ * so the two were byte-for-byte identical and only waiting to drift apart.
+ * Procurement calls `baht` / `bahtOrDash` like everywhere else.
+ */

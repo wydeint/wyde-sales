@@ -172,7 +172,7 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left rounded-[11px] p-3 flex flex-col gap-2 transition-all group"
+      className="w-full text-left rounded-[8px] p-3 flex flex-col gap-2 transition-all group"
       style={{
         background: 'var(--card-bg)',
         border: `1px solid ${isOverdue ? 'color-mix(in srgb, var(--accent-red) 35%, transparent)' : 'var(--card-border)'}`,
@@ -188,7 +188,7 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
               {job.room_no || '—'}
             </p>
             {seqNo && seqNo > 0 && (
-              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[8px] flex-shrink-0"
                 style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                 งานที่ {seqNo}
               </span>
@@ -203,13 +203,13 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
       {/* work type + phone */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {job.work_type && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {job.work_type}
           </span>
         )}
         {job.package_type && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
             {job.package_type}
           </span>
@@ -249,14 +249,14 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
             // so this chip stays distinguishable from the เกินกำหนด chip beside it.
             const tone = payment.due_date && payment.due_date < today ? 'var(--accent-red)' : 'var(--accent-orange)'
             return (
-              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+              <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
                 style={{ background: `color-mix(in srgb, ${tone} 12%, transparent)`, color: tone }}>
                 ค้าง {payment.installment_name}
               </span>
             )
           })()}
           {isOverdue && (
-            <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
+            <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-red) 15%, transparent)', color: 'var(--accent-red)' }}>
               เกินกำหนด
             </span>
           )}
@@ -447,7 +447,7 @@ function AddJobModal({
           </div>
           {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving}
-            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? '#666' : 'var(--accent)' }}>
             {saving ? 'กำลังสร้างงาน...' : '+ เพิ่มงาน'}
           </button>
@@ -961,7 +961,7 @@ export default function JobsPage() {
                   <p className="text-xs font-bold uppercase tracking-wider flex-shrink-0" style={{ color: 'var(--accent)' }}>
                     {projectName}
                   </p>
-                  <span className="text-xs px-1.5 py-0.5 rounded-[4px] font-semibold flex-shrink-0"
+                  <span className="text-xs px-1.5 py-0.5 rounded-[8px] font-semibold flex-shrink-0"
                     style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                     {groupJobs.length} งาน
                   </span>
@@ -987,7 +987,7 @@ export default function JobsPage() {
         <>
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-[20px] p-6 space-y-5 pointer-events-auto"
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-[18px] p-6 space-y-5 pointer-events-auto"
             data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
             {/* Modal header */}
@@ -1063,7 +1063,7 @@ export default function JobsPage() {
                     )}
 
                     {/* B2C: combined info card (ชื่อ + โครงการ + เบอร์) */}
-                    <div className="col-span-2 rounded-[11px] overflow-hidden"
+                    <div className="col-span-2 rounded-[8px] overflow-hidden"
                       style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                       {/* ชื่อลูกค้า */}
                       <div className="flex items-center gap-3 px-4 py-3"
@@ -1079,7 +1079,7 @@ export default function JobsPage() {
                       {/* เลขห้อง + โครงการ */}
                       <div className="px-4 py-2 flex items-center gap-2"
                         style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
-                        <span className="text-xs font-semibold flex-shrink-0 rounded-[5px] px-2 py-0.5"
+                        <span className="text-xs font-semibold flex-shrink-0 rounded-[8px] px-2 py-0.5"
                           style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                           {editing.room_no || '—'}
                         </span>
@@ -1126,7 +1126,7 @@ export default function JobsPage() {
                     )}
 
                     {/* B2B: combined card (ชื่อบริษัท + โครงการ + เบอร์) */}
-                    <div className="col-span-2 rounded-[11px] overflow-hidden"
+                    <div className="col-span-2 rounded-[8px] overflow-hidden"
                       style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                       {/* ชื่อบริษัท */}
                       <div className="flex items-center gap-3 px-4 py-3"
@@ -1142,7 +1142,7 @@ export default function JobsPage() {
                       {/* เลขห้อง + โครงการ */}
                       <div className="px-4 py-2 flex items-center gap-2"
                         style={{ borderTop: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)' }}>
-                        <span className="text-xs font-semibold flex-shrink-0 rounded-[5px] px-2 py-0.5"
+                        <span className="text-xs font-semibold flex-shrink-0 rounded-[8px] px-2 py-0.5"
                           style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                           {editing.room_no || '—'}
                         </span>
@@ -1181,7 +1181,7 @@ export default function JobsPage() {
                 {/* PO · SO · PR · ต้นทุน · GP% ย้ายไปกรอกที่หน้า Cost & GP% ทั้งหมด
                     (แท็บเอกสาร = งานแอดมิน · แท็บจัดซื้อจัดจ้าง = ต้นทุน) หน้านี้
                     เหลือแค่แสดงผล — เหลือทางกรอกทางเดียวต่อข้อมูลหนึ่งชุด */}
-                <div className="col-span-2 rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
+                <div className="col-span-2 rounded-[8px] p-3" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>
                       เอกสาร &amp; ต้นทุน
@@ -1338,7 +1338,7 @@ export default function JobsPage() {
                     </span>
                   </div>
                 </div>
-                <div className="rounded-[11px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
+                <div className="rounded-[8px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center gap-1 mb-1">
                     <Calculator size={12} style={{ color: 'var(--text-3)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>Profit / GP%</span>
@@ -1399,7 +1399,7 @@ export default function JobsPage() {
 
             {/* Payment alert */}
             {editing.id && paymentMap[editing.id] && (
-              <div className="rounded-[11px] p-3 flex items-center justify-between"
+              <div className="rounded-[8px] p-3 flex items-center justify-between"
                 style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: 'var(--accent-orange)' }}>มีงวดค้างชำระ</p>

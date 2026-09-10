@@ -86,10 +86,10 @@ export default function DesignPreviewPage() {
       <section className="space-y-2">
         <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Nav item radius (11px) — จำลองจาก Sidebar</p>
         <div className="w-56 space-y-0.5">
-          <div className="flex items-center gap-2.5 rounded-[11px] px-3 py-2 text-sm" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>
+          <div className="flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm" style={{ background: 'var(--active-bg)', color: 'var(--accent)' }}>
             เมนูที่กำลังเปิดอยู่
           </div>
-          <div className="flex items-center gap-2.5 rounded-[11px] px-3 py-2 text-sm" style={{ color: 'var(--text-2)' }}>
+          <div className="flex items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm" style={{ color: 'var(--text-2)' }}>
             เมนูปกติ
           </div>
         </div>

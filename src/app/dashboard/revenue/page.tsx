@@ -314,7 +314,7 @@ export default function RevenuePage() {
         className=""
         actions={
           <button onClick={exportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-xs font-semibold"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
             <FileDown size={13} /> Export CSV
           </button>
@@ -603,7 +603,7 @@ export default function RevenuePage() {
                   <span className="text-xs font-bold w-5 text-right flex-shrink-0" style={{ color: 'var(--text-3)' }}>{i + 1}</span>
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
                   <span className="flex-1 text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-[4px] flex-shrink-0" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>{p.units} งาน</span>
+                  <span className="text-xs px-2 py-0.5 rounded-[8px] flex-shrink-0" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>{p.units} งาน</span>
                   <span className="text-sm font-bold flex-shrink-0 w-24 text-right" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(p.revenue)}</span>
                   <ChevronDown size={14} className="flex-shrink-0 transition-transform" style={{ color: 'var(--text-3)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </button>
@@ -698,7 +698,7 @@ export default function RevenuePage() {
                       <div className="font-semibold" style={{ color: 'var(--text-1)' }}>{j.room_no || '—'}</div>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="px-1.5 py-0.5 rounded-[4px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+                      <span className="px-1.5 py-0.5 rounded-[8px] text-xs" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
                         {j.work_type || '—'}
                       </span>
                     </td>

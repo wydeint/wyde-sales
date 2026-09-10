@@ -378,7 +378,7 @@ export default function ExecutivePage() {
         ].map(s => (
           <div key={s.label} className="ds-card-sm">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold px-2 py-0.5 rounded-[4px]" style={{ background: s.color + '22', color: s.color }}>{s.label}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-[8px]" style={{ background: s.color + '22', color: s.color }}>{s.label}</span>
               <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.count} งาน</span>
             </div>
             <p className="text-lg font-bold mt-1" style={{ color: 'var(--text-1)' }}>{fk(s.revenue)}</p>
@@ -739,7 +739,7 @@ export default function ExecutivePage() {
                   sub={me.card.lateValue > 0 ? `${me.card.lateN} งาน ต้องตามเก็บ` : 'ไม่มีค้างเกินกำหนด'} />
               </div>
               {me.card.collected > 0 && (
-                <p className="mt-3 rounded-[11px] p-3 text-caption leading-relaxed"
+                <p className="mt-3 rounded-[8px] p-3 text-caption leading-relaxed"
                   style={{
                     background: 'color-mix(in srgb, var(--accent) 9%, transparent)',
                     border: '1px solid color-mix(in srgb, var(--accent) 28%, transparent)',
@@ -791,7 +791,7 @@ export default function ExecutivePage() {
                   {teams.map(t => {
                     const k = t.members.length
                     return (
-                      <div key={t.manager?.id} className="rounded-[11px] p-3.5"
+                      <div key={t.manager?.id} className="rounded-[8px] p-3.5"
                         style={{
                           background: 'var(--panel-bg)',
                           border: `1px solid ${t.mine ? 'var(--accent)' : 'var(--divider)'}`,

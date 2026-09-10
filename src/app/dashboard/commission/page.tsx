@@ -197,7 +197,7 @@ function IndividualTab({
                 <div className="flex items-center gap-3">
                   <div className="flex gap-1.5">
                     {STATUSES.map(s => statusCounts[s] > 0 && (
-                      <span key={s} className="text-micro font-semibold px-2 py-0.5 rounded-[4px]"
+                      <span key={s} className="text-micro font-semibold px-2 py-0.5 rounded-[8px]"
                         style={{ background: STATUS_CFG[s].bg, color: STATUS_CFG[s].color }}>
                         {statusCounts[s]}
                       </span>
@@ -389,7 +389,7 @@ function ReferralTab({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{j.customer_name}</span>
-                    <span className="text-micro px-1.5 py-0.5 rounded-[5px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+                    <span className="text-micro px-1.5 py-0.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                       {j.room_no}
                     </span>
                   </div>
@@ -442,7 +442,7 @@ function ReferralTab({
                   <div className="flex gap-1 p-0.5 rounded-[8px] w-fit" style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)' }}>
                     {(['amount', 'pct'] as const).map(mode => (
                       <button key={mode} onClick={() => setInputMode(mode)}
-                        className="px-3 py-1 rounded-[6px] text-xs font-semibold transition-colors"
+                        className="px-3 py-1 rounded-[8px] text-xs font-semibold transition-colors"
                         style={{ background: inputMode === mode ? 'var(--accent-blue)' : 'transparent', color: inputMode === mode ? '#fff' : 'var(--text-3)' }}>
                         {mode === 'amount' ? 'กรอกยอด' : 'เลือก %'}
                       </button>
@@ -472,7 +472,7 @@ function ReferralTab({
                         <div className="flex gap-1">
                           {([1, 2, 3] as const).map(p => (
                             <button key={p} onClick={() => setNewPct(p)}
-                              className="px-2.5 py-2 rounded-[6px] text-xs font-bold"
+                              className="px-2.5 py-2 rounded-[8px] text-xs font-bold"
                               style={{ background: newPct === p ? 'var(--accent-blue)' : 'var(--input-bg)', color: newPct === p ? '#fff' : 'var(--text-2)', border: '1px solid var(--divider)' }}>
                               {p}%
                             </button>

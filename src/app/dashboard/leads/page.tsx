@@ -482,11 +482,11 @@ export default function LeadsPage() {
         className="mb-5"
         actions={
           <>
-            <button onClick={() => load()} className="p-2 rounded-[11px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
+            <button onClick={() => load()} className="p-2 rounded-[8px] transition-colors" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
               <RefreshCw size={15} />
             </button>
             <button onClick={() => { setShowImport(!showImport); setImportResult(null); setImportRows([]) }}
-              className="flex items-center gap-2 px-4 py-2 rounded-[11px] text-sm font-semibold transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-[8px] text-sm font-semibold transition-colors"
               style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--glass-border)' }}>
               <Upload size={15} />นำเข้า xlsx
             </button>
@@ -551,7 +551,7 @@ export default function LeadsPage() {
                   เลือกใหม่
                 </button>
               </div>
-              <div className="overflow-auto max-h-60 rounded-[11px] border text-xs" style={{ borderColor: 'var(--divider)' }}>
+              <div className="overflow-auto max-h-60 rounded-[8px] border text-xs" style={{ borderColor: 'var(--divider)' }}>
                 <table className="w-full tbl-rows">
                   <thead>
                     <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>

@@ -512,7 +512,7 @@ export default function FinancePage() {
                   What was missing from a finance page was the stage before a
                   booking exists: money that might still arrive. Same stage names
                   as Prospects, so nothing new has to be learned. */}
-              <div className="rounded-[11px] p-4 flex flex-col" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[8px] p-4 flex flex-col" style={{ background: 'var(--hover-bg)' }}>
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>โอกาสก่อนจอง</p>
                   {prospectCount > 0 && (
@@ -545,7 +545,7 @@ export default function FinancePage() {
               </div>
 
               {/* 2. Active Job Backlog — แยก Reserve / Backlog */}
-              <div className="rounded-[11px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[8px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งานที่กำลังทำ</p>
                   <button onClick={() => setDrilldown('backlog')} className="text-micro hover:underline" style={{ color: 'var(--accent)' }}>ดูรายการ ↗</button>
@@ -598,7 +598,7 @@ export default function FinancePage() {
               </div>
 
               {/* 3. Outstanding Final Installments */}
-              <div className="rounded-[11px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[8px] p-4 space-y-3" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>งวดรอเก็บ</p>
                 <div className="space-y-2">
                   <button className="flex justify-between items-center w-full text-left hover:underline" onClick={() => setDrilldown('pending_final')}>
@@ -664,7 +664,7 @@ export default function FinancePage() {
                               {salesName[0]}
                             </div>
                             <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{salesName}</span>
-                            <span className="text-xs px-1.5 py-0.5 rounded-[4px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
+                            <span className="text-xs px-1.5 py-0.5 rounded-[8px]" style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                               {payments.length} งวด
                             </span>
                           </div>
@@ -756,7 +756,7 @@ export default function FinancePage() {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-[11px] flex items-center justify-center text-sm font-bold text-white"
+                        <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-sm font-bold text-white"
                           style={{ background: color }}>{ct}</div>
                         <div>
                           <p className="text-section-title" style={{ color: 'var(--text-1)' }}>{ct === 'B2C' ? 'ลูกค้าบุคคล' : 'ลูกค้าองค์กร/นิติบุคคล'}</p>
@@ -775,7 +775,7 @@ export default function FinancePage() {
                     )}
 
                     {/* RPT */}
-                    <div className="rounded-[11px] p-4 space-y-1" style={{ background: 'var(--hover-bg)' }}>
+                    <div className="rounded-[8px] p-4 space-y-1" style={{ background: 'var(--hover-bg)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: RPT_COLOR }} />
@@ -790,7 +790,7 @@ export default function FinancePage() {
                     </div>
 
                     {/* N-RPT */}
-                    <div className="rounded-[11px] p-4 space-y-2" style={{ background: 'var(--hover-bg)' }}>
+                    <div className="rounded-[8px] p-4 space-y-2" style={{ background: 'var(--hover-bg)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: NRPT_COLOR }} />
@@ -929,7 +929,7 @@ export default function FinancePage() {
       {tab === 'payments' && (
         <div className="space-y-4">
           {overdue.length > 0 && (
-            <div className="flex items-center gap-3 p-3 rounded-[11px] text-sm" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
+            <div className="flex items-center gap-3 p-3 rounded-[8px] text-sm" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 30%, transparent)', color: 'var(--accent-red)' }}>
               <AlertCircle size={15} />มี {overdue.length} งวดค้างเก็บเกิน {CHASE_AFTER_DAYS} วันหลังส่งมอบ รวม {f(overdue.reduce((s, p) => s + p.amount, 0))}
             </div>
           )}
@@ -1018,7 +1018,7 @@ export default function FinancePage() {
           </div>
         </div>
         {saveError && (
-          <div className="flex items-center gap-2 mt-3 p-3 rounded-[11px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
+          <div className="flex items-center gap-2 mt-3 p-3 rounded-[8px] text-xs " style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', color: 'var(--accent-red)' }}>
             <AlertCircle size={14} />{saveError}
           </div>
         )}
@@ -1049,7 +1049,7 @@ export default function FinancePage() {
             </div>
             <div className="overflow-y-auto p-5 space-y-2">
               {drilldown === 'backlog' && activeJobs.map(j => (
-                <div key={j.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
+                <div key={j.id} className="flex items-center justify-between p-3 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{j.customer_name}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{j.room_no} · {(j.projects as any)?.name} · {j.working_status}</p>
@@ -1058,7 +1058,7 @@ export default function FinancePage() {
                 </div>
               ))}
               {drilldown === 'pending_final' && activePayments.filter(p => p.status !== 'paid' && (p as any).is_final).map(p => (
-                <div key={p.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
+                <div key={p.id} className="flex items-center justify-between p-3 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>{(p as any).jobs?.room_no} · {p.due_date || 'ยังไม่กำหนดวัน'}</p>
@@ -1071,7 +1071,7 @@ export default function FinancePage() {
               {drilldown === 'overdue' && overdue.map(p => {
                 const d = (p as any).jobs?.actual_deliver_date as string | undefined
                 return (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 7.0%, transparent)' }}>
+                  <div key={p.id} className="flex items-center justify-between p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 7.0%, transparent)' }}>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
                       <p className="text-xs" style={{ color: 'var(--accent-red)' }}>{(p as any).jobs?.room_no} · ส่งมอบมาแล้ว {daysSinceDelivery(d)} วัน</p>
@@ -1086,7 +1086,7 @@ export default function FinancePage() {
               {drilldown === 'prospects' && [...bookedCustomers]
                 .sort((a, b) => valueOf(b) - valueOf(a))
                 .map(c => (
-                  <div key={c.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
+                  <div key={c.id} className="flex items-center justify-between p-3 rounded-[8px]" style={{ background: 'var(--hover-bg)' }}>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
                       <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>

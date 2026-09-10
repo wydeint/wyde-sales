@@ -479,12 +479,12 @@ function CustomerDetail({
                 })
 
                 if (jobs.length === 0) return (
-                  <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
+                  <p className="text-xs px-3 py-4 rounded-[8px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
                     ยังไม่มีงาน
                   </p>
                 )
                 if (shown.length === 0) return (
-                  <p className="text-xs px-3 py-4 rounded-[11px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
+                  <p className="text-xs px-3 py-4 rounded-[8px] text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-3)' }}>
                     ไม่พบห้องที่ค้นหา
                   </p>
                 )
@@ -935,7 +935,7 @@ export default function CustomersPage() {
                       button is right there, so a control here only adds a way to
                       change a customer by mis-clicking while scanning the list. */}
                   <td className="px-4 py-3">
-                    <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px]"
+                    <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px]"
                       style={{
                         background: (c as any).customer_type === 'B2B'
                           ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)'
@@ -989,7 +989,7 @@ export default function CustomersPage() {
                           <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text-1)' }}>{t.total}</span>
                           <div className="flex gap-1 flex-wrap">
                             {chips.filter(([n]) => n > 0).map(([n, label, color]) => (
-                              <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap"
+                              <span key={label} className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] whitespace-nowrap"
                                 style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
                                 {label} {n}
                               </span>
@@ -1016,7 +1016,7 @@ export default function CustomersPage() {
                           {totalRev > 0 ? (
                             <div className="flex items-center justify-end gap-1.5">
                               {isBudget && (
-                                <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px]"
+                                <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px]"
                                   style={{ background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)', color: 'var(--accent-amber)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)' }}>
                                   งบ
                                 </span>

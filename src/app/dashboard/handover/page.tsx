@@ -83,7 +83,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   const base = "cursor-pointer transition-opacity hover:opacity-70 active:opacity-50"
   if (entry.no_start_date) {
     return (
-      <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-amber) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-amber) 30%, transparent)', color: 'var(--accent-amber)' }}
         title="ยังไม่มีวันเริ่มงาน — คลิกเพื่อแก้ไข">
         {entry.room_no}
@@ -92,7 +92,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   }
   if (entry.is_delivered) {
     return (
-      <button onClick={onClick} className={`${base} flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      <button onClick={onClick} className={`${base} flex items-center gap-1 px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)', color: 'var(--accent-green)' }}>
         <CheckCircle2 size={10} />
         {entry.room_no}
@@ -101,7 +101,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
   }
   if (entry.is_overdue) {
     return (
-      <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+      <button onClick={onClick} className={`${base} flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
         style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
         {entry.room_no}
         <span className="text-micro font-normal opacity-60">+{entry.days_overdue}d</span>
@@ -109,7 +109,7 @@ function RoomChip({ entry, onClick }: { entry: RoomEntry; onClick: () => void })
     )
   }
   return (
-    <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[6px] text-xs font-semibold`}
+    <button onClick={onClick} className={`${base} px-2.5 py-1 rounded-[8px] text-xs font-semibold`}
       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
       {entry.room_no}
     </button>
@@ -786,14 +786,14 @@ export default function HandoverPage() {
               const projDelivered = rooms.filter(r => r.is_delivered).length
               const projOverdue = rooms.filter(r => r.is_overdue).length
               return (
-                <div key={name} className="rounded-[11px] overflow-hidden"
+                <div key={name} className="rounded-[8px] overflow-hidden"
                   style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
                   {/* Project header */}
                   <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--divider)', background: 'var(--hover-bg)' }}>
                     <p className="font-semibold text-sm flex-1" style={{ color: 'var(--text-1)' }}>{name}</p>
                     <div className="flex items-center gap-3">
                       {projOverdue > 0 && (
-                        <span className="text-label font-semibold px-1.5 py-0.5 rounded-[4px]"
+                        <span className="text-label font-semibold px-1.5 py-0.5 rounded-[8px]"
                           style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 25%, transparent)', color: 'var(--accent-red)' }}>
                           {projOverdue} หลุด
                         </span>
@@ -891,7 +891,7 @@ function UndatedLane({ title, hint, tone, rooms, onOpen, showDaysOverdue }: {
   const [open, setOpen] = useState(showDaysOverdue || rooms.length <= 60)
   const value = rooms.reduce((s, r) => s + r.revenue, 0)
   return (
-    <div className="rounded-[11px] overflow-hidden"
+    <div className="rounded-[8px] overflow-hidden"
       style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
       <button onClick={() => setOpen(o => !o)}
         className="w-full px-4 py-3 flex items-center justify-between gap-3 flex-wrap text-left"
@@ -912,7 +912,7 @@ function UndatedLane({ title, hint, tone, rooms, onOpen, showDaysOverdue }: {
         <div className="p-4 flex flex-wrap gap-2">
           {rooms.map(r => (
             <button key={r.id} onClick={() => onOpen(r)}
-              className="px-2.5 py-1 rounded-[6px] text-xs font-semibold transition-opacity hover:opacity-70"
+              className="px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-opacity hover:opacity-70"
               style={{
                 background: `color-mix(in srgb, ${tone} 8%, transparent)`,
                 border: `1px solid color-mix(in srgb, ${tone} 28%, transparent)`,

@@ -74,7 +74,7 @@ export default function PeriodPicker({
               over Tailwind's px-3 py-1.5 and made this pill 67px tall instead of ~30
               — 24px of padding on every side. The pages this pattern was copied from
               have the same bug. Border and background are set directly instead. */}
-          <span className="text-sm font-semibold px-3 py-1.5 rounded-[11px] flex items-center gap-1"
+          <span className="text-sm font-semibold px-3 py-1.5 rounded-[8px] flex items-center gap-1"
             style={{ color: 'var(--text-1)', background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
             {/* One fixed-width group for every unit — the arrows sit outside it
                 and therefore never move. */}

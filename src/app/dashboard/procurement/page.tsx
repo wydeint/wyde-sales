@@ -1295,7 +1295,7 @@ function RoomSheet({
                               {canWrite && !it.po_no && (
                                 <button type="button" title="ของนี้เบิกจากสต๊อก ไม่ได้เปิด PO"
                                   onClick={() => onPatch(it.id, { is_stock: true, supplier_id: null })}
-                                  className="text-label flex-shrink-0 px-1.5 py-0.5 rounded-[6px]"
+                                  className="text-label flex-shrink-0 px-1.5 py-0.5 rounded-[8px]"
                                   style={{ color: 'var(--accent-purple)', border: '1px solid var(--divider)' }}>
                                   สต๊อก
                                 </button>
@@ -1514,7 +1514,7 @@ function Cell({ v, onSave, canWrite, w, type = 'text', num, display, placeholder
     }
     return (
       <button type="button" onClick={() => { setVal(v); setEditing(true) }}
-        className="text-left rounded-[6px] px-2 py-1 tabular-nums w-full"
+        className="text-left rounded-[8px] px-2 py-1 tabular-nums w-full"
         style={{
           color: v ? 'var(--text-1)' : 'var(--text-3)',
           fontSize: v ? undefined : 'var(--fs-caption)',
@@ -1714,7 +1714,7 @@ function DocCell({ job, field, type = 'text', canWrite, onSave }: {
         type="button"
         disabled={!canWrite}
         onClick={() => { setVal(saved); setEditing(true) }}
-        className="text-left w-full rounded-[6px] px-2 py-1 transition-colors"
+        className="text-left w-full rounded-[8px] px-2 py-1 transition-colors"
         style={{
           color: saved ? 'var(--text-1)' : 'var(--text-3)',
           fontSize: saved ? undefined : 'var(--fs-caption)',
@@ -1795,7 +1795,7 @@ function PrCell({ job, canWrite, usedBy, onSave }: {
       {list.map(pr => {
         const others = (usedBy.get(pr) ?? 1) - 1
         return (
-          <span key={pr} className="inline-flex items-center gap-1 rounded-[6px] px-1.5 py-0.5"
+          <span key={pr} className="inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5"
             style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', fontSize: 'var(--fs-caption)' }}
             title={others > 0 ? `ใบนี้ใช้กับอีก ${others} ห้อง` : 'ใช้กับห้องนี้ห้องเดียว'}>
             <span style={{ color: 'var(--text-1)' }}>{pr}</span>
@@ -1829,7 +1829,7 @@ function PrCell({ job, canWrite, usedBy, onSave }: {
         </span>
       ) : (
         <button onClick={() => { setVal(''); setAdding(true) }}
-          className="rounded-[6px] px-1.5 py-0.5"
+          className="rounded-[8px] px-1.5 py-0.5"
           style={{ color: 'var(--text-3)', fontSize: 'var(--fs-caption)' }}
           aria-label={`เพิ่ม PR ห้อง ${job.room_no ?? job.id}`}>
           {list.length ? '+ PR' : '+ เพิ่ม PR'}

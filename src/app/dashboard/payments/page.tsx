@@ -105,7 +105,7 @@ function InstallmentBadge({ inst }: { inst: Installment }) {
           {inst.installment_no}
         </div>
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 hidden group-hover:block pointer-events-none">
-          <div className="text-micro rounded-[6px] px-2 py-1.5 whitespace-nowrap shadow-lg"
+          <div className="text-micro rounded-[8px] px-2 py-1.5 whitespace-nowrap shadow-lg"
             style={{ background: 'var(--tooltip-bg)', color: 'var(--tooltip-fg)' }}>
             <p className="font-semibold">{inst.installment_name}</p>
             <p>{f(inst.amount)}</p>
@@ -132,7 +132,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
     <>
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
+      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[18px] shadow-2xl pointer-events-auto"
         data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         <div className="flex items-start gap-3 p-5" style={{ borderBottom: '1px solid var(--divider)' }}>
           <div className="flex-1">
@@ -177,7 +177,7 @@ function RowDrawer({ job, onClose }: { job: JobRow; onClose: () => void }) {
                 return (
                   <div key={inst.id} className="flex items-center gap-3 p-3 rounded-[8px]"
                     style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
-                    <div className="w-6 h-6 rounded-[6px] flex items-center justify-center text-micro font-bold flex-shrink-0"
+                    <div className="w-6 h-6 rounded-[8px] flex items-center justify-center text-micro font-bold flex-shrink-0"
                       style={{ background: inst.status === 'paid' ? 'color-mix(in srgb, var(--accent-green) 20%, transparent)' : inst.status === 'overdue' ? 'color-mix(in srgb, var(--accent-red) 20%, transparent)' : 'var(--card-bg)', color: txtColor }}>
                       {inst.installment_no}
                     </div>
@@ -464,7 +464,7 @@ export default function PaymentsPage() {
         </div>
 
       {/* Table */}
-      <div className="tbl-scroll rounded-[11px]"
+      <div className="tbl-scroll rounded-[8px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
         <table className="text-sm tbl-rows" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>

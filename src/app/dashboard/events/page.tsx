@@ -937,7 +937,7 @@ export default function EventsPage() {
               <div className="px-3 py-2 flex items-center justify-between" style={{ borderTop: '1px solid color-mix(in srgb, var(--accent-orange) 20%, transparent)', background: 'var(--hover-bg)' }}>
                 <p className="text-xs" style={{ color: 'var(--text-3)' }}>ยังต้องการเพิ่มในงานนี้หรือไม่?</p>
                 <button onClick={() => setDupConfirmed(true)}
-                  className="text-xs px-3 py-1 rounded-[6px] font-semibold"
+                  className="text-xs px-3 py-1 rounded-[8px] font-semibold"
                   style={{ background: 'color-mix(in srgb, var(--accent-orange) 20%, transparent)', color: 'var(--accent-orange)' }}>
                   ยืนยัน — เพิ่มต่อ
                 </button>

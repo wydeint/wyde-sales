@@ -702,14 +702,14 @@ export default function TargetsPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-3">
-                          <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
+                          <div className="rounded-[8px] p-3" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เป้ายอดขาย</p>
                             <p className="text-success font-bold text-base">{f(t.target_sales_value)}</p>
                             <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actS)}</span></p>
                             <ProgressBar value={actS} max={t.target_sales_value} color="var(--accent-green)" />
                             <p className="text-success text-micro mt-0.5 text-right">{pct(actS, t.target_sales_value)}%</p>
                           </div>
-                          <div className="rounded-[11px] p-3" style={{ background: 'var(--card-bg)' }}>
+                          <div className="rounded-[8px] p-3" style={{ background: 'var(--card-bg)' }}>
                             <p className="text-micro mb-1" style={{ color: 'var(--text-3)' }}>เป้าส่งมอบ</p>
                             <p className="text-info font-bold text-base">{f(t.target_delivery_value)}</p>
                             <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>จริง <span style={{ color: 'var(--text-1)' }}>{f(actD)}</span></p>

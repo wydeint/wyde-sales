@@ -9,10 +9,16 @@
    Color lives in the :root / .dark blocks below.
 ══════════════════════════════════════════ */
 :root {
-  /* Radius */
+  /* ── Radius — two values ──────────────────────────────────────────────
+     The rule reads off the screen without opening the code: something that
+     floats on the page background is 18, something sitting inside another
+     box is 8. Five values were in use (4 · 8 · 11 · 16 · 20 plus 18) and a
+     drawer at 20 containing a card at 11 containing a badge at 4 put three
+     different corners on one screen.
+     --radius-md is kept as a name so nothing breaks, but it is 8 now. */
   --radius-none: 0px;
   --radius-sm:   8px;
-  --radius-md:   11px;
+  --radius-md:   8px;
   --radius-lg:   18px;
 
   /* Spacing */
@@ -101,6 +107,15 @@
   --text-2xl--line-height: 28px;
   --text-3xl: 20px;
   --text-3xl--line-height: 28px;
+
+  /* Tailwind's own radius utilities, onto the same two values. rounded-lg
+     already resolved to 18 through --radius-lg; xl / 2xl / 3xl were still
+     Tailwind's defaults (12 / 16 / 24px) and appear 22 times.
+     rounded-full is left alone — a circle on an avatar or a status dot is a
+     shape, not a corner. */
+  --radius-xl:  18px;
+  --radius-2xl: 18px;
+  --radius-3xl: 18px;
 }
 
 /* ══════════════════════════════════════════
@@ -145,7 +160,7 @@
   --accent-red: #dc2626;
   --accent-amber: #d97706;
   --radius-sm: 8px;
-  --radius-md: 11px;
+  --radius-md: 8px;
   --radius-lg: 18px;
 }
 
@@ -186,7 +201,7 @@
   --accent-red: #f87171;
   --accent-amber: #fbbf24;
   --radius-sm: 8px;
-  --radius-md: 11px;
+  --radius-md: 8px;
   --radius-lg: 18px;
 }
 
@@ -680,13 +695,42 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    it: .ds-card and the utility have equal specificity and .ds-card is declared
    later, so the tables inside them have been sitting on a 16px cushion with
    `overflow-hidden` clipping the corners around it. */
-.ds-card-flush { padding: 0; }
+.ds-card-flush { padding: 0; overflow: hidden; }
 
-/* Smaller card variant (table section headers, KPI tiles) */
+/* ── Summary strip ────────────────────────────────────────────────────────
+   The figures under the filter bar, in one container divided by hairlines
+   rather than as separate cards. Two columns on a phone, four from 640px.
+   The dividers are drawn per cell and removed on the first cell of each row,
+   so the grid stays correct at either column count without the component
+   knowing which one it is in. See components/ui/SummaryCard.tsx. */
+.summary-strip { display: grid; grid-template-columns: repeat(2, 1fr); }
+.summary-strip > * { padding: var(--space-md); border-left: 1px solid var(--divider); }
+.summary-strip > *:nth-child(2n + 1) { border-left: 0; }
+.summary-strip > *:nth-child(n + 3)  { border-top: 1px solid var(--divider); }
+
+/* Above 640px every figure gets its own column and the row dividers go away.
+   The count comes from the component, because nth-child cannot read a custom
+   property — a fixed repeat(4) left an empty column whenever a page showed
+   three figures, which is most of them. */
+@media (min-width: 640px) {
+  .summary-strip > * { border-top: 0; border-left: 1px solid var(--divider); }
+  .summary-strip > *:first-child { border-left: 0; }
+  .summary-strip.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .summary-strip.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .summary-strip.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .summary-strip.cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .summary-strip.cols-6 { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* .ds-card-sm was the "smaller card" — padding 16, radius 11 — and pages put
+   it side by side with .ds-card at padding 24, radius 18, which is what made
+   Prospects, My Deals, Cost and Sales Performance show two corner sizes in one
+   row. There is one card now: same padding, same corner, whatever the content.
+   The class stays as an alias so the ~30 places using it keep working. */
 .ds-card-sm {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--space-md);
 }
 

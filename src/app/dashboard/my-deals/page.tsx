@@ -26,6 +26,7 @@ import { netReceived } from '@/lib/voucher'
 import { cancelJob, deliverJob } from '@/lib/jobLifecycle'
 import { compareRoom } from '@/lib/utils'
 import { exVatOf, incVatOf } from '@/lib/procurement'
+import { SummaryStrip } from '@/components/ui/SummaryCard'
 
 // ─── LINE Logo ────────────────────────────────────────────
 function LineLogo({ size = 14 }: { size?: number }) {
@@ -373,7 +374,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
         <div className="p-5 space-y-4">
           {step === 'plan' ? (
             <>
-              <div className="rounded-[11px] p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[8px] p-3 text-center" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-xs mb-0.5" style={{ color: 'var(--text-2)' }}>มูลค่างาน</p>
                 <p className="text-xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(total)}</p>
               </div>
@@ -382,7 +383,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                 <div className="grid grid-cols-2 gap-2">
                   {(['B2C', 'B2B'] as ClientType[]).map(t => (
                     <button key={t} onClick={() => setClientType(t)}
-                      className="py-2 rounded-[11px] text-sm font-semibold border"
+                      className="py-2 rounded-[8px] text-sm font-semibold border"
                       style={clientType === t ? btnActive : btnIdle}>{t}</button>
                   ))}
                 </div>
@@ -393,7 +394,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                   <div className="space-y-2">
                     {B2C_PLANS.map(p => (
                       <button key={p.value} onClick={() => setPlan(p.value)}
-                        className="w-full text-left px-4 py-3 rounded-[11px] border"
+                        className="w-full text-left px-4 py-3 rounded-[8px] border"
                         style={plan === p.value
                           ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                           : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -419,7 +420,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                     <div className="space-y-2">
                       {B2B_PLANS.map(p => (
                         <button key={p.value} onClick={() => setB2bPlan(p.value)}
-                          className="w-full text-left px-4 py-3 rounded-[11px] border"
+                          className="w-full text-left px-4 py-3 rounded-[8px] border"
                           style={b2bPlan === p.value
                             ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                             : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -443,7 +444,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                         <div className="flex gap-2">
                           {[2, 3, 4, 5, 6].map(n => (
                             <button key={n} onClick={() => updateB2bCount(n)}
-                              className="flex-1 py-2 rounded-[11px] text-sm font-semibold border"
+                              className="flex-1 py-2 rounded-[8px] text-sm font-semibold border"
                               style={b2bCount === n ? btnActive : btnIdle}>{n}</button>
                           ))}
                         </div>
@@ -484,8 +485,8 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                       style={{ background: 'var(--hover-bg)' }}>
                       <div>
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{p.name}</span>
-                        {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>}
-                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', color: 'var(--accent-green)' }}>สุดท้าย</span>}
+                        {p.trigger && <span className="ml-2 text-micro px-1.5 py-0.5 rounded-[8px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>}
+                        {p.final && <span className="ml-2 text-micro px-1.5 py-0.5 rounded-[8px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', color: 'var(--accent-green)' }}>สุดท้าย</span>}
                       </div>
                       <span className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(p.amount)}</span>
                     </div>
@@ -495,14 +496,14 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
               <button
                 onClick={() => isSingleB2B ? save() : setStep('pay')}
                 disabled={saving}
-                className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+                className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
                 style={{ background: saving ? '#999' : 'var(--accent)' }}>
                 {isSingleB2B ? (saving ? 'กำลังบันทึก...' : 'บันทึกแผน') : 'ถัดไป → บันทึกงวดแรก'}
               </button>
             </>
           ) : (
             <>
-              <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)' }}>
+              <div className="rounded-[8px] p-4" style={{ background: 'var(--hover-bg)' }}>
                 <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>งวดที่ 1 — {firstInst?.name}</p>
                 <p className="text-2xl font-bold" style={{ color: 'var(--text-1)' }}>{fmtBaht(firstInst?.amount || 0)}</p>
                 {firstInst?.trigger && <p className="text-xs mt-1 text-accent">งวดนี้เป็นงวดเริ่มงาน</p>}
@@ -569,9 +570,9 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onClose: ()
                 </label>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setStep('plan')} className="flex-1 py-2.5 rounded-[11px] text-sm border"
+                <button onClick={() => setStep('plan')} className="flex-1 py-2.5 rounded-[8px] text-sm border"
                   style={btnIdle}>← ย้อนกลับ</button>
-                <button onClick={save} disabled={saving} className="flex-1 py-2.5 rounded-[11px] font-semibold text-sm text-white"
+                <button onClick={save} disabled={saving} className="flex-1 py-2.5 rounded-[8px] font-semibold text-sm text-white"
                   style={{ background: saving ? '#999' : 'var(--accent)' }}>
                   {saving ? 'กำลังบันทึก...' : 'ตั้งค่าและบันทึก'}
                 </button>
@@ -661,7 +662,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
           <div className="space-y-2">
             {allInsts.map(inst => (
               <button key={inst.id} onClick={() => selectInst(inst)}
-                className="w-full text-left px-4 py-3 rounded-[11px] border"
+                className="w-full text-left px-4 py-3 rounded-[8px] border"
                 style={selected?.id === inst.id
                   ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--text-1)' }
                   : { background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)' }}>
@@ -700,7 +701,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
             </select>
           </div>
           {/* Voucher */}
-          <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-3 px-4 py-3 cursor-pointer" style={{ background: 'var(--hover-bg)' }}>
               <input type="checkbox" checked={useVoucher} onChange={e => { setUseVoucher(e.target.checked); if (!e.target.checked) { setVoucherAmount(0); setVoucherCode('') } }}
                 className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-amber)' }} />
@@ -753,7 +754,7 @@ function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () => void
             </label>
           </div>
           <button onClick={save} disabled={saving || !selected}
-            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? '#999' : 'var(--accent)' }}>
             {saving ? 'กำลังบันทึก...' : `บันทึก ${selected ? fmtBaht(useVoucher && voucherAmount > 0 ? netAmount : paidAmount) : ''}`}
           </button>
@@ -812,7 +813,7 @@ function QuickDeliverModal({ job, onClose, onSaved }: { job: FullJob; onClose: (
               ))}
             </div>
           </div>
-          <div className="rounded-[11px] p-3" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
+          <div className="rounded-[8px] p-3" style={{ background: 'color-mix(in srgb, var(--accent-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-orange) 25%, transparent)' }}>
             <p className="text-xs font-semibold text-warning">ยังไม่รับเงิน</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>สถานะจะแสดง "ส่งมอบแล้ว/ค้างรับเงิน" จนกว่าจะรับเงินครบ</p>
           </div>
@@ -883,7 +884,7 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
             </div>
           </div>
           {finalInst && (
-            <div className="rounded-[11px] p-3 space-y-2" style={{ background: 'var(--hover-bg)' }}>
+            <div className="rounded-[8px] p-3 space-y-2" style={{ background: 'var(--hover-bg)' }}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={markFinalPaid} onChange={e => setMarkFinalPaid(e.target.checked)} className="w-4 h-4 rounded" />
                 <div>
@@ -901,11 +902,11 @@ function HandoverModal({ job, onClose, onSaved }: { job: FullJob; onClose: () =>
               )}
             </div>
           )}
-          <div className="rounded-[11px] p-3" style={{ background: 'color-mix(in srgb, var(--accent) 5%, transparent)', border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3" style={{ background: 'color-mix(in srgb, var(--accent) 5%, transparent)', border: '1px solid var(--divider)' }}>
             <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>ประกันรันอัตโนมัติ {warrantyMonths} เดือน</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>เริ่ม {deliverDate}</p>
           </div>
-          <button onClick={save} disabled={saving} className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+          <button onClick={save} disabled={saving} className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? 'var(--text-3)' : 'var(--accent-green)' }}>
             {saving ? 'กำลังบันทึก...' : 'ยืนยันส่งมอบ'}
           </button>
@@ -960,7 +961,7 @@ function RevenueCard({ job, onUpdated }: {
 
   if (editing) {
     return (
-      <div className="rounded-[11px] p-4" style={{ background: 'var(--hover-bg)', border: '1px solid var(--accent)' }}>
+      <div className="rounded-[8px] p-4" style={{ background: 'var(--hover-bg)', border: '1px solid var(--accent)' }}>
         <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-3)' }}>แก้ไขมูลค่างาน (VAT 7%)</p>
         <div className="space-y-2">
           <div>
@@ -987,7 +988,7 @@ function RevenueCard({ job, onUpdated }: {
   }
 
   return (
-    <div className="rounded-[11px] p-4 flex items-center justify-between"
+    <div className="rounded-[8px] p-4 flex items-center justify-between"
       style={{ background: 'var(--hover-bg)' }}>
       <div>
         <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
@@ -1127,10 +1128,10 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           งวด {inst.installment_no} · {inst.installment_name}
         </span>
         {inst.is_final && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>สุดท้าย</span>
         )}
         {inst.is_work_trigger && inst.status !== 'paid' && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}>เริ่มงาน</span>
         )}
         <div className="flex-1" />
         {/* Amount chip */}
@@ -1138,7 +1139,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           <div className="flex items-center gap-1">
             <MoneyInput value={amountVal} onChange={setAmountVal} ariaLabel="ยอด"
               onKeyDown={e => { if (e.key === 'Enter') saveAmount(); if (e.key === 'Escape') setEditingAmount(false) }}
-              autoFocus className="text-xs font-semibold w-24 px-2 py-0.5 rounded-[6px] focus:outline-none text-right"
+              autoFocus className="text-xs font-semibold w-24 px-2 py-0.5 rounded-[8px] focus:outline-none text-right"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--accent)', color: 'var(--accent-green)' }} />
             <button onClick={saveAmount} disabled={saving} className="text-micro px-1.5 py-0.5 rounded font-semibold text-white" style={{ background: 'var(--accent)' }}>{saving ? '...' : '✓'}</button>
             <button onClick={() => setEditingAmount(false)} className="text-micro" style={{ color: 'var(--text-3)' }}>✕</button>
@@ -1146,7 +1147,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
         ) : (
           <button
             onClick={inst.status === 'paid' ? () => { setAmountVal(String(inst.paid_amount ?? inst.amount ?? '')); setEditingAmount(true) } : undefined}
-            className="group flex items-center gap-1 rounded-[6px] px-1.5 py-0.5 transition-colors"
+            className="group flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 transition-colors"
             style={{ background: 'none', border: 'none', cursor: inst.status === 'paid' ? 'pointer' : 'default' }}
             title={inst.status === 'paid' ? 'คลิกเพื่อแก้ไขยอด' : undefined}>
             <span className="text-sm font-bold tabular-nums" style={{ color: inst.status === 'paid' ? 'var(--accent-green)' : 'var(--text-2)' }}>
@@ -1173,7 +1174,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
 
       {/* Paid: voucher box */}
       {inst.status === 'paid' && inst.voucher_amount > 0 && (
-        <div className="ml-5 mt-1 text-micro rounded-[6px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+        <div className="ml-5 mt-1 text-micro rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
           <div className="px-2 py-1 space-y-0.5" style={{ background: 'var(--hover-bg)' }}>
             <div className="flex justify-between">
               <span style={{ color: 'var(--text-3)' }}>ยอดงวด (Gross)</span>
@@ -1210,7 +1211,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
               </div>
             ) : (
               <button onClick={() => { setDateVal(inst.paid_date || todayStr()); setEditingDate(true) }}
-                className="group flex items-center gap-1.5 px-2 py-1 rounded-[6px]"
+                className="group flex items-center gap-1.5 px-2 py-1 rounded-[8px]"
                 style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)', color: inst.paid_date ? 'var(--text-2)' : 'var(--accent-orange)', cursor: 'pointer', fontSize: '12px', fontWeight: 500 }}>
                 {inst.paid_date ? fmtDate(inst.paid_date) : '+ เพิ่มวันที่'}
                 <Pencil size={9} className="opacity-0 group-hover:opacity-60 transition-opacity" style={{ color: 'var(--text-3)' }} />
@@ -1221,7 +1222,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           <div className="flex items-center gap-2">
             <span style={fieldLabelStyle}>ช่องทางชำระ</span>
             <select value={channel} onChange={e => saveChannel(e.target.value)}
-              className="text-micro px-2 py-1 rounded-[6px] focus:outline-none appearance-none"
+              className="text-micro px-2 py-1 rounded-[8px] focus:outline-none appearance-none"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-2)', fontFamily: 'inherit' }}>
               {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -1265,7 +1266,7 @@ function InstRow({ inst, job, onDateSaved, onDeleted, onUpdated, onCollect }: { 
           {/* Trash — ล่างสุดคนเดียว มีเส้น divider คั่น */}
           <div style={{ marginTop: '8px', borderTop: '1px solid var(--divider)', paddingTop: '8px' }}>
             <button onClick={deleteInst} disabled={deleting}
-              className="flex items-center gap-1 px-2 py-1 rounded-[6px] active:scale-95 disabled:opacity-40"
+              className="flex items-center gap-1 px-2 py-1 rounded-[8px] active:scale-95 disabled:opacity-40"
               style={{ background: 'transparent', border: '1px solid var(--divider)', color: 'var(--text-3)', cursor: 'pointer', fontSize: '12px' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent-red)'; (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--accent-red) 30%, transparent)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--divider)' }}>
@@ -1335,7 +1336,7 @@ function CancelModal({ onClose, onConfirm }: {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+      <div className="relative rounded-[18px] p-5 w-full max-w-sm space-y-4" data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ยกเลิกสัญญา</p>
         <div className="flex gap-2">
@@ -1554,7 +1555,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       {/* Centered Panel */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
+      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[18px] shadow-2xl pointer-events-auto"
         data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
@@ -1732,7 +1733,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           })()}
 
           {hasPlan && totalCount > 0 && (
-            <div className="rounded-[11px] px-4 py-3 flex items-center justify-between"
+            <div className="rounded-[8px] px-4 py-3 flex items-center justify-between"
               style={{ background: 'var(--hover-bg)' }}>
               <p className="text-sm font-semibold" style={{ color: paidCount === totalCount ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                 {paidCount}/{totalCount} งวด
@@ -1789,7 +1790,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
 
           {/* Installments */}
           {hasPlan && (
-            <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            <div className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
               <div className="flex items-center" style={{ background: 'var(--hover-bg)' }}>
                 <span className="flex-1 px-4 py-2.5 text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>งวดชำระเงิน</span>
                 <button onClick={() => setActionModal('setup')}
@@ -1814,7 +1815,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           )}
 
           {/* Documents section */}
-          <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
             <button className="w-full flex items-center justify-between px-4 py-2.5"
               style={{ color: 'var(--text-3)', background: 'var(--hover-bg)' }}
               onClick={() => setDocsExpanded(e => !e)}>
@@ -1843,7 +1844,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           </div>
 
           {/* File Attachments */}
-          <div className="rounded-[11px] p-3" style={{ border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3" style={{ border: '1px solid var(--divider)' }}>
             <FileAttach jobId={job.id} projectName={job.project_name} roomNo={job.room_no} />
           </div>
 
@@ -1878,7 +1879,7 @@ function DealDrawer({ job: initialJob, onClose, onRefresh }: { job: FullJob; onC
           <div className="pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
             {delivered ? (
               <div className="space-y-2">
-                <div className="rounded-[11px] p-3 text-center"
+                <div className="rounded-[8px] p-3 text-center"
                   style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
                   <p className="text-sm font-semibold" style={{ color: 'var(--accent-green)' }}>ส่งมอบแล้ว {fmtDate(job.actual_deliver_date)}</p>
                   {job.warranty_end && (
@@ -2003,7 +2004,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
   // least readable thing on it. The muted text colour alone says "finished".
   return (
     <div
-      className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+      className="relative group w-full rounded-[8px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
       style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
@@ -2021,7 +2022,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
                 project name is still guessable, a cut room number is not. */}
             <p className="font-bold text-sm flex-shrink-0" style={{ color: isDone ? 'var(--text-2)' : 'var(--text-1)' }}>{job.room_no}</p>
             {seqNo && seqNo > 1 && (
-              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[4px] flex-shrink-0"
+              <span className="text-micro font-bold px-1.5 py-0.5 rounded-[8px] flex-shrink-0"
                 style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                 งานที่ {seqNo}
               </span>
@@ -2031,7 +2032,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
             {job.customer_name || '—'}{job.project_name ? ` · ${job.project_name}` : ''}
           </p>
         </div>
-        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 mt-0.5"
+        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] flex-shrink-0 mt-0.5"
           style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}>
           {meta.label}
         </span>
@@ -2039,7 +2040,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
       {/* Row 2: payment chips */}
       {job.has_plan && job.total_count > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: job.paid_count === job.total_count ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
             {job.paid_count}/{job.total_count} งวด
           </span>
@@ -2049,7 +2050,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
             // How long the money has been outstanding since handover — the one
             // number that says whether this needs chasing today.
             return (
-              <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+              <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
                 style={late
                   ? { background: 'color-mix(in srgb, var(--accent-red) 12%, transparent)', color: 'var(--accent-red)' }
                   : { background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', color: 'var(--accent-orange)' }}>
@@ -2093,7 +2094,7 @@ function RoomCard({ job, onClick, onDelete, seqNo }: { job: RoomJob; onClick: ()
       {/* Delete button */}
       <button
         onClick={e => { e.stopPropagation(); onDelete() }}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
         style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
         title="ลบงาน"
       >
@@ -2447,49 +2448,40 @@ export default function MyDealsPage() {
           const donePct = doneRev > 0 ? Math.round(donePaid / doneRev * 100) : 0
           const doneOwing = doneJobs.filter(j => j.total_amount - j.paid_amount_total > 1).length
           return (
-            <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
-              <div className="ds-card-sm text-center">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{doneJobs.length}</p>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>ห้อง</p>
-              </div>
-              <div className="ds-card-sm text-center">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่าที่ส่งมอบ</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{fk(doneRev)}</p>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว {donePct}% · {fk(donePaid)}</p>
-              </div>
-              <div className="ds-card-sm text-center">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
-                <p className="text-lg font-bold" style={{ color: doneDue > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(doneDue)}</p>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>
-                  {doneOwing > 0 ? `${doneOwing} ห้องที่ยังค้าง` : 'เก็บครบทุกห้อง'}
-                </p>
-              </div>
+            <div className="flex-shrink-0 mb-4">
+              <SummaryStrip items={[
+                { label: 'ส่งมอบแล้ว', value: doneJobs.length, sub: 'ห้อง', tone: 'var(--accent-green)' },
+                { label: 'มูลค่าที่ส่งมอบ', value: fk(doneRev), sub: `เก็บแล้ว ${donePct}% · ${fk(donePaid)}` },
+                {
+                  label: 'ค้างรับ',
+                  value: fk(doneDue),
+                  sub: doneOwing > 0 ? `${doneOwing} ห้องที่ยังค้าง` : 'เก็บครบทุกห้อง',
+                  tone: doneDue > 0 ? 'var(--accent-orange)' : 'var(--accent-green)',
+                },
+              ]} />
             </div>
           )
         }
 
         return (
-          <div className="flex-shrink-0 mb-4 grid grid-cols-3 gap-2">
-            <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>กำลังทำ</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{activeJobs.length}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ส่งมอบแล้ว {doneJobs.length}</p>
-            </div>
-            <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่างานที่ทำอยู่</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{fk(activeRev)}</p>
-              {/* The all-rooms total lives here so nobody has to leave the page for
-                  it — Revenue is period-scoped and cannot answer "everything so far". */}
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>เก็บแล้ว {activePct}% · รวมส่งมอบ {fk(allRev)}</p>
-            </div>
-            <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ค้างรับ</p>
-              <p className="text-lg font-bold" style={{ color: activeDue > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(activeDue)}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>
-                {owing} ห้อง · รวมส่งมอบ {fk(allDue)}
-              </p>
-            </div>
+          <div className="flex-shrink-0 mb-4">
+            <SummaryStrip items={[
+              { label: 'กำลังทำ', value: activeJobs.length, sub: `ส่งมอบแล้ว ${doneJobs.length}` },
+              {
+                label: 'มูลค่างานที่ทำอยู่',
+                value: fk(activeRev),
+                // The all-rooms total lives here so nobody has to leave the page
+                // for it — Revenue is period-scoped and cannot answer
+                // "everything so far".
+                sub: `เก็บแล้ว ${activePct}% · รวมส่งมอบ ${fk(allRev)}`,
+              },
+              {
+                label: 'ค้างรับ',
+                value: fk(activeDue),
+                sub: `${owing} ห้อง · รวมส่งมอบ ${fk(allDue)}`,
+                tone: activeDue > 0 ? 'var(--accent-orange)' : 'var(--accent-green)',
+              },
+            ]} />
           </div>
         )
       })()}
@@ -2511,7 +2503,7 @@ export default function MyDealsPage() {
               {/* Project header */}
               <div className="flex items-center gap-2 mb-3 min-w-0">
                 <span className="text-sm font-semibold truncate min-w-0" style={{ color: 'var(--text-1)' }}>{name}</span>
-                <span className="text-xs px-2 py-0.5 rounded-[4px] font-semibold"
+                <span className="text-xs px-2 py-0.5 rounded-[8px] font-semibold"
                   style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}>
                   {filterStage ? active.length + done.length : active.length} ห้อง
                 </span>
@@ -2572,7 +2564,7 @@ export default function MyDealsPage() {
         <>
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={closeDrawer} />
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-            <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[20px] p-12 pointer-events-auto"
+            <div className="w-full max-w-[460px] max-h-[90vh] flex items-center justify-center rounded-[18px] p-12 pointer-events-auto"
               data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
               <p className="text-sm" style={{ color: 'var(--text-3)' }}>กำลังโหลด...</p>
             </div>

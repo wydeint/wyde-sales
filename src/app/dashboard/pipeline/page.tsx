@@ -27,6 +27,7 @@ import { deleteJobCascade, deleteJobsCascade } from '@/lib/deleteJob'
 import { compareRoom } from '@/lib/utils'
 import { resolveCustomerId, nextCustomerId } from '@/lib/customerId'
 import { exVatOf } from '@/lib/procurement'
+import { SummaryStrip } from '@/components/ui/SummaryCard'
 
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
@@ -167,7 +168,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
   const ws = jobWorkingStatus ?? ''
   const isClosed = ws === 'ดำเนินการ' || ws === 'ส่งมอบแล้ว' || ws === 'รอส่งมอบ'
   return (
-    <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+    <div className="relative group w-full rounded-[8px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
       style={{ background: 'var(--card-bg)', border: `1px solid ${isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)'}`, opacity: isClosed ? 0.85 : 1 }}
       onMouseEnter={e => (e.currentTarget.style.borderColor = isClosed ? 'color-mix(in srgb, var(--accent-green) 50%, transparent)' : 'var(--accent)')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = isClosed ? 'color-mix(in srgb, var(--accent-green) 25%, transparent)' : 'var(--card-border)')}
@@ -175,7 +176,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
     >
       {isClosed && (
         <a href="/dashboard/my-deals" onClick={e => e.stopPropagation()}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-micro font-semibold"
+          className="flex items-center gap-1.5 px-2 py-1 rounded-[8px] text-micro font-semibold"
           style={{ background: 'color-mix(in srgb, var(--accent-green) 12%, transparent)', color: 'var(--accent-green)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
           <span>✓</span> อยู่ใน My Deals แล้ว →
         </a>
@@ -191,14 +192,14 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
             {jobOf(c, jobId).room_no || c.interested_room || '—'}
           </p>
           {jobSeqNo != null && (
-            <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+            <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] flex-shrink-0 whitespace-nowrap"
               style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
               งานที่ {jobSeqNo}
             </span>
           )}
         </div>
         {(() => { const s = ws === 'จอง' ? stageMap['booked'] : resolveStage(jobCrmStage); return (
-          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}
           </span>
@@ -206,7 +207,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
         {/* How the cancellation settled — a forfeited booking is money we kept,
             which "หลุด" on its own does not say. */}
         {(() => { const cj = jobOf(c, jobId); const co = cancelOutcome(cj.cancel_type); return co && (
-          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+          <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] flex-shrink-0 whitespace-nowrap"
             style={{ background: `color-mix(in srgb, ${co.color} 15%, transparent)`, color: co.color, border: `1px solid color-mix(in srgb, ${co.color} 30%, transparent)` }}>
             {co.label}{cj.cancel_amount ? ` ฿${Math.round(cj.cancel_amount).toLocaleString('th-TH')}` : ''}
           </span>
@@ -216,18 +217,18 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
       <p className="text-xs truncate w-full" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
       {/* Row 3: type chips */}
       <div className="flex gap-1 flex-wrap">
-        <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+        <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
           style={{ background: custType === 'B2B' ? 'color-mix(in srgb, var(--accent-amber) 15%, transparent)' : 'color-mix(in srgb, var(--accent-blue) 12%, transparent)', color: custType === 'B2B' ? 'var(--accent-amber)' : 'var(--accent-blue)' }}>
           {custType}
         </span>
         {workType && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {workType}
           </span>
         )}
         {c.source && (
-          <span className="text-micro px-1.5 py-0.5 rounded-[4px] font-semibold"
+          <span className="text-micro px-1.5 py-0.5 rounded-[8px] font-semibold"
             style={{ background: 'var(--hover-bg)', color: 'var(--text-2)' }}>
             {c.source}
           </span>
@@ -249,7 +250,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
       {/* Delete button */}
       <button
         onClick={e => { e.stopPropagation(); onDelete() }}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
         style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
         title="ลบ"
       >
@@ -312,14 +313,14 @@ function BookedJobCard({ job, onClick, onDelete }: { job: BookedJob; onClick: ()
   const barPct = job.revenue_inc_vat > 0 ? Math.min(100, Math.round(job.pct * 100)) : null
   const barColor = barPct === null ? '' : barPct >= 50 ? 'var(--accent-blue)' : 'var(--accent-orange)'
   return (
-    <div className="relative group w-full rounded-[11px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
+    <div className="relative group w-full rounded-[8px] p-3 flex flex-col gap-2 transition-all cursor-pointer"
       style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
       onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--card-border)')}
       onClick={onClick}>
       <div className="flex items-start justify-between gap-1 min-w-0">
         <p className="font-bold text-sm truncate min-w-0" style={{ color: 'var(--text-1)' }}>{job.room_no || '—'}</p>
-        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
+        <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] flex-shrink-0 whitespace-nowrap"
           style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
           จอง
         </span>
@@ -348,7 +349,7 @@ function BookedJobCard({ job, onClick, onDelete }: { job: BookedJob; onClick: ()
       {onDelete && (
         <button
           onClick={e => { e.stopPropagation(); onDelete() }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[6px]"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
           style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
           title="ลบ"
         >
@@ -383,7 +384,7 @@ function CancelModal({ onClose, onConfirm }: {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 pb-4 pt-14 lg:pt-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative rounded-[16px] p-5 w-full max-w-sm space-y-4" data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
+      <div className="relative rounded-[18px] p-5 w-full max-w-sm space-y-4" data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}
         onClick={e => e.stopPropagation()}>
         <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>ยกเลิกสัญญา</p>
 
@@ -781,7 +782,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       {/* Panel */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none px-4 pb-4 pt-14 lg:pt-4">
-      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[20px] shadow-2xl pointer-events-auto"
+      <div className="w-full max-w-[460px] max-h-[90vh] flex flex-col rounded-[18px] shadow-2xl pointer-events-auto"
         data-panel style={{ background: 'var(--panel-bg)', border: '1px solid var(--card-border)' }}>
 
         {/* Header — like DealDrawer */}
@@ -825,7 +826,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             const displayVal = jobRev
             const label = jobRev > 0 ? 'มูลค่างาน (inc. VAT)' : 'งบประมาณ'
             return (
-          <div className="rounded-[11px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
+          <div className="rounded-[8px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
             <div>
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>{label}</p>
               <p className="text-xl font-bold mt-0.5" style={{ color: displayVal > 0 ? 'var(--text-1)' : 'var(--text-3)' }}>
@@ -833,7 +834,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               </p>
             </div>
             {customer.source && (
-              <span className="text-label px-2 py-1 rounded-[6px] font-semibold"
+              <span className="text-label px-2 py-1 rounded-[8px] font-semibold"
                 style={{ background: 'var(--card-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
                 {customer.source}
               </span>
@@ -1005,7 +1006,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
 
           {/* Edit form */}
           {editing && (
-            <div className="space-y-3 p-4 rounded-[11px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+            <div className="space-y-3 p-4 rounded-[8px]" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
               <p className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>แก้ไขข้อมูล</p>
               <Input label="ชื่อลูกค้า" value={form.customer_name} onChange={e => setForm(p => ({ ...p, customer_name: e.target.value }))} />
               <div className="grid grid-cols-2 gap-2">
@@ -1085,7 +1086,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
 
           {/* Warranties */}
           {!loadingDetail && warranties.length > 0 && (
-            <div className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+            <div className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
               <div className="px-4 py-2.5" style={{ background: 'var(--hover-bg)' }}>
                 <span className="text-micro font-semibold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>ประกัน</span>
               </div>
@@ -1109,7 +1110,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             const docCount = [j.quotation1_url, j.quotation2_url, j.id_card_url, j.delivery_doc_url, j.satisfaction_url].filter(Boolean).length
             const expanded = docsExpanded[j.id] ?? false
             return (
-              <div key={j.id} className="rounded-[11px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+              <div key={j.id} className="rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
                 <button className="w-full flex items-center justify-between px-4 py-2.5"
                   style={{ background: 'var(--hover-bg)', color: 'var(--text-3)' }}
                   onClick={() => setDocsExpanded(e => ({ ...e, [j.id]: !e[j.id] }))}>
@@ -1138,7 +1139,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           })})()}
 
           {/* File Attachments */}
-          <div className="rounded-[11px] p-3" style={{ border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3" style={{ border: '1px solid var(--divider)' }}>
             <FileAttach
               customerId={customer.id}
               projectName={(customer as any).projects?.name || customer.project_id || ''}
@@ -1149,7 +1150,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           {/* Already cancelled — the cancel toggle below is gone once the stage is
               lost, so without this the drawer said nothing about what was settled. */}
           {(() => { const cj = jobOf(customer, focusJobId); const co = cancelOutcome(cj.cancel_type); return co && (
-            <div className="rounded-[11px] p-3" style={{ background: `color-mix(in srgb, ${co.color} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${co.color} 25%, transparent)` }}>
+            <div className="rounded-[8px] p-3" style={{ background: `color-mix(in srgb, ${co.color} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${co.color} 25%, transparent)` }}>
               <p className="text-label font-semibold" style={{ color: co.color }}>ยกเลิกสัญญา · {co.label}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
                 {cj.cancel_amount ? `฿${Math.round(cj.cancel_amount).toLocaleString('th-TH')}` : 'ไม่ได้ระบุยอด'}
@@ -1398,7 +1399,7 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
           </div>
           {error && <p className="text-xs text-danger">{error}</p>}
           <button onClick={save} disabled={saving}
-            className="w-full py-3 rounded-[11px] font-semibold text-sm text-white"
+            className="w-full py-3 rounded-[8px] font-semibold text-sm text-white"
             style={{ background: saving ? '#666' : 'var(--accent-green)' }}>
             {saving ? 'กำลังสร้างงาน...' : '⚡ เริ่มงาน'}
           </button>
@@ -1423,7 +1424,7 @@ function fLineDate(d: string | null) {
 function BookingAttachBtn({ label, active, saving, onClick, activeColor }: { label: string; active: boolean; saving: boolean; onClick: () => void; activeColor: string }) {
   return (
     <button onClick={onClick} disabled={saving}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all active:scale-95"
       style={{
         background: active ? `color-mix(in srgb, ${activeColor} 12%, transparent)` : 'var(--hover-bg)',
         border: `1px solid ${active ? `color-mix(in srgb, ${activeColor} 30%, transparent)` : 'var(--divider)'}`,
@@ -1442,7 +1443,7 @@ function BookingCopyBtn({ lineMsg }: { lineMsg: string }) {
   }
   return (
     <button onClick={copy}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition-all active:scale-95"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all active:scale-95"
       style={{
         background: copied ? 'color-mix(in srgb, var(--accent-green) 15%, transparent)' : 'rgba(0,185,107,0.08)',
         border: `1px solid ${copied ? 'color-mix(in srgb, var(--accent-green) 40%, transparent)' : 'rgba(0,185,107,0.25)'}`,
@@ -1472,7 +1473,7 @@ function DocProspectField({ jobId, field, label, value, onUpdate }: {
     <button onClick={toggle} disabled={saving}
       className="flex items-center gap-2 w-full text-left py-1.5"
       style={{ opacity: saving ? 0.5 : 1 }}>
-      <div className="w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0"
+      <div className="w-4 h-4 rounded-[8px] flex items-center justify-center flex-shrink-0"
         style={{
           background: checked ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--hover-bg)',
           border: `1px solid ${checked ? 'var(--accent)' : 'var(--divider)'}`,
@@ -2116,42 +2117,34 @@ export default function ProspectsKanbanPage() {
           const noSales = filtered.filter(j => !j.sales_id).length
             + bookedNoJob.filter(c => !salesIdOf(c)).length
           return (
-            <div className="mb-3 grid grid-cols-3 gap-2">
-              <div className="ds-card-sm text-center">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>จองอยู่</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{bookedCount}</p>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>งาน</p>
-              </div>
-              <div className="ds-card-sm text-center">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalRev > 0 ? bahtShort(totalRev) : '—'}</p>
-              </div>
-              <div className="ds-card-sm text-center">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>
-                <p className="text-lg font-bold" style={{ color: noSales > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{noSales}</p>
-                <p className="text-micro" style={{ color: 'var(--text-3)' }}>งาน</p>
-              </div>
+            <div className="mb-3">
+              <SummaryStrip items={[
+                { label: 'จองอยู่', value: bookedCount, sub: 'งาน' },
+                { label: 'มูลค่ารวม', value: totalRev > 0 ? bahtShort(totalRev) : '—' },
+                {
+                  label: 'ยังไม่มี Sales',
+                  value: noSales,
+                  sub: 'งาน',
+                  tone: noSales > 0 ? 'var(--accent-orange)' : 'var(--accent-green)',
+                },
+              ]} />
             </div>
           )
         }
         const totalBudget = list.reduce((s, card) => s + cardValue(card.c, card.jobSeqNo, card.jobRev, card.jobCrmStage), 0)
         const noSales = list.filter(card => !jobOf(card.c, card.jobId).sales_id).length
         return (
-          <div className="mb-3 grid grid-cols-3 gap-2">
-            <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ในกลุ่มนี้</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{list.length}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ราย</p>
-            </div>
-            <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>มูลค่ารวม</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{totalBudget > 0 ? bahtShort(totalBudget) : '—'}</p>
-            </div>
-            <div className="ds-card-sm text-center">
-              <p className="text-micro font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-3)' }}>ยังไม่มี Sales</p>
-              <p className="text-lg font-bold" style={{ color: noSales > 0 ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{noSales}</p>
-              <p className="text-micro" style={{ color: 'var(--text-3)' }}>ราย</p>
-            </div>
+          <div className="mb-3">
+            <SummaryStrip items={[
+              { label: 'ในกลุ่มนี้', value: list.length, sub: 'ราย' },
+              { label: 'มูลค่ารวม', value: totalBudget > 0 ? bahtShort(totalBudget) : '—' },
+              {
+                label: 'ยังไม่มี Sales',
+                value: noSales,
+                sub: 'ราย',
+                tone: noSales > 0 ? 'var(--accent-orange)' : 'var(--accent-green)',
+              },
+            ]} />
           </div>
         )
       })()}
@@ -2332,7 +2325,7 @@ export default function ProspectsKanbanPage() {
                   const cStage = resolveStage(newestJob?.crm_stage)
                   return (
                     <button key={c.id} onClick={() => setRepeatConfirm(c)}
-                      className="w-full flex items-center gap-3 p-3 rounded-[10px] text-left transition-all"
+                      className="w-full flex items-center gap-3 p-3 rounded-[8px] text-left transition-all"
                       style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}
                       onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--divider)')}>
@@ -2343,7 +2336,7 @@ export default function ProspectsKanbanPage() {
                           {cJobs.length > 1 ? ` · ${cJobs.length} งาน` : ''}
                         </p>
                       </div>
-                      <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0" style={{ background: cStage.badge, color: cStage.text }}>{cStage.label}</span>
+                      <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[8px] flex-shrink-0" style={{ background: cStage.badge, color: cStage.text }}>{cStage.label}</span>
                     </button>
                   )
                 })}
@@ -2354,12 +2347,12 @@ export default function ProspectsKanbanPage() {
               const canSubmit = repeatJobForm.project_id && repeatJobForm.room.trim() && repeatJobForm.work_type
               const projectNotFound = repeatJobForm.project_id === '__not_found__'
               return (
-                <div className="p-4 rounded-[11px] space-y-3" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
+                <div className="p-4 rounded-[8px] space-y-3" style={{ background: 'color-mix(in srgb, var(--accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
                   {/* Header */}
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>
                       {repeatConfirm.customer_name}
-                      <span className="ml-2 text-xs font-normal px-1.5 py-0.5 rounded-[5px]"
+                      <span className="ml-2 text-xs font-normal px-1.5 py-0.5 rounded-[8px]"
                         style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                         งานที่ {jobCount + 1}
                       </span>
@@ -2382,7 +2375,7 @@ export default function ProspectsKanbanPage() {
                       </button>
                     )}
                     {projectNotFound && (
-                      <p className="mt-1 text-label px-2 py-1 rounded-[6px]"
+                      <p className="mt-1 text-label px-2 py-1 rounded-[8px]"
                         style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)', color: 'var(--accent-orange)', border: '1px solid color-mix(in srgb, var(--accent-orange) 30%, transparent)' }}>
                         ⚠️ กรุณาสร้างโครงการใหม่ใน Settings ก่อน แล้วกลับมาเพิ่มงานซ้ำอีกครั้ง
                       </p>

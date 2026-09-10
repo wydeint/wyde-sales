@@ -154,7 +154,7 @@ export default function NotificationBell() {
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
             <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>การแจ้งเตือน</span>
             {total > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-[4px] font-bold"
+              <span className="text-xs px-2 py-0.5 rounded-[8px] font-bold"
                 style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
                 {total} รายการ
               </span>

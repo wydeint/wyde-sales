@@ -513,7 +513,7 @@ function EventAddSheet({ open, onClose, events }: {
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map(s => (
                 <button key={s.value} onClick={() => setStatus(s.value)}
-                  className="py-3 rounded-[11px] text-sm font-semibold transition-all border"
+                  className="py-3 rounded-[8px] text-sm font-semibold transition-all border"
                   style={status === s.value
                     ? { background: s.activeBg, color: s.activeColor, borderColor: s.activeBorder }
                     : { background: 'var(--hover-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
@@ -735,7 +735,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
               {CHANNEL_OPTS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div className="rounded-[11px] p-3 space-y-2.5" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3 space-y-2.5" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input type="checkbox" checked={useVoucher} onChange={e => setUseVoucher(e.target.checked)}
                 className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-orange)' }} />
@@ -758,7 +758,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
               </div>
             )}
           </div>
-          <div className="rounded-[11px] p-3 space-y-2.5" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
+          <div className="rounded-[8px] p-3 space-y-2.5" style={{ background: 'var(--hover-bg)', border: '1px solid var(--divider)' }}>
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input type="checkbox" checked={slipPosted} onChange={e => setSlipPosted(e.target.checked)}
                 className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent-blue)' }} />
@@ -1450,7 +1450,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
                   <p className="text-xs mt-0.5" style={t2}>{r.room} · {r.projectName}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-micro px-2 py-0.5 rounded-[4px] font-semibold"
+                  <span className="text-micro px-2 py-0.5 rounded-[8px] font-semibold"
                     style={{ background: r.kind === 'job' ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: r.kind === 'job' ? 'var(--accent)' : 'var(--accent-orange)' }}>
                     {r.kind === 'job' ? 'งาน' : 'Prospect'}
                   </span>
@@ -1467,7 +1467,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
           <button onClick={() => setSelected(null)} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
             <ArrowLeft size={14} /> {selected.name} · {selected.room}
           </button>
-          <div className="rounded-[11px] p-4 mb-4" style={sheetCard}>
+          <div className="rounded-[8px] p-4 mb-4" style={sheetCard}>
             <p className="font-semibold text-sm mb-0.5" style={t1}>{selected.name}</p>
             <p className="text-xs" style={t2}>{selected.room} · {selected.projectName}</p>
           </div>

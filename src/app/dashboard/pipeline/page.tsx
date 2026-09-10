@@ -824,7 +824,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           {(() => {
             const jobRev = jobs.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
             const displayVal = jobRev
-            const label = jobRev > 0 ? 'มูลค่างาน (inc. VAT)' : 'งบประมาณ'
+            const label = jobRev > 0 ? 'มูลค่างาน (inc.VAT)' : 'งบประมาณ'
             return (
           <div className="rounded-[8px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
             <div>
@@ -1356,10 +1356,10 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
               style={inputStyle} placeholder="เช่น A-101" />
           </div>
           <div>
-            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</label>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc.VAT)</label>
             <input type="number" value={revenue || ''} onChange={e => setRevenue(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
-            {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
+            {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>exc.VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>

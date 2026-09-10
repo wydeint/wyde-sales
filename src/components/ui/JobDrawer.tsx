@@ -771,13 +771,13 @@ export function RevenueCard({ job, onUpdated }: {
       <p className="text-xs font-semibold mb-4" style={{ color: 'var(--text-3)' }}>แก้ไขมูลค่างาน (VAT 7%)</p>
       <div className="space-y-2">
         <div>
-          <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา ex. VAT (บาท)</label>
-          <MoneyInput value={exVat} onChange={handleExChange} ariaLabel="ราคา ex VAT"
+          <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา exc.VAT (บาท)</label>
+          <MoneyInput value={exVat} onChange={handleExChange} ariaLabel="ราคา exc.VAT"
             className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
         </div>
         <div>
-          <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา inc. VAT (บาท)</label>
-          <MoneyInput value={incVat} onChange={handleIncChange} ariaLabel="ราคา inc VAT"
+          <label className="text-xs mb-1 block" style={{ color: 'var(--text-3)' }}>ราคา inc.VAT (บาท)</label>
+          <MoneyInput value={incVat} onChange={handleIncChange} ariaLabel="ราคา inc.VAT"
             className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
         </div>
       </div>
@@ -793,9 +793,9 @@ export function RevenueCard({ job, onUpdated }: {
   return (
     <div className="rounded-[8px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
       <div>
-        <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc.VAT)</p>
         <p className="text-xl font-bold mt-1" style={{ color: 'var(--text-1)' }}>{fmtBaht(job.revenue_inc_vat || job.revenue_ex_vat)}</p>
-        {job.revenue_ex_vat > 0 && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT {fmtBaht(job.revenue_ex_vat)}</p>}
+        {job.revenue_ex_vat > 0 && <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>exc.VAT {fmtBaht(job.revenue_ex_vat)}</p>}
       </div>
       <button onClick={openEdit} className="p-2 rounded-[8px]" style={{ color: 'var(--text-3)', background: 'var(--card-bg)' }}>
         <Pencil size={14} />

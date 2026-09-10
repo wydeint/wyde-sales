@@ -408,10 +408,10 @@ function AddJobModal({
               style={inputStyle} placeholder="เช่น A-101" />
           </div>
           <div>
-            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</label>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc.VAT)</label>
             <MoneyInput value={revenue ? String(revenue) : ''} onChange={v => setRevenue(Number(v) || 0)} ariaLabel="มูลค่างาน" 
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
-            {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
+            {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>exc.VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -924,7 +924,7 @@ export default function JobsPage() {
         return (
           <div className="grid grid-cols-3 gap-4">
             <div className="ds-card">
-              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (Ex.VAT)</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>Revenue (exc.VAT)</p>
               <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>{f(totalRevenue)}</p>
               <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>Cost {f(totalCost)}</p>
             </div>
@@ -950,7 +950,7 @@ export default function JobsPage() {
 
       {/* ─── Card Grid (grouped by project) ─── */}
       {filtered.length === 0 ? (
-        <div className="ds-card"><EmptyState icon={Briefcase} message="ยังไม่มีข้อมูล" sub="ยังไม่มีงานที่ตรงกับตัวกรอง" /></div>
+        <div className="ds-card"><EmptyState icon={Briefcase} message="ไม่พบงาน" sub="ลองเปลี่ยนคำค้นหรือตัวกรอง" /></div>
       ) : (() => {
         const seqMap = buildSequenceMap(filtered)
         return (
@@ -1314,13 +1314,13 @@ export default function JobsPage() {
               <SectionDivider label="4 · Revenue & Cost" color="var(--accent)" />
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
-                  <label className="field-label">Revenue (Inc.VAT) ฿</label>
+                  <label className="field-label">Revenue (inc.VAT) ฿</label>
                   <MoneyInput value={editing.revenue_inc_vat ? String(editing.revenue_inc_vat) : ''}
                     onChange={v => handleRevenueChange(Number(v) || 0)}
-                    className="field-input w-full mt-1" placeholder="0" ariaLabel="มูลค่างาน inc VAT" />
+                    className="field-input w-full mt-1" placeholder="0" ariaLabel="มูลค่างาน inc.VAT" />
                 </div>
                 <div>
-                  <label className="field-label">Revenue (Ex.VAT) ฿ <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>auto ÷ 1.07</span></label>
+                  <label className="field-label">Revenue (exc.VAT) ฿ <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>auto ÷ 1.07</span></label>
                   <div className="field-input mt-1 flex items-center gap-2" style={{ background: 'var(--hover-bg)' }}>
                     <span style={{ color: 'var(--text-1)', fontWeight: 600 }}>
                       {editing.revenue_ex_vat ? f(editing.revenue_ex_vat) : '—'}

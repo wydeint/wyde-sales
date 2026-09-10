@@ -127,7 +127,7 @@ export default function SettingsPage() {
         <div className="flex items-center gap-2 mb-4">
           <Settings2 size={15} style={{ color: 'var(--accent)' }} />
           <h2 className="text-section-title" style={{ color: 'var(--text-1)' }}>Commission Tiers</h2>
-          <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>คำนวณจาก Revenue (Ex.VAT)</span>
+          <span className="text-xs ml-auto" style={{ color: 'var(--text-3)' }}>คำนวณจาก Revenue (exc.VAT)</span>
         </div>
 
         <div className="overflow-x-auto">

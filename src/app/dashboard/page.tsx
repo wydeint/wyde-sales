@@ -283,7 +283,7 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
-                      {['Job ID', 'ลูกค้า', 'โครงการ / ห้อง', 'Sales', 'วันส่งมอบ (actual)', 'Revenue (Inc.VAT)'].map(h => (
+                      {['Job ID', 'ลูกค้า', 'โครงการ / ห้อง', 'Sales', 'วันส่งมอบ (actual)', 'Revenue (inc.VAT)'].map(h => (
                         <th key={h} className="text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                       ))}
                     </tr>

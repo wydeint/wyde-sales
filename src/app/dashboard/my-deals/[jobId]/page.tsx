@@ -766,7 +766,7 @@ export default function JobDetailPage() {
           {/* Revenue */}
           <div className="px-4 pt-4 pb-3 flex items-center justify-between">
             <div>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc. VAT)</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>มูลค่างาน (inc.VAT)</p>
               <p className="text-2xl font-bold mt-1" style={{ color: 'var(--text-1)' }}>{fmtBaht(revenue)}</p>
             </div>
             <div className="text-right">

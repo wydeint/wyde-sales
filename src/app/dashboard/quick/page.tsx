@@ -1363,7 +1363,7 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                   </div>
                 </div>
               ))}
-              {items.length === 0 && <EmptyState message="ยังไม่มีข้อมูล commission" />}
+              {items.length === 0 && <EmptyState message="ยังไม่มีข้อมูล Commission" />}
             </div>
           </>
         )}

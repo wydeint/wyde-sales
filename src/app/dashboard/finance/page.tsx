@@ -974,7 +974,7 @@ export default function FinancePage() {
               </thead>
               <tbody>
                 {payBase.length === 0 ? (
-                  <TableEmpty colSpan={6} icon={Wallet} message="ไม่มีรายการ" />
+                  <TableEmpty colSpan={6} icon={Wallet} message="ไม่พบรายการในช่วงเวลานี้" />
                 ) : payBase.map((p, i) => {
                   const st = PAY_STATUS.find(s => s.value === p.status) || PAY_STATUS[0]
                   const isOD = p.status !== 'paid' && p.due_date && p.due_date < today

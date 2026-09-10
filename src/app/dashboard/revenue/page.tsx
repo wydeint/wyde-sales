@@ -266,7 +266,7 @@ export default function RevenuePage() {
       'ประเภทงาน', 'แพ็กเกจ',
       isSalesMode ? 'วันจอง / เริ่มงาน' : 'วันส่งมอบ (จริง)',
       'สถานะงาน',
-      'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)',
+      'Revenue (exc.VAT)', 'Revenue (inc.VAT)',
       ...(mainTab === 'deliver' ? ['Cost', 'GP%'] : []),
       'เกณฑ์ Commission (Tier)', 'Commission Rate%', 'Commission',
       'Sales', 'PO No.', 'SO No.', 'Voucher',
@@ -369,13 +369,13 @@ export default function RevenuePage() {
       {(() => {
         const kpis = mainTab === 'sales' ? [
           { label: 'จำนวนงาน', value: unitCount + ' งาน', sub: `เฉลี่ย ${unitCount > 0 ? fk(totalRevenue / unitCount) : '—'}/งาน`, color: 'var(--accent-blue)' },
-          { label: 'ยอดขาย (Inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: 'var(--accent-orange)' },
-          { label: 'ยอดขาย (Ex.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: 'var(--accent-amber)' },
-          { label: 'Commission (คาดการณ์)', value: fk(totalCommission), sub: totalRevenueEx > 0 ? (totalCommission / totalRevenueEx * 100).toFixed(2) + '% ของ Ex.VAT' : '—', color: 'var(--accent-purple)' },
+          { label: 'ยอดขาย (inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: 'var(--accent-orange)' },
+          { label: 'ยอดขาย (exc.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: 'var(--accent-amber)' },
+          { label: 'Commission (คาดการณ์)', value: fk(totalCommission), sub: totalRevenueEx > 0 ? (totalCommission / totalRevenueEx * 100).toFixed(2) + '% ของ exc.VAT' : '—', color: 'var(--accent-purple)' },
         ] : [
           { label: 'จำนวนห้อง/งาน', value: unitCount + ' งาน', sub: `เฉลี่ย ${unitCount > 0 ? fk(totalRevenue / unitCount) : '—'}/งาน`, color: 'var(--accent-blue)' },
-          { label: 'Revenue ส่งมอบ (Inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: 'var(--accent-green)' },
-          { label: 'Revenue (Ex.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: 'var(--accent-amber)' },
+          { label: 'Revenue ส่งมอบ (inc.VAT)', value: fk(totalRevenue), sub: growthPct ? `${Number(growthPct) > 0 ? '+' : ''}${growthPct}% vs ${PERIOD_LABELS[period]}ก่อน` : `vs ก่อนหน้า ${fk(prevRevenue)}`, color: 'var(--accent-green)' },
+          { label: 'Revenue (exc.VAT)', value: fk(totalRevenueEx), sub: totalRevenue > 0 ? `VAT ${fk(totalRevenue - totalRevenueEx)}` : '—', color: 'var(--accent-amber)' },
           { label: 'Profit (GP)', value: fk(totalProfit), sub: totalRevenueEx > 0 ? 'GP ' + (totalProfit / totalRevenueEx * 100).toFixed(2) + '%' : '—', color: totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' },
         ]
         return (
@@ -479,7 +479,7 @@ export default function RevenuePage() {
           <table className="w-full text-sm tbl-rows">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
-                {['Sales', 'จำนวนงาน', 'Revenue (Inc.VAT)', ...(mainTab === 'deliver' ? ['Cost', 'Profit (Ex-Cost)', 'GP%'] : [])].map(h => (
+                {['Sales', 'จำนวนงาน', 'Revenue (inc.VAT)', ...(mainTab === 'deliver' ? ['Cost', 'Profit (Ex-Cost)', 'GP%'] : [])].map(h => (
                   <th key={h} className="text-left text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{h}</th>
                 ))}
               </tr>
@@ -523,7 +523,7 @@ export default function RevenuePage() {
                               <thead>
                                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                                   {['ห้อง', 'โครงการ', 'ลูกค้า', mainTab === 'sales' ? 'วันจอง' : 'วันส่งมอบ', 'ประเภทงาน',
-                                    mainTab === 'sales' ? 'สถานะ' : '', 'Revenue (Inc.VAT)'].filter(Boolean).map(h => (
+                                    mainTab === 'sales' ? 'สถานะ' : '', 'Revenue (inc.VAT)'].filter(Boolean).map(h => (
                                     <th key={h} className="text-left font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                                   ))}
                                 </tr>
@@ -613,7 +613,7 @@ export default function RevenuePage() {
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                           {['ห้อง', 'ลูกค้า', mainTab === 'sales' ? 'วันจอง' : 'วันส่งมอบ', 'ประเภท', 'Sales',
-                            mainTab === 'sales' ? 'สถานะ' : '', 'Revenue (Inc.VAT)',
+                            mainTab === 'sales' ? 'สถานะ' : '', 'Revenue (inc.VAT)',
                             mainTab === 'deliver' ? 'GP%' : ''].filter(Boolean).map(h => (
                             <th key={h} className="text-left font-semibold whitespace-nowrap" style={{ color: 'var(--text-3)' }}>{h}</th>
                           ))}
@@ -671,7 +671,7 @@ export default function RevenuePage() {
               <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                 {[
                   mainTab === 'sales' ? 'วันจอง' : 'วันส่งมอบ',
-                  'ลูกค้า', 'โครงการ / ห้อง', 'ประเภท', 'Revenue (Inc.VAT)',
+                  'ลูกค้า', 'โครงการ / ห้อง', 'ประเภท', 'Revenue (inc.VAT)',
                   mainTab === 'deliver' ? 'Cost' : '',
                   mainTab === 'deliver' ? 'GP%' : '',
                   'สถานะ', 'Sales',

@@ -32,7 +32,7 @@ export async function createProspectJob(
     salesId?: string | null
     crmStage: string
     /**
-     * มูลค่างาน (inc. VAT) — what sales expects this room to be worth.
+     * มูลค่างาน (inc.VAT) — what sales expects this room to be worth.
      *
      * It used to be written to `customers.budget` instead, which cannot work:
      * one customer holds up to 147 rooms and has one budget field, so the

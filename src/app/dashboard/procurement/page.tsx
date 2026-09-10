@@ -823,7 +823,7 @@ function SummaryTab({ summary, rows, itemsByJob, projById, setOpenJob, setTab }:
               </tr>
             </thead>
             <tbody>
-              {byProject.length === 0 && <TableEmpty colSpan={8} message="ไม่มีห้องในช่วงที่เลือก" />}
+              {byProject.length === 0 && <TableEmpty colSpan={8} message="ไม่พบห้องในช่วงที่เลือก" />}
               {byProject.map(p => {
                 const isOpen = open.has(p.pid)
                 return (
@@ -929,7 +929,7 @@ function WorkTab({ rows, itemsByJob, projById, nameOf, setOpenJob }: {
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && <TableEmpty colSpan={10} message="ไม่มีห้องในช่วงที่เลือก" />}
+            {rows.length === 0 && <TableEmpty colSpan={10} message="ไม่พบห้องในช่วงที่เลือก" />}
             {rows.map((j, ri) => {
               const list = itemsByJob.get(j.id) ?? []
               const t = totalsOf(list)
@@ -1598,7 +1598,7 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && <TableEmpty colSpan={9} message="ไม่มีห้องตามตัวกรองที่เลือก" />}
+            {rows.length === 0 && <TableEmpty colSpan={9} message="ไม่พบห้องตามตัวกรองที่เลือก" />}
             {rows.map((j, ri) => {
               const items = itemsByJob.get(j.id) ?? []
               const pos = new Set(items.filter(i => i.po_no).map(i => i.po_no!)).size

@@ -56,8 +56,8 @@ const TABLES: TableDef[] = [
       { key: 'work_type', label: 'ประเภทงาน', type: 'select', options: [...WORK_TYPES], width: 130 },
       { key: 'package_type', label: 'Package', type: 'text', width: 110 },
       { key: 'order_date', label: 'วันขาย', type: 'date', width: 120 },
-      { key: 'revenue_ex_vat', label: 'มูลค่า (ex VAT)', type: 'number', width: 130 },
-      { key: 'revenue_inc_vat', label: 'มูลค่า (inc VAT)', type: 'number', width: 130 },
+      { key: 'revenue_ex_vat', label: 'มูลค่า (exc.VAT)', type: 'number', width: 130 },
+      { key: 'revenue_inc_vat', label: 'มูลค่า (inc.VAT)', type: 'number', width: 130 },
       { key: 'working_status', label: 'สถานะงาน', type: 'select', options: ['จอง', 'ดำเนินการ', 'รอส่งมอบ', 'ส่งมอบแล้ว', 'ยกเลิก'], width: 140 },
       // crm_stage is the only place a stage lives now — customers.status was
       // dropped on 2026-08-27. The Prospects card can move most stages, but not

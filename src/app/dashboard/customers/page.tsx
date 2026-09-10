@@ -496,8 +496,8 @@ function CustomerDetail({
                         <tr>
                           <th className="text-left" style={{ width: '22%' }}>ห้อง</th>
                           <th className="text-left" style={{ width: '20%' }}>สถานะ</th>
-                          <th className="num num-pct" style={{ width: '20%' }}><span>มูลค่า</span></th>
-                          <th className="num num-pct" style={{ width: '18%' }}><span>ชำระ</span></th>
+                          <th className="num num-money" style={{ width: '20%' }}><span>มูลค่างาน</span></th>
+                          <th className="num num-money" style={{ width: '18%' }}><span>ชำระ</span></th>
                           <th className="text-left" style={{ width: '20%' }}>ส่งมอบ</th>
                         </tr>
                       </thead>

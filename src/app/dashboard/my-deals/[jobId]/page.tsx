@@ -330,7 +330,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
                       </div>
                       <div className="w-32">
-                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
+                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่างาน (บาท)</label>
                         <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="มูลค่า Voucher" 
                           placeholder="0"
                           className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"

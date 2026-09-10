@@ -444,7 +444,7 @@ export function SetupAndPayModal({ job, onClose, onSaved }: { job: FullJob; onCl
                           className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                       </div>
                       <div className="w-32">
-                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
+                        <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่างาน (บาท)</label>
                         <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="ยอดส่วนลด"
                           placeholder="0"
                           className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
@@ -614,7 +614,7 @@ export function PayModal({ job, onClose, onSaved }: { job: FullJob; onClose: () 
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />
                 </div>
                 <div className="w-32">
-                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
+                  <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่างาน (บาท)</label>
                   <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="ยอดส่วนลด"
                     placeholder="0"
                     className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none" style={inputStyle} />

@@ -751,7 +751,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
                     style={sheetInputStyle} />
                 </div>
                 <div>
-                  <label className="text-xs mb-1 block" style={t3}>มูลค่า (฿)</label>
+                  <label className="text-xs mb-1 block" style={t3}>มูลค่างาน (฿)</label>
                   <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="มูลค่า Voucher" 
                     placeholder="0" className="w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                     style={sheetInputStyle} />

@@ -1593,8 +1593,8 @@ function DocsTab({ rows, projById, itemsByJob, canWrite, nameOf, adminPeople, on
               <th className="text-left th-muted" style={{ width: '10%', whiteSpace: 'normal' }}>แอดมินรับงาน</th>
               <th className="text-left th-muted" style={{ width: '10%', whiteSpace: 'normal' }}>จัดซื้อรับงาน</th>
               <th className="text-left th-muted" style={{ width: '11%' }}>แอดมิน</th>
-              <th className="num num-pct th-muted" style={{ width: '10%', whiteSpace: 'normal' }}><span>Revenue exc.VAT</span></th>
-              <th className="num num-pct th-muted" style={{ width: '7%', whiteSpace: 'normal' }}><span>PO Supplier</span></th>
+              <th className="num num-money th-muted" style={{ width: '10%', whiteSpace: 'normal' }}><span>Revenue exc.VAT</span></th>
+              <th className="num num-count th-muted" style={{ width: '7%', whiteSpace: 'normal' }}><span>PO Supplier</span></th>
             </tr>
           </thead>
           <tbody>
@@ -2006,7 +2006,7 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
               <tr>
                 <th className="text-left th-muted" style={{ width: '46%' }}>หมวด</th>
                 <th className="text-left th-muted" style={{ width: '22%' }}>ผู้ประมาณการ</th>
-                <th className="num num-pct th-muted" style={{ width: '22%' }}><span>Supplier ในหมวด</span></th>
+                <th className="num num-count th-muted" style={{ width: '22%' }}><span>Supplier ในหมวด</span></th>
                 {canWrite && <th style={{ width: '10%' }} />}
               </tr>
             </thead>
@@ -2062,8 +2062,8 @@ function RegistryTab({ cats, sups, supsOfCat, items, canWrite, onAddSupplier, on
                 <th className="text-left th-muted" style={{ width: '14%' }}>ผู้ติดต่อ</th>
                 <th className="text-left th-muted" style={{ width: '22%' }}>อีเมล</th>
                 <th className="text-left th-muted" style={{ width: '12%' }}>เบอร์โทร</th>
-                <th className="num num-pct th-muted" style={{ width: '8%' }}><span>งานที่จ้าง</span></th>
-                <th className="num num-pct th-muted" style={{ width: '10%' }}><span>มูลค่ารวม</span></th>
+                <th className="num num-count th-muted" style={{ width: '8%' }}><span>งานที่จ้าง</span></th>
+                <th className="num num-money th-muted" style={{ width: '10%' }}><span>มูลค่ารวม</span></th>
                 {canWrite && <th style={{ width: '5%' }} />}
               </tr>
             </thead>

@@ -576,7 +576,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                         <th className="text-left font-semibold" style={{ color: 'var(--text-3)' }}>ห้อง</th>
                         <th className="text-left font-semibold" style={{ color: 'var(--text-3)' }}>สถานะ</th>
                         <th className="num num-count font-semibold" style={{ color: 'var(--text-3)' }}><span>วันที่ขาย</span></th>
-                        <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>มูลค่า</span></th>
+                        <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>มูลค่างาน</span></th>
                         <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>รับแล้ว</span></th>
                       </tr>
                     </thead>
@@ -1254,7 +1254,7 @@ export default function ProjectSummaryPage() {
               <td className="px-3 py-2.5"><FunnelBar delivered={totals.delivered} total={totals.jobs} /></td>
               <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--accent)' }}><span>{fM(totals.rev)}</span></td>
               <td className=" num num-money text-xs font-bold tabular-nums" style={{ color: 'var(--accent-green)' }}><span>{fM(totals.revDel)}</span></td>
-              <td className=" num num-pct">
+              <td className=" num num-money">
                 <span>{totals.rev - totals.cash > 0 ? (
                   <>
                     <p className="text-xs font-bold tabular-nums" style={{ color: 'var(--accent-orange)' }}>{fM(totals.rev - totals.cash)}</p>

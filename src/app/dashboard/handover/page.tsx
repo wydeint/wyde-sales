@@ -250,7 +250,7 @@ function EditDrawer({ entry, onClose, onSaved }: { entry: EditState; onClose: ()
             <Row2 label="ลูกค้า" value={form.customer_name || '—'} />
             <Row2 label="Sales" value={form.sales_name || '—'} />
             <Row2 label="ประเภทงาน" value={form.work_type || '—'} />
-            <Row2 label="มูลค่า (inc.VAT)" value={baht(form.revenue)} />
+            <Row2 label="มูลค่างาน (inc.VAT)" value={baht(form.revenue)} />
             <Row2 label="สถานะ" value={form.working_status} />
           </div>
 

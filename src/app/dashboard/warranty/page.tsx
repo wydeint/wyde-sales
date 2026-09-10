@@ -215,7 +215,7 @@ export default function WarrantyPage() {
         subtitle="ติดตามระยะเวลาประกันผลงาน"
         actions={
           <button onClick={() => { setEditing(null); setForm(emptyForm); setOpen(true) }}
-            className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+            className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors">
             <Plus size={16} />เพิ่มประกัน
           </button>
         }
@@ -268,7 +268,7 @@ export default function WarrantyPage() {
         <div className="mb-6">
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>อยู่ในประกัน ({active.length})</h2>
           <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
-            <table className="w-full">
+            <table className="w-full tbl-rows">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                   <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
@@ -288,7 +288,7 @@ export default function WarrantyPage() {
                   const custPhone = (w as any).customers?.phone || ''
                   const room = w.room || (w as any).jobs?.room_no || '-'
                   return (
-                    <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+                    <tr key={w.id} className="transition-colors">
                       <td className="px-4 py-3">
                         <p className="text-sm" style={{ color: 'var(--text-1)' }}>{custName}</p>
                         {custPhone && <p className="text-xs" style={{ color: 'var(--text-3)' }}>{custPhone}</p>}
@@ -339,7 +339,7 @@ export default function WarrantyPage() {
         <div>
           <h2 className="text-xs font-bold mb-3" style={{ color: 'var(--text-2)' }}>หมดประกันแล้ว ({expired.length})</h2>
           <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0, opacity: 0.75 }}>
-            <table className="w-full">
+            <table className="w-full tbl-rows">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                   <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>ลูกค้า</th>
@@ -353,7 +353,7 @@ export default function WarrantyPage() {
                   const custName = (w as any).jobs?.customer_name || (w as any).customers?.customer_name || '-'
                   const room = w.room || (w as any).jobs?.room_no || '-'
                   return (
-                    <tr key={w.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+                    <tr key={w.id} className="transition-colors">
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-1)' }}>{custName}</td>
                       <td className="px-4 py-3">
                         {w.job_id && <p className="text-xs font-mono mb-0.5" style={{ color: 'var(--text-3)' }}>{w.job_id}</p>}
@@ -415,7 +415,7 @@ export default function WarrantyPage() {
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || (!form.job_id && !form.customer_id)} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || (!form.job_id && !form.customer_id)} className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

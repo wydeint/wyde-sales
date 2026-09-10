@@ -5,11 +5,13 @@ import DateInput from '@/components/ui/DateInput'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
 import {
   ArrowLeft, CheckCircle2, Circle, ChevronDown, ChevronUp,
   Wallet, Package, Wrench, ShoppingCart, AlertTriangle, X,
 } from 'lucide-react'
 import { baht } from '@/lib/money'
+import { deliverJob, DEFAULT_WARRANTY_MONTHS } from '@/lib/jobLifecycle'
 
 // ─── Types ────────────────────────────────────────────────
 type ClientType = 'B2C' | 'B2B'
@@ -217,7 +219,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                   {plan === 'C' && (
                     <div className="mt-3">
                       <label className="text-xs" style={{ color: 'var(--text-2)' }}>ยอดมัดจำ (บาท)</label>
-                      <input type="number" value={depositAmount || ''} onChange={e => setDepositAmount(Number(e.target.value))}
+                      <MoneyInput value={depositAmount ? String(depositAmount) : ''} onChange={v => setDepositAmount(Number(v) || 0)} ariaLabel="ยอดมัดจำ" 
                         placeholder={`เช่น ${Math.round(total * 0.1).toLocaleString()}`}
                         className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                         style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
@@ -329,7 +331,7 @@ function SetupAndPayModal({ job, onClose, onSaved }: { job: Job; onClose: () => 
                       </div>
                       <div className="w-32">
                         <label className="text-xs" style={{ color: 'var(--text-2)' }}>มูลค่า (บาท)</label>
-                        <input type="number" value={voucherAmount || ''} onChange={e => setVoucherAmount(Number(e.target.value))}
+                        <MoneyInput value={voucherAmount ? String(voucherAmount) : ''} onChange={v => setVoucherAmount(Number(v) || 0)} ariaLabel="มูลค่า Voucher" 
                           placeholder="0"
                           className="mt-1 w-full rounded-[8px] px-3 py-2 text-sm focus:outline-none"
                           style={{ background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }} />
@@ -390,7 +392,6 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
     setSaving(true); setError('')
     if (selected.is_work_trigger && !job.work_start_date) {
       await supabase.from('jobs').update({ work_start_date: paidDate, working_status: 'ดำเนินการ', crm_stage: 'closed' }).eq('id', job.id)
-      await supabase.from('customers').update({ status: 'closed' }).eq('id', job.customer_id)
     }
     const { error: e } = await supabase.from('payments').update({
       status: 'paid',
@@ -513,7 +514,8 @@ function PayModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () =>
 function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: () => void; onSaved: () => void; onError?: (msg: string) => void }) {
   const supabase = createClient()
   const [deliverDate, setDeliverDate] = useState(job.actual_deliver_date || today())
-  const [warrantyMonths, setWarrantyMonths] = useState(12)
+  // 6 เดือนคือค่ามาตรฐาน — หน้านี้เคยตั้ง 12 อยู่หน้าเดียว
+  const [warrantyMonths, setWarrantyMonths] = useState(DEFAULT_WARRANTY_MONTHS)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const finalInst = job.installments.find(i => i.is_final && i.status !== 'paid') || null
@@ -522,57 +524,12 @@ function HandoverModal({ job, onClose, onSaved, onError }: { job: Job; onClose: 
 
   async function save() {
     setSaving(true); setError('')
-    const wEnd = new Date(deliverDate)
-    wEnd.setMonth(wEnd.getMonth() + warrantyMonths)
-    const wEndStr = `${wEnd.getFullYear()}-${String(wEnd.getMonth() + 1).padStart(2, '0')}-${String(wEnd.getDate()).padStart(2, '0')}`
-
-    const { error: e1 } = await supabase.from('jobs').update({
-      actual_deliver_date: deliverDate,
-      working_status: 'ส่งมอบแล้ว',
-      // The other two handover paths close the stage; this one did not, so a job
-      // delivered from the single-job page kept whatever stage it had.
-      crm_stage: 'closed',
-    }).eq('id', job.id)
-    if (e1) { const msg = 'บันทึกไม่สำเร็จ: ' + e1.message; setError(msg); onError?.(msg); setSaving(false); return }
-
-    if (markFinalPaid && finalInst) {
-      await supabase.from('payments').update({ status: 'paid', paid_date: deliverDate }).eq('id', finalInst.id)
-    }
-
-    const handoverPayload = {
-      // handovers.id is NOT NULL with no default. Every insert here omitted it
-      // and failed the constraint — and only this one of the three call sites
-      // even read the error, so the table sat empty behind 578 delivered jobs.
-      id: `HO-${job.id}`,
-      job_id: job.id,
-      customer_id: job.customer_id || null,
-      project_id: job.project_id || null,
-      room: job.room_no,
-      delivery_date: deliverDate,
-      work_status: 'delivered', status: 'completed',
-    }
-    const { data: existingHO } = await supabase.from('handovers').select('id').eq('job_id', job.id).maybeSingle()
-    if (existingHO) {
-      const { error: e2 } = await supabase.from('handovers').update(handoverPayload).eq('id', existingHO.id)
-      if (e2) { const msg = 'handovers: ' + e2.message; setError(msg); onError?.(msg); setSaving(false); return }
-    } else {
-      const { error: e2 } = await supabase.from('handovers').insert(handoverPayload)
-      if (e2) { const msg = 'handovers: ' + e2.message; setError(msg); onError?.(msg); setSaving(false); return }
-    }
-
-    const { error: e3 } = await supabase.from('warranties').upsert({
-      id: `WAR-${job.id}`,
-      customer_id: job.customer_id || null,
-      project_id: job.project_id || null,
-      room: job.room_no,
-      handover_date: deliverDate,
-      warranty_start: deliverDate,
-      warranty_end: wEndStr,
-      warranty_months: warrantyMonths,
-      status: 'active',
-    }, { onConflict: 'id' })
-    if (e3) { setError('warranties: ' + e3.message); setSaving(false); return }
-
+    const res = await deliverJob(supabase, job, {
+      deliverDate, warrantyMonths,
+      finalInstalment: markFinalPaid && finalInst ? { id: finalInst.id, paidAmount: finalInst.amount } : null,
+    })
+    if (!res.ok) { setError(res.error!); onError?.(res.error!); setSaving(false); return }
+    if (res.warning) { setError(res.warning); onError?.(res.warning) }
     setSaving(false); onSaved(); onClose()
   }
 

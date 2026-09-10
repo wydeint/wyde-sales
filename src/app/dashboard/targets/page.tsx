@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { MoneyField } from '@/components/ui/MoneyInput'
 import { Plus, Target, Pencil, Building2, Users } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
@@ -270,13 +271,13 @@ export default function TargetsPage() {
           <>
           {tab === 'org' && (
             <button onClick={() => { setEditingOrg(null); setOrgForm({ ...emptyOrgForm, year: filterYear }); setOrgModalOpen(true) }}
-              className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+              className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors">
               <Plus size={16} />ตั้งเป้าองค์กร
             </button>
           )}
           {tab === 'sales' && (
             <button onClick={() => { setEditingSales(null); setSalesForm({ ...emptySalesForm, year: filterYear }); setSalesModalStep(1); setSalesModalOpen(true) }}
-              className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+              className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors">
               <Plus size={16} />ตั้งเป้า Sales
             </button>
           )}
@@ -401,7 +402,7 @@ export default function TargetsPage() {
                   <h3 className="text-section-title" style={{ color: 'var(--text-1)' }}>เป้ารายเดือน ปี {filterYear + 543}</h3>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full tbl-rows">
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         {['เดือน','เป้ายอดขาย','จริง (ขาย)','%','เป้าส่งมอบ','จริง (ส่งมอบ)','%',''].map((h, i) => (
@@ -588,7 +589,7 @@ export default function TargetsPage() {
                       <p className="text-section-title" style={{ color: 'var(--text-1)' }}>เปรียบเทียบผลทีม ({periodLabel})</p>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
+                      <table className="w-full text-sm tbl-rows">
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                             <th className="text-left px-4 py-2 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ชื่อ</th>
@@ -769,14 +770,16 @@ export default function TargetsPage() {
         <div className="grid grid-cols-2 gap-4">
           <Select label="ปี" value={String(orgForm.year)} onChange={e => setOrgForm({ ...orgForm, year: Number(e.target.value) })} options={yearOptions} />
           <Select label="เดือน" value={String(orgForm.month)} onChange={e => setOrgForm({ ...orgForm, month: Number(e.target.value) })} options={monthOptions} />
-          <Input label="เป้ายอดขาย (บาท)" type="number" value={orgForm.target_sales_value} onChange={e => setOrgForm({ ...orgForm, target_sales_value: Number(e.target.value) })} />
-          <Input label="เป้าส่งมอบ (บาท)" type="number" value={orgForm.target_delivery_value} onChange={e => setOrgForm({ ...orgForm, target_delivery_value: Number(e.target.value) })} />
+          <MoneyField label="เป้ายอดขาย (บาท)" value={orgForm.target_sales_value ? String(orgForm.target_sales_value) : ''}
+            onChange={v => setOrgForm({ ...orgForm, target_sales_value: Number(v) || 0 })} />
+          <MoneyField label="เป้าส่งมอบ (บาท)" value={orgForm.target_delivery_value ? String(orgForm.target_delivery_value) : ''}
+            onChange={v => setOrgForm({ ...orgForm, target_delivery_value: Number(v) || 0 })} />
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOrgModalOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-1)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-2)')}>ยกเลิก</button>
-          <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveOrg} disabled={orgSaving} className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             {orgSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -855,7 +858,7 @@ export default function TargetsPage() {
             </button>
           ) : (
             <button onClick={saveSales} disabled={salesSaving}
-              className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+              className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
               {salesSaving ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           )}

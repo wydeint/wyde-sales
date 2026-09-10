@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { MoneyField } from '@/components/ui/MoneyInput'
 import { Plus, Wallet, Pencil, AlertCircle, TrendingUp, TrendingDown, DollarSign, Trash2, Package, Save, RotateCcw } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
@@ -48,7 +49,6 @@ interface EntryJob {
   project_id: string
   revenue_ex_vat: number | null
   revenue_inc_vat: number | null
-  cost: number | null
   actual_deliver_date: string | null
   working_status: string
   projects?: { name: string }
@@ -67,11 +67,10 @@ interface ActiveJob {
 interface BookedCustomer {
   id: string
   customer_name: string
-  budget: number
-  booking_date: string | null
-  status: string
-  /** A prospect has no job yet, so the room lives on the customer record. */
+  /** The room a prospect is interested in — their job has no room yet. */
   interested_room: string | null
+  /** Stage now comes from the job, joined in the query above. */
+  jobs?: { crm_stage: string; working_status: string | null; revenue_inc_vat: number | null }[]
   projects?: { name: string }
 }
 
@@ -89,7 +88,6 @@ interface Entry {
 type EntryDraft = {
   revenue_ex_vat: string
   revenue_inc_vat: string
-  cost: string
   actual_deliver_date: string
 }
 
@@ -162,12 +160,16 @@ export default function FinancePage() {
         .not('working_status', 'in', '("ส่งมอบแล้ว","ยกเลิก")'),
       // Prospects — everything before a booking is committed. These are the left
       // end of the money funnel; จอง and ดำเนินการ come from `jobs` next door.
+      // Upstream prospects come from the job's stage now, not a customer-level
+      // status column. A prospect job is one that was never ordered —
+      // working_status is still null on every one of them.
       supabase.from('customers')
-        .select('id,customer_name,budget,booking_date,status,interested_room,projects(name)')
-        .in('status', ['new', 'interested', 'quoted', 'close_pending']),
+        .select('id,customer_name,interested_room,projects(name),jobs!inner(crm_stage,working_status,revenue_inc_vat)')
+        .in('jobs.crm_stage', ['new', 'interested', 'quoted', 'close_pending'])
+        .is('jobs.working_status', null),
       // data entry jobs
       supabase.from('jobs')
-        .select('id,customer_name,room_no,project_id,revenue_ex_vat,revenue_inc_vat,cost,actual_deliver_date,working_status,projects(name)')
+        .select('id,customer_name,room_no,project_id,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,projects(name)')
         .not('working_status', 'eq', 'ยกเลิก')
         .order('customer_name'),
     ])
@@ -185,7 +187,6 @@ export default function FinancePage() {
       drafts[j.id] = {
         revenue_ex_vat: j.revenue_ex_vat != null ? String(j.revenue_ex_vat) : '',
         revenue_inc_vat: j.revenue_inc_vat != null ? String(j.revenue_inc_vat) : '',
-        cost: j.cost != null ? String(j.cost) : '',
         actual_deliver_date: j.actual_deliver_date || '',
       }
     })
@@ -202,7 +203,6 @@ export default function FinancePage() {
       return (
         (d.revenue_ex_vat !== (j.revenue_ex_vat != null ? String(j.revenue_ex_vat) : '')) ||
         (d.revenue_inc_vat !== (j.revenue_inc_vat != null ? String(j.revenue_inc_vat) : '')) ||
-        (d.cost !== (j.cost != null ? String(j.cost) : '')) ||
         (d.actual_deliver_date !== (j.actual_deliver_date || ''))
       )
     })
@@ -213,7 +213,6 @@ export default function FinancePage() {
       return supabase.from('jobs').update({
         revenue_ex_vat: d.revenue_ex_vat !== '' ? Number(d.revenue_ex_vat) : null,
         revenue_inc_vat: d.revenue_inc_vat !== '' ? Number(d.revenue_inc_vat) : null,
-        cost: d.cost !== '' ? Number(d.cost) : null,
         actual_deliver_date: d.actual_deliver_date || null,
       }).eq('id', j.id)
     }))
@@ -267,13 +266,18 @@ export default function FinancePage() {
     { value: 'quoted', label: 'เสนอราคาแล้ว' },
     { value: 'close_pending', label: 'รอปิด' },
   ]
+  // The joined prospect job carries the stage; a customer row has none.
+  const stageOf = (c: BookedCustomer) => c.jobs?.[0]?.crm_stage || 'new'
+  // The value is the prospect job's own. customers.budget was retired
+  // 2026-09-07 — one customer can hold many rooms and it held one number.
+  const valueOf = (c: BookedCustomer) => Number(c.jobs?.[0]?.revenue_inc_vat) || 0
   const prospectRows = PRE_BOOK_STAGES.map(s => {
-    const list = bookedCustomers.filter(c => c.status === s.value)
+    const list = bookedCustomers.filter(c => stageOf(c) === s.value)
     return {
       ...s,
       count: list.length,
-      value: list.reduce((sum, c) => sum + (c.budget || 0), 0),
-      noBudget: list.filter(c => !c.budget).length,
+      value: list.reduce((sum, c) => sum + valueOf(c), 0),
+      noBudget: list.filter(c => !valueOf(c)).length,
     }
   }).filter(r => r.count > 0)
   const prospectCount = prospectRows.reduce((s, r) => s + r.count, 0)
@@ -314,7 +318,7 @@ export default function FinancePage() {
   const prevIncome = paidPayments
     .filter(p => p.paid_date >= prevStart && p.paid_date <= prevEnd)
     .reduce((s, p) => s + (p.paid_amount || 0), 0)
-  const growthPct = prevIncome > 0 ? ((periodPaidAmount - prevIncome) / prevIncome * 100).toFixed(1) : null
+  const growthPct = prevIncome > 0 ? ((periodPaidAmount - prevIncome) / prevIncome * 100).toFixed(2) : null
 
   // Monthly chart (12 months ending this month)
   const monthlyChart = useMemo(() => {
@@ -535,7 +539,7 @@ export default function FinancePage() {
 
                 {prospectNoBudget > 0 && (
                   <p className="text-micro mt-2 pt-2" style={{ color: 'var(--accent-amber)', borderTop: '1px solid var(--divider)' }}>
-                    ⚠ {prospectNoBudget} รายยังไม่ระบุงบ — ยอดจริงสูงกว่านี้
+                    ⚠ {prospectNoBudget} รายยังไม่ระบุมูลค่า — ยอดจริงสูงกว่านี้
                   </p>
                 )}
               </div>
@@ -744,7 +748,7 @@ export default function FinancePage() {
                 const nrpt = ct === 'B2C' ? b2cNrpt : b2bNrpt
                 const color = CUST_COLORS[ct]
                 const nrptDetails = workTypeBreakdown(seg, ct)
-                const pct = totalCash > 0 ? (total / totalCash * 100).toFixed(1) : '0'
+                const pct = totalCash > 0 ? (total / totalCash * 100).toFixed(2) : '0'
                 const count = calcCount(seg, ct, true) + calcCount(seg, ct, false)
                 return (
                   <div key={ct} className="rounded-[18px] p-5 space-y-4"
@@ -782,7 +786,7 @@ export default function FinancePage() {
                       {total > 0 && <div className="w-full h-1 rounded-full" style={{ background: 'var(--divider)' }}>
                         <div style={{ width: `${(rpt / total) * 100}%`, background: RPT_COLOR, height: '100%', borderRadius: 9999 }} />
                       </div>}
-                      <p className="text-micro text-right" style={{ color: RPT_COLOR }}>{total > 0 ? ((rpt / total) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-micro text-right" style={{ color: RPT_COLOR }}>{total > 0 ? ((rpt / total) * 100).toFixed(2) : 0}%</p>
                     </div>
 
                     {/* N-RPT */}
@@ -797,7 +801,7 @@ export default function FinancePage() {
                       {total > 0 && <div className="w-full h-1 rounded-full" style={{ background: 'var(--divider)' }}>
                         <div style={{ width: `${(nrpt / total) * 100}%`, background: NRPT_COLOR, height: '100%', borderRadius: 9999 }} />
                       </div>}
-                      <p className="text-micro text-right" style={{ color: NRPT_COLOR }}>{total > 0 ? ((nrpt / total) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-micro text-right" style={{ color: NRPT_COLOR }}>{total > 0 ? ((nrpt / total) * 100).toFixed(2) : 0}%</p>
                       {nrptDetails.length > 0 && (
                         <div className="pt-2 space-y-1.5" style={{ borderTop: '1px solid var(--divider)' }}>
                           {nrptDetails.map(([wt, val]) => (
@@ -824,7 +828,7 @@ export default function FinancePage() {
               <div className="px-5 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
                 <p className="text-section-title" style={{ color: 'var(--text-1)' }}>ตารางสรุปเงินสดรับ ({label})</p>
               </div>
-              <table className="w-full text-sm">
+              <table className="w-full text-sm tbl-rows">
                 <thead>
                   <tr style={{ background: 'var(--hover-bg)', borderBottom: '1px solid var(--divider)' }}>
                     <th className="text-left px-5 py-2.5 text-xs font-semibold" style={{ color: 'var(--text-3)' }}>ประเภท</th>
@@ -852,7 +856,7 @@ export default function FinancePage() {
                         <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: NRPT_COLOR }}>{fk(nrpt)}</td>
                         <td className="px-5 py-3 text-right text-sm font-bold" style={{ color: 'var(--text-1)' }}>{fk(total)}</td>
                         <td className="px-5 py-3 text-right text-xs font-semibold" style={{ color }}>
-                          {totalCash > 0 ? ((total / totalCash) * 100).toFixed(1) : 0}%
+                          {totalCash > 0 ? ((total / totalCash) * 100).toFixed(2) : 0}%
                         </td>
                       </tr>
                     )
@@ -887,7 +891,7 @@ export default function FinancePage() {
             </div>
           </div>
           <div className="ds-card tbl-scroll">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm tbl-rows">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                   {['วันที่','หมวด','รายละเอียด','Ref','จำนวน',''].map(h => (
@@ -899,7 +903,7 @@ export default function FinancePage() {
                 {filteredEntries.length === 0 ? (
                   <TableEmpty colSpan={6} icon={TrendingDown} message="ยังไม่มีรายจ่าย" sub='กด "เพิ่มรายจ่าย" เพื่อเริ่มต้น' />
                 ) : filteredEntries.map((e, i) => (
-                  <tr key={e.id} style={{ borderBottom: '1px solid var(--divider)', background: i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
+                  <tr key={e.id} >
                     <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'var(--text-2)' }}>{dateStr(e.entry_date)}</td>
                     <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>{e.category}</td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-1)' }}>{e.description || '—'}</td>
@@ -959,7 +963,7 @@ export default function FinancePage() {
             ))}
           </div>
           <div className="ds-card tbl-scroll">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm tbl-rows">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                   {['ลูกค้า / ห้อง','งวด','กำหนดชำระ','ยอด','ชำระแล้ว','สถานะ'].map(h => (
@@ -974,7 +978,7 @@ export default function FinancePage() {
                   const st = PAY_STATUS.find(s => s.value === p.status) || PAY_STATUS[0]
                   const isOD = p.status !== 'paid' && p.due_date && p.due_date < today
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid var(--divider)', background: isOD ? 'color-mix(in srgb, var(--accent-red) 4%, transparent)' : i % 2 ? 'var(--hover-bg)' : 'transparent' }}>
+                    <tr key={p.id} style={{ background: isOD ? 'color-mix(in srgb, var(--accent-red) 4%, transparent)' : undefined }}>
                       <td className="px-4 py-3">
                         <p className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{(p as any).jobs?.customer_name || '—'}</p>
                         <p className="text-xs" style={{ color: 'var(--accent)' }}>{(p as any).jobs?.room_no}</p>
@@ -1001,7 +1005,8 @@ export default function FinancePage() {
           <Select label="หมวด *" value={entryForm.category}
             onChange={e => setEntryForm({ ...entryForm, category: e.target.value })}
             options={[{ value: '', label: '— เลือกหมวด —' }, ...EXPENSE_CATS.map(c => ({ value: c, label: c }))]} />
-          <Input label="จำนวนเงิน (บาท) *" type="number" value={entryForm.amount} onChange={e => setEntryForm({ ...entryForm, amount: Number(e.target.value) })} />
+          <MoneyField label="จำนวนเงิน (บาท)" required value={entryForm.amount ? String(entryForm.amount) : ''}
+            onChange={v => setEntryForm({ ...entryForm, amount: Number(v) || 0 })} />
           <div className="col-span-2">
             <Input label="วันที่ *" type="date" value={entryForm.entry_date} onChange={e => setEntryForm({ ...entryForm, entry_date: e.target.value })} />
           </div>
@@ -1079,21 +1084,21 @@ export default function FinancePage() {
                   Rows with no budget fall to the bottom and say so, rather than
                   showing ฿0 as though the deal were worthless. */}
               {drilldown === 'prospects' && [...bookedCustomers]
-                .sort((a, b) => (b.budget || 0) - (a.budget || 0))
+                .sort((a, b) => valueOf(b) - valueOf(a))
                 .map(c => (
                   <div key={c.id} className="flex items-center justify-between p-3 rounded-[11px]" style={{ background: 'var(--hover-bg)' }}>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-1)' }}>{c.customer_name}</p>
                       <p className="text-xs truncate" style={{ color: 'var(--text-3)' }}>
-                        {crmStage(c.status).label}
+                        {crmStage(stageOf(c)).label}
                         {c.interested_room ? ` · ห้อง ${c.interested_room}` : ''}
                         {' · '}{c.projects?.name || '—'}
                       </p>
                     </div>
-                    {c.budget ? (
-                      <span className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--accent-blue)' }}>{fk(c.budget)}</span>
+                    {valueOf(c) ? (
+                      <span className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--accent-blue)' }}>{fk(valueOf(c))}</span>
                     ) : (
-                      <span className="text-xs flex-shrink-0" style={{ color: 'var(--accent-amber)' }}>ยังไม่ระบุงบ</span>
+                      <span className="text-xs flex-shrink-0" style={{ color: 'var(--accent-amber)' }}>ยังไม่ระบุมูลค่า</span>
                     )}
                   </div>
                 ))}

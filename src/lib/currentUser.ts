@@ -19,6 +19,22 @@ export async function appUserId(supabase: SupabaseClient): Promise<string | null
   const { data: { session } } = await supabase.auth.getSession()
   const email = session?.user?.email
   if (!email) return null
-  const { data } = await supabase.from('users').select('id').eq('email', email).maybeSingle()
+  // ilike, not eq: three rows were stored with capitals while Google always
+  // hands back a lower-cased address, so an exact compare silently missed them.
+  // The rows are normalised now, but the next capital typed into the Users page
+  // must not break this again.
+  const { data } = await supabase.from('users').select('id').ilike('email', email).maybeSingle()
   return (data as { id: string } | null)?.id ?? null
 }
+
+/** The signed-in person's role, or null when they are not registered staff. */
+export async function appUserRole(supabase: SupabaseClient): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const email = session?.user?.email
+  if (!email) return null
+  const { data } = await supabase.from('users').select('role').ilike('email', email).maybeSingle()
+  return (data as { role: string } | null)?.role ?? null
+}
+
+/** QC / PM: sees everything, changes nothing. Enforced in RLS; this is the UI half. */
+export const QC_PM_ROLE = 'qc_pm'

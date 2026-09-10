@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import {X, Calculator, Briefcase, Receipt, ChevronRight, Phone, FileDown } from 'lucide-react'
+import MoneyInput from '@/components/ui/MoneyInput'
+import JobNote from '@/components/ui/JobNote'
+import {X, Calculator, Briefcase, Receipt, ChevronRight, Phone } from 'lucide-react'
 import { WORK_TYPES } from '@/lib/status'
 import { PageSpinner, PageError, EmptyState } from '@/components/ui/StateUI'
 import Money from '@/components/ui/Money'
@@ -15,6 +17,10 @@ import Pagination from '@/components/ui/Pagination'
 import { COMMISSION_STATUSES, WORKING_STATUSES } from '@/lib/status'
 import DateInput from '@/components/ui/DateInput'
 import { baht } from '@/lib/money'
+import { compareRoom } from '@/lib/utils'
+import { resolveCustomerId } from '@/lib/customerId'
+import { exVatOf } from '@/lib/procurement'
+import { cleanName } from '@/lib/customerName'
 
 // ─────────────────────────────────────────
 // Constants
@@ -71,7 +77,6 @@ type Job = {
   revenue_ex_vat: number
   revenue_inc_vat: number
   voucher: number
-  cost: number
   working_status: string
   crm_stage: string
   room_status: string
@@ -288,13 +293,12 @@ const emptyJob = (): Partial<Job> => ({
   work_start_date: '',
   plan_transfer_month: '',
   voucher: 0,
-  cost: 0,
   commission_rate: 0,
   commission_amount: 0,
 })
 
 const f = (v?: number) => baht(v)
-const pct = (v?: number) => ((v || 0) * 100).toFixed(1) + '%'
+const pct = (v?: number) => ((v || 0) * 100).toFixed(2) + '%'
 
 function calcCommission(revenue: number, tiers: CommissionTier[]): { rate: number; amount: number } {
   const sorted = [...tiers].sort((a, b) => a.revenue_min - b.revenue_min)
@@ -331,7 +335,7 @@ function AddJobModal({
   const [error, setError] = useState('')
 
   const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
-  const revenueEx = revenue ? Math.round(revenue / 1.07) : 0
+  const revenueEx = revenue ? exVatOf(revenue) : 0
 
   async function save() {
     if (!customerName.trim()) { setError('กรุณาระบุชื่อลูกค้า'); return }
@@ -345,21 +349,20 @@ function AddJobModal({
       return Math.max(max, n)
     }, 0)
     const jobId = `JOB-${String(maxNum + 1).padStart(3, '0')}`
-    const baseId = `${projectId}-${roomNo.trim()}`
-    const isB2B = custType === 'B2B'
-    const { data: existing } = await supabase.from('customers').select('id, customer_type').eq('id', baseId).maybeSingle()
-    const customerId = isB2B && existing && existing.customer_type !== 'B2B' ? `${baseId}-B2B` : baseId
+    const customerId = await resolveCustomerId(supabase, {
+      projectId, roomNo: roomNo.trim(), customerName: customerName.trim(), customerType: custType,
+    })
 
     // Create customer at 'booked' stage (not 'closed') — requires payment before entering My Deals
     await supabase.from('customers').upsert({
       id: customerId, project_id: projectId,
-      customer_name: customerName.trim(), customer_type: custType, status: 'booked',
+      customer_name: cleanName(customerName), customer_type: custType,
     }, { onConflict: 'id', ignoreDuplicates: true })
 
     const { error: jobErr } = await supabase.from('jobs').insert({
       id: jobId, customer_id: customerId,
       project_id: projectId, room_no: roomNo.trim(),
-      customer_name: customerName.trim(), customer_type: custType,
+      customer_name: cleanName(customerName), customer_type: custType,
       work_type: workType, package_type: pkgType || null, order_date: orderDate,
       revenue_inc_vat: revenue || null, revenue_ex_vat: revenueEx || null,
       // crm_stage travels with working_status. Prospects groups by the stage, so
@@ -405,7 +408,7 @@ function AddJobModal({
           </div>
           <div>
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>มูลค่างาน (inc. VAT)</label>
-            <input type="number" value={revenue || ''} onChange={e => setRevenue(Number(e.target.value))}
+            <MoneyInput value={revenue ? String(revenue) : ''} onChange={v => setRevenue(Number(v) || 0)} ariaLabel="มูลค่างาน" 
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none" style={inputStyle} />
             {revenue > 0 && <p className="text-label mt-1" style={{ color: 'var(--text-3)' }}>ex. VAT ≈ ฿{revenueEx.toLocaleString()}</p>}
           </div>
@@ -457,9 +460,25 @@ function AddJobModal({
 // ─────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────
+/** ช่องแสดงผลอย่างเดียวในแถบสรุป — ค่าว่างขึ้นขีดจาง เพื่อให้เห็นว่า
+    "ยังไม่มี" ต่างจาก "ไม่เกี่ยวข้อง" */
+function ReadField({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="min-w-0">
+      <p style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p className="font-semibold tabular-nums truncate"
+        style={{ fontSize: 12.5, lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
+        {value || '—'}
+      </p>
+    </div>
+  )
+}
+
 export default function JobsPage() {
   const supabase = createClient()
   const [jobs, setJobs] = useState<Job[]>([])
+  /** ต้นทุนรวมต่อห้อง คำนวณสดจาก job_cost_items (เฟส 4) */
+  const [costByJob, setCostByJob] = useState<Map<string, number>>(new Map())
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [users, setUsers] = useState<{ id: string; name: string }[]>([])
   const [tiers, setTiers] = useState<CommissionTier[]>([])
@@ -472,8 +491,6 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(true)
 
   // Quick filter
-  const [filterNoSO, setFilterNoSO] = useState(false)
-  const [filterNoPO, setFilterNoPO] = useState(false)
 
   // Filters
   const [search, setSearch] = useState('')
@@ -524,6 +541,7 @@ export default function JobsPage() {
       { data: tierData },
       { data: paymentsData },
       { data: refData },
+      { data: costItems },
     ] = await Promise.all([
       supabase.from('jobs').select('*, condo_leads(customer_name,room_no,phone), projects(name), sales:users!jobs_sales_id_fkey(name), job_payments:payments(status,paid_amount,amount,voucher_amount)').order('room_no').range(0, 999),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
@@ -531,6 +549,9 @@ export default function JobsPage() {
       supabase.from('commission_settings').select('*').eq('active', true).order('sort_order'),
       supabase.from('payments').select('job_id, installment_name, status, amount, due_date').neq('status', 'paid').order('due_date'),
       supabase.from('commission_referrals').select('job_id,referrer_name,referral_amount').order('created_at'),
+      // เฟส 4: ต้นทุนไม่ได้อยู่ที่ jobs.cost อีกแล้ว — เป็นผลรวมของรายการย่อย
+      // ที่จัดซื้อกรอกในหน้า Cost & GP% หน้านี้จึงกลายเป็นหน้าอ่านอย่างเดียว
+      supabase.from('job_cost_items').select('job_id, est_cost, act_cost'),
     ])
     if (e1) { setFetchError(e1.message); setLoading(false); return }
     setJobs((jobsData as Job[]) || [])
@@ -538,6 +559,15 @@ export default function JobsPage() {
     setUsers(usrData || [])
     setTiers(tierData || [])
     setReferrals((refData || []) as { job_id: string; referrer_name: string; referral_amount: number }[])
+
+    /* ต้นทุนของห้อง = ผลรวมรายการย่อย ใช้ยอดจัดจ้างจริงก่อน ยังไม่จ้างจึงใช้
+       ยอดประมาณการณ์ — กติกาเดียวกับ effectiveCost() ในหน้า Cost & GP% */
+    const cm = new Map<string, number>()
+    for (const it of (costItems ?? []) as { job_id: string; est_cost: number; act_cost: number }[]) {
+      const v = Number(it.act_cost || 0) > 0 ? Number(it.act_cost) : Number(it.est_cost || 0)
+      cm.set(it.job_id, (cm.get(it.job_id) ?? 0) + v)
+    }
+    setCostByJob(cm)
 
     // Build payment map by customer_id (first pending/overdue installment per customer)
     const map: Record<string, PaymentSummary | null> = {}
@@ -573,7 +603,7 @@ export default function JobsPage() {
 
   // ─── Commission auto-calc when revenue changes ───
   function handleRevenueChange(incVat: number) {
-    const exVat = incVat ? Math.round(incVat / 1.07) : 0
+    const exVat = incVat ? exVatOf(incVat) : 0
     const { rate, amount } = calcCommission(exVat, tiers)
     setEditing(e => ({ ...e, revenue_inc_vat: incVat, revenue_ex_vat: exVat, commission_rate: rate, commission_amount: amount }))
   }
@@ -590,13 +620,16 @@ export default function JobsPage() {
     setEditing(e => {
       const projectId = e.project_id || ''
       const roomNo = lead?.room_no || ''
-      const customerId = projectId && roomNo ? `${projectId}-${roomNo.trim().toUpperCase()}` : e.customer_id || ''
+      // customer_id is deliberately left alone. It used to be guessed here as
+      // `PROJECT-ROOM`, which stopped being a customer code when every record
+      // was renumbered to CST-nnnn — the guess would now be a foreign key
+      // pointing at nothing. Which record the job belongs to is decided on save
+      // by resolveCustomerId, which can also reuse an existing B2B company.
       return {
         ...e,
         lead_id: lead ? lead.id : null,
         room_no: roomNo,
         customer_name: lead?.customer_name || '',
-        customer_id: customerId,
       }
     })
   }
@@ -660,10 +693,29 @@ export default function JobsPage() {
       ...editing,
       room_no: editing.room_no ? normalizeRoomNo(editing.room_no, projectName) : editing.room_no,
     }
-    delete payload.customers
-    delete payload.projects
-    delete payload.sales
-    delete payload.condo_leads
+    /*
+     * ตัดทุกอย่างที่ไม่ใช่คอลัมน์จริงของ jobs ออกก่อนส่ง
+     *
+     * `editing` มาจาก select ที่ join ตารางอื่นมาด้วย พอ spread ทั้งก้อนไปเป็น
+     * payload ค่าที่ join มาจึงถูกส่งไปเป็นคอลัมน์ → PostgREST ตอบ 400
+     * เดิมลบไว้ 4 ตัวแต่ลืม `job_payments` ที่เพิ่มเข้ามาทีหลัง ทำให้แก้มูลค่า
+     * ที่หน้านี้แล้วบันทึกไม่ได้เลย
+     *
+     * ลบแบบระบุชื่อจะพลาดซ้ำอีกทุกครั้งที่มีใครเพิ่ม join — ตัดจากรูปร่างของค่า
+     * แทน: คอลัมน์จริงไม่มีทางเป็น object หรือ array
+     */
+    // ตัดสองชั้น เพราะแต่ละชั้นพลาดคนละแบบ:
+    //   1. ระบุชื่อ — จับได้แม้ค่าเป็น null (งานที่ไม่มี lead ได้ condo_leads: null
+    //      ซึ่งไม่ใช่ object จึงรอดจากชั้นที่ 2 แล้วถูกส่งไปเป็นคอลัมน์)
+    //   2. ตามรูปร่าง — จับ join ใหม่ที่มีคนเพิ่มทีหลังโดยไม่ได้มาแก้ตรงนี้
+    //      (`job_payments` ที่เพิ่มมาทีหลังคือกรณีนี้)
+    for (const k of ['customers', 'projects', 'sales', 'condo_leads', 'job_payments']) {
+      delete payload[k]
+    }
+    for (const k of Object.keys(payload)) {
+      const v = payload[k]
+      if (v !== null && typeof v === 'object') delete payload[k]
+    }
     // null-ify empty optionals
     payload.lead_id = payload.lead_id || null
     payload.customer_id = payload.customer_id || null
@@ -693,21 +745,15 @@ export default function JobsPage() {
     if (isNew) {
       // Auto-create customer record so job appears in Prospect/customers page
       if (payload.project_id && payload.room_no) {
-        const baseId = payload.customer_id || `${payload.project_id}-${payload.room_no}`
-        const isB2B = (payload.customer_type || 'B2C') === 'B2B'
-        // Check if a B2C customer already exists for this room
-        const { data: existing } = await supabase.from('customers').select('id, customer_type').eq('id', baseId).maybeSingle()
-        let customerId = baseId
-        if (isB2B && existing && existing.customer_type !== 'B2B') {
-          // Room already has a B2C record — create separate B2B customer
-          customerId = `${baseId}-B2B`
-        }
+        const customerId = payload.customer_id || await resolveCustomerId(supabase, {
+          projectId: payload.project_id, roomNo: payload.room_no,
+          customerName: payload.customer_name || '', customerType: payload.customer_type || 'B2C',
+        })
         await supabase.from('customers').upsert({
           id: customerId,
           project_id: payload.project_id,
           customer_name: payload.customer_name || '',
           customer_type: payload.customer_type || 'B2C',
-          status: 'closed',
         }, { onConflict: 'id', ignoreDuplicates: true })
         payload.customer_id = customerId
       }
@@ -728,8 +774,6 @@ export default function JobsPage() {
   // A cancelled job has no SO or PO and never will, so it is not missing one.
   // The counts already excluded them; the toggles did not, so turning one on
   // listed rows the badge had never counted.
-  const missingSO = (j: Job) => !j.so_no?.trim() && j.working_status !== 'ยกเลิก'
-  const missingPO = (j: Job) => j.customer_type === 'B2B' && !j.po_no?.trim() && j.working_status !== 'ยกเลิก'
 
   // Everything except the two document toggles. Their badges count from here,
   // so the numbers follow the project / sales / status filters instead of
@@ -748,28 +792,20 @@ export default function JobsPage() {
     return matchSearch && matchProj && matchStatus && matchSales && matchWorkType && matchCustomerType
   })
 
-  const filtered = baseFiltered.filter(j =>
-    (!filterNoSO || missingSO(j)) && (!filterNoPO || missingPO(j))
-  )
+  // เลิกกรอง "ไม่มี SO / ไม่มี PO" ที่นี่ — เอกสารย้ายไปอยู่หน้า Cost & GP%
+  // แท็บเอกสาร ซึ่งมีตัวกรองชุดเดียวกันและกรอกแก้ได้ในที่เดียวกัน
+  const filtered = baseFiltered
 
   // Each badge counts what its own toggle would select, with the other one
   // still applied — the same rule the status chips elsewhere follow.
-  const noSOCount = baseFiltered.filter(j => missingSO(j) && (!filterNoPO || missingPO(j))).length
-  const noPOCount = baseFiltered.filter(j => missingPO(j) && (!filterNoSO || missingSO(j))).length
 
-  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO, filterNoPO])
+  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType])
 
-  function sortRoomNo(a: string, b: string): number {
-    const parse = (r: string) => {
-      const m = (r || '').toUpperCase().match(/^([A-Z])-?(\d+)$/)
-      return m ? { letter: m[1], num: parseInt(m[2]) } : { letter: r || '', num: 0 }
-    }
-    const pa = parse(a), pb = parse(b)
-    if (pa.letter !== pb.letter) return pa.letter.localeCompare(pb.letter)
-    return pa.num - pb.num
-  }
+  // Was a hand-rolled parser matching only /^[A-Z]-?\d+$/. Rooms like 12A03,
+  // 45/10 and B-606 fell through to num: 0 and sorted as raw strings.
+  const sortRoomNo = compareRoom
 
-  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType, filterNoSO, filterNoPO])
+  useEffect(() => { setPage(1) }, [search, filterProject, filterStatus, filterSales, filterWorkType, filterCustomerType])
 
   // Paginate the flat list first, then group what is on this page. Grouping the
   // whole set and paginating groups would give wildly uneven pages — one project
@@ -789,63 +825,30 @@ export default function JobsPage() {
       .sort((a, b) => a.projectName.localeCompare(b.projectName, 'th'))
   }, [paginated])
 
-  function exportCSV() {
-    const headers = [
-      'ลูกค้า', 'เบอร์โทร', 'ประเภทลูกค้า', 'โครงการ', 'ห้อง', 'Job ID',
-      'ประเภทงาน', 'แพ็กเกจ', 'PO', 'SO',
-      'วันสั่งงาน', 'วันเริ่มงาน', 'วันกำหนดส่ง', 'วันส่งมอบ (จริง)',
-      'Revenue (Ex.VAT)', 'Revenue (Inc.VAT)', 'Voucher', 'Cost', 'GP%',
-      'เกณฑ์ Commission (Tier)', 'Commission Rate%', 'Commission', 'สถานะ Commission',
-      'ผู้แนะนำ (Referral)', 'ค่าแนะนำรวม',
-      'สถานะงาน', 'Sales',
-    ]
-    const rows = filtered.map(j => {
-      const name = (j.condo_leads as any)?.customer_name || j.customer_name || ''
-      const phone = (j.condo_leads as any)?.phone || ''
-      const project = (j.projects as any)?.name || ''
-      const sales = (j.sales as any)?.name || ''
-      const profitAmt = (j.revenue_ex_vat || 0) - (j.cost || 0)
-      const gp = (j.revenue_ex_vat || 0) > 0 ? (profitAmt / j.revenue_ex_vat * 100).toFixed(1) : ''
-      const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : ''
-      const commStatusLabel: Record<string, string> = { pending: 'รอ', approved: 'อนุมัติ', paid: 'จ่ายแล้ว' }
-      // Commission: prefer DB value, fallback to tier calc
-      const { rate: tierRate, amount: tierAmt } = calcCommission(j.revenue_ex_vat || 0, tiers)
-      const commRate = j.commission_rate || tierRate
-      const commAmt  = j.commission_amount || tierAmt
-      // Tier name
-      const sorted = [...tiers].sort((a, b) => a.revenue_min - b.revenue_min)
-      const matchedTier = sorted.find(t => (j.revenue_ex_vat || 0) >= t.revenue_min && (t.revenue_max === null || (j.revenue_ex_vat || 0) <= t.revenue_max))
-      const tierName = (matchedTier as any)?.tier_name || (commRate ? `${(commRate * 100).toFixed(2)}%` : '—')
-      // Referrals
-      const jobRefs = referrals.filter(r => r.job_id === j.id)
-      const refNames = jobRefs.map(r => `${r.referrer_name} (${Math.round(r.referral_amount).toLocaleString()})`).join(', ')
-      const refTotal = jobRefs.reduce((s, r) => s + r.referral_amount, 0)
-      return [
-        name, phone, j.customer_type || '', project, j.room_no || '', j.id,
-        j.work_type || '', j.package_type || '', j.po_no || '', j.so_no || '',
-        fmt(j.order_date), fmt((j as any).work_start_date), fmt(j.expected_finish_date), fmt(j.actual_deliver_date),
-        j.revenue_ex_vat || 0, j.revenue_inc_vat || 0, j.voucher || 0, j.cost || 0, gp,
-        tierName, commRate ? (commRate * 100).toFixed(2) : '', commAmt || 0,
-        commStatusLabel[j.commission_status] || j.commission_status || '',
-        refNames, refTotal || '',
-        j.working_status || '', sales,
-      ]
-    })
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `wyde-clients-${new Date().toISOString().slice(0,10)}.csv`; a.click()
-    URL.revokeObjectURL(url)
-  }
 
   // ─── Summary ───
   const totalRevenue = filtered.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
   const totalCommission = filtered.reduce((s, j) => s + (j.commission_amount || 0), 0)
-  const totalCost = filtered.reduce((s, j) => s + (j.cost || 0), 0)
+  const totalCost = filtered.reduce((s, j) => s + (costByJob.get(j.id) ?? 0), 0)
 
-  const profit = (editing.revenue_ex_vat || 0) - (editing.cost || 0)
-  const gpPct = (editing.revenue_ex_vat || 0) > 0
-    ? (profit / (editing.revenue_ex_vat || 1) * 100).toFixed(1) : '—'
+  // A room with no cost entered has an unknown cost, not a cost of zero.
+  // Treating the missing value as 0 makes the room report its whole revenue as
+  // profit at 100% GP — a number that looks like an answer and is not one.
+  //
+  // "Not in the map" was the test, which covers a room with no lines at all but
+  // not a room that has lines with every cost field still blank: that one lands
+  // in the map holding 0 and read as a perfect margin. JOB-628 (฿266,355.14,
+  // two lines, both blank) was doing exactly that in this drawer — found
+  // 2026-09-08. The summary tile above already tested `> 0`; this is the same
+  // test, so the two agree.
+  const editingVoucher = ((editing as any).job_payments as { voucher_amount?: number | null }[] | undefined ?? [])
+    .reduce((s2, p) => s2 + Number(p.voucher_amount || 0), 0)
+
+  const editingCost = costByJob.get(editing.id ?? '')
+  const hasCost = (editingCost ?? 0) > 0
+  const profit = hasCost ? (editing.revenue_ex_vat || 0) - (editingCost ?? 0) : null
+  const gpPct = hasCost && (editing.revenue_ex_vat || 0) > 0
+    ? (profit! / (editing.revenue_ex_vat || 1) * 100).toFixed(2) : '—'
 
   const canWrite = ['admin', 'admin_sales', 'sales'].includes(myRole)
 
@@ -855,17 +858,12 @@ export default function JobsPage() {
   return (
     <div className="page-content space-y-5">
       {/* Header */}
+      {/* Export CSV removed 2026-09-07 — nobody used it, and the same rows come
+          out of Revenue's export with the cost and commission columns attached. */}
       <PageHeader
-        title="Wyde Clients"
-        subtitle="บันทึก PO/SO ต่องาน · ติดตามงวดการเก็บเงิน"
+        title="Job Registry"
+        subtitle="ทะเบียนงานทั้งหมด"
         className=""
-        actions={
-          <button onClick={exportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-[11px] text-xs font-semibold"
-            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-2)' }}>
-            <FileDown size={13} /> Export CSV
-          </button>
-        }
       />
 
       {/* Filters — the no-SO / no-PO chips live in the card too; they narrow
@@ -904,36 +902,15 @@ export default function JobsPage() {
         </select>
       </FilterBar>
 
-      {/* Status chips in their own row between the filter card and the data,
-          matching Customers. They used to sit inside the filter card; separated
-          they read as a sequence — search, then narrow by status, then results. */}
-      <div className="tab-group mb-4 flex-wrap">
-        {([
-          { on: filterNoSO, toggle: () => setFilterNoSO(v => !v), label: 'ไม่มี SO', count: noSOCount },
-          { on: filterNoPO, toggle: () => setFilterNoPO(v => !v), label: 'ไม่มี PO', count: noPOCount },
-        ]).map(c => (
-          <button key={c.label} onClick={c.toggle}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors"
-            style={c.on
-              ? { background: 'var(--accent)', color: '#fff' }
-              : { color: 'var(--text-2)' }}>
-            {c.label}
-            {c.count > 0 && (
-              <span className="font-bold" style={{ color: c.on ? '#fff' : 'var(--accent-orange)' }}>{c.count}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
       {/* Summary KPI */}
       {(() => {
         // GP% is computed over jobs that actually have a cost recorded. Dividing
         // by total revenue counted every job with no cost as pure profit, which
         // put the headline at 99.3% when only 6.7% of jobs carry cost data —
         // the real margin across those is about 31%.
-        const costedJobs = filtered.filter(j => (j.cost || 0) > 0)
+        const costedJobs = filtered.filter(j => (costByJob.get(j.id) ?? 0) > 0)
         const costedRevenue = costedJobs.reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
-        const costedCost = costedJobs.reduce((s, j) => s + (j.cost || 0), 0)
+        const costedCost = costedJobs.reduce((s, j) => s + (costByJob.get(j.id) ?? 0), 0)
         const profit = costedRevenue - costedCost
         const gpPctAvg = costedRevenue > 0 ? (profit / costedRevenue * 100) : null
         const costCoverage = filtered.length > 0 ? costedJobs.length / filtered.length * 100 : 0
@@ -953,7 +930,7 @@ export default function JobsPage() {
             <div className="ds-card p-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>GP% (เฉพาะงานที่มีต้นทุน)</p>
               <p className="text-lg font-bold" style={{ color: gpColor }}>
-                {gpPctAvg !== null ? gpPctAvg.toFixed(1) + '%' : '—'}
+                {gpPctAvg !== null ? gpPctAvg.toFixed(2) + '%' : '—'}
               </p>
               <p className="text-label mt-0.5" style={{ color: costCoverage < 50 ? 'var(--accent-orange)' : 'var(--text-3)' }}>
                 กำไร {f(profit)} · มีต้นทุน {costedJobs.length}/{filtered.length} งาน ({costCoverage.toFixed(0)}%)
@@ -1023,6 +1000,18 @@ export default function JobsPage() {
               </div>
               <button onClick={() => setOpen(false)} style={{ color: 'var(--text-3)' }}><X size={18} /></button>
             </div>
+
+            {/* หมายเหตุของงาน — เขียนที่ Prospects หรือ My Deals แล้วขึ้นที่นี่
+                ทันที เพราะเป็น jobs.notes แถวเดียวกัน ไม่ได้ sync กัน
+
+                หน้านี้เรียงเป็นหมวด 1–5 ส่วนมูลค่างานอยู่หมวด 4 การวาง
+                "เหนือ Revenue" ตามตัวอักษรจึงเท่ากับซ่อนไว้กลางลิ้นชัก ซึ่งค้าน
+                กับเหตุผลที่ขอ — ให้เห็นทันทีที่กดเข้ามา ที่นี่จึงวางไว้บนสุด
+                เหมือนกับที่มันอยู่บนสุดของอีกสองหน้า */}
+            {!!editing.id && (
+              <JobNote jobId={editing.id} value={editing.notes ?? null}
+                onSaved={next => setEditing(e => ({ ...e, notes: next }))} />
+            )}
 
             {/* ── 1 · ลูกค้า & ห้อง ── */}
             <section>
@@ -1189,15 +1178,37 @@ export default function JobsPage() {
             <section>
               <SectionDivider label="2 · ข้อมูลงาน / PO-SO" color="var(--accent)" />
               <div className="grid grid-cols-2 gap-3 mt-3">
-                <div className="col-span-2">
-                  <label className="field-label">PO No. (Origin)</label>
-                  <input value={editing.po_no || ''} onChange={e => setEditing(e2 => ({ ...e2, po_no: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="WAG-SONO25-000001" />
-                </div>
-                <div className="col-span-2">
-                  <label className="field-label">SO No. (Wyde)</label>
-                  <input value={editing.so_no || ''} onChange={e => setEditing(e2 => ({ ...e2, so_no: e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="SO-..." />
+                {/* PO · SO · PR · ต้นทุน · GP% ย้ายไปกรอกที่หน้า Cost & GP% ทั้งหมด
+                    (แท็บเอกสาร = งานแอดมิน · แท็บจัดซื้อจัดจ้าง = ต้นทุน) หน้านี้
+                    เหลือแค่แสดงผล — เหลือทางกรอกทางเดียวต่อข้อมูลหนึ่งชุด */}
+                <div className="col-span-2 rounded-[11px] p-3" style={{ background: 'var(--hover-bg)' }}>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>
+                      เอกสาร &amp; ต้นทุน
+                    </span>
+                    <a href="/dashboard/procurement" className="text-xs font-semibold whitespace-nowrap"
+                      style={{ color: 'var(--accent)' }}>แก้ที่ Cost &amp; GP% →</a>
+                  </div>
+                  <div className="grid grid-cols-3 gap-x-3 gap-y-2">
+                    <ReadField label="SO" value={editing.so_no} />
+                    <ReadField label="PR" value={((editing as any).pr_nos as string[] | null)?.join(' · ')} />
+                    <ReadField label="PO ลูกค้า"
+                      value={editing.customer_type === 'B2B' ? editing.po_no : '— (B2C)'} />
+                    <ReadField label="ต้นทุน"
+                      value={(costByJob.get(editing.id ?? '') ?? 0)
+                        ? (costByJob.get(editing.id ?? '') ?? 0).toLocaleString('en-US') : null} />
+                    <ReadField label="GP%" value={(() => {
+                      const c = costByJob.get(editing.id ?? '') ?? 0
+                      const rev = editing.revenue_ex_vat || 0
+                      if (!c || !rev) return null
+                      return ((rev - c) / rev * 100).toFixed(2) + '%'
+                    })()} />
+                    <ReadField label="จัดซื้อรับงาน"
+                      value={(editing as any).procurement_received_at
+                        ? new Date((editing as any).procurement_received_at)
+                            .toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
+                        : null} />
+                  </div>
                 </div>
                 <div>
                   <label className="field-label">ประเภทงาน</label>
@@ -1273,11 +1284,9 @@ export default function JobsPage() {
                       <DateInput value={editing.actual_deliver_date || ''} onChange={e => setEditing(e2 => ({ ...e2, actual_deliver_date: e.target.value }))}
                         className="field-input w-full mt-1" />
                     </div>
-                    <div className="col-span-2">
-                      <label className="field-label">หมายเหตุ</label>
-                      <input value={editing.notes || ''} onChange={e => setEditing(e2 => ({ ...e2, notes: e.target.value }))}
-                        className="field-input w-full mt-1" placeholder="..." />
-                    </div>
+                    {/* หมายเหตุ ย้ายขึ้นไปบนสุดของลิ้นชัก ที่เดียวกับอีกสองหน้า
+                        มันเคยอยู่ตรงนี้ ใต้หมวด "สถานะ & ส่งมอบ" ซึ่งต้องเลื่อน
+                        ผ่านสามหมวดถึงจะเจอ — คนที่เปิดงานมาดูจึงไม่รู้ว่ามี */}
                   </div>
                 </div>
                 {/* กลุ่ม: Origin / โครงการ */}
@@ -1305,8 +1314,9 @@ export default function JobsPage() {
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
                   <label className="field-label">Revenue (Inc.VAT) ฿</label>
-                  <input type="number" value={editing.revenue_inc_vat || ''} onChange={e => handleRevenueChange(+e.target.value)}
-                    className="field-input w-full mt-1" placeholder="0" />
+                  <MoneyInput value={editing.revenue_inc_vat ? String(editing.revenue_inc_vat) : ''}
+                    onChange={v => handleRevenueChange(Number(v) || 0)}
+                    className="field-input w-full mt-1" placeholder="0" ariaLabel="มูลค่างาน inc VAT" />
                 </div>
                 <div>
                   <label className="field-label">Revenue (Ex.VAT) ฿ <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>auto ÷ 1.07</span></label>
@@ -1316,24 +1326,32 @@ export default function JobsPage() {
                     </span>
                   </div>
                 </div>
+                {/* อ่านอย่างเดียว — Voucher บันทึกตอนรับเงินที่หน้า My Deals ลงใน
+                    payments.voucher_amount หน้านี้เป็น**ทะเบียนงาน** ไม่ใช่ที่กรอกเงิน
+                    (เจ้าของสั่ง 2026-09-08) ช่องกรอกเดิมเขียนลง jobs.voucher ซึ่งเป็น
+                    คนละตัวเลข และตอนนี้ไม่มีหน้าไหนอ่านแล้ว · ดู lib/voucher.ts */}
                 <div>
                   <label className="field-label">Voucher / ส่วนลด ฿</label>
-                  <input type="number" value={editing.voucher || ''} onChange={e => setEditing(e2 => ({ ...e2, voucher: +e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="0" />
-                </div>
-                <div>
-                  <label className="field-label">Cost ฿</label>
-                  <input type="number" value={editing.cost || ''} onChange={e => setEditing(e2 => ({ ...e2, cost: +e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="0" />
+                  <div className="field-input mt-1 flex items-center gap-2" style={{ background: 'var(--hover-bg)' }}>
+                    <span style={{ color: editingVoucher ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 600 }}>
+                      {editingVoucher ? f(editingVoucher) : '—'}
+                    </span>
+                  </div>
                 </div>
                 <div className="rounded-[11px] p-3 flex flex-col justify-center" style={{ background: 'var(--hover-bg)' }}>
                   <div className="flex items-center gap-1 mb-1">
                     <Calculator size={12} style={{ color: 'var(--text-3)' }} />
                     <span className="text-xs" style={{ color: 'var(--text-3)' }}>Profit / GP%</span>
                   </div>
-                  <p className="font-bold text-sm" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-                    {f(profit)} <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>({gpPct}%)</span>
-                  </p>
+                  {profit === null ? (
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-3)' }}>
+                      — <span style={{ fontWeight: 400 }}>ยังไม่ได้กรอกต้นทุน</span>
+                    </p>
+                  ) : (
+                    <p className="font-bold text-sm" style={{ color: profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                      {f(profit)} <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>({gpPct}%)</span>
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -1353,8 +1371,8 @@ export default function JobsPage() {
                 </div>
                 <div>
                   <label className="field-label">Commission ฿</label>
-                  <input type="number" value={editing.commission_amount || ''} onChange={e => setEditing(e2 => ({ ...e2, commission_amount: +e.target.value }))}
-                    className="field-input w-full mt-1" placeholder="0" />
+                  <MoneyInput value={editing.commission_amount ? String(editing.commission_amount) : ''} onChange={v => setEditing(e2 => ({ ...e2, commission_amount: Number(v) || 0 }))}
+                    ariaLabel="Commission" className="field-input w-full mt-1" placeholder="0" />
                 </div>
                 <div>
                   <label className="field-label">เดือนเบิก Commission</label>

@@ -11,8 +11,8 @@ import { baht } from '@/lib/money'
 const f = baht
 const fn = (v: number) => (v || 0).toLocaleString()
 
-type Customer = { status: string; budget: number; customer_type: string }
-type Job = { id: string; order_date: string; work_start_date: string; work_type: string; customer_type: string; customer_name: string; room_no: string; revenue_ex_vat: number; revenue_inc_vat: number; actual_deliver_date: string; working_status: string; sales_id: string; projects?: { name: string }; sales?: { name: string } }
+type Customer = { id: string; customer_type: string }
+type Job = { id: string; order_date: string; work_start_date: string; work_type: string; customer_type: string; customer_name: string; room_no: string; revenue_ex_vat: number; revenue_inc_vat: number; actual_deliver_date: string; working_status: string; crm_stage: string; customer_id: string | null; sales_id: string; projects?: { name: string }; sales?: { name: string } }
 type OrgTarget = { target_sales_value: number; target_delivery_value: number }
 
 export default function DashboardPage() {
@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   const [allCustomers, setAllCustomers] = useState<Customer[]>([])
   const [allJobs, setAllJobs] = useState<Job[]>([])
-  const [condoLeads, setCondoLeads] = useState<{ customer_id: string | null; created_at: string }[]>([])
+  const [condoLeads, setCondoLeads] = useState<{ customer_id: string | null; imported_at: string }[]>([])
   const [orgTarget, setOrgTarget] = useState<OrgTarget | null>(null)
   const [todayPayments, setTodayPayments] = useState<{ paid_amount: number }[]>([])
   const [monthPayments, setMonthPayments] = useState<{ paid_amount: number }[]>([])
@@ -54,9 +54,12 @@ export default function DashboardPage() {
         { data: monthPmts },
       ] = await Promise.all([
         supabase.auth.getUser(),
-        supabase.from('customers').select('status, budget, customer_type'),
-        supabase.from('jobs').select('id,order_date,work_start_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
-        supabase.from('condo_leads').select('customer_id, created_at'),
+        supabase.from('customers').select('id, customer_type'),
+        supabase.from('jobs').select('id,order_date,work_start_date,work_type,customer_type,customer_name,room_no,revenue_ex_vat,revenue_inc_vat,actual_deliver_date,working_status,crm_stage,customer_id,sales_id,projects(name),sales:users!jobs_sales_id_fkey(name)'),
+        // condo_leads records when a lead was imported, not created — asking for
+        // created_at made PostgREST reject the select and both lead counters
+        // below silently read zero.
+        supabase.from('condo_leads').select('customer_id, imported_at'),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value').eq('year', now.getFullYear()).eq('month', now.getMonth() + 1).maybeSingle(),
         supabase.from('payments').select('paid_amount').eq('status', 'paid').eq('paid_date', todayStr),
         supabase.from('payments').select('paid_amount').eq('status', 'paid').gte('paid_date', ms),
@@ -75,7 +78,7 @@ export default function DashboardPage() {
 
       setAllCustomers((customers || []) as Customer[])
       setAllJobs((jobs || []) as unknown as Job[])
-      setCondoLeads((leads || []) as { customer_id: string | null; created_at: string }[])
+      setCondoLeads((leads || []) as { customer_id: string | null; imported_at: string }[])
       setOrgTarget(ot as OrgTarget | null)
       setTodayPayments((todayPmts || []) as { paid_amount: number }[])
       setMonthPayments((monthPmts || []) as { paid_amount: number }[])
@@ -120,17 +123,23 @@ export default function DashboardPage() {
     [jobs, monthStart, monthEnd]
   )
 
-  const newLeadsThisMonth = condoLeads.filter(l => l.created_at >= monthStart).length
-  const newLeadsInPipeline = condoLeads.filter(l => l.created_at >= monthStart && l.customer_id).length
+  const newLeadsThisMonth = condoLeads.filter(l => l.imported_at >= monthStart).length
+  const newLeadsInPipeline = condoLeads.filter(l => l.imported_at >= monthStart && l.customer_id).length
 
   const pipelineOrder = FUNNEL_ORDER
+  // Counted per job, like Prospects. A buyer with a delivered room and a live
+  // one belongs in two columns, and customers.status could only put them in one.
   const pipeline = useMemo(() =>
-    pipelineOrder.map(s => ({
-      status: s,
-      count: customers.filter(x => x.status === s).length,
-      value: customers.filter(x => x.status === s).reduce((sum, x) => sum + (x.budget || 0), 0)
-    })),
-    [customers]
+    pipelineOrder.map(s => {
+      const rows = jobs.filter((j: any) => j.crm_stage === s)
+      return {
+        status: s,
+        count: rows.length,
+        // The job's own value — customers.budget was retired 2026-09-07.
+        value: rows.reduce((sum: number, j: any) => sum + (j.revenue_inc_vat || 0), 0),
+      }
+    }),
+    [jobs]
   )
 
   const salesLeaderboard = useMemo(() => {
@@ -229,7 +238,7 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${customers.filter(c => c.status === 'booked').length} · ปิด ${customers.filter(c => c.status === 'closed').length}`, color: 'var(--accent-blue)', onClick: undefined },
+          { icon: Users, label: 'ลูกค้าทั้งหมด', value: fn(customers.length), sub: `จอง ${jobs.filter((j: any) => j.crm_stage === 'booked').length} งาน · ปิด ${jobs.filter((j: any) => j.crm_stage === 'closed').length} งาน`, color: 'var(--accent-blue)', onClick: undefined },
           { icon: TrendingUp, label: 'ยอดขายเดือนนี้', value: fn(salesThisMonth.length) + ' รายการ', sub: f(salesThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: 'var(--accent-orange)', onClick: undefined },
           { icon: Package, label: 'ยอดส่งมอบเดือนนี้', value: fn(deliveredThisMonth.length) + ' รายการ', sub: f(deliveredThisMonth.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)), color: 'var(--accent-green)', onClick: () => setDeliverDrillOpen(true) },
           { icon: Wallet, label: 'รายรับเดือนนี้', value: f(monthPayments.reduce((s, p) => s + (p.paid_amount || 0), 0)), sub: `${monthPayments.length} งวด`, color: 'var(--accent-green)', onClick: undefined, money: true },

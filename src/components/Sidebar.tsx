@@ -6,8 +6,8 @@ import {
   LayoutDashboard, Users, TrendingUp, CalendarDays,
   ClipboardList, DollarSign, ArrowRightLeft, FileText,
   ShieldCheck, BarChart3, Wallet, Building2, UserCog,
-  Target, LogOut, Sun, Moon, ChevronRight,
-  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap, Search
+  Target, LogOut, Sun, Moon,
+  Briefcase, Settings2, TrendingDown, Database, Receipt, Zap, Search, PackageSearch
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -45,8 +45,8 @@ const NAV = [
     color: 'text-info',
     dot: 'dot-info',
     items: [
-      { href: '/dashboard/jobs', icon: Briefcase, label: 'Wyde Clients' },
-      { href: '/dashboard/customers', icon: Users, label: 'Customers' },
+      { href: '/dashboard/jobs', icon: Briefcase, label: 'Job Registry' },
+      { href: '/dashboard/customers', icon: Users, label: 'Customer Registry' },
       { href: '/dashboard/handover', icon: ClipboardList, label: 'Handover' },
       { href: '/dashboard/payments', icon: Receipt, label: 'Payments' },
       { href: '/dashboard/warranty', icon: ShieldCheck, label: 'Warranty' },
@@ -60,6 +60,7 @@ const NAV = [
     dot: 'dot-value',
     items: [
       { href: '/dashboard/revenue', icon: TrendingDown, label: 'Revenue' },
+      { href: '/dashboard/procurement', icon: PackageSearch, label: 'Cost & GP%' },
       { href: '/dashboard/project-summary', icon: BarChart3, label: 'Project Summary' },
       { href: '/dashboard/executive', icon: BarChart3, label: 'Sales Performance' },
       { href: '/dashboard/finance', icon: Wallet, label: 'Finance' },
@@ -188,8 +189,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   <span className="flex items-center justify-center py-2.5 px-3">
                     <Icon size={16} style={{ color: isActive ? 'var(--accent)' : 'var(--text-3)', flexShrink: 0 }} />
                   </span>
-                  <span className="truncate flex-1 text-sm font-normal">{item.label}</span>
-                  {isActive && <ChevronRight size={12} style={{ color: 'var(--accent)' }} className="flex-shrink-0 mr-2" />}
+                  <span className="truncate flex-1 text-sm font-normal pr-2">{item.label}</span>
                 </Link>
               )
             })}

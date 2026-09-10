@@ -25,6 +25,8 @@ const ROLES = [
   { value: 'admin_sales', label: 'Admin Sales' },
   { value: 'executive', label: 'Executive' },
   { value: 'finance', label: 'Finance' },
+  // Read-only. Enforced by RLS (can_write()), not by this list.
+  { value: 'qc_pm', label: 'QC / PM (ดูอย่างเดียว)' },
 ]
 
 const LEVELS = [
@@ -43,6 +45,7 @@ const ROLE_COLORS: Record<string, string> = {
   admin_sales: 'badge badge-purple',
   executive: 'badge badge-orange',
   finance: 'badge badge-blue',
+  qc_pm: 'badge badge-gray',
 }
 
 const empty = { email: '', name: '', role: 'sales', level: 'staff', dept: '', active: true, manager_id: '' }
@@ -112,14 +115,14 @@ export default function UsersPage() {
         title="Users"
         subtitle="จัดการผู้ใช้และสิทธิ์การเข้าถึง"
         actions={
-          <button onClick={openNew} className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <button onClick={openNew} className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors">
             <Plus size={16} />เพิ่มผู้ใช้
           </button>
         }
       />
 
       <div className="ds-card overflow-hidden tbl-scroll" style={{ padding: 0 }}>
-        <table className="w-full">
+        <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
               <th className="text-left px-4 py-3 text-card-title" style={{ color: 'var(--text-2)' }}>ชื่อ</th>
@@ -141,7 +144,7 @@ export default function UsersPage() {
               </td></tr>
             )}
             {users.map((u, i) => (
-              <tr key={u.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+              <tr key={u.id} className="transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--divider)' }}>
@@ -198,7 +201,7 @@ export default function UsersPage() {
         )}
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={save} disabled={saving || !form.name || !form.email} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={save} disabled={saving || !form.name || !form.email} className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

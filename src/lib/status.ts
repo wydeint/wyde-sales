@@ -166,3 +166,57 @@ export function workCategory(wt: string | null | undefined): 'RPT' | 'N-RPT' | '
   if (v === 'N-RPT' || v === 'N-RPT/EQ' || v === 'N-RPT/Event') return 'N-RPT'
   return 'unknown'
 }
+
+// ── ระเบียนลูกค้า vs งาน ────────────────────────────────────
+/**
+ * Two different questions, and they were being answered by one column.
+ *
+ * A **job** has a stage: new → interested → quoted → booked → closed, or lost.
+ * That is `jobs.crm_stage`, and it changes per order.
+ *
+ * A **customer** has none of that. The register answers "has this person ever
+ * bought from us, and how much" — one buyer can hold a delivered room, a live
+ * one and a cancelled one at the same time, and no single stage describes them.
+ * `customers.status` tried to and drifted: 4 records disagreed with their own
+ * jobs, and `quoted` appeared on both sides of the line.
+ *
+ * The split is clean in the data: `working_status` is set on all 923 jobs that
+ * were actually ordered and null on all 51 that are still prospects — every one
+ * of those 51 has no order date and no value.
+ */
+export type CustomerKind = 'customer' | 'prospect'
+
+export interface CustomerSummary {
+  kind: CustomerKind
+  /** ordered at least once, then cancelled every one of them */
+  allCancelled: boolean
+  /** bought more than once and cancelled some — still a customer */
+  hasCancelled: boolean
+  orderedJobs: number
+  liveJobs: number
+}
+
+export function summariseCustomer(
+  jobs: { working_status?: string | null }[] | null | undefined,
+): CustomerSummary {
+  const js = jobs ?? []
+  const ordered = js.filter(j => j.working_status)
+  const cancelled = ordered.filter(j => j.working_status === 'ยกเลิก')
+  const live = ordered.length - cancelled.length
+  return {
+    kind: ordered.length > 0 ? 'customer' : 'prospect',
+    allCancelled: ordered.length > 0 && live === 0,
+    hasCancelled: cancelled.length > 0,
+    orderedJobs: ordered.length,
+    liveJobs: live,
+  }
+}
+
+export const CUSTOMER_KINDS: StatusEntry<CustomerKind>[] = [
+  { value: 'customer', label: 'ลูกค้า', icon: '★', badge: 'badge badge-green', color: 'var(--accent-green)' },
+  { value: 'prospect', label: 'ผู้สนใจ', icon: '◇', badge: 'badge badge-blue', color: 'var(--accent-blue)' },
+]
+
+export function customerKind(k: CustomerKind): StatusEntry<CustomerKind> {
+  return CUSTOMER_KINDS.find(x => x.value === k) ?? CUSTOMER_KINDS[1]
+}

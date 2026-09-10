@@ -53,10 +53,10 @@ export default function DesignPreviewPage() {
       <section className="space-y-2">
         <p className="text-label-upper" style={{ color: 'var(--text-3)' }}>Buttons — pill radius, weight 600, press = scale(0.95)</p>
         <div className="flex items-center gap-3 flex-wrap">
-          <button className="px-4 py-2 btn-green text-white text-sm">เพิ่มรายการ</button>
-          <button className="px-4 py-2 btn-purple text-white text-sm">Warranty</button>
-          <button className="px-4 py-2 btn-blue text-white text-sm">ดูรายละเอียด</button>
-          <button onClick={() => setModalOpen(true)} className="px-4 py-2 btn-green text-white text-sm">เปิด Modal</button>
+          <button className="px-4 py-2 btn-green text-white">เพิ่มรายการ</button>
+          <button className="px-4 py-2 btn-purple text-white">Warranty</button>
+          <button className="px-4 py-2 btn-blue text-white">ดูรายละเอียด</button>
+          <button onClick={() => setModalOpen(true)} className="px-4 py-2 btn-green text-white">เปิด Modal</button>
         </div>
       </section>
 
@@ -113,7 +113,7 @@ export default function DesignPreviewPage() {
           นี่คือตัวอย่างเนื้อหาใน Modal หลังปรับ radius เป็น 18px ตาม design.md — เงายังคงอยู่ตามข้อยกเว้นของ overlay
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={() => setModalOpen(false)} className="px-4 py-2 btn-blue text-white text-sm">ปิด</button>
+          <button onClick={() => setModalOpen(false)} className="px-4 py-2 btn-blue text-white">ปิด</button>
         </div>
       </Modal>
     </div>

@@ -45,7 +45,7 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
   },
   {
     field: 'room_no', owner: 'jobs', customerColumn: 'interested_room',
-    why: 'ห้องที่สั่งงานจริง ส่วนฝั่งลูกค้าคือห้องที่สนใจ',
+    why: 'ห้องที่สั่งงานจริง ส่วนฝั่งลูกค้าคือห้องที่สนใจ · หน้าจอที่แสดงเป็น "งานหนึ่งใบ" ต้องอ่านจาก jobs.room_no เสมอ — ระเบียนลูกค้ามีห้องเดียว พอรวมระเบียนซ้ำหรือลูกค้าซื้อหลายห้อง ทุกการ์ดจะขึ้นห้องเดียวกันหมด (เจอ 47 การ์ด 2026-08-27)',
   },
   {
     field: 'po_no', owner: 'jobs',
@@ -93,6 +93,15 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
     why: 'หมายเหตุของงาน — ฝั่งลูกค้ามี 19 แถวที่เป็นหมายเหตุระดับคน ต้องอ่านก่อนลบ',
   },
 
+  {
+    field: 'sales_id', owner: 'jobs', customerColumn: 'assigned_to',
+    why: 'เซลล์ที่ขายงานใบนั้น — ลูกค้าคนเดียวเปลี่ยนเซลล์ได้ตามงาน · ค่าคอมและเป้าคิดจากรายได้ต่อใบงาน จึงต้องผูกกับงาน · customers.assigned_to เหลือไว้ให้ Prospect ที่ยังไม่มีงาน และจะถูกลบในระลอก 1e',
+  },
+  {
+    field: 'revenue_inc_vat', owner: 'jobs', droppedFromCustomers: true,
+    why: 'มูลค่างานใบนั้น · **แก้กติกา 2026-09-07 (เจ้าของ):** เดิมเขียนว่า customers.budget คือ "งบรวมทั้งราย" ซึ่งไม่จริง — ลูกค้า 64 รายมีหลายงาน มากสุด 147 ห้อง ต่อช่องงบช่องเดียว ตัวเลขจึงบอกไม่ได้ว่าเป็นของห้องไหน และไม่มีหน้าไหนใช้มันเป็นงบรวมเลย ทุกจุดเขียน `jobRev || budget` คือใช้เป็นมูลค่างานสำรองมาตลอด · ตอนนี้ทุกฟอร์มเขียนลง jobs.revenue_inc_vat แล้ว (ย้ายของเดิม 12 งาน ฿3.66M) customers.budget ถูกลบทิ้งแล้ว 2026-09-07 (สำรองไว้ที่ backup_customers_budget_20260907 631 แถว) · การ์ด Prospects เคยรวมยอดจาก customers.budget ทำให้ค้น A812 เห็นการ์ดเดียว ฿69,590 แต่สรุปบอก ฿152,513',
+  },
+
   // ── customers owns: properties of a person ───────────────────────────
   {
     field: 'customer_type', owner: 'customers',
@@ -117,7 +126,7 @@ export const FIELD_OWNERSHIP: FieldOwnership[] = [
  *  their customer are deliberate (the company that hired us is not the person
  *  who bought the room). */
 export const RECONCILE_FIELDS = FIELD_OWNERSHIP.filter(f =>
-  f.field === 'room_no' || f.field === 'customer_type')
+  f.field === 'room_no' || f.field === 'customer_type' || f.field === 'sales_id')
 
 export function ownerOf(field: string): Owner | null {
   return FIELD_OWNERSHIP.find(f => f.field === field)?.owner ?? null

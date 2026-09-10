@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
 import DialogHost from '@/components/ui/dialog'
+import ReadOnlyGate from './ReadOnlyGate'
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -46,6 +47,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
       {/* ── Main content ── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+
+        {/* Says "you cannot change anything here" before they try, not after. */}
+        <ReadOnlyGate />
 
         {/* Topbar — mobile/iPad only */}
         <header

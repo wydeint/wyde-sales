@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ClipboardList, Plus, CheckCircle } from 'lucide-react'
 import { TableSpinner, TableError, TableEmpty } from '@/components/ui/StateUI'
 import { Input, TextArea } from '@/components/ui/Input'
+import { MoneyField } from '@/components/ui/MoneyInput'
 import PageHeader from '@/components/ui/PageHeader'
 
 interface DailyReport {
@@ -92,7 +93,7 @@ export default function DailyReportPage() {
           <>
         {!todayDone && (
           <button onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+            className="flex items-center gap-2 btn-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors">
             <Plus size={16} />บันทึกวันนี้
           </button>
         )}
@@ -115,16 +116,16 @@ export default function DailyReportPage() {
             <Input label="Follow Up (ครั้ง)" type="number" value={form.follow_ups} onChange={e => setForm({ ...form, follow_ups: Number(e.target.value) })} />
             <Input label="ส่งใบเสนอราคา (ใบ)" type="number" value={form.quotations_sent} onChange={e => setForm({ ...form, quotations_sent: Number(e.target.value) })} />
             <Input label="Lead ใหม่" type="number" value={form.leads_created} onChange={e => setForm({ ...form, leads_created: Number(e.target.value) })} />
-            <Input label="มูลค่าใบเสนอราคา (บาท)" type="number" value={form.quotation_value} onChange={e => setForm({ ...form, quotation_value: Number(e.target.value) })} />
-            <Input label="มูลค่า Booking (บาท)" type="number" value={form.booking_value} onChange={e => setForm({ ...form, booking_value: Number(e.target.value) })} />
-            <Input label="รายได้ (บาท)" type="number" value={form.revenue} onChange={e => setForm({ ...form, revenue: Number(e.target.value) })} />
+            <MoneyField label="มูลค่าใบเสนอราคา (บาท)" value={String(form.quotation_value || '')} onChange={v => setForm({ ...form, quotation_value: Number(v) || 0 })} />
+            <MoneyField label="มูลค่า Booking (บาท)" value={String(form.booking_value || '')} onChange={v => setForm({ ...form, booking_value: Number(v) || 0 })} />
+            <MoneyField label="รายได้ (บาท)" value={String(form.revenue || '')} onChange={v => setForm({ ...form, revenue: Number(v) || 0 })} />
           </div>
           <div className="mb-4">
             <TextArea label="หมายเหตุ / สรุปวันนี้" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="สรุปกิจกรรมวันนี้..." />
           </div>
           <div className="flex justify-end gap-3">
             <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-            <button onClick={save} disabled={saving} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            <button onClick={save} disabled={saving} className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
               {saving ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
@@ -136,7 +137,7 @@ export default function DailyReportPage() {
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--divider)' }}>
           <p className="text-card-title" style={{ color: 'var(--text-2)' }}>ประวัติรายงาน 30 วันล่าสุด</p>
         </div>
-        <table className="w-full">
+        <table className="w-full tbl-rows">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--divider)' }}>
               <th className="text-left px-4 py-3 text-xs" style={{ color: 'var(--text-2)' }}>วันที่</th>
@@ -157,7 +158,7 @@ export default function DailyReportPage() {
               <TableEmpty colSpan={9} icon={ClipboardList} message="ยังไม่มีรายงาน" />
             )}
             {reports.map((r, i) => (
-              <tr key={r.id} className="transition-colors" style={{ borderBottom: '1px solid var(--divider)', background: i % 2 !== 0 ? 'var(--hover-bg)' : undefined }}>
+              <tr key={r.id} className="transition-colors">
                 <td className="px-4 py-2.5 text-sm" style={{ color: 'var(--text-2)' }}>
                   {new Date(r.date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
                 </td>

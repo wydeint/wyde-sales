@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
 import { Settings2, Save, RefreshCw, AlertTriangle } from 'lucide-react'
 import { PageSpinner, PageError } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
@@ -151,7 +152,7 @@ export default function SettingsPage() {
               </div>
               <div className="col-span-3">
                 {isAdmin ? (
-                  <input type="number" value={t.revenue_min} onChange={e => updateTier(t.id, 'revenue_min', +e.target.value)}
+                  <MoneyInput value={t.revenue_min ? String(t.revenue_min) : ''} onChange={v => updateTier(t.id, 'revenue_min', Number(v) || 0)} ariaLabel="ยอดขั้นต่ำ" 
                     className="field-input w-full text-xs" />
                 ) : (
                   <span className="text-xs" style={{ color: 'var(--text-2)' }}>{f(t.revenue_min)}</span>
@@ -159,7 +160,7 @@ export default function SettingsPage() {
               </div>
               <div className="col-span-3">
                 {isAdmin ? (
-                  <input type="number" value={t.revenue_max ?? ''} onChange={e => updateTier(t.id, 'revenue_max', e.target.value === '' ? null : +e.target.value)}
+                  <MoneyInput value={t.revenue_max != null ? String(t.revenue_max) : ''} onChange={v => updateTier(t.id, 'revenue_max', v === '' ? null : Number(v) || 0)} ariaLabel="ยอดสูงสุด" 
                     className="field-input w-full text-xs" placeholder="ไม่จำกัด" />
                 ) : (
                   <span className="text-xs" style={{ color: 'var(--text-2)' }}>{t.revenue_max ? f(t.revenue_max) : 'ไม่จำกัด'}</span>

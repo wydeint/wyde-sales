@@ -9,6 +9,7 @@ import FilterBar from '@/components/ui/FilterBar'
 import Pagination, { PAGE_SIZE } from '@/components/ui/Pagination'
 import { fetchAllRows } from '@/lib/fetchAll'
 import { baht } from '@/lib/money'
+import { compareRoom } from '@/lib/utils'
 
 // ─── Types ─────────────────────────────────────────────────
 interface Installment {
@@ -40,7 +41,6 @@ interface JobRow {
   sale_receipt_url: string | null
   sale_slip_url: string | null
   working_status: string
-  customer_status: string
   installments: Installment[]
   paid_total: number
   unpaid_total: number
@@ -54,9 +54,16 @@ const f = baht
 
 // ─── Auto-check rules ──────────────────────────────────────
 // ส่งมอบแล้ว → เอกสารทุกอย่างครบ
-// จอง / ดำเนินการ (customerStatus) → เอกสารส่วนลูกค้าครบ
+// จอง / ดำเนินการ → เอกสารส่วนลูกค้าครบ
+//
+// The last two used to be read from customers.status through an embedded
+// `customers:customer_id(status)` in the select. That column was dropped when
+// stage moved onto the job, so PostgREST rejected the whole query and the page
+// rendered with no rows at all — the join broke every job, not just the field.
+// They were always working_status values anyway ('จอง', 'ดำเนินการ'), and the
+// job is where that state belongs.
 function autoCheckedSale(job: JobRow) {
-  return job.working_status === 'ส่งมอบแล้ว' || job.customer_status === 'จอง' || job.customer_status === 'ดำเนินการ'
+  return ['ส่งมอบแล้ว', 'จอง', 'ดำเนินการ'].includes(job.working_status)
 }
 function autoCheckedDelivery(job: JobRow) {
   return job.working_status === 'ส่งมอบแล้ว'
@@ -267,7 +274,7 @@ export default function PaymentsPage() {
     setLoading(true)
     const [{ data: jobsRaw }, { data: pData }, { data: uData }] = await Promise.all([
       supabase.from('jobs').select(
-        'id, room_no, project_id, customer_name, sales_id, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name), customers:customer_id(status)'
+        'id, room_no, project_id, customer_name, sales_id, revenue_inc_vat, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url, sale_receipt_url, sale_slip_url, projects(name), sales:users!sales_id(name)'
       ).neq('working_status', 'ยกเลิก').order('room_no'),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -319,7 +326,6 @@ export default function PaymentsPage() {
         satisfaction_url: j.satisfaction_url,
         sale_receipt_url: j.sale_receipt_url, sale_slip_url: j.sale_slip_url,
         working_status: j.working_status || '',
-        customer_status: (j as any).customers?.status || '',
         installments: insts, paid_total, unpaid_total,
       }
     })
@@ -360,7 +366,13 @@ export default function PaymentsPage() {
     : 'settled'
 
   const filtered = useMemo(
-    () => filterMoney === 'all' ? preFiltered : preFiltered.filter(j => moneyOf(j) === filterMoney),
+    () => {
+      // .order('room_no') on the server is a plain string sort — it puts 1839
+      // before 222. Re-sort here with the shared rule.
+      const base = filterMoney === 'all' ? preFiltered : preFiltered.filter(j => moneyOf(j) === filterMoney)
+      return [...base].sort((a, b) =>
+        (a.project_name || '').localeCompare(b.project_name || '', 'th') || compareRoom(a.room_no, b.room_no))
+    },
     [preFiltered, filterMoney]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Counts come from the set the other filters already narrowed, so a chip
@@ -454,7 +466,7 @@ export default function PaymentsPage() {
       {/* Table */}
       <div className="tbl-scroll rounded-[11px]"
         style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
-        <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
+        <table className="text-sm tbl-rows" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'var(--hover-bg)' }}>
               {['ห้อง / โครงการ', 'ลูกค้า / Sales', 'งวดชำระ', 'มูลค่างาน', 'ชำระแล้ว', 'คงเหลือ', 'เอกสาร'].map(h => (
@@ -470,9 +482,7 @@ export default function PaymentsPage() {
               const docsDone = [job.quotation1_url, job.id_card_url, job.delivery_doc_url, job.satisfaction_url].filter(Boolean).length
               return (
                 <tr key={job.id} onClick={() => setSelected(job)}
-                  style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)', borderBottom: '1px solid var(--divider)', cursor: 'pointer' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--hover-bg)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = ri % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)')}>
+                  style={{ cursor: 'pointer' }}>
 
                   <td style={{ padding: '10px 16px', verticalAlign: 'middle' }}>
                     <p className="font-bold" style={{ color: 'var(--text-1)' }}>{job.room_no}</p>

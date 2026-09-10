@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import MoneyInput from '@/components/ui/MoneyInput'
 import {
   Plus, X, Phone, Mail, MessageCircle, Building2, Home,
   Banknote, FileText, Pencil, Save, ChevronRight, ChevronDown, Search, Copy, Check,
@@ -19,8 +20,13 @@ import PageHeader from '@/components/ui/PageHeader'
 import DateInput from '@/components/ui/DateInput'
 import { bahtShort } from '@/lib/money'
 import { createProspectJob as createProspectJobShared } from '@/lib/prospectJob'
-import { appUserId } from '@/lib/currentUser'
+import { cleanName, nameKey } from '@/lib/customerName'
+import { cancelJob } from '@/lib/jobLifecycle'
 import { showAlert } from '@/components/ui/dialog'
+import { deleteJobCascade, deleteJobsCascade } from '@/lib/deleteJob'
+import { compareRoom } from '@/lib/utils'
+import { resolveCustomerId, nextCustomerId } from '@/lib/customerId'
+import { exVatOf } from '@/lib/procurement'
 
 const PRODUCT_TYPES = [
   'Curtain', 'Wallcovering', 'Loose furniture', 'Built-in', 'Electric appliance',
@@ -34,8 +40,8 @@ const todayStr = () => {
 // ─── Types ─────────────────────────────────────────────────
 interface Customer {
   id: string; customer_name: string; phone: string; email: string; line_id: string
-  source: string; project_id: string; interested_room: string; budget: number
-  status: string; assigned_to: string; notes: string; created_at: string
+  source: string; project_id: string; interested_room: string
+  status: string; notes: string; created_at: string
   cancel_type?: string | null; cancel_amount?: number | null; cancel_date?: string | null
   projects?: { name: string }; users?: { name: string }
 }
@@ -74,10 +80,24 @@ const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
  * misleading answer available. Match case-insensitively, then fall back to the
  * customer's own status, and only then to an explicit unknown chip.
  */
-const UNKNOWN_STAGE = { value: '', label: '—', text: 'var(--text-3)', dot: 'var(--text-3)', bg: 'transparent', border: 'var(--divider)', badge: 'var(--hover-bg)', chip: 'var(--hover-bg)' }
+/** Shown when a customer record has no job at all, so there is no stage to
+ *  read. It used to say "—", which reads as a rendering glitch rather than a
+ *  fact about the record — nobody could tell what to do about it. It is a real
+ *  state with a real cause (a customer created before, or instead of, a job) and
+ *  the fix is to open a job or delete the record, so the chip says so. */
+const UNKNOWN_STAGE = { value: '', label: 'ยังไม่เปิดงาน', text: 'var(--accent-orange)', dot: 'var(--accent-orange)', bg: 'transparent', border: 'color-mix(in srgb, var(--accent-orange) 40%, transparent)', badge: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', chip: 'color-mix(in srgb, var(--accent-orange) 20%, transparent)' }
 /** Cancellation and the order note live on the job now. A card shows one job,
  *  the drawer focuses one — but both are handed a customer, so read through to
  *  the job they are about, falling back to the first when none is in focus. */
+/** The sales on this customer's jobs. customers.assigned_to was dropped on
+ *  2026-08-27, so the job is the only place a seller is recorded. */
+function salesIdOf(c: any, focusJobId?: string | null): string {
+  const focused = jobOf(c, focusJobId)?.sales_id
+  if (focused) return focused
+  for (const j of ((c?.jobs as any[]) || [])) if (j?.sales_id) return j.sales_id
+  return ''
+}
+
 function jobOf(c: any, focusJobId?: string | null): any {
   const js = ((c?.jobs as any[]) || [])
   return (focusJobId && js.find(j => j.id === focusJobId)) || js[0] || {}
@@ -125,16 +145,25 @@ function CardSkeleton() {
 }
 
 // ─── CustomerCard ───────────────────────────────────────────
+/** The money a card shows: this job's revenue, falling back to the customer's
+ *  budget only while the job is still a prospect with no value of its own.
+ *
+ *  The summary strip above the cards used to sum `c.budget` instead, so a
+ *  customer with two jobs contributed their whole budget to each card —
+ *  searching A812 reported ฿152,513 over a single ฿69,590 card. One formula
+ *  now feeds both. */
+function cardValue(c: Customer, jobSeqNo: number | undefined, jobRev: number | undefined, _jobCrmStage?: string | null): number {
+  return jobSeqNo != null
+    ? (jobRev || 0)
+    : (jobRev || (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || 0))
+}
+
 function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jobWorkingStatus, jobCrmStage }: { c: Customer; stage: ReturnType<typeof resolveStage>; onClick: () => void; onDelete: (jobId?: string) => void; jobSeqNo?: number; jobRev?: number; jobId?: string; jobWorkingStatus?: string; jobCrmStage?: string | null }) {
   const custType = (c as any).customer_type || 'B2C'
   // The card shows one job, so its own work type — not a customer-level copy,
   // which no longer exists.
   const workType = jobOf(c, jobId).work_type || ''
-  const prospectCrmStages: string[] = PROSPECT_STAGES
-  // multi-job: show this job's revenue; for prospect jobs with no revenue yet, fall back to customer budget
-  const displayValue = jobSeqNo != null
-    ? (jobRev || (prospectCrmStages.includes(jobCrmStage || '') ? c.budget || 0 : 0))
-    : (jobRev || (((c as any).jobs as { revenue_inc_vat: number }[] | null)?.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0) || c.budget || 0))
+  const displayValue = cardValue(c, jobSeqNo, jobRev, jobCrmStage)
   const ws = jobWorkingStatus ?? ''
   const isClosed = ws === 'ดำเนินการ' || ws === 'ส่งมอบแล้ว' || ws === 'รอส่งมอบ'
   return (
@@ -154,8 +183,12 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
       {/* Row 1: room number + badges */}
       <div className="flex items-start justify-between gap-1 min-w-0">
         <div className="flex items-center gap-1 min-w-0 flex-1">
+          {/* The job's room, not the customer's. Merging two records for one
+              buyer leaves a single interested_room, so every card of theirs
+              printed that one room — Mr.Andrea Donalisio's A812 job showed as
+              A603 after his two records were merged. 47 cards read like that. */}
           <p className="font-bold text-sm truncate min-w-0" style={{ color: 'var(--text-1)' }}>
-            {c.interested_room || '—'}
+            {jobOf(c, jobId).room_no || c.interested_room || '—'}
           </p>
           {jobSeqNo != null && (
             <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
@@ -164,7 +197,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
             </span>
           )}
         </div>
-        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : resolveStage(jobCrmStage, c.status); return (
+        {(() => { const s = ws === 'จอง' ? stageMap['booked'] : resolveStage(jobCrmStage); return (
           <span className="text-micro font-semibold px-1.5 py-0.5 rounded-[4px] flex-shrink-0 whitespace-nowrap"
             style={{ background: s.badge, color: s.text, border: `1px solid ${s.border}` }}>
             {s.label}
@@ -206,7 +239,10 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
           {displayValue > 0
             ? <p className="text-xs font-bold truncate" style={{ color: 'var(--accent-green)' }}>{f(displayValue)}</p>
             : <p className="text-micro" style={{ color: 'var(--text-3)' }}>ไม่ระบุมูลค่า</p>}
-          {(c as any).users?.name && <p className="text-micro truncate" style={{ color: 'var(--text-3)' }}>{(c as any).users.name}</p>}
+          {/* The seller of THIS job, not the customer's assigned_to. A repeat
+              buyer served by someone new used to show the first sales on every
+              one of their cards. */}
+          {jobOf(c, jobId).sales?.name && <p className="text-micro truncate" style={{ color: 'var(--text-3)' }}>{jobOf(c, jobId).sales.name}</p>}
         </div>
         <ChevronRight size={14} style={{ color: 'var(--text-3)' }} className="opacity-40 group-hover:opacity-100 transition-opacity flex-shrink-0" />
       </div>
@@ -224,7 +260,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
 }
 
 // ─── Card expand helper ─────────────────────────────────────
-type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null; work_type?: string | null; room_no?: string | null; notes?: string | null }
+type JobMeta = { id: string; order_date: string | null; revenue_inc_vat: number; working_status: string; crm_stage: string | null; work_type?: string | null; room_no?: string | null; notes?: string | null; sales_id?: string | null; sales?: { name: string } | null }
 type CardItem = { c: Customer; jobSeqNo: number | undefined; jobRev: number | undefined; jobId: string | undefined; jobWorkingStatus: string | undefined; jobCrmStage: string | null | undefined; cardKey: string }
 interface BookedJob {
   id: string; customer_name: string; room_no: string; revenue_inc_vat: number
@@ -368,7 +404,7 @@ function CancelModal({ onClose, onConfirm }: {
             <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>
               {cancelType === 'forfeit' ? 'ยอดที่ยึด (บาท)' : 'ยอดคืน (บาท)'}
             </label>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
+            <MoneyInput value={amount} onChange={setAmount} placeholder="0" ariaLabel="จำนวนเงิน"
               className="w-full px-3 py-2 rounded-[8px] text-sm focus:outline-none"
               style={{ background: 'var(--input-bg)', border: `1px solid ${needsAmount ? 'var(--accent-red)' : 'var(--divider)'}`, color: 'var(--text-1)' }} />
             {needsAmount && (
@@ -410,8 +446,12 @@ function CancelModal({ onClose, onConfirm }: {
 }
 
 async function createBookedJob(customer: Customer, supabase: ReturnType<typeof createClient>): Promise<string> {
-  const { data: extra } = await supabase.from('customers').select('booking_value').eq('id', customer.id).maybeSingle()
-  const revInc = (extra as any)?.booking_value || customer.budget || 0
+  // customers.booking_value was dropped: 3 rows out of 890, and two of those
+  // three disagreed with the job they belonged to (฿300,000 against a ฿5,000
+  // job). Opened for a customer that has no job at all, so there is no value to
+  // carry across — customers.budget was retired 2026-09-07. Filled in on the
+  // card afterwards.
+  const revInc = 0
   const payload = {
     customer_id: customer.id,
     project_id: customer.project_id || null,
@@ -419,7 +459,7 @@ async function createBookedJob(customer: Customer, supabase: ReturnType<typeof c
     customer_name: customer.customer_name,
     customer_type: (customer as any).customer_type || 'B2C',
     revenue_inc_vat: revInc,
-    revenue_ex_vat: revInc ? Math.round(revInc / 1.07) : 0,
+    revenue_ex_vat: revInc ? exVatOf(revInc) : 0,
     working_status: 'จอง',
     // crm_stage has to be set with it. Ten jobs opened through here carried a
     // null stage while their working_status said จอง, and every other booked
@@ -436,7 +476,7 @@ async function createBookedJob(customer: Customer, supabase: ReturnType<typeof c
     // instalment sets it to the payment date, which is the booking date.
     order_date: null,
     work_start_date: null,
-    sales_id: customer.assigned_to || null,
+    sales_id: salesIdOf(customer) || null,
   }
   // Fetch all JOB-* IDs and find true numeric max to avoid string-sort issues
   const { data: allJobIds } = await supabase.from('jobs').select('id').like('id', 'JOB-%')
@@ -466,13 +506,27 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   const supabase = createClient()
   const jobsArr = ((customer as any).jobs as JobMeta[]) || []
   const focusJobMeta = focusJobId ? jobsArr.find((j: JobMeta) => j.id === focusJobId) : null
-  const effectiveStage = focusJobMeta?.crm_stage || focusJobCrmStage || customer.status
-  const stage = focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : resolveStage(effectiveStage, customer.status)
+  // The job's stage, full stop. customers.status is on its way out and every
+  // job carries a crm_stage of its own.
+  const effectiveStage = focusJobMeta?.crm_stage || focusJobCrmStage || 'new'
+  const stage = focusJobWorkingStatus === 'จอง' ? stageMap['booked'] : resolveStage(effectiveStage)
   const [editing, setEditing] = useState(false)
   // notes lives on the job now, so it has to be seeded from the job — spreading
   // the customer alone leaves the field undefined, and saving an untouched form
   // would then blank the note the job already had.
-  const [form, setForm] = useState({ ...customer, notes: jobOf(customer, focusJobId).notes || '' })
+  // assigned_to is not a customer column any more — seed it from the job so the
+  // picker still shows who is on this order.
+  const [form, setForm] = useState({
+    ...customer,
+    notes: jobOf(customer, focusJobId).notes || '',
+    // Same reason as notes: work_type is a job column, so spreading the customer
+    // leaves it undefined and an untouched save would blank it.
+    work_type: jobOf(customer, focusJobId).work_type || '',
+    assigned_to: salesIdOf(customer, focusJobId),
+    // The money is the job's now, so seed it from the job. Seeding from
+    // customers.budget showed one customer's number on every one of their rooms.
+    budget: jobOf(customer, focusJobId).revenue_inc_vat || 0,
+  })
   const [saving, setSaving] = useState(false)
   const [jobs, setJobs] = useState<DetailJob[]>([])
   const [warranties, setWarranties] = useState<DetailWarranty[]>([])
@@ -489,16 +543,14 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
     let cancelled = false
     async function load() {
       setLoadingDetail(true)
-      // Query jobs by customer_id (UUID — legacy) OR by project+room (new flow from เริ่มงาน)
-      const expectedCustomerId = customer.project_id && customer.interested_room
-        ? `${customer.project_id}-${customer.interested_room}` : null
+      // Jobs used to link either by the customer's own id or by a `PROJECT-ROOM`
+      // string, so this searched both. Every record is CST-nnnn now and the
+      // second form matches nothing, so the customer's id is the whole answer.
       const jobQuery = supabase.from('jobs')
         .select('id, po_no, so_no, work_type, package_type, order_date, contract_date, expected_finish_date, revenue_inc_vat, customer_type, working_status, quotation1_url, quotation2_url, id_card_url, delivery_doc_url, satisfaction_url')
         .order('order_date', { ascending: false })
       const [{ data: jobsRaw }, { data: wRaw }] = await Promise.all([
-        expectedCustomerId
-          ? jobQuery.or(`customer_id.eq.${customer.id},customer_id.eq.${expectedCustomerId}`)
-          : jobQuery.eq('customer_id', customer.id),
+        jobQuery.eq('customer_id', customer.id),
         // job_id matters here: a repeat order reuses the customer record, so
         // fetching by customer alone showed the first job's warranty on the
         // second job's drawer — a room booked minutes ago appeared to already
@@ -563,13 +615,9 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
     setLoadingBookedJob(true)
     let jobId: string | null = focusJobId || null
     if (!jobId) {
-      // Search by customer.id AND by project-room format (jobs may link via either)
-      const altId = customer.project_id && customer.interested_room
-        ? `${customer.project_id}-${customer.interested_room}` : null
-      const baseQuery = supabase.from('jobs').select('id').not('working_status', 'eq', 'ยกเลิก').order('id', { ascending: false }).limit(1)
-      const { data: existing } = altId && altId !== customer.id
-        ? await baseQuery.or(`customer_id.eq.${customer.id},customer_id.eq.${altId}`)
-        : await baseQuery.eq('customer_id', customer.id)
+      const { data: existing } = await supabase.from('jobs').select('id')
+        .not('working_status', 'eq', 'ยกเลิก').order('id', { ascending: false }).limit(1)
+        .eq('customer_id', customer.id)
       jobId = (existing as any)?.[0]?.id || null
     }
     if (!jobId) { jobId = await createBookedJob(customer, supabase) }
@@ -589,19 +637,48 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
   async function save() {
     setSaving(true)
     const payload: Record<string, unknown> = {
-      customer_name: form.customer_name, phone: form.phone, email: form.email,
+      customer_name: cleanName(form.customer_name), phone: form.phone, email: form.email,
       line_id: form.line_id, source: form.source, project_id: form.project_id || null,
-      interested_room: form.interested_room, budget: form.budget || 0,
-      status: form.status, assigned_to: form.assigned_to || null,
+      interested_room: form.interested_room,
+      // budget is no longer written here — the money belongs to the job (see
+      // the jobs update below). The column stays until the reads are cleaned up
+      // in the next pass, but nothing adds to it any more.
+      // status is not written here any more — the stage buttons above move the
+      // job, and a customer has no stage of their own.
     }
     const { error } = await supabase.from('customers').update(payload).eq('id', customer.id)
+    // The seller lives on the job — customers.assigned_to was dropped on
+    // 2026-08-27. Option 1 as agreed: assigning here re-assigns every job this
+    // customer holds.
+    if (form.assigned_to !== salesIdOf(customer, focusJobId)) {
+      const { error: sErr } = await supabase.from('jobs')
+        .update({ sales_id: form.assigned_to || null }).eq('customer_id', customer.id)
+      if (sErr) await showAlert(`บันทึกเซลล์ผู้รับผิดชอบไม่สำเร็จ: ${sErr.message}`)
+    }
     // notes moved to jobs in the step-3 column drop — the customers copy is gone,
     // and writing it here made every save fail with "Could not find the 'notes'
     // column". See lib/ownership.ts.
     if (!error && focusJobId) {
-      await supabase.from('jobs').update({ notes: form.notes || null }).eq('id', focusJobId)
+      const revInc = Number(form.budget) || 0
+      await supabase.from('jobs')
+        .update({
+          notes: form.notes || null, work_type: form.work_type || null,
+          revenue_inc_vat: revInc,
+          revenue_ex_vat: revInc ? Math.round((revInc / 1.07) * 100) / 100 : 0,
+        })
+        .eq('id', focusJobId)
     }
-    if (!error) onUpdate({ ...customer, ...form } as Customer)
+    // ต้องอัปเดต customer.jobs ด้วย ไม่ใช่แค่ระดับบนของฟอร์ม — ปุ่ม "จอง"
+    // อ่าน work_type จาก `focusJobMeta` ซึ่งมาจากอาร์เรย์นี้ ถ้าไม่อัปเดต
+    // ผู้ใช้เลือกประเภทงาน กดบันทึก แล้วกดจอง จะโดนเด้งว่า "ยังไม่ได้ระบุ
+    // ประเภทงาน" ทั้งที่เพิ่งเลือกไป — ต้อง refresh หน้าถึงจะผ่าน
+    if (!error) {
+      const nextJobs = (((customer as any).jobs as JobMeta[]) || []).map(j =>
+        j.id === focusJobId
+          ? { ...j, work_type: form.work_type || null, notes: form.notes || null, revenue_inc_vat: Number(form.budget) || 0 }
+          : j)
+      onUpdate({ ...customer, ...form, jobs: nextJobs } as Customer)
+    }
     setSaving(false)
     setEditing(false)
   }
@@ -624,14 +701,20 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               // The second place a stage can be moved. It cannot reach จอง, so
               // only the quote rule applies here — but it has to apply, or the
               // requirement is one button away from being skipped.
-              if (s.value === 'quoted' && !(customer.budget > 0)) {
-                await showAlert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
+              // Reads the job, not the customer. The value moved to
+              // jobs.revenue_inc_vat because one customer holds many rooms and
+              // one budget field cannot say which room it belongs to.
+              if (s.value === 'quoted' && !((jobOf(customer, focusJobId).revenue_inc_vat || 0) > 0)) {
+                await showAlert('ยังไม่ได้ระบุมูลค่างาน — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกมูลค่างานก่อนย้ายสถานะ')
                 return
               }
+              // Stage belongs to the job. Writing customers.status as well moved
+              // every other job this person holds — one card's stage change
+              // rewrote the lot. The customer copy is only touched when there is
+              // no job to carry it (a prospect that predates createProspectJob).
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
-              await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
-              onUpdate({ ...customer, status: s.value, jobs: updatedJobs } as any)
+              onUpdate({ ...customer, jobs: updatedJobs } as any)
             }}
               className="px-2.5 py-1 rounded-[8px] text-label font-semibold"
               style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
@@ -644,9 +727,8 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             title={canClose ? undefined : `ต้องชำระอย่างน้อย 50% ก่อนเริ่มงาน (ชำระแล้ว ${jobValue > 0 ? Math.round(totalSettled / jobValue * 100) : 0}%)`}
             onClick={async () => {
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'closed' }).eq('id', focusJobId)
-              await supabase.from('customers').update({ status: 'closed' }).eq('id', customer.id)
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'closed' } : j) : (customer as any).jobs
-              onUpdate({ ...customer, status: 'closed', jobs: updatedJobs } as any)
+              onUpdate({ ...customer, jobs: updatedJobs } as any)
             }}
             className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-opacity"
             style={{
@@ -710,14 +792,16 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 style={{ background: stage.badge, color: stage.text }}>
                 {stage.label}
               </span>
-              {customer.interested_room && (
-                <span className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{customer.interested_room}</span>
+              {(jobOf(customer, focusJobId).room_no || customer.interested_room) && (
+                <span className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>
+                  {jobOf(customer, focusJobId).room_no || customer.interested_room}
+                </span>
               )}
             </div>
             <p className="font-bold text-sm mt-1 truncate" style={{ color: 'var(--text-1)' }}>{customer.customer_name}</p>
             <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>
               {(customer as any).projects?.name || ''}
-              {(customer as any).users?.name ? ` · ${(customer as any).users.name}` : ''}
+              {jobOf(customer, focusJobId).sales?.name ? ` · ${jobOf(customer, focusJobId).sales.name}` : ''}
             </p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0 ml-2">
@@ -738,7 +822,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
           {/* Budget card */}
           {(() => {
             const jobRev = jobs.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
-            const displayVal = jobRev || customer.budget
+            const displayVal = jobRev
             const label = jobRev > 0 ? 'มูลค่างาน (inc. VAT)' : 'งบประมาณ'
             return (
           <div className="rounded-[11px] p-4 flex items-center justify-between" style={{ background: 'var(--hover-bg)' }}>
@@ -796,23 +880,53 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             </div>
           ))})()}
 
-          {/* Product per job */}
+          {/* Product and ประเภทงาน per job. They sit side by side because they are
+              the two halves of "what is this job" and their names invite mixing
+              up: someone picked Product = Curtain, pressed จอง, and was told to
+              choose a ประเภทงาน they could not see — that field was buried in
+              the collapsed edit form, and Product does not satisfy the rule.
+              Different columns, different vocabularies (RPT vs Curtain), both
+              needed. Editing either writes straight through, same as before. */}
           {!loadingDetail && jobs.map(j => (
-            <div key={`prod-${j.id}`} className="flex flex-col gap-1">
-              <p className="field-label">Product{jobs.length > 1 ? ` (งาน ${j.id})` : ''}</p>
-              <div className="relative">
-                <select
-                  value={j.package_type || ''}
-                  onChange={async e => {
-                    const v = e.target.value || null
-                    await supabase.from('jobs').update({ package_type: v }).eq('id', j.id)
-                    setJobs(prev => prev.map(x => x.id === j.id ? { ...x, package_type: v || '' } : x))
-                  }}
-                  className="field-input appearance-none pr-7">
-                  <option value="">— เลือก Product —</option>
-                  {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-                <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+            <div key={`prod-${j.id}`} className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1">
+                <p className="field-label">Product{jobs.length > 1 ? ` (งาน ${j.id})` : ''}</p>
+                <div className="relative">
+                  <select
+                    value={j.package_type || ''}
+                    onChange={async e => {
+                      const v = e.target.value || null
+                      await supabase.from('jobs').update({ package_type: v }).eq('id', j.id)
+                      setJobs(prev => prev.map(x => x.id === j.id ? { ...x, package_type: v || '' } : x))
+                    }}
+                    className="field-input appearance-none pr-7">
+                    <option value="">— เลือก Product —</option>
+                    {PRODUCT_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="field-label">ประเภทงาน{jobs.length > 1 ? ` (งาน ${j.id})` : ''}</p>
+                <div className="relative">
+                  <select
+                    value={j.work_type || ''}
+                    onChange={async e => {
+                      const v = e.target.value || null
+                      await supabase.from('jobs').update({ work_type: v }).eq('id', j.id)
+                      setJobs(prev => prev.map(x => x.id === j.id ? { ...x, work_type: v || '' } : x))
+                      // Keep the card's copy in step too, so the edit form and
+                      // anything else reading customer.jobs agrees with this.
+                      onUpdate({ ...customer, jobs: (((customer as any).jobs as JobMeta[]) || [])
+                        .map(x => x.id === j.id ? { ...x, work_type: v } : x) } as any)
+                    }}
+                    className="field-input appearance-none pr-7"
+                    style={!j.work_type ? { borderColor: 'color-mix(in srgb, var(--accent-orange) 55%, transparent)' } : undefined}>
+                    <option value="">— เลือกประเภทงาน —</option>
+                    {WORK_TYPES.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
+                </div>
               </div>
             </div>
           ))}
@@ -828,8 +942,8 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   // scope. Demanding either up front only produces guesses —
                   // 37 of 52 live prospects have no budget precisely because
                   // nobody knew it on day one.
-                  if (s.value === 'quoted' && !(customer.budget > 0)) {
-                    await showAlert('ยังไม่ได้ระบุงบประมาณ — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกงบก่อนย้ายสถานะ')
+                  if (s.value === 'quoted' && !((focusJobMeta?.revenue_inc_vat || 0) > 0)) {
+                    await showAlert('ยังไม่ได้ระบุมูลค่างาน — เสนอราคาแล้วต้องมีตัวเลข กรุณากรอกมูลค่างานก่อนย้ายสถานะ')
                     return
                   }
                   // Ask the job, not the customer. A repeat order creates a new
@@ -841,10 +955,22 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   // page offers no way to fill it. The job is the right thing to
                   // ask anyway — one customer can order two different kinds of
                   // work, and only the job knows which is which.
-                  const workType = (focusJobMeta?.work_type || '').trim()
-                  if (s.value === 'booked' && !workType) {
-                    await showAlert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงานก่อนย้ายสถานะ')
-                    return
+                  //
+                  // Ask the database, not the card. The card's copy of the job
+                  // is assembled in several places — creating a prospect, saving
+                  // the edit form, the repeat order — and any one of them that
+                  // forgets to carry work_type makes this guard reject a job that
+                  // has one. That is exactly what happened: a prospect created
+                  // with ประเภทงาน filled in could not be booked until the page
+                  // was reloaded, because the card built at creation left the
+                  // field out. One read is cheaper than trusting every writer.
+                  if (s.value === 'booked' && focusJobId) {
+                    const { data: fresh } = await supabase.from('jobs')
+                      .select('work_type').eq('id', focusJobId).maybeSingle()
+                    if (!((fresh?.work_type || '').trim())) {
+                      await showAlert('ยังไม่ได้ระบุประเภทงาน — จองแล้วต้องรู้ว่าเป็นงานแบบไหน กรุณาเลือกประเภทงาน (ช่องข้าง Product) ก่อนย้ายสถานะ')
+                      return
+                    }
                   }
                   // Reaching จอง has to set working_status too. A prospect's job row
                   // is created with working_status null, and every page that lists
@@ -855,9 +981,8 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   const jobPatch: Record<string, unknown> = { crm_stage: s.value }
                   if (s.value === 'booked') jobPatch.working_status = 'จอง'
                   if (focusJobId) await supabase.from('jobs').update(jobPatch).eq('id', focusJobId)
-                  await supabase.from('customers').update({ status: s.value }).eq('id', customer.id)
                   const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, ...jobPatch } : j) : (customer as any).jobs
-                  onUpdate({ ...customer, status: s.value, jobs: updatedJobs } as any)
+                  onUpdate({ ...customer, jobs: updatedJobs } as any)
                 }}
                   className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-colors"
                   style={{ background: s.chip, color: '#fff', border: `1px solid ${s.border}` }}>
@@ -867,9 +992,8 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               {effectiveStage !== 'lost' && (
                 <button onClick={async () => {
                   if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'lost' }).eq('id', focusJobId)
-                  await supabase.from('customers').update({ status: 'lost' }).eq('id', customer.id)
                   const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'lost' } : j) : (customer as any).jobs
-                  onUpdate({ ...customer, status: 'lost', jobs: updatedJobs } as any)
+                  onUpdate({ ...customer, jobs: updatedJobs } as any)
                 }}
                   className="px-2.5 py-1 rounded-[8px] text-label font-semibold transition-colors"
                   style={{ background: 'color-mix(in srgb, var(--accent-red) 20%, transparent)', color: '#fff', border: '1px solid color-mix(in srgb, var(--accent-red) 50%, transparent)' }}>
@@ -899,12 +1023,19 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                 <Input label="ห้องที่สนใจ" value={form.interested_room} onChange={e => setForm(p => ({ ...p, interested_room: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input label="งบประมาณ" type="number" value={String(form.budget || '')} onChange={e => setForm(p => ({ ...p, budget: Number(e.target.value) }))} />
+                <Input label="มูลค่างาน (ประมาณ)" type="number" value={String(form.budget || '')} onChange={e => setForm(p => ({ ...p, budget: Number(e.target.value) }))} />
                 <Select label="ช่องทาง" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} options={SOURCE_OPTS} />
               </div>
-              <Select label="สถานะ" value={form.status}
-                onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-                options={STAGES.filter(s => s.value !== 'closed' || form.status === 'closed').map(s => ({ value: s.value, label: s.label }))} />
+              {/* ประเภทงาน is offered when the prospect is created but was not
+                  editable afterwards, and moving to จอง refuses to proceed
+                  without it — so a prospect saved without one could not be
+                  booked from this page at all, only by going round through Job
+                  Registry. It writes to the job, which is where work_type lives. */}
+              <Select label="ประเภทงาน" value={form.work_type}
+                onChange={e => setForm(p => ({ ...p, work_type: e.target.value }))}
+                options={[{ value: '', label: '— เลือก —' }, ...WORK_TYPES.map(w => ({ value: w, label: w }))]} />
+              {/* No status picker: use the ย้ายสถานะ buttons, which move the
+                  job this card is for rather than the whole customer. */}
               <div><p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>มอบหมายให้</p>
                 <SearchableSelect
                   value={form.assigned_to}
@@ -1084,35 +1215,24 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             // customer's cancel_* columns were dropped on 2026-08-25, and writing
             // cancel_notes to a column that no longer exists failed the whole
             // update, so the cancel button stopped working until this change.
-            const { error: cancelErr } = await supabase.from('customers').update({
-              status: 'lost',
-            }).eq('id', customer.id)
-            if (cancelErr) { await showAlert(`บันทึกการยกเลิกไม่สำเร็จ: ${cancelErr.message}`); return }
+            // Shared with My Deals and JobDrawer — see lib/jobLifecycle.
             if (focusJobId) {
-              await supabase.from('jobs').update({
-                crm_stage: 'lost', working_status: 'ยกเลิก',
-                cancel_type: type, cancel_date: date || null,
-                cancel_amount: amount || null, cancel_notes: notes || null,
-              }).eq('id', focusJobId)
+              const fj = jobOf(customer, focusJobId)
+              const res = await cancelJob(supabase, {
+                id: focusJobId,
+                customer_id: customer.id,
+                customer_name: customer.customer_name,
+                room_no: fj?.room_no ?? null,
+              }, { type, amount, date, notes })
+              if (!res.ok) { await showAlert(res.error!); return }
+              if (res.warning) await showAlert(res.warning)
             }
-            // Only a refund moves money. A forfeited deposit was already banked and
-            // already counted as รายรับ when the instalment was marked paid —
-            // adding an income row here counted the same ฿ twice.
-            if (type === 'refund' && amount > 0) {
-              const { error: finErr } = await supabase.from('finance_entries').insert({
-                type: 'expense',
-                category: 'คืนเงินยกเลิก',
-                amount,
-                entry_date: date,
-                description: `คืนเงินยกเลิก: ${customer.customer_name}${notes ? ' — ' + notes : ''}`,
-                // The job id, not the customer id — JobDrawer already writes the job,
-                // and a finance row that sometimes holds one and sometimes the other
-                // cannot be traced back reliably.
-                ref_id: focusJobId || customer.id,
-                created_by: await appUserId(supabase),
-              })
-              if (finErr) await showAlert(`ยกเลิกแล้ว แต่บันทึกรายการเงินไม่สำเร็จ: ${finErr.message}`)
-            }
+            // A prospect with no job row used to be closed by writing
+            // customers.status = 'lost' here. That column is gone — stage lives
+            // on the job now — so the write could only fail and stop the
+            // cancellation with an error. Nothing takes its place: with no job
+            // there is nothing to mark, and the card is driven by the jobs the
+            // customer holds.
             onUpdate({ ...customer, status: 'lost', cancel_type: type, cancel_amount: amount || null } as any)
             setShowCancel(false)
           }}
@@ -1124,7 +1244,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
 
 // ─── Start Job Modal ────────────────────────────────────────
 type BookingData = {
-  booking_value: number | null; customer_type: string | null; work_type: string | null; job_type: string | null
+  customer_type: string | null
 }
 
 function StartJobModal({ customer, users, onClose, onSaved }: {
@@ -1133,32 +1253,32 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
 }) {
   const supabase = createClient()
   const [roomNo, setRoomNo] = useState(customer.interested_room || '')
-  const [revenue, setRevenue] = useState(customer.budget || 0)
+  const [revenue, setRevenue] = useState(0)
   const [workType, setWorkType] = useState('N-RPT/Event')
   const [custType, setCustType] = useState<'B2C' | 'B2B'>('B2C')
   const [pkgType, setPkgType] = useState('')
   const [orderDate, setOrderDate] = useState(todayStr())
-  const [salesId, setSalesId] = useState(customer.assigned_to || '')
+  const [salesId, setSalesId] = useState(salesIdOf(customer) || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [booking, setBooking] = useState<BookingData | null>(null)
 
   const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--divider)', color: 'var(--text-1)' }
-  const revenueEx = revenue ? Math.round(revenue / 1.07) : 0
+  const revenueEx = revenue ? exVatOf(revenue) : 0
 
   // Fetch booking data to pre-fill
   useEffect(() => {
+    // Only customer_type survives on customers. booking_value and job_type were
+    // dropped (3 and 1 rows), and work_type was never in this select at all —
+    // `b.work_type` had been reading undefined since customers.work_type went.
     supabase.from('customers')
-      .select('booking_value,customer_type,job_type')
+      .select('customer_type')
       .eq('id', customer.id).single()
       .then(({ data }) => {
         if (!data) return
         const b = data as BookingData
         setBooking(b)
-        if (b.booking_value) setRevenue(b.booking_value)
-        if (b.work_type) setWorkType(b.work_type)
         if (b.customer_type === 'B2B') setCustType('B2B')
-        if (b.job_type) setPkgType(b.job_type)
       })
   }, [customer.id])
 
@@ -1175,16 +1295,15 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
       return Math.max(max, n)
     }, 0)
     const jobId = `JOB-${String(maxNum + 1).padStart(3, '0')}`
-    const baseId = `${customer.project_id}-${roomNo.trim()}`
-    const isB2B = custType === 'B2B'
-    // If B2B and a B2C customer record already exists for this room, use separate ID
-    const { data: existingCustomer } = await supabase.from('customers').select('id, customer_type').eq('id', baseId).maybeSingle()
-    const customerId = isB2B && existingCustomer && existingCustomer.customer_type !== 'B2B' ? `${baseId}-B2B` : baseId
+    const customerId = await resolveCustomerId(supabase, {
+      projectId: customer.project_id, roomNo: roomNo.trim(),
+      customerName: customer.customer_name, customerType: custType,
+    })
 
     // Upsert job-customer record (FK)
     await supabase.from('customers').upsert({
       id: customerId, project_id: customer.project_id,
-      customer_name: customer.customer_name, customer_type: custType, status: 'closed',
+      customer_name: customer.customer_name, customer_type: custType,
     }, { onConflict: 'id', ignoreDuplicates: true })
 
     // Insert job
@@ -1204,7 +1323,6 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
     if (jobErr) { setError('เกิดข้อผิดพลาด: ' + jobErr.message); setSaving(false); return }
 
     // Update pipeline prospect to closed
-    await supabase.from('customers').update({ status: 'closed' }).eq('id', customer.id)
     setSaving(false); onSaved(); onClose()
   }
 
@@ -1223,13 +1341,11 @@ function StartJobModal({ customer, users, onClose, onSaved }: {
         </div>
         <div className="p-5 space-y-3">
           {/* Booking data banner */}
-          {booking && booking.booking_value && (
+          {booking && (
             <div className="rounded-[8px] px-3 py-2.5 flex flex-col gap-1"
               style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-green) 25%, transparent)' }}>
-              <p className="text-label font-semibold" style={{ color: 'var(--accent-green)' }}>พบข้อมูล Booking</p>
-              <p className="text-label" style={{ color: 'var(--text-2)' }}>
-                ฿{booking.booking_value.toLocaleString()} · {booking.customer_type || '—'} · {booking.job_type || '—'}
-              </p>
+              <p className="text-label font-semibold" style={{ color: 'var(--accent-green)' }}>พบข้อมูลจอง</p>
+              <p className="text-label" style={{ color: 'var(--text-2)' }}>{booking.customer_type || '—'}</p>
             </div>
           )}
           <div>
@@ -1384,12 +1500,17 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
 // ─── Add/Edit modal form ────────────────────────────────────
 function CustomerForm({ initial, projects, users, onSave, onClose }: {
   initial?: typeof emptyForm; projects: Project[]; users: User[]
-  onSave: (data: typeof emptyForm) => Promise<string | null>; onClose: () => void
+  onSave: (data: typeof emptyForm, ackNameWarn?: boolean) => Promise<string | null>; onClose: () => void
 }) {
   const isAdd = !initial
   const [form, setForm] = useState(isAdd ? { ...emptyForm, status: 'new' } : initial)
   const [saving, setSaving] = useState(false)
   const [errMsg, setErrMsg] = useState<string | null>(null)
+  // A near-duplicate company name is a warning, not a rule. Two records for the
+  // same developer in the same project are usually the same buyer typed twice —
+  // but not always, so the second submit goes through. Reset whenever the name
+  // is edited, so acknowledging one name never waves through the next.
+  const [nameWarn, setNameWarn] = useState<string | null>(null)
   const s = (k: keyof typeof emptyForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(p => ({ ...p, [k]: e.target.value }))
 
@@ -1413,14 +1534,22 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
     }
     setSaving(true)
     setErrMsg(null)
-    const err = await onSave(form)
+    const err = await onSave(form, !!nameWarn)
     setSaving(false)
+    if (err && err.startsWith('WARN:')) { setNameWarn(err.slice(5)); return }
     if (err) setErrMsg(err)
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <Input label="ชื่อลูกค้า *" value={form.customer_name} onChange={s('customer_name')} autoFocus />
+      <Input label="ชื่อลูกค้า *" value={form.customer_name}
+        onChange={e => { setNameWarn(null); setForm(p => ({ ...p, customer_name: e.target.value })) }} autoFocus />
+      {nameWarn && (
+        <p className="text-xs py-1.5 px-2 rounded-[8px]"
+          style={{ color: 'var(--accent-orange)', background: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)' }}>
+          {nameWarn} — กดบันทึกอีกครั้งหากเป็นคนละราย
+        </p>
+      )}
       {/* One of the two, not both — a single asterisk on each would have read as
           "fill in both", so the requirement is spelled out under the pair. */}
       <div>
@@ -1458,13 +1587,11 @@ function CustomerForm({ initial, projects, users, onSave, onClose }: {
       <Select label="ประเภทงาน" value={form.work_type} onChange={s('work_type')}
         options={[{ value: '', label: '— เลือก —' }, ...WORK_TYPES.map(t => ({ value: t, label: t }))]} />
       <div className="grid grid-cols-2 gap-3">
-        <Input label="งบประมาณ" type="number" value={String(form.budget || '')} onChange={e => setForm(p => ({ ...p, budget: Number(e.target.value) }))} />
+        <Input label="มูลค่างาน (ประมาณ)" type="number" value={String(form.budget || '')} onChange={e => setForm(p => ({ ...p, budget: Number(e.target.value) }))} />
         <Select label="ช่องทาง" value={form.source} onChange={s('source')} options={SOURCE_OPTS} />
       </div>
-      {!isAdd && (
-        <Select label="สถานะ" value={form.status} onChange={s('status')}
-          options={STAGES.filter(st => st.value !== 'closed' || form.status === 'closed').map(st => ({ value: st.value, label: st.label }))} />
-      )}
+      {/* Stage moved out of this form: it belongs to the job, and a customer
+          with several jobs has no single stage to edit here. */}
       <div><p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>มอบหมายให้ (Sales)</p>
         <SearchableSelect value={form.assigned_to}
           onChange={v => setForm(p => ({ ...p, assigned_to: String(v) }))}
@@ -1516,19 +1643,38 @@ export default function ProspectsKanbanPage() {
 
   // Thin wrapper over the shared helper — the page's callers pass positional
   // args and today's date, which is what a prospect opened here means.
-  async function createProspectJob(customerId: string, custName: string, projectId: string | null, roomNo: string | null, custType: string, workType: string | null, salesId: string | null, crmStage: string, notes?: string | null): Promise<string> {
+  async function createProspectJob(customerId: string, custName: string, projectId: string | null, roomNo: string | null, custType: string, workType: string | null, salesId: string | null, crmStage: string, notes?: string | null, revenueIncVat?: number | null): Promise<string> {
     return createProspectJobShared(supabase, {
       customerId, customerName: custName, projectId, roomNo,
       customerType: custType, workType, salesId, crmStage, orderDate: todayStr(),
-      notes: notes || null,
+      notes: notes || null, revenueIncVat: revenueIncVat ?? null,
     })
   }
+
+  /** The exact shape the board renders. Kept in one place because every write
+   *  that adds a customer or a job has to hand the board a row of this shape —
+   *  and each time one of them was assembled by hand instead, a field went
+   *  missing and the card was wrong until the page was reloaded: first the work
+   *  type, then the salesperson's name, then the revenue. Re-reading the row the
+   *  database just wrote is one round trip and cannot drift. */
+  const CUSTOMER_SELECT = 'id, customer_name, phone, email, line_id, source, project_id, interested_room, created_at, customer_type, projects(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date, sales_id, sales:users!jobs_sales_id_fkey(name))'
+
+  /** Re-read one customer and drop it into the list, replacing any existing
+   *  copy. Use after any write that changes what a card shows. */
+  const refreshCustomer = useCallback(async (customerId: string) => {
+    const { data } = await supabase.from('customers').select(CUSTOMER_SELECT).eq('id', customerId).maybeSingle()
+    if (!data) return
+    setCustomers(prev => {
+      const without = prev.filter(c => c.id !== customerId)
+      return [data as any, ...without]
+    })
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
     const [{ data: cData }, { data: pData }, { data: uData }, { data: jData }] = await Promise.all([
       supabase.from('customers')
-        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date)')
+        .select('id, customer_name, phone, email, line_id, source, project_id, interested_room, created_at, customer_type, projects(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date, sales_id, sales:users!jobs_sales_id_fkey(name))')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name').eq('active', true).order('name'),
       supabase.from('users').select('id, name').eq('active', true).in('dept', ['Sales Executive', 'Administration']).order('name'),
@@ -1562,12 +1708,31 @@ export default function ProspectsKanbanPage() {
   useEffect(() => { load() }, [load])
 
 
-  async function addCustomer(form: typeof emptyForm, skipRoomCheck = false): Promise<string | null> {
+  async function addCustomer(form: typeof emptyForm, ackNameWarn = false, skipRoomCheck = false): Promise<string | null> {
     // Check: must have project
     if (!form.project_id) {
       if (projects.length === 0)
         return 'ยังไม่มีโครงการในระบบ — กรุณาสร้างโครงการก่อนที่หน้า Projects'
       return 'กรุณาเลือกโครงการก่อน'
+    }
+
+    // Near-duplicate company name in the same project. B2B names are long and
+    // get pasted, and the wrapper moves around — "บริษัท ก จำกัด" one time, "ก"
+    // the next — so an exact match catches none of it. nameKey strips the
+    // wrapper and the case, which is how ออริจิ้น เพลย์ ศรีอุดม would have been
+    // caught before it became two records. A warning only: the salesperson can
+    // confirm and continue. See lib/customerName.ts.
+    if (!ackNameWarn && (form.customer_type || 'B2C') === 'B2B' && form.project_id) {
+      const key = nameKey(form.customer_name)
+      if (key) {
+        const { data: sameProject } = await supabase
+          .from('customers')
+          .select('id, customer_name')
+          .eq('project_id', form.project_id)
+          .eq('customer_type', 'B2B')
+        const near = (sameProject || []).find(c => nameKey(c.customer_name) === key)
+        if (near) return `WARN:มีลูกค้า B2B ชื่อใกล้เคียงในโครงการนี้แล้ว — "${near.customer_name}" (${near.id})`
+      }
     }
 
     // Duplicate check: same phone OR same project+room
@@ -1609,8 +1774,12 @@ export default function ProspectsKanbanPage() {
           // different buyer and gets their own record. Twenty rooms in the data
           // are one person split across two records because this always made a
           // new one.
-          const typed = form.customer_name.trim().toLowerCase()
-          const sameName = roomDups.find(c => (c.customer_name || '').trim().toLowerCase() === typed)
+          // Compared through nameKey, not trim/lowercase: a name pasted out of
+          // a PDF carries a non-breaking or doubled space, matched nothing, and
+          // opened a second record for a buyer who already had one. See
+          // lib/customerName.ts.
+          const typed = nameKey(form.customer_name)
+          const sameName = roomDups.find(c => nameKey(c.customer_name) === typed)
           const owner = sameName || roomDups[0]
           setAddModal(false)
           setDupRoomCustomer({
@@ -1629,15 +1798,11 @@ export default function ProspectsKanbanPage() {
       }
     }
 
-    let newId: string
-    if (form.project_id && form.interested_room.trim()) {
-      const base = `${form.project_id}-${form.interested_room.trim().toUpperCase()}`
-      const taken = customers.filter(c => c.id === base || c.id.startsWith(base + '-')).length
-      newId = taken === 0 ? base : `${base}-${taken + 1}`
-    } else {
-      const nums = customers.map(c => parseInt(c.id.replace('CST-', ''))).filter(n => !isNaN(n))
-      newId = 'CST-' + String(nums.length > 0 ? Math.max(...nums) + 1 : 1).padStart(4, '0')
-    }
+    // One code scheme for everyone. This used to build `PROJECT-ROOM` whenever a
+    // room was known and fall back to CST- only otherwise, which left the
+    // register holding two formats — and the room-shaped half went stale the
+    // moment a buyer took a second room. See lib/customerId.ts.
+    const newId = await nextCustomerId(supabase)
 
     // `notes` and `work_type` were dropped from customers in the step-3 column
     // clean-up: they describe an order, not a person, so they live on the job.
@@ -1646,18 +1811,24 @@ export default function ProspectsKanbanPage() {
     // *deleted*, not set to undefined: supabase-js builds the `columns` query
     // param from Object.keys, which still lists a key whose value is undefined.
     // See lib/ownership.ts.
-    const { notes: _formNotes, work_type: _formWorkType, ...customerFields } = form
+    const { notes: _formNotes, work_type: _formWorkType, status: _formStatus, assigned_to: _formSales, ...customerFields } = form
     const { data, error } = await supabase.from('customers').insert([{
       id: newId, ...customerFields,
-      project_id: form.project_id || null, assigned_to: form.assigned_to || null, budget: form.budget || 0,
+      customer_name: cleanName(form.customer_name),
+      project_id: form.project_id || null,
+      // budget is not written any more — the number goes on the job that
+      // createProspectJob opens below.
       customer_type: form.customer_type || 'B2C',
-    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, budget, status, assigned_to, created_at, customer_type, projects(name), users!customers_assigned_to_fkey(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date)').single()
+    }]).select('id, customer_name, phone, email, line_id, source, project_id, interested_room, created_at, customer_type, projects(name), jobs(id, order_date, revenue_inc_vat, working_status, crm_stage, work_type, room_no, notes, cancel_type, cancel_amount, cancel_date, sales_id, sales:users!jobs_sales_id_fkey(name))').single()
     if (error) return error.message
     if (data) {
       const crmStage = form.status || 'new'
-      const jobId = await createProspectJob(newId, form.customer_name, form.project_id || null, form.interested_room || null, form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null, crmStage, form.notes)
-      const customerWithJob = { ...data, jobs: jobId ? [{ id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: crmStage }] : [] }
-      setCustomers(prev => [customerWithJob as any, ...prev])
+      const jobId = await createProspectJob(newId, cleanName(form.customer_name), form.project_id || null, form.interested_room || null, form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null, crmStage, form.notes, form.budget || 0)
+      // Read the row back instead of assembling it. Hand-built copies kept
+      // losing a field — work type, then the salesperson, then the revenue —
+      // and each one looked like its own bug to whoever hit it. See
+      // refreshCustomer.
+      await refreshCustomer(newId)
       setActiveStage(crmStage)
       setAddModal(false)
     }
@@ -1667,7 +1838,7 @@ export default function ProspectsKanbanPage() {
   async function confirmAddNewJob() {
     if (!pendingAddForm) return
     setDupRoomCustomer(null)
-    await addCustomer(pendingAddForm, true)
+    await addCustomer(pendingAddForm, true, true)
     setPendingAddForm(null)
   }
 
@@ -1683,25 +1854,14 @@ export default function ProspectsKanbanPage() {
     const jobId = await createProspectJob(
       owner.id, owner.customer_name, form.project_id || null, form.interested_room || null,
       form.customer_type || 'B2C', form.work_type || null, form.assigned_to || null,
-      form.status || 'new', form.notes,
+      form.status || 'new', form.notes, Number(form.budget) || 0,
     )
-    // Budget belongs to the person, so only fill it in when they had none —
-    // a second order is no reason to overwrite the first one's number.
-    const newBudget = Number(form.budget) || 0
-    if (newBudget > 0) {
-      await supabase.from('customers').update({ budget: newBudget }).eq('id', owner.id)
-    }
+    // The value went in with the job above (createProspectJob). It used to be
+    // written to customers.budget here, which overwrote the number belonging to
+    // whatever room this buyer ordered first.
     setDupRoomAdding(false)
     if (jobId) {
-      setCustomers(prev => prev.map(x => x.id !== owner.id ? x : ({
-        ...x,
-        budget: newBudget > 0 ? newBudget : x.budget,
-        jobs: [...(((x as any).jobs as JobMeta[]) || []), {
-          id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null,
-          crm_stage: form.status || 'new', work_type: form.work_type || null,
-          room_no: form.interested_room || null, notes: form.notes || null,
-        }],
-      } as any)))
+      await refreshCustomer(owner.id)
       setActiveStage(form.status || 'new')
     }
     setDupRoomCustomer(null)
@@ -1713,29 +1873,21 @@ export default function ProspectsKanbanPage() {
     if (!repeatJobForm.project_id || !repeatJobForm.room.trim() || !repeatJobForm.work_type) return
     setRepeatAdding(true)
     const c = repeatConfirm
-    const salesId = repeatJobForm.assigned_to || c.assigned_to
-    const jobId = await createProspectJob(c.id, c.customer_name, repeatJobForm.project_id, repeatJobForm.room.trim(), (c as any).customer_type || 'B2C', repeatJobForm.work_type, salesId, 'new')
-    // update customer's assigned_to if sales changed
-    if (repeatJobForm.assigned_to && repeatJobForm.assigned_to !== c.assigned_to) {
-      await supabase.from('customers').update({ assigned_to: repeatJobForm.assigned_to }).eq('id', c.id)
+    const salesId = repeatJobForm.assigned_to || salesIdOf(c)
+    const jobId = await createProspectJob(c.id, c.customer_name, repeatJobForm.project_id, repeatJobForm.room.trim(), (c as any).customer_type || 'B2C', repeatJobForm.work_type, salesId, 'new', null, Number(repeatJobForm.budget) || 0)
+    // Changing the sales on a repeat purchase re-assigns the customer's whole
+    // book (option 1). The customers copy is kept in step until the column goes.
+    if (repeatJobForm.assigned_to && repeatJobForm.assigned_to !== salesIdOf(c)) {
+      await supabase.from('jobs').update({ sales_id: repeatJobForm.assigned_to }).eq('customer_id', c.id)
     }
-    // update customer's budget if entered
-    const newBudget = Number(repeatJobForm.budget) || 0
-    if (newBudget > 0) {
-      await supabase.from('customers').update({ budget: newBudget }).eq('id', c.id)
-    }
+    // Same as above: the repeat order's value goes on the repeat order's job,
+    // not onto the customer where it would overwrite the previous room's number.
     setRepeatAdding(false)
     if (jobId) {
-      setCustomers(prev => prev.map(x => {
-        if (x.id !== c.id) return x
-        const prevJobs = ((x as any).jobs as JobMeta[] || [])
-        return {
-          ...x,
-          budget: newBudget > 0 ? newBudget : x.budget,
-          assigned_to: repeatJobForm.assigned_to || x.assigned_to,
-          jobs: [...prevJobs, { id: jobId, order_date: null, revenue_inc_vat: 0, working_status: null, crm_stage: 'new' }]
-        } as any
-      }))
+      // Was assembled by hand and the new entry carried no room_no and no
+      // work_type — so the repeat card grouped under the blank-room key and
+      // read as a copy of the first order rather than a new one.
+      await refreshCustomer(c.id)
       setActiveStage('new')
       setRepeatConfirm(null)
       setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' })
@@ -1759,9 +1911,11 @@ export default function ProspectsKanbanPage() {
     setDeleting(true)
     const { c, jobId, hasMultipleJobs } = deleteTarget
     if (jobId) {
-      // Delete single job (and its payments)
-      await supabase.from('payments').delete().eq('job_id', jobId)
-      await supabase.from('jobs').delete().eq('id', jobId)
+      // ลบงานพร้อมทุกอย่างที่ผูกอยู่ และ**ต้องรู้ผลก่อน**จึงแตะหน้าจอ — เดิมลบ
+      // payments แล้วลบ jobs โดยไม่เช็ค error การ์ดจึงหายไปจากจอทั้งที่งานยังอยู่
+      // ดู lib/deleteJob.ts
+      const res = await deleteJobCascade(supabase, jobId)
+      if (!res.ok) { setDeleting(false); await showAlert(res.error!); return }
       if (!hasMultipleJobs) {
         // Only job removed — also delete customer
         await supabase.from('customers').delete().eq('id', c.id)
@@ -1777,13 +1931,10 @@ export default function ProspectsKanbanPage() {
       }
     } else {
       // Delete all jobs then customer
-      const altId = c.project_id && c.interested_room ? `${c.project_id}-${c.interested_room}` : null
-      const ids = altId && altId !== c.id ? [c.id, altId] : [c.id]
-      const { data: linked } = await supabase.from('jobs').select('id').in('customer_id', ids)
+      const { data: linked } = await supabase.from('jobs').select('id').eq('customer_id', c.id)
       if (linked && linked.length > 0) {
-        const jobIds = linked.map(j => j.id)
-        await supabase.from('payments').delete().in('job_id', jobIds)
-        await supabase.from('jobs').delete().in('id', jobIds)
+        const res = await deleteJobsCascade(supabase, linked.map(j => j.id))
+        if (!res.ok) { setDeleting(false); await showAlert(res.error!); return }
       }
       const { error } = await supabase.from('customers').delete().eq('id', c.id)
       if (!error) {
@@ -1815,9 +1966,9 @@ export default function ProspectsKanbanPage() {
    *  the other tabs, whose filter is the stage they are not at. They render as
    *  customer cards beside the booked jobs until someone opens a job for them. */
   const bookedNoJob = customers.filter(c =>
-    c.status === 'booked' && ((((c as any).jobs as JobMeta[] | null) || []).length === 0)
+    (((c as any).jobs as JobMeta[] | null) || []).length === 0
     && (!filterProject || c.project_id === filterProject)
-    && (!filterSales || c.assigned_to === filterSales))
+    && (!filterSales || salesIdOf(c) === filterSales))
   const addSearchResults = addSearchQ.length >= 1
     ? customers.filter(c => {
         const q = addSearchQ.toLowerCase()
@@ -1825,17 +1976,26 @@ export default function ProspectsKanbanPage() {
       }).slice(0, 6)
     : []
   const list = allCards.filter(card => {
-    const cardStage = card.jobCrmStage ?? card.c.status
+    // Every job carries its own crm_stage (verified: 0 null), so there is no
+    // customer-level status to fall back to any more.
+    const cardStage = card.jobCrmStage
     if (!search && cardStage !== activeStage) return false
     if (filterProject && card.c.project_id !== filterProject) return false
-    if (filterSales && card.c.assigned_to !== filterSales) return false
+    if (filterSales && jobOf(card.c, card.jobId).sales_id !== filterSales) return false
     if (search) {
       const q = search.toLowerCase().replace(/[-\s]/g, '')
-      const room = (card.c.interested_room || '').toLowerCase().replace(/[-\s]/g, '')
+      // Match the room the card actually shows — the job's, falling back to the
+      // customer's only for a prospect with no job room yet. Matching both at
+      // once made a search for A603 return Mr.Andrea's A812 card, because his
+      // two records were merged and the surviving one still says A603.
+      const room = (jobOf(card.c, card.jobId).room_no || card.c.interested_room || '')
+        .toLowerCase().replace(/[-\s]/g, '')
       return room.includes(q) || card.c.customer_name.toLowerCase().includes(search.toLowerCase())
     }
     return true
-  }).sort((a, b) => (a.c.interested_room || '').localeCompare(b.c.interested_room || '', 'th', { numeric: true, sensitivity: 'base' }))
+  }).sort((a, b) => compareRoom(
+    jobOf(a.c, a.jobId).room_no || a.c.interested_room,
+    jobOf(b.c, b.jobId).room_no || b.c.interested_room))
 
   return (
     <div className="page-content">
@@ -1844,7 +2004,9 @@ export default function ProspectsKanbanPage() {
       <div>
         <PageHeader
           title="Prospects"
-          subtitle={`${customers.length} ราย`}
+          // Was the record count, which the summary cards below already give.
+          // A subtitle should say what the page is for.
+          subtitle="ลูกค้าที่กำลังติดตาม · แยกตามขั้นการขาย"
           className="mb-4"
           actions={
             <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
@@ -1905,9 +2067,9 @@ export default function ProspectsKanbanPage() {
             const count = s.value === 'booked'
               ? bookedJobs.filter(j => (!filterProject || j.project_id === filterProject) && (!filterSales || j.sales_id === filterSales)).length
                 + bookedNoJob.length
-              : allCards.filter(card => (card.jobCrmStage ?? card.c.status) === s.value
+              : allCards.filter(card => card.jobCrmStage === s.value
                   && (!filterProject || card.c.project_id === filterProject)
-                  && (!filterSales || card.c.assigned_to === filterSales)).length
+                  && (!filterSales || jobOf(card.c, card.jobId).sales_id === filterSales)).length
             const active = activeStage === s.value && !search
             const done = s.value === 'closed' || s.value === 'lost'
             return (
@@ -1940,9 +2102,8 @@ export default function ProspectsKanbanPage() {
           // smaller book than the cards below it show.
           const bookedCount = filtered.length + bookedNoJob.length
           const totalRev = filtered.reduce((s, j) => s + (j.revenue_inc_vat || 0), 0)
-            + bookedNoJob.reduce((s, c) => s + (c.budget || 0), 0)
           const noSales = filtered.filter(j => !j.sales_id).length
-            + bookedNoJob.filter(c => !c.assigned_to).length
+            + bookedNoJob.filter(c => !salesIdOf(c)).length
           return (
             <div className="mb-3 grid grid-cols-3 gap-2">
               <div className="ds-card-sm text-center">
@@ -1962,8 +2123,8 @@ export default function ProspectsKanbanPage() {
             </div>
           )
         }
-        const totalBudget = list.reduce((s, card) => s + (card.c.budget || 0), 0)
-        const noSales = list.filter(card => !card.c.assigned_to).length
+        const totalBudget = list.reduce((s, card) => s + cardValue(card.c, card.jobSeqNo, card.jobRev, card.jobCrmStage), 0)
+        const noSales = list.filter(card => !jobOf(card.c, card.jobId).sales_id).length
         return (
           <div className="mb-3 grid grid-cols-3 gap-2">
             <div className="ds-card-sm text-center">
@@ -2076,7 +2237,7 @@ export default function ProspectsKanbanPage() {
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                       {items.map(({ c, jobSeqNo, jobRev, jobId, jobWorkingStatus, jobCrmStage, cardKey }) => (
-                        <CustomerCard key={cardKey} c={c} stage={resolveStage(jobCrmStage, c.status)} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null); setSelectedJobCrmStage(jobCrmStage || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
+                        <CustomerCard key={cardKey} c={c} stage={resolveStage(jobCrmStage)} onClick={() => { setSelectedCustomer(c); setSelectedJobId(jobId || null); setSelectedJobWorkingStatus(jobWorkingStatus || null); setSelectedJobCrmStage(jobCrmStage || null) }} onDelete={() => triggerDelete(c, jobId)} jobSeqNo={jobSeqNo} jobRev={jobRev} jobId={jobId} jobWorkingStatus={jobWorkingStatus} jobCrmStage={jobCrmStage} />
                       ))}
                     </div>
                   </div>
@@ -2157,7 +2318,7 @@ export default function ProspectsKanbanPage() {
                         (a.order_date || '').localeCompare(b.order_date || '') ||
                         a.id.localeCompare(b.id, undefined, { numeric: true }))[cJobs.length - 1]
                     : undefined
-                  const cStage = resolveStage(newestJob?.crm_stage, c.status)
+                  const cStage = resolveStage(newestJob?.crm_stage)
                   return (
                     <button key={c.id} onClick={() => setRepeatConfirm(c)}
                       className="w-full flex items-center gap-3 p-3 rounded-[10px] text-left transition-all"
@@ -2233,14 +2394,14 @@ export default function ProspectsKanbanPage() {
                   </div>
 
                   {/* Budget (optional) */}
-                  <Input label="งบประมาณ (optional)" type="number" value={repeatJobForm.budget}
+                  <Input label="มูลค่างาน (ประมาณ)" type="number" value={repeatJobForm.budget}
                     onChange={e => setRepeatJobForm(f => ({ ...f, budget: e.target.value }))} />
 
                   {/* Sales */}
                   <div>
                     <p className="text-xs mb-1" style={{ color: 'var(--text-2)' }}>Sales ที่ดูแล</p>
                     <SearchableSelect
-                      value={repeatJobForm.assigned_to || repeatConfirm.assigned_to || ''}
+                      value={repeatJobForm.assigned_to || salesIdOf(repeatConfirm) || ''}
                       onChange={v => setRepeatJobForm(f => ({ ...f, assigned_to: String(v) }))}
                       options={[{ value: '', label: '— ไม่ระบุ —' }, ...users.map(u => ({ value: u.id, label: u.name }))]}
                     />
@@ -2325,7 +2486,7 @@ export default function ProspectsKanbanPage() {
               {deleteTarget.jobId && deleteTarget.hasMultipleJobs
                 ? <>ต้องการลบ <strong style={{ color: 'var(--text-1)' }}>งานงานที่ {((deleteTarget.c as any).jobs as JobMeta[])
                     ?.sort((a, b) => ((a.order_date || a.id) < (b.order_date || b.id) ? -1 : 1))
-                    ?.findIndex(j => j.id === deleteTarget.jobId) + 1}</strong> ของห้อง <strong style={{ color: 'var(--text-1)' }}>{deleteTarget.c.interested_room}</strong> ใช่ไหม?</>
+                    ?.findIndex(j => j.id === deleteTarget.jobId) + 1}</strong> ของห้อง <strong style={{ color: 'var(--text-1)' }}>{jobOf(deleteTarget.c, deleteTarget.jobId).room_no || deleteTarget.c.interested_room}</strong> ใช่ไหม?</>
                 : <>ต้องการลบ <strong style={{ color: 'var(--text-1)' }}>{deleteTarget.c.customer_name}</strong> ออกจาก Pipeline ใช่ไหม?</>
               }
             </p>

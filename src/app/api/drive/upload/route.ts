@@ -3,6 +3,7 @@ import { google } from 'googleapis'
 import { Readable } from 'stream'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { requireWriter } from '@/lib/serverAuth'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'application/pdf']
 const MAX_SIZE = 5 * 1024 * 1024
@@ -56,6 +57,9 @@ export async function POST(req: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const denied = await requireWriter()
+    if (denied) return denied
 
     const formData = await req.formData()
     const jobId = formData.get('job_id') as string | null

@@ -10,21 +10,33 @@ import PeriodPicker from '@/components/ui/PeriodPicker'
 import { getPeriodBounds, MONTHS_TH, beYear, type PeriodUnit } from '@/lib/period'
 import { crmStage, FUNNEL_ORDER, workCategory } from '@/lib/status'
 import { baht, bahtShort } from '@/lib/money'
+import { fetchAllRows } from '@/lib/fetchAll'
+import {
+  buildScorecard, settledByJob, pipelineFor, isIntragroup,
+  type ScorecardJob, type ScorecardPayment,
+} from '@/lib/salesScorecard'
 
 type Customer = {
-  id: string; status: string; budget: number; customer_type: string
-  source: string; assigned_to: string; created_at: string
+  id: string; customer_type: string
+  source: string; created_at: string
   users?: { name: string }
 }
 
 type Job = {
   id: string; order_date: string; work_start_date: string; actual_deliver_date: string
   revenue_ex_vat: number; revenue_inc_vat: number; work_type: string; customer_type: string
-  working_status: string; sales_id: string
+  working_status: string; sales_id: string; crm_stage: string; customer_id: string | null
   sales?: { name: string }
   projects?: { name: string }
 }
-type PaidPayment = { paid_amount: number; paid_date: string; job_id: string; jobs: { sales_id: string } | null }
+type PaidPayment = {
+  paid_amount: number; paid_date: string; job_id: string
+  // amount + voucher_amount are what buildScorecard settles with: a null
+  // paid_amount falls back to the instalment amount, and a voucher is a
+  // discount that settles the row rather than money still owed.
+  amount: number; voucher_amount: number; status: string
+  jobs: { sales_id: string } | null
+}
 
 
 const f = baht
@@ -32,6 +44,8 @@ const f = baht
 // shows the full value below a million instead, and MB. above it.
 const fk = bahtShort
 const pct = (a: number, b: number) => b > 0 ? Math.round(a / b * 100) : 0
+/** ประเภทงาน dropdown value that means "drop the affiliated-company contracts". */
+const NO_IG = 'NO_INTRAGROUP'
 
 
 const ld = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
@@ -54,10 +68,21 @@ export default function ExecutivePage() {
   // being counted as whichever one the test happened to fall through to.
   const [filterWorkType, setFilterWorkType] = useState('')
   const matchWork = (wt: string | null | undefined) =>
-    !filterWorkType || workCategory(wt) === filterWorkType
+    !filterWorkType || filterWorkType === NO_IG || workCategory(wt) === filterWorkType
+  /* One scope test for every tab. NO_IG is not a work category — it drops the
+     affiliated-company contracts (B2B + RPT), which no combination of the two
+     dropdowns could express on their own: picking B2B keeps all B2B and picking
+     RPT keeps all RPT. Excluding them used to be hard-coded inside the money
+     buckets, which is why Sales Performance and Payments disagreed by ฿1.28 MB.
+     on one person with nothing on screen to explain it. */
+  const inScope = (j: { customer_type?: string | null; work_type?: string | null }) =>
+    (!filterCustType || j.customer_type === filterCustType)
+    && matchWork(j.work_type)
+    && (filterWorkType !== NO_IG || !isIntragroup(j))
   const [allPayments, setAllPayments] = useState<PaidPayment[]>([])
-  const [mainTab, setMainTab] = useState<'performance' | 'team'>('performance')
-  const [teamUsers, setTeamUsers] = useState<{ id: string; name: string; manager_id: string | null }[]>([])
+  const [mainTab, setMainTab] = useState<'performance' | 'team' | 'individual'>('performance')
+  const [teamUsers, setTeamUsers] = useState<{ id: string; name: string; manager_id: string | null; role: string }[]>([])
+  const [selectedSales, setSelectedSales] = useState('')
   const [salesTargets, setSalesTargets] = useState<{ user_id: string; month: number; year: number; target_sales_value: number; target_delivery_value: number }[]>([])
 
   const { start, end, label } = getPeriodBounds(period, offset)
@@ -72,10 +97,14 @@ export default function ExecutivePage() {
         { data: ot },
         { data: pmts },
       ] = await Promise.all([
-        supabase.from('customers').select('id,status,budget,customer_type,source,assigned_to,created_at,users!customers_assigned_to_fkey(name)'),
-        supabase.from('jobs').select('id,order_date,work_start_date,actual_deliver_date,revenue_ex_vat,revenue_inc_vat,work_type,customer_type,working_status,sales_id,sales:users!jobs_sales_id_fkey(name),projects(name)'),
+        supabase.from('customers').select('id,customer_type,source,created_at'),
+        fetchAllRows(() => supabase.from('jobs').select('id,order_date,work_start_date,actual_deliver_date,revenue_ex_vat,revenue_inc_vat,work_type,customer_type,working_status,crm_stage,sales_id,customer_id,sales:users!jobs_sales_id_fkey(name),projects(name)').order('id')),
         supabase.from('org_targets').select('target_sales_value,target_delivery_value,year,month').order('year').order('month'),
-        supabase.from('payments').select('paid_amount,paid_date,job_id,jobs(sales_id)').eq('status', 'paid').not('paid_date', 'is', null),
+        // paid_date is no longer required: a paid instalment settles the job whether
+        // or not someone typed the date. The team tab filters on paid_date itself,
+        // and a null date simply fails that comparison. fetchAllRows because
+        // payments sits close to PostgREST's 1,000-row cap.
+        fetchAllRows(() => supabase.from('payments').select('paid_amount,paid_date,job_id,amount,voucher_amount,status,jobs(sales_id)').eq('status', 'paid').order('id')),
       ])
       if (e1 || e2) { setFetchError((e1 ?? e2)!.message); setLoading(false); return }
       setAllCustomers((cust || []) as unknown as Customer[])
@@ -86,7 +115,11 @@ export default function ExecutivePage() {
 
       // Load team data
       const [{ data: uData }, { data: stData }] = await Promise.all([
-        supabase.from('users').select('id, name, manager_id').eq('active', true),
+        // แผนก Sales เท่านั้น — แท็บนี้จัดกลุ่มจาก manager_id ล้วนๆ พอทีมจัดซื้อ/QS
+        // ได้หัวหน้า (wanwipa.o) ตอนทำหน้า Cost มันก็โผล่มาเป็นทีมที่ 3 ทันที
+        // ทั้งที่ไม่มีเป้ายอดขายและไม่มีงานผูก sales_id ตัวเลขจึงเป็น 0 ทั้งแถบ
+        supabase.from('users').select('id, name, manager_id, role, dept')
+          .eq('active', true).eq('dept', 'Sales Executive'),
         supabase.from('sales_targets').select('user_id, month, year, target_sales_value, target_delivery_value').eq('year', new Date().getFullYear()),
       ])
       setTeamUsers((uData || []) as any)
@@ -105,15 +138,14 @@ export default function ExecutivePage() {
   const periodJobs = useMemo(() =>
     allJobs.filter(j => {
       const d = j.order_date || j.work_start_date
-      return !!d && d >= start && d <= end && (!filterCustType || j.customer_type === filterCustType) && matchWork(j.work_type)
+      return !!d && d >= start && d <= end && inScope(j)
     }),
     [allJobs, start, end, filterCustType, filterWorkType]
   )
 
   const deliveredJobs = useMemo(() =>
     allJobs.filter(j => j.actual_deliver_date >= start && j.actual_deliver_date <= end &&
-      j.working_status === 'ส่งมอบแล้ว' &&
-      (!filterCustType || j.customer_type === filterCustType) && matchWork(j.work_type)),
+      j.working_status === 'ส่งมอบแล้ว' && inScope(j)),
     [allJobs, start, end, filterCustType, filterWorkType]
   )
 
@@ -147,25 +179,32 @@ export default function ExecutivePage() {
     ),
     [allCustomers, filterCustType, start, end]
   )
-  const periodClosed = periodCustomers.filter(c => c.status === 'closed').length
-  const periodLost = periodCustomers.filter(c => c.status === 'lost').length
+  // Counted from jobs, not customers: one buyer can hold a closed room and a
+  // lost one at the same time, and customers.status could only say one of them.
+  const periodJobIds = new Set(periodCustomers.map(c => c.id))
+  const stageJobs = allJobs.filter(j => j.customer_id && periodJobIds.has(j.customer_id))
+  const periodClosed = stageJobs.filter(j => j.crm_stage === 'closed').length
+  const periodLost = stageJobs.filter(j => j.crm_stage === 'lost').length
   const winRate = pct(periodClosed, periodClosed + periodLost)
 
   // All-time closed/lost for pipeline funnel label
-  const closedCount = customers.filter(c => c.status === 'closed').length
-  const lostCount = customers.filter(c => c.status === 'lost').length
+  const closedCount = allJobs.filter(j => j.crm_stage === 'closed').length
+  const lostCount = allJobs.filter(j => j.crm_stage === 'lost').length
 
   // Pipeline funnel
   const pipelineOrder = FUNNEL_ORDER
   const funnelData = useMemo(() => {
-    const max = Math.max(...pipelineOrder.map(s => customers.filter(c => c.status === s).length), 1)
+    const max = Math.max(...pipelineOrder.map(s => allJobs.filter(j => j.crm_stage === s).length), 1)
     return pipelineOrder.map(s => ({
       status: s,
-      count: customers.filter(c => c.status === s).length,
-      value: customers.filter(c => c.status === s).reduce((sum, c) => sum + (c.budget || 0), 0),
+      count: allJobs.filter(j => j.crm_stage === s).length,
+      // The job's own value. It used to fall back to customers.budget, retired
+      // 2026-09-07 — every prospect now carries its value on the job.
+      value: allJobs.filter(j => j.crm_stage === s)
+        .reduce((sum, j) => sum + (j.revenue_inc_vat || 0), 0),
       max,
     }))
-  }, [customers])
+  }, [allJobs])
 
   // B2C / B2B split (period jobs)
   const b2cRevenue = periodJobs.filter(j => j.customer_type === 'B2C').reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
@@ -212,7 +251,7 @@ export default function ExecutivePage() {
       const ms = `${y}-${String(m + 1).padStart(2, '0')}-01`
       const me = ld(new Date(y, m + 1, 0))
       const rev = allJobs.filter(j => j.order_date >= ms && j.order_date <= me &&
-        (!filterCustType || j.customer_type === filterCustType) && matchWork(j.work_type))
+        inScope(j))
         .reduce((s, j) => s + (j.revenue_ex_vat || 0), 0)
       return { label: MONTHS_TH[m], revenue: rev }
     })
@@ -248,6 +287,10 @@ export default function ExecutivePage() {
           className={`tab-btn ${mainTab === 'team' ? 'active' : ''}`}>
           <Users size={14} />ทีม Sales
         </button>
+        <button onClick={() => setMainTab('individual')}
+          className={`tab-btn ${mainTab === 'individual' ? 'active' : ''}`}>
+          <Award size={14} />รายคน
+        </button>
       </div>
 
       {/* Period + filter row — always visible */}
@@ -266,6 +309,7 @@ export default function ExecutivePage() {
           <option value="">RPT + N-RPT</option>
           <option value="RPT">RPT</option>
           <option value="N-RPT">N-RPT</option>
+          <option value={NO_IG}>ไม่รวมงานในเครือ</option>
         </select>
         <PeriodPicker unit={period} setUnit={setPeriod} offset={offset} setOffset={setOffset}
           units={['week','month','quarter','year']} />
@@ -574,6 +618,255 @@ export default function ExecutivePage() {
                 </div>
               ))}
             </div>
+          </div>
+        )
+      })()}
+
+      {/* ══ INDIVIDUAL TAB ════════════════════════════════════
+          The three money buckets sales asked to see. Definitions live in
+          lib/salesScorecard so a second screen cannot drift from this one. */}
+      {mainTab === 'individual' && (() => {
+        const settled = settledByJob(allPayments as unknown as ScorecardPayment[])
+        // A prospect job has no revenue yet, so ③ falls back to the customer's
+        const scopedJobs = allJobs.filter(inScope) as unknown as (ScorecardJob & { customer_id?: string | null })[]
+        const jobsFor = (uid: string) =>
+          allJobs.filter(j => j.sales_id === uid && inScope(j)) as unknown as ScorecardJob[]
+
+        // Only people who actually hold jobs. The two managers hold none —
+        // they run teams — so they belong in the team cards below, not here.
+        // role === 'sales' only. Areeruk.y is an admin who happens to hold one
+        // job — JOB-1096, the ฿39.18 MB. intragroup contract — and putting that
+        // beside real sales figures makes every other number look like noise.
+        const holders = teamUsers
+          .filter(u => u.role === 'sales' && allJobs.some(j => j.sales_id === u.id))
+          .map(u => ({ ...u, card: buildScorecard(jobsFor(u.id), settled, { from: start, to: end }) }))
+          .sort((a, b) => b.card.soldValue - a.card.soldValue)
+
+        if (!holders.length) return <EmptyState message="ยังไม่มีข้อมูลเซลล์" sub="ไม่พบงานที่ผูกกับเซลล์คนใดในระบบ" />
+
+        const me = holders.find(h => h.id === selectedSales) ?? holders[0]
+        const pipe = pipelineFor(scopedJobs, me.id)
+        const waiting = me.card.openValue + me.card.gapValue
+
+        const Tile = ({ label: lb, dot, value, sub, color }: {
+          label: string; dot?: string; value: string; sub: React.ReactNode; color?: string
+        }) => (
+          <div className="ds-card-sm p-3">
+            <p className="text-micro uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+              {dot && <i className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dot }} />}
+              {lb}
+            </p>
+            <p className="text-kpi-money font-bold mt-1.5" style={{ color: color || 'var(--text-1)' }}>{value}</p>
+            <p className="text-micro mt-0.5" style={{ color: 'var(--text-3)' }}>{sub}</p>
+          </div>
+        )
+        const Section = ({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) => (
+          <div className="ds-card p-4">
+            <div className="flex items-baseline justify-between gap-3 mb-3">
+              <h3 className="font-semibold" style={{ fontSize: 'var(--fs-section)', color: 'var(--text-1)' }}>{title}</h3>
+              {note && <span className="text-micro" style={{ color: 'var(--text-3)' }}>{note}</span>}
+            </div>
+            {children}
+          </div>
+        )
+        const grid = 'grid gap-2.5 grid-cols-[repeat(auto-fill,minmax(min(190px,100%),1fr))]'
+
+        // Team roll-up: a manager's numbers are their members', summed.
+        const managerIds = [...new Set(teamUsers.filter(u => u.manager_id).map(u => u.manager_id!))]
+        const teams = managerIds.map(mid => {
+          const manager = teamUsers.find(u => u.id === mid)
+          const members = teamUsers.filter(u => u.manager_id === mid)
+          const memberJobs = allJobs.filter(j => members.some(m => m.id === j.sales_id) && inScope(j)) as unknown as ScorecardJob[]
+          const card = buildScorecard(memberJobs, settled, { from: start, to: end })
+          const tPipe = members.reduce((acc, m) => acc + pipelineFor(scopedJobs, m.id).value, 0)
+          return { manager, members, card, tPipe, mine: members.some(m => m.id === me.id) }
+        }).filter(t => t.members.length > 0)
+
+        /* Three columns, not two. The amount and its "N งาน" used to share one
+           right-aligned box, so every row's ฿ figure ended at a different x —
+           the longer the note, the further left the money sat. The note now has
+           a reserved column of its own (wide enough for "113 งาน"), which every
+           row keeps whether it has a note or not, so the amounts line up. */
+        const TeamRow = ({ label: lb, value, note, color, strong, last }: {
+          label: string; value: string; note?: string; color?: string
+          strong?: boolean; last?: boolean
+        }) => (
+          <div className="grid items-baseline gap-2 py-1.5"
+            style={{
+              gridTemplateColumns: '1fr auto 52px',
+              borderBottom: last ? 'none' : '1px solid var(--divider)',
+            }}>
+            <span className="text-caption" style={{ color: strong ? 'var(--text-1)' : 'var(--text-2)', fontWeight: strong ? 600 : 400 }}>{lb}</span>
+            <span className="text-caption font-bold tabular-nums text-right" style={{ color: color || 'var(--text-1)' }}>{value}</span>
+            <span className="text-micro" style={{ color: 'var(--text-3)' }}>{note || ''}</span>
+          </div>
+        )
+
+        return (
+          <div className="space-y-4">
+            {/* Who */}
+            <div className="flex flex-wrap gap-2">
+              {holders.map(h => {
+                const on = h.id === me.id
+                return (
+                  <button key={h.id} onClick={() => setSelectedSales(h.id)}
+                    className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 text-xs font-semibold transition-colors"
+                    style={{
+                      background: on ? 'color-mix(in srgb, var(--accent) 12%, var(--card-bg))' : 'var(--card-bg)',
+                      border: `1px solid ${on ? 'var(--accent)' : 'var(--card-border)'}`,
+                      color: on ? 'var(--text-1)' : 'var(--text-2)',
+                    }}>
+                    <span className="w-6 h-6 rounded-full grid place-items-center text-micro font-bold text-white"
+                      style={{ background: 'var(--accent)' }}>{h.name?.[0] ?? '?'}</span>
+                    {h.name}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* ── การเงิน ── */}
+            <Section title="การเงิน — เงินที่รออยู่" note={filterWorkType === NO_IG ? 'ภาพ ณ ปัจจุบัน · ไม่รวมงานในเครือ' : 'ภาพ ณ ปัจจุบัน · รวมงานในเครือ'}>
+              <div className={grid}>
+                <Tile label="เก็บเงินมาแล้ว" dot="var(--accent-green)" color="var(--accent-green)"
+                  value={fk(me.card.collected)} sub={f(me.card.collected)} />
+                <Tile label="① เปิดงานแล้ว ยังเก็บไม่ครบ" dot="var(--accent-orange)" color="var(--accent-orange)"
+                  value={fk(me.card.openValue)} sub={`${me.card.openN} งานที่เปิดแล้ว`} />
+                <Tile label="② โอกาสเก็บเพิ่มจากยอดจอง" dot="var(--accent)" color="var(--accent)"
+                  value={fk(me.card.gapValue)} sub={`${me.card.gapN} งานจอง · เก็บถึง 50% แล้วเลื่อนเข้า My Deals`} />
+                <Tile label="ค้างเกิน 60 วันหลังส่งมอบ" dot="var(--accent-red)"
+                  color={me.card.lateValue > 10000 ? 'var(--accent-red)' : 'var(--text-3)'}
+                  value={me.card.lateValue > 0 ? f(me.card.lateValue) : '—'}
+                  sub={me.card.lateValue > 0 ? `${me.card.lateN} งาน ต้องตามเก็บ` : 'ไม่มีค้างเกินกำหนด'} />
+              </div>
+              {me.card.collected > 0 && (
+                <p className="mt-3 rounded-[11px] p-3 text-caption leading-relaxed"
+                  style={{
+                    background: 'color-mix(in srgb, var(--accent) 9%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--accent) 28%, transparent)',
+                    color: 'var(--text-1)',
+                  }}>
+                  ถ้าเก็บครบทั้งสองก้อน <b style={{ color: 'var(--accent)' }}>{fk(waiting)}</b> จะเข้ามาเพิ่ม —
+                  คิดเป็น <b style={{ color: 'var(--accent)' }}>{Math.round(waiting / me.card.collected * 100)}%</b>
+                  {' '}ของที่ {me.name} เก็บมาได้ทั้งหมดแล้ว ({fk(me.card.collected)})
+                </p>
+              )}
+            </Section>
+
+            {/* ── ขาย ── */}
+            <Section title="ขาย" note={`นับจากวันที่ขาย · ${label}`}>
+              <div className={grid}>
+                <Tile label="ยอดขาย" value={fk(me.card.soldValue)} sub={`${me.card.soldN} งาน`} />
+                <Tile label="เฉลี่ยต่องาน"
+                  value={me.card.soldN ? f(me.card.soldValue / me.card.soldN) : '—'}
+                  sub={me.card.soldN ? (me.card.soldValue / me.card.soldN > 200000 ? 'งานใหญ่ ชิ้นน้อย' : 'งานเล็ก ปริมาณมาก') : 'ไม่มีงานในช่วงนี้'} />
+                <Tile label="③ Pipeline ที่ยังไม่ปิด"
+                  color={pipe.value ? 'var(--text-1)' : 'var(--text-3)'}
+                  value={pipe.value ? fk(pipe.value) : '—'}
+                  sub={pipe.value ? `${pipe.count} ราย ที่ยังไม่ปิด` : 'ยังไม่ได้ระบุงบ/เจ้าของ — กรอกที่หน้า Prospects'} />
+              </div>
+            </Section>
+
+            {/* ── ส่งมอบ ── */}
+            <Section title="ส่งมอบ" note={`นับจากวันส่งมอบจริง · ${label}`}>
+              <div className={grid}>
+                <Tile label="ส่งมอบแล้ว" color="var(--accent-blue)"
+                  value={fk(me.card.delivValue)} sub={`${me.card.delivN} งาน`} />
+                <Tile label="กำลังดำเนินการ" value={`${me.card.wipN} งาน`} sub="เปิดงานแล้ว ยังไม่ส่งมอบ" />
+                {/* Not a ratio of the selected period. Prattana.o sold one job
+                    in August and delivered 17 older ones, which the old
+                    "ขาย → ส่งมอบ" card reported as 1835%. This counts the whole
+                    book of work instead, so a quiet sales month cannot distort it. */}
+                <Tile label="ส่งมอบแล้ว / งานที่ถืออยู่"
+                  value={`${me.card.heldDelivN}/${me.card.heldN} งาน`}
+                  sub={me.card.heldN
+                    ? `ส่งมอบแล้ว ${Math.round(me.card.heldDelivN / me.card.heldN * 100)}% ของงานทั้งหมดที่ถืออยู่`
+                    : 'ยังไม่มีงานในมือ'} />
+              </div>
+            </Section>
+
+            {/* ── ทีม ── */}
+            {teams.length > 0 && (
+              <Section title="เทียบเป็นทีม" note="ทีมของคนที่เลือกอยู่จะมีขอบเน้น">
+                <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))]">
+                  {teams.map(t => {
+                    const k = t.members.length
+                    return (
+                      <div key={t.manager?.id} className="rounded-[11px] p-3.5"
+                        style={{
+                          background: 'var(--panel-bg)',
+                          border: `1px solid ${t.mine ? 'var(--accent)' : 'var(--divider)'}`,
+                        }}>
+                        <div className="flex items-center gap-2.5 mb-3">
+                          <span className="w-7 h-7 rounded-full grid place-items-center text-micro font-bold text-white"
+                            style={{ background: 'var(--accent)' }}>{t.manager?.name?.[0] ?? '?'}</span>
+                          <span>
+                            <b className="block" style={{ fontSize: 'var(--fs-card-title)', color: 'var(--text-1)' }}>ทีม {t.manager?.name}</b>
+                            <span className="text-micro" style={{ color: 'var(--text-3)' }}>
+                              {k} คน · {t.members.map(m => m.name).join(' · ')}
+                            </span>
+                          </span>
+                        </div>
+                        <TeamRow label="ยอดขาย" value={fk(t.card.soldValue)} note={`${t.card.soldN} งาน`} />
+                        <TeamRow label="ส่งมอบ" value={fk(t.card.delivValue)} note={`${t.card.delivN} งาน`} color="var(--accent-blue)" />
+                        <TeamRow label="เก็บเงินมาแล้ว" value={fk(t.card.collected)} color="var(--accent-green)" />
+                        <TeamRow label="① เปิดงานแล้ว ยังเก็บไม่ครบ" value={fk(t.card.openValue)} note={`${t.card.openN} งาน`} color="var(--accent-orange)" />
+                        <TeamRow label="② โอกาสเก็บเพิ่มจากยอดจอง" value={fk(t.card.gapValue)} note={`${t.card.gapN} งาน`} color="var(--accent)" />
+                        <TeamRow label="③ Pipeline ที่ยังไม่ปิด" value={t.tPipe ? fk(t.tPipe) : '—'} color="var(--text-2)" last />
+                        {/* The averages go through the same TeamRow, so they sit
+                            on the same three columns as the totals above. */}
+                        <div className="mt-2 pt-1" style={{ borderTop: '2px solid var(--divider)' }}>
+                          <TeamRow label="เฉลี่ยต่อคน — ยอดขาย" strong
+                            value={fk(t.card.soldValue / k)} />
+                          <TeamRow label="เฉลี่ยต่อคน — เงินที่รออยู่ ①+②" strong last
+                            value={fk((t.card.openValue + t.card.gapValue) / k)} color="var(--accent)" />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* The "ทีมต่างขนาดกัน" note that used to sit here was written to
+                    explain the design in conversation, not to be read on the
+                    screen every day. The team header already states the size
+                    ("4 คน · …") and the เฉลี่ยต่อคน rows carry the same point
+                    without a paragraph. */}
+              </Section>
+            )}
+
+            {/* ── ตารางรวม ── */}
+            <Section title="เทียบทั้งทีม" note="เรียงตามยอดขายในช่วงที่เลือก">
+              <div className="tbl-scroll">
+                <table className="w-full text-caption tabular-nums tbl-rows">
+                  <thead>
+                    <tr>
+                      {['Sales', 'ยอดขาย', '① เก็บไม่ครบ', '② โอกาสเก็บเพิ่ม', '③ Pipeline', 'ส่งมอบ'].map((h, i) => (
+                        <th key={h} className={`px-2.5 py-2 text-micro uppercase tracking-wider font-semibold ${i ? 'text-right' : 'text-left'}`}
+                          style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--divider)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {holders.map(h => {
+                      const p = pipelineFor(scopedJobs, h.id)
+                      const on = h.id === me.id
+                      const td = 'px-2.5 py-2 text-right whitespace-nowrap'
+                      const bd = { borderBottom: '1px solid var(--divider)' }
+                      return (
+                        <tr key={h.id} onClick={() => setSelectedSales(h.id)} className="cursor-pointer"
+                          style={{ background: on ? 'var(--hover-bg)' : 'transparent' }}>
+                          <td className="px-2.5 py-2 whitespace-nowrap"
+                            style={{ ...bd, color: 'var(--text-1)', fontWeight: on ? 700 : 400 }}>{h.name}</td>
+                          <td className={td} style={bd}>{fk(h.card.soldValue)}</td>
+                          <td className={td} style={{ ...bd, color: 'var(--accent-orange)' }}>{fk(h.card.openValue)}</td>
+                          <td className={td} style={{ ...bd, color: 'var(--accent)' }}>{fk(h.card.gapValue)}</td>
+                          <td className={td} style={{ ...bd, color: p.value ? 'var(--text-1)' : 'var(--text-3)' }}>{p.value ? fk(p.value) : '—'}</td>
+                          <td className={td} style={{ ...bd, color: 'var(--accent-blue)' }}>{fk(h.card.delivValue)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Section>
           </div>
         )
       })()}

@@ -7,8 +7,11 @@ import { PageError, EmptyState } from '@/components/ui/StateUI'
 import Modal from '@/components/ui/Modal'
 import PageHeader from '@/components/ui/PageHeader'
 import { Input, Select, TextArea } from '@/components/ui/Input'
+import { MoneyField } from '@/components/ui/MoneyInput'
 import { baht } from '@/lib/money'
 import { createProspectJob } from '@/lib/prospectJob'
+import { incVatOf } from '@/lib/procurement'
+import { cleanName } from '@/lib/customerName'
 
 interface Project { id: string; name: string }
 interface Lead { id: number; tower: string; room_no: string; customer_name: string; phone: string }
@@ -97,7 +100,7 @@ export default function EventsPage() {
   const [saving, setSaving] = useState(false)
   const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set())
   const [promotingAll, setPromotingAll] = useState(false)
-  const [systemStatus, setSystemStatus] = useState<Map<string, string>>(new Map()) // event_customer.id → "Wyde Clients"|"Prospects"
+  const [systemStatus, setSystemStatus] = useState<Map<string, string>>(new Map()) // event_customer.id → "Job Registry"|"Prospects"
   const [fetchError, setFetchError] = useState('')
   const [editingCustomer, setEditingCustomer] = useState<EventCustomer | null>(null)
   const [editCustForm, setEditCustForm] = useState(emptyCust)
@@ -139,11 +142,14 @@ export default function EventsPage() {
     const eventCustIds = rows.map(c => c.id)
 
     const [{ data: jobRows }, { data: custRows }, { data: byEventCustId }] = await Promise.all([
+      // jobs has no phone column, so this select was rejected outright and the
+      // "already in the system" check fell back to customers alone. Match on the
+      // customer the job belongs to instead.
       phones.length
-        ? supabase.from('jobs').select('phone, customer_name').in('phone', phones)
+        ? supabase.from('customers').select('phone, customer_name').in('phone', phones)
         : Promise.resolve({ data: [] }),
       phones.length
-        ? supabase.from('customers').select('phone, customer_name, status').in('phone', phones)
+        ? supabase.from('customers').select('phone, customer_name').in('phone', phones)
         : Promise.resolve({ data: [] }),
       supabase.from('customers').select('event_customer_id').in('event_customer_id', eventCustIds),
     ])
@@ -159,7 +165,7 @@ export default function EventsPage() {
       const inCust = c.phone && custPhones.has(c.phone)
       const linked = ecIdLinked.has(c.id)
       const isConverted = normStatus(c.status) === 'converted'
-      if (inJob) { statusMap.set(c.id, 'Wyde Clients'); alreadyPromoted.add(c.id) }
+      if (inJob) { statusMap.set(c.id, 'Job Registry'); alreadyPromoted.add(c.id) }
       else if (inCust || linked) { statusMap.set(c.id, 'Prospects'); alreadyPromoted.add(c.id) }
       else if (isConverted) { alreadyPromoted.add(c.id) }
     }
@@ -228,7 +234,7 @@ export default function EventsPage() {
       lead_id: Number(custForm.lead_id) || null,
       room_no: custForm.room_no || (selectedLead ? `${selectedLead.tower}-${selectedLead.room_no}` : ''),
       sales_id: custForm.sales_id || null,
-      customer_name: custForm.customer_name,
+      customer_name: cleanName(custForm.customer_name),
       phone: custForm.phone || null,
       email: custForm.email || null,
       status: custForm.status,
@@ -276,7 +282,7 @@ export default function EventsPage() {
         supabase.from('condo_leads').select('customer_name').eq('phone', phone).limit(1),
       ])
       if (cust?.[0]) inSystem = { src: 'Prospects/Pipeline', name: (cust[0] as any).customer_name }
-      else if (jobs?.[0]) inSystem = { src: 'Wyde Clients', name: (jobs[0] as any).customer_name }
+      else if (jobs?.[0]) inSystem = { src: 'Job Registry', name: (jobs[0] as any).customer_name }
       else if (leads?.[0]) inSystem = { src: 'Origin Pool', name: (leads[0] as any).customer_name }
     }
 
@@ -312,8 +318,9 @@ export default function EventsPage() {
     // 1. Find or create customer (dedup by lead_id → phone)
     let customerId = await findExistingCustomer(c)
     if (customerId) {
-      await supabase.from('customers').update({ status: 'booked', booking_date: c.booked_date || undefined })
-        .eq('id', customerId)
+      // Nothing to update on the customer any more: the booking date lives on
+      // the job's order_date and the stage on the job's crm_stage. The job is
+      // created or found just below.
     } else {
       customerId = await genCustomerId()
       const projectId = c.project_id || selectedEvent?.project_id || null
@@ -328,8 +335,6 @@ export default function EventsPage() {
         event_customer_id: c.id,
         source_event_id: selectedEvent?.id || null,
         source: 'event',
-        status: 'booked',
-        booking_date: c.booked_date || null,
       })
     }
 
@@ -339,7 +344,7 @@ export default function EventsPage() {
       const jobId = await genJobId()
       const projId = c.project_id || selectedEvent?.project_id || null
       const exVat = c.booked_value || 0
-      const incVat = exVat ? Math.round(exVat * 1.07) : 0
+      const incVat = exVat ? incVatOf(exVat) : 0
       await supabase.from('jobs').insert({
         id: jobId,
         customer_id: customerId,
@@ -382,8 +387,9 @@ export default function EventsPage() {
       event_customer_id: c.id,
       source_event_id: selectedEvent?.id || null,
       source: 'event',
-      status: 'interested',
-      first_contact_date: c.booked_date || null,
+      // first_contact_date was dropped from customers on 2026-08-27: 37 rows,
+      // all from this one write, and no screen ever read it back. The date the
+      // guest booked at the event lives on event_customers.
     })
     // promoteBooked below already opens a job; this path did not, so an event
     // guest promoted at สนใจ became a customer with nothing to show on the
@@ -429,7 +435,7 @@ export default function EventsPage() {
     if (!editingCustomer || !selectedEvent) return
     setEditSaving(true)
     await supabase.from('event_customers').update({
-      customer_name: editCustForm.customer_name,
+      customer_name: cleanName(editCustForm.customer_name),
       phone: editCustForm.phone || null,
       room_no: editCustForm.room_no || null,
       sales_id: editCustForm.sales_id || null,
@@ -490,7 +496,7 @@ export default function EventsPage() {
 
   function getPromoteLabel(c: EventCustomer): string | null {
     const s = normStatus(c.status)
-    if (s === 'booked')      return '→ Wyde Clients'
+    if (s === 'booked')      return '→ Job Registry'
     if (s === 'interested')  return '→ Prospects'
     if (s === 'not_met')     return '→ Prospects'
     return null
@@ -503,7 +509,7 @@ export default function EventsPage() {
         subtitle="จัดการงาน Event · บันทึกลูกค้า · ติดตาม Performance"
         actions={
           <button onClick={() => { setEditingEvent(null); setForm(emptyEvent); setOpenEvent(true) }}
-            className="flex items-center gap-2 btn-primary text-white px-3 py-2 sm:px-4 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
+            className="flex items-center gap-2 btn-primary text-white px-3 py-2 sm:px-4 rounded-lg font-semibold transition-colors flex-shrink-0">
             <Plus size={16} /><span className="hidden sm:inline">เพิ่ม Event</span><span className="sm:hidden">เพิ่ม</span>
           </button>
         }
@@ -636,7 +642,7 @@ export default function EventsPage() {
                   )}
                   {customers.length > 0 && (
                     <div className="overflow-x-auto">
-                      <table className="w-full" style={{ minWidth: 700 }}>
+                      <table className="w-full tbl-rows" style={{ minWidth: 700 }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                             <th className="text-left px-3 py-2 text-xs" style={{ color: 'var(--text-3)' }}>#</th>
@@ -770,7 +776,7 @@ export default function EventsPage() {
         </div>
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setOpenEvent(false)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
-          <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+          <button onClick={saveEvent} disabled={saving || !form.event_name} className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -794,10 +800,10 @@ export default function EventsPage() {
             options={CUST_STATUS.map(s => ({ value: s.value, label: s.label }))} />
           <Input label="วัน BOOKED" type="date" value={editCustForm.booked_date}
             onChange={e => setEditCustForm({ ...editCustForm, booked_date: e.target.value })} />
-          <Input label="BOOKED VALUE (บาท)" type="number" value={editCustForm.booked_value}
-            onChange={e => setEditCustForm({ ...editCustForm, booked_value: e.target.value })} />
-          <Input label="มัดจำ เงินสด (บาท)" type="number" value={editCustForm.deposit_amount}
-            onChange={e => setEditCustForm({ ...editCustForm, deposit_amount: e.target.value })} />
+          <MoneyField label="BOOKED VALUE (บาท)" value={editCustForm.booked_value}
+            onChange={v => setEditCustForm({ ...editCustForm, booked_value: v })} />
+          <MoneyField label="มัดจำ เงินสด (บาท)" value={editCustForm.deposit_amount}
+            onChange={v => setEditCustForm({ ...editCustForm, deposit_amount: v })} />
           <div className="sm:col-span-2">
             <TextArea label="หมายเหตุ" value={editCustForm.notes}
               onChange={e => setEditCustForm({ ...editCustForm, notes: e.target.value })} />
@@ -806,7 +812,7 @@ export default function EventsPage() {
         <div className="flex justify-end gap-3 mt-5">
           <button onClick={() => setEditingCustomer(null)} className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={saveEditCustomer} disabled={editSaving || !editCustForm.customer_name}
-            className="flex items-center gap-2 px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            className="flex items-center gap-2 px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             <Save size={14} />{editSaving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
@@ -833,7 +839,7 @@ export default function EventsPage() {
                 ...custForm,
                 lead_id: e.target.value,
                 room_no: lead ? `${lead.tower}-${lead.room_no}` : custForm.room_no,
-                customer_name: lead ? lead.customer_name : custForm.customer_name,
+                customer_name: cleanName(lead ? lead.customer_name : custForm.customer_name),
                 phone: lead ? lead.phone : custForm.phone,
               })
             }}
@@ -871,11 +877,11 @@ export default function EventsPage() {
               <Select label="ประเภท" value={custForm.booking_type}
                 onChange={e => setCustForm({ ...custForm, booking_type: e.target.value })}
                 options={BOOKING_TYPES.map(t => ({ value: t.value, label: t.label }))} />
-              <Input label="BOOKED VALUE (บาท)" type="number" value={custForm.booked_value}
-                onChange={e => setCustForm({ ...custForm, booked_value: e.target.value })}
+              <MoneyField label="BOOKED VALUE (บาท)" value={custForm.booked_value}
+                onChange={v => setCustForm({ ...custForm, booked_value: v })}
                 placeholder="ราคาซื้อ" />
-              <Input label="มัดจำ เงินสด (บาท)" type="number" value={custForm.deposit_amount}
-                onChange={e => setCustForm({ ...custForm, deposit_amount: e.target.value })}
+              <MoneyField label="มัดจำ เงินสด (บาท)" value={custForm.deposit_amount}
+                onChange={v => setCustForm({ ...custForm, deposit_amount: v })}
                 placeholder="เงินมัดจำที่รับจริง" />
             </>
           )}
@@ -933,7 +939,7 @@ export default function EventsPage() {
             className="px-4 py-2 text-sm transition-colors" style={{ color: 'var(--text-2)' }}>ยกเลิก</button>
           <button onClick={saveCustomer}
             disabled={saving || !custForm.customer_name || !!dupCheck.inEvent || (!dupConfirmed && !!dupCheck.inSystem)}
-            className="px-4 py-2 btn-primary disabled:opacity-50 text-white text-sm rounded-lg transition-colors">
+            className="px-4 py-2 btn-primary disabled:opacity-50 text-white rounded-lg transition-colors">
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>

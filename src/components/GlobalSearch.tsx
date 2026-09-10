@@ -45,7 +45,10 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         : `customer_name.ilike.%${q}%,room_no.ilike.%${q}%`
       const [{ data: customers }, { data: jobs }] = await Promise.all([
         supabase.from('customers')
-          .select('id, customer_name, phone, status')
+          // customers.status no longer exists; the job carries the stage. Left
+          // as-is, PostgREST rejected the select and customers never appeared
+          // in global search at all.
+          .select('id, customer_name, phone, jobs(crm_stage)')
           .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%`)
           .limit(5),
         supabase.from('jobs')
@@ -59,7 +62,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           type: 'customer' as const,
           id: c.id,
           title: c.customer_name,
-          subtitle: `${c.phone || '—'} · ${c.status}`,
+          subtitle: `${c.phone || '—'} · ${(c.jobs as any[] | null)?.find(j => j?.crm_stage)?.crm_stage || 'new'}`,
           href: '/dashboard/customers',
         })),
         ...(jobs || []).map((j: any) => ({

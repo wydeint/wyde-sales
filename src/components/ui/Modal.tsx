@@ -104,7 +104,11 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
           className="flex items-center justify-between p-5"
           style={{ borderBottom: '1px solid var(--divider)' }}
         >
-          <h2 id={titleId} className="font-semibold text-base" style={{ color: 'var(--text-1)' }}>
+          {/* 15px ไม่ใช่ 16 — ระบบมี .modal-title กำหนดไว้ที่ --fs-section อยู่แล้ว
+              แต่คอมโพเนนต์นี้เขียนทับด้วย text-base (16px ของ Tailwind ซึ่งไม่มี
+              ในสเกลเรา) หัวข้อโมดัลทุกบานในแอปจึงใหญ่กว่ามาตรฐานของตัวเอง 1px
+              มาตลอด · แก้ 2026-09-08 ดู reference_type_scale */}
+          <h2 id={titleId} className="text-section-title" style={{ color: 'var(--text-1)' }}>
             {title}
           </h2>
           {/* type="button" matters: a <button> inside a <form> defaults to

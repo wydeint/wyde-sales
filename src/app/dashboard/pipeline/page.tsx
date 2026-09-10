@@ -1811,7 +1811,18 @@ export default function ProspectsKanbanPage() {
     // *deleted*, not set to undefined: supabase-js builds the `columns` query
     // param from Object.keys, which still lists a key whose value is undefined.
     // See lib/ownership.ts.
-    const { notes: _formNotes, work_type: _formWorkType, status: _formStatus, assigned_to: _formSales, ...customerFields } = form
+    // `budget` belongs on this list for the same reason and was missed: it is a
+    // form field, not a column — customers.budget was dropped when the money
+    // moved to jobs.revenue_inc_vat, because one customer can hold several
+    // rooms and a single budget column cannot say which room the number is for.
+    // The comment below said it was no longer written, but the spread was still
+    // carrying `budget: 0` into the insert, so PostgREST rejected every new
+    // prospect. Nothing about the message pointed at the money field, which is
+    // why it read as "เพิ่มลูกค้าใหม่ไม่ได้" rather than as a missing column.
+    const {
+      notes: _formNotes, work_type: _formWorkType, status: _formStatus,
+      assigned_to: _formSales, budget: _formBudget, ...customerFields
+    } = form
     const { data, error } = await supabase.from('customers').insert([{
       id: newId, ...customerFields,
       customer_name: cleanName(form.customer_name),

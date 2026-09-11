@@ -250,7 +250,7 @@ function CustomerCard({ c, stage, onClick, onDelete, jobSeqNo, jobRev, jobId, jo
       {/* Delete button */}
       <button
         onClick={e => { e.stopPropagation(); onDelete() }}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
+        className="card-delete icon-btn absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
         style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
         title="ลบ"
       >
@@ -349,7 +349,7 @@ function BookedJobCard({ job, onClick, onDelete }: { job: BookedJob; onClick: ()
       {onDelete && (
         <button
           onClick={e => { e.stopPropagation(); onDelete() }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
+          className="card-delete icon-btn absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px]"
           style={{ color: 'var(--accent-red)', background: 'var(--hover-bg)' }}
           title="ลบ"
         >

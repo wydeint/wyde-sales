@@ -44,25 +44,44 @@
      Gone: 8 · 10 · 11 · 14 · 15 · 16 · 28. --fs-section, --fs-label and
      --fs-micro stay declared and point at a surviving size, so the ~320
      places already using them move without being touched. */
-  --fs-page-title: 20px;
-  --fs-section:    13px;   /* was 15 — heading is body size at weight 700 */
-  --fs-card-title: 13px;
-  --fs-body:       13px;
-  --fs-caption:    12px;
-  --fs-label:      12px;   /* was 11 */
-  --fs-kpi:        20px;   /* was 28 — 13→20→28 was two big jumps in a row */
-  --fs-micro:      12px;   /* was 10 — Thai tone marks touch the vowels there */
+  /* ── The scale is fluid, and it runs the other way round ──────────────
+     Text gets LARGER as the screen gets SMALLER. That is deliberate and it
+     is the opposite of most fluid-type setups, which grow with the viewport
+     for display drama. This app has no display drama: on a notebook there is
+     a mouse and room for density, and on a phone the same screen is read at
+     arm's length in a condo corridor and operated with a thumb.
 
-  /* ── Typography — line-height in px, never a ratio ────────────────────
+     clamp() rather than breakpoints because we cannot control which handset
+     anyone carries — there is no device list to maintain, and no width where
+     the type jumps. The min and max are in rem so a person who has set a
+     larger font in their phone still gets it; only the middle term uses vw.
+
+              390px (phone)   768px (tablet)   1280px (notebook)
+     caption      14.0             12.8              12.0
+     body         15.0             13.9              13.4
+     kpi          22.0             21.1              20.0             */
+  --fs-page-title: clamp(1.25rem,   1.430rem - 0.225vw, 1.375rem);  /* 20 → 22 */
+  --fs-section:    clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem); /* 13 → 15 */
+  --fs-card-title: clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem);
+  --fs-body:       clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem);
+  --fs-caption:    clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);  /* 12 → 14 */
+  --fs-label:      clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);
+  --fs-kpi:        clamp(1.25rem,   1.430rem - 0.225vw, 1.375rem);
+  --fs-micro:      clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);
+
+  /* ── Typography — line-height, never a bare ratio ─────────────────────
      13 × 1.5 = 19.5px. Half a pixel per line is why table rows measured
-     41 · 50 · 61 · 64 · 79 instead of one repeating height. Every value
-     below divides by 4, so every line in the app lands on the same grid
-     without anyone tuning a single spot. */
-  --lh-page-title: 28px;
-  --lh-section:    20px;
-  --lh-body:       20px;
-  --lh-caption:    16px;
-  --lh-kpi:        28px;
+     41 · 50 · 61 · 64 · 79 instead of one repeating height.
+
+     Line-height travels with the size, or 15px Thai sits in a 20px box and
+     the tone marks clip against the line above. Same shape, double the slope,
+     because each one moves 4px where the size moves 2: every value still
+     lands on 16 / 20 / 24 / 28 / 32, so the 4px grid holds at both ends. */
+  --lh-page-title: clamp(1.75rem,  2.110rem - 0.45vw, 2rem);     /* 28 → 32 */
+  --lh-section:    clamp(1.25rem,  1.610rem - 0.45vw, 1.5rem);   /* 20 → 24 */
+  --lh-body:       clamp(1.25rem,  1.610rem - 0.45vw, 1.5rem);
+  --lh-caption:    clamp(1rem,     1.360rem - 0.45vw, 1.25rem);  /* 16 → 20 */
+  --lh-kpi:        clamp(1.75rem,  2.110rem - 0.45vw, 2rem);
 
   /* Typography — letter-spacing */
   --ls-page-title: -0.01em;
@@ -87,26 +106,29 @@
      of them at once and keeps every existing className valid — the
      alternative was 511 hand edits with 511 chances to miss one.
 
-     text-xs already resolves to 12px, which is our label size, so the 846
-     places using it are correct as they stand and are left alone. */
-  --text-sm: 13px;
-  --text-sm--line-height: 20px;
-  --text-base: 13px;
-  --text-base--line-height: 20px;
-  --text-xs--line-height: 16px;
+     They point at the tokens rather than at fixed pixels, so the fluid scale
+     reaches them too — otherwise the 846 `text-xs` and 482 `text-sm` in the
+     app would stay frozen at 12 and 13 while everything around them grew on a
+     phone, and that is most of the screen. */
+  --text-xs: var(--fs-caption);
+  --text-xs--line-height: var(--lh-caption);
+  --text-sm: var(--fs-body);
+  --text-sm--line-height: var(--lh-body);
+  --text-base: var(--fs-body);
+  --text-base--line-height: var(--lh-body);
 
   /* The larger utilities all land on 20px, the one display size. text-lg (18px)
      is the KPI figure on My Deals and Prospects; text-xl / 2xl / 3xl appear 15
      times between them and were never distinguishable from each other in
      context. 35 places, one value. */
-  --text-lg: 20px;
-  --text-lg--line-height: 28px;
-  --text-xl: 20px;
-  --text-xl--line-height: 28px;
-  --text-2xl: 20px;
-  --text-2xl--line-height: 28px;
-  --text-3xl: 20px;
-  --text-3xl--line-height: 28px;
+  --text-lg: var(--fs-kpi);
+  --text-lg--line-height: var(--lh-kpi);
+  --text-xl: var(--fs-kpi);
+  --text-xl--line-height: var(--lh-kpi);
+  --text-2xl: var(--fs-kpi);
+  --text-2xl--line-height: var(--lh-kpi);
+  --text-3xl: var(--fs-kpi);
+  --text-3xl--line-height: var(--lh-kpi);
 
   /* Tailwind's own radius utilities, onto the same two values. rounded-lg
      already resolved to 18 through --radius-lg; xl / 2xl / 3xl were still
@@ -947,6 +969,45 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
   .tab-btn {
     padding: 8px 16px;
     font-size: var(--fs-caption);
+  }
+}
+
+/* ══════════════════════════════════════════
+   Touch targets
+   Keyed to how the device is *operated*, not to how wide it is. A tablet in
+   a stand and a laptop can be the same width; a thumb and a mouse cannot hit
+   the same target. `hover: none` and `pointer: coarse` ask that directly, so
+   nothing here depends on knowing which handset anyone is carrying.
+
+   The sizes are not invented: WCAG 2.2 SC 2.5.8 (AA) sets the floor at
+   24×24 CSS px, and Apple's HIG asks for 44×44 on anything a finger uses.
+   Measured on My Deals before this: 174 controls under 44px, 123 of them at
+   19px.
+══════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  /* Controls a finger drives get Apple's 44. min-height rather than height,
+     so a button whose content is already taller is left alone. */
+  .btn-primary, .btn-green, .btn-blue, .btn-purple, .btn-util,
+  .tab-btn, .field-input, select, input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 44px;
+  }
+
+  /* An icon-only button is square, so the width matters as much as the
+     height — a 44px-tall, 19px-wide target is still a miss. */
+  .icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Buttons revealed by hover do not exist on a touch screen — but they stay
+     clickable at opacity 0, which is how the delete button on a job card
+     became an invisible 19px target sitting in the corner of every card.
+     Show them instead of hiding them. */
+  .card-delete {
+    opacity: 1 !important;
   }
 }
 

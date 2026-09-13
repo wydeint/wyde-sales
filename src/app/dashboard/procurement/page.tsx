@@ -15,7 +15,7 @@ import { compareRoom, fmtDate } from '@/lib/utils'
 import { baht, bahtShort } from '@/lib/money'
 import { drawCostTable, copyCanvas, type CopyResult } from '@/lib/costImage'
 import { showAlert } from '@/components/ui/dialog'
-import { getPeriodBounds, type PeriodUnit } from '@/lib/period'
+import { getPeriodBounds, MONTHS_TH, beYear, type PeriodUnit } from '@/lib/period'
 import {
   ANCHOR_LABELS, PO_KPI_DAYS, ROOM_STATUS_CLASS, anchorDate, effectiveCost,
   gpCosted, gpText, revenueBase, round2, exVatOf, saleSplitOf, SALE_PRICE_TOLERANCE, handoffDays, peopleFor, scoreAdmins, ADMIN_KPI_DAYS, poLeadDays, roomStatus, scorePeople, totalsOf,
@@ -115,6 +115,18 @@ export default function ProcurementPage() {
   const [unit, setUnit] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
 
+  /*
+   * รายงานจัดซื้อจัดจ้างถามเดือนของตัวเองเสมอ ไม่อ่านตัวกรองบนหน้า
+   *
+   * รายงานนี้ออกเดือนละครั้งตอนสิ้นเดือน ส่วนตัวกรองบนหน้าเป็นของการค้นหางาน
+   * ที่จะลงต้นทุน — คนละงานกัน พอค่าเริ่มต้นของหน้าเปลี่ยนเป็น "ทั้งหมด" ปุ่มที่
+   * อ่านตัวกรองร่วมกันจะออกไฟล์ของทุกเดือนให้เงียบๆ ถ้าไม่ทันสังเกต
+   */
+  const [reportOpen, setReportOpen] = useState(false)
+  const now = new Date()
+  const [repYear, setRepYear] = useState(now.getFullYear())
+  const [repMonth, setRepMonth] = useState(now.getMonth())
+
   // drill-down + modals
   const [openJob, setOpenJob] = useState<string | null>(null)
   const [supModal, setSupModal] = useState<{ open: boolean; editing: Supplier | null }>({ open: false, editing: null })
@@ -148,11 +160,11 @@ export default function ProcurementPage() {
    * ผูกกับงวดที่รับจริงคือฝั่ง payments ดู lib/voucher.ts
    */
   async function exportReport() {
-    const inPeriod = (d: string | null) =>
-      !!d && (!byPeriod || (d >= bounds.start && d <= bounds.end))
     const rooms = liveJobs
-      .filter(j => matchesFilters(j))
-      .filter(j => inPeriod(j.actual_deliver_date))
+      .filter(j => {
+        const d = j.actual_deliver_date
+        return !!d && d >= repBounds.start && d <= repBounds.end
+      })
       .sort((a, b) => (projById.get(a.project_id ?? '') ?? '').localeCompare(projById.get(b.project_id ?? '') ?? '', 'th')
         || compareRoom(a.room_no, b.room_no))
 
@@ -200,7 +212,8 @@ export default function ProcurementPage() {
       round2(cRev - tCost), cRev > 0 ? ((cRev - tCost) / cRev * 100).toFixed(1) + '%' : '',
       '', '', '', '', '', ''])
 
-    downloadCsv(`รายงานจัดซื้อจัดจ้าง-${(byPeriod ? bounds.label : 'ทั้งหมด').replace(/\s/g, '-')}`, out)
+    downloadCsv(`รายงานจัดซื้อจัดจ้าง-${repBounds.label}`, out)
+    setReportOpen(false)
   }
 
   /* ── load ─────────────────────────────────────────────── */
@@ -268,6 +281,35 @@ export default function ProcurementPage() {
   const liveJobs = useMemo(
     () => jobs.filter(j => j.working_status && j.working_status !== 'ยกเลิก'),
     [jobs])
+
+  /** ขอบเขตของเดือนที่เลือกในกล่องรายงาน — อ่านวันที่จากเวลาเครื่อง ไม่แปลง timezone */
+  const repBounds = useMemo(() => {
+    const p = (n: number) => String(n).padStart(2, '0')
+    const last = new Date(repYear, repMonth + 1, 0).getDate()
+    return {
+      start: `${repYear}-${p(repMonth + 1)}-01`,
+      end: `${repYear}-${p(repMonth + 1)}-${p(last)}`,
+      label: `${MONTHS_TH[repMonth]}-${beYear(repYear)}`,
+    }
+  }, [repYear, repMonth])
+
+  /** ปีที่เลือกได้ — จากปีที่มีห้องส่งมอบจริง ไม่ใช่รายการปีที่เดาไว้ */
+  const reportYears = useMemo(() => {
+    const ys = new Set<number>([now.getFullYear()])
+    for (const j of liveJobs) {
+      const d = j.actual_deliver_date
+      if (d) ys.add(Number(d.slice(0, 4)))
+    }
+    return [...ys].sort((a, b) => b - a)
+  }, [liveJobs, now])
+
+  /** ห้องที่จะอยู่ในไฟล์ — นับให้เห็นก่อนกดดาวน์โหลด */
+  const repRooms = useMemo(
+    () => liveJobs.filter(j => {
+      const d = j.actual_deliver_date
+      return !!d && d >= repBounds.start && d <= repBounds.end
+    }),
+    [liveJobs, repBounds])
 
   const inPeriod = useMemo(() => byPeriod ? liveJobs.filter(j => {
     const d = anchorDate(j, anchor)
@@ -545,8 +587,8 @@ export default function ProcurementPage() {
               active={byPeriod} />
             {/* อยู่ติด PeriodPicker เพราะช่วงเวลาคือสิ่งที่กำหนดขอบเขตของไฟล์ —
                 ปุ่มที่ลอยห่างจากตัวควบคุมของตัวเองทำให้เดาไม่ออกว่าจะได้อะไรมา */}
-            <button onClick={exportReport} className="btn-util ml-auto flex items-center gap-1.5"
-              title="ห้องที่ส่งมอบจริงในช่วงที่เลือก · รูปแบบเดียวกับชีต Revenue-Cost">
+            <button onClick={() => setReportOpen(true)} className="btn-util ml-auto flex items-center gap-1.5"
+              title="เลือกเดือนแล้วออกไฟล์ · ห้องที่ส่งมอบจริงในเดือนนั้น · รูปแบบเดียวกับชีต Revenue-Cost">
               <FileDown size={13} /> รายงานจัดซื้อจัดจ้าง
             </button>
           </div>
@@ -657,6 +699,44 @@ export default function ProcurementPage() {
       )}
 
       {/* ── Supplier form ── */}
+      {/* เลือกเดือนก่อนออกไฟล์เสมอ — ไม่ผูกกับตัวกรองบนหน้า ซึ่งเป็นของการค้นหางาน
+          คนละเรื่องกับการปิดยอดสิ้นเดือน */}
+      <Modal open={reportOpen} onClose={() => setReportOpen(false)} title="รายงานจัดซื้อจัดจ้าง" size="sm">
+        <div className="space-y-4">
+          <p className="text-caption" style={{ color: 'var(--text-3)' }}>
+            ห้องที่ส่งมอบจริงในเดือนที่เลือก พร้อมรายการต้นทุนของแต่ละห้อง
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Select label="เดือน" value={String(repMonth)}
+              onChange={e => setRepMonth(Number(e.target.value))}
+              options={MONTHS_TH.map((m, i) => ({ value: String(i), label: m }))} />
+            <Select label="ปี" value={String(repYear)}
+              onChange={e => setRepYear(Number(e.target.value))}
+              options={reportYears.map(y => ({ value: String(y), label: String(beYear(y)) }))} />
+          </div>
+
+          {/* บอกจำนวนก่อนกด — เดือนที่ยังไม่มีห้องส่งมอบจะได้ไม่ดาวน์โหลดไฟล์เปล่า */}
+          <div className="rounded-[8px] p-3" style={{ background: 'var(--hover-bg)' }}>
+            <p className="text-caption m-0" style={{ color: 'var(--text-3)' }}>
+              {repBounds.start} ถึง {repBounds.end}
+            </p>
+            <p className="text-body-strong m-0 mt-1"
+              style={{ color: repRooms.length ? 'var(--text-1)' : 'var(--accent-orange)' }}>
+              {repRooms.length ? `${repRooms.length} ห้องที่ส่งมอบในเดือนนี้` : 'ไม่พบห้องที่ส่งมอบในเดือนนี้'}
+            </p>
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <button className="btn-util" onClick={() => setReportOpen(false)}>ยกเลิก</button>
+            <button className="btn-primary flex items-center gap-1.5"
+              onClick={exportReport} disabled={!repRooms.length}
+              style={!repRooms.length ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}>
+              <FileDown size={13} /> ดาวน์โหลด CSV
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <Modal open={supModal.open} onClose={() => setSupModal({ open: false, editing: null })}
         title={supModal.editing ? 'แก้ไข Supplier' : 'เพิ่ม Supplier'}>
         <div className="space-y-3">

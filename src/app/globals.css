@@ -524,12 +524,21 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 .tbl-rows tbody tr:hover { background: var(--hover-bg); }
 
 /* ── Standard table typography ─────────────────────────────────────────
-   Single source of truth for all .tbl-scroll tables.
-   Inline text-xs / text-sm classes on individual cells still override
-   these for intentional exceptions (badges, ID columns, summary rows).
+   Scoped to `.tbl-rows` — the class on the <table> itself — not to the
+   `.tbl-scroll` wrapper around it.
+
+   That matters: a table is only sometimes inside a scroll wrapper, and the
+   sub-tables in the Project Summary drawer are not. They carried .tbl-rows
+   and so had the header band and the row dividers, but none of the sizing or
+   alignment, which is why their headers sat centred over left-aligned data —
+   the browser's own default for <th> showing through. Every real table in the
+   app carries .tbl-rows, so scoping here reaches all of them.
+
+   Inline text-xs / text-sm classes on individual cells still override these
+   for intentional exceptions (badges, ID columns, summary rows).
 ────────────────────────────────────────────────────────────────────── */
-.tbl-scroll table { font-size: var(--fs-body); }
-.tbl-scroll thead th {
+table.tbl-rows { font-size: var(--fs-body); }
+.tbl-rows thead th {
   font-size: var(--fs-caption);
   font-weight: 600;
   line-height: var(--lh-caption);
@@ -538,7 +547,7 @@ input[type="date"], input[type="number"] { color-scheme: light; }
 }
 /* 20px line + 4 + 4 = a 28px row, every row, on the 4px grid. Rows measured
    41 · 50 · 61 · 64 · 79 before this. */
-.tbl-scroll tbody td { padding: 4px 16px; line-height: var(--lh-body); }
+.tbl-rows tbody td { padding: 4px 16px; line-height: var(--lh-body); }
 
 /* ── One alignment rule: everything starts on the left ────────────────────
    Header and cell always take the same side, so their left edges line up in
@@ -559,20 +568,20 @@ input[type="date"], input[type="number"] { color-scheme: light; }
    before any of them had a `.num` block to fall back on. What it does change
    today is the browser's own default for <th>, which is centre: that is the
    "header floating away from its column" you spotted. */
-:where(.tbl-scroll) :where(th, td) { text-align: left; }
-.tbl-scroll th.num > span,
-.tbl-scroll td.num > span,
+:where(.tbl-rows) :where(th, td) { text-align: left; }
+.tbl-rows th.num > span,
+.tbl-rows td.num > span,
 /* Cells whose value already arrives wrapped — a coloured span, a badge —
    use that element as the block instead of gaining a second wrapper. */
-.tbl-scroll th.num > :only-child,
-.tbl-scroll td.num > :only-child {
+.tbl-rows th.num > :only-child,
+.tbl-rows td.num > :only-child {
   display: inline-block;
   text-align: right;
   min-width: var(--num-w, 9ch);
 }
-.tbl-scroll .num-money { --num-w: 9ch; }   /* 1,065,220 */
-.tbl-scroll .num-pct   { --num-w: 5ch; }   /* 51.9%     */
-.tbl-scroll .num-count { --num-w: 4ch; }   /* 12 · 3/5  */
+.tbl-rows .num-money { --num-w: 9ch; }   /* 1,065,220 */
+.tbl-rows .num-pct   { --num-w: 5ch; }   /* 51.9%     */
+.tbl-rows .num-count { --num-w: 4ch; }   /* 12 · 3/5  */
 
 /* Column headings should sit behind the data, not compete with it. The shared
    rule sets size and weight but no colour, so a bare <th> inherits --text-1 and

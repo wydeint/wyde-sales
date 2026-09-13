@@ -548,6 +548,14 @@ table.tbl-rows { font-size: var(--fs-body); }
 /* 20px line + 4 + 4 = a 28px row, every row, on the 4px grid. Rows measured
    41 · 50 · 61 · 64 · 79 before this. */
 .tbl-rows tbody td { padding: 4px 16px; line-height: var(--lh-body); }
+/* The total row is a row. It was left out of the rule above — which named only
+   thead and tbody — so every tfoot in the app sat at padding 0 while the data
+   above it had 16px at the sides. The figures in a summary row are the ones a
+   reader checks a column against, and they were the ones starting in a
+   different place. Same bug as scoping the table rules to the wrapper instead
+   of the table: a rule that names some of the parts silently misses the rest. */
+.tbl-rows tfoot td,
+.tbl-rows tfoot th { padding: 4px 16px; line-height: var(--lh-body); }
 
 /* ── One alignment rule: everything starts on the left ────────────────────
    Header and cell always take the same side, so their left edges line up in
@@ -993,7 +1001,22 @@ a, button { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
    Measured on My Deals before this: 174 controls under 44px, 123 of them at
    19px.
 ══════════════════════════════════════════ */
-@media (hover: none) and (pointer: coarse) {
+/*
+ * Capability AND width, because capability alone does not discriminate.
+ *
+ * The first cut used `(hover: none) and (pointer: coarse)` on the grounds that
+ * it asks how the device is operated rather than how wide it is. Measured on
+ * the machine this was built on — a Windows touchscreen laptop, 1422px wide,
+ * maxTouchPoints 10 — that query matched, and so did `any-hover: none`. Every
+ * select in the cost sheet went to 44px and a 28px row became 57.
+ *
+ * A hybrid device answers "touch" to all of them. So the width has to come
+ * back in: touch sizing applies to a touch device that is also phone- or
+ * tablet-width. A touchscreen laptop keeps the dense layout it needs, and the
+ * same laptop with its window pulled narrow gets the roomy one, which is the
+ * right answer at that size anyway.
+ */
+@media (any-hover: none) and (max-width: 1023px) {
   /* Controls a finger drives get Apple's 44. min-height rather than height,
      so a button whose content is already taller is left alone. */
   .btn-primary, .btn-green, .btn-blue, .btn-purple, .btn-util,

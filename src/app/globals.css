@@ -64,10 +64,21 @@
   --fs-section:    clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem); /* 13 → 15 */
   --fs-card-title: clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem);
   --fs-body:       clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem);
-  --fs-caption:    clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);  /* 12 → 14 */
-  --fs-label:      clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);
-  --fs-kpi:        clamp(1.25rem,   1.430rem - 0.225vw, 1.375rem);
+  /* --fs-caption is the working size, not a smaller one.
+     It carries the 846 `text-xs` in the app and every table header, and on
+     Project Summary 760 of the 869 things rendering at that size were sitting
+     inside table cells — the data people read all day, not captions. It was
+     12 because phase 1 folded 10 and 11 into it; that made it the size most of
+     the app is written in, one step below the size meant for reading.
+     It is the body size now. 12 and 13 were 8% apart anyway, under the ~15%
+     the eye separates, so a table header and its cells already looked the same
+     size — this makes the code agree with what was on screen. */
+  --fs-caption:    clamp(0.8125rem, 1.016rem - 0.225vw, 0.9375rem); /* 13 → 15 */
+  /* The two that stay small, and the only ones: the label above a field, and
+     the note under a figure. Supplementary text, genuinely. */
+  --fs-label:      clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);  /* 12 → 14 */
   --fs-micro:      clamp(0.75rem,   0.930rem - 0.225vw, 0.875rem);
+  --fs-kpi:        clamp(1.25rem,   1.430rem - 0.225vw, 1.375rem);
 
   /* ── Typography — line-height, never a bare ratio ─────────────────────
      13 × 1.5 = 19.5px. Half a pixel per line is why table rows measured
@@ -111,7 +122,7 @@
      app would stay frozen at 12 and 13 while everything around them grew on a
      phone, and that is most of the screen. */
   --text-xs: var(--fs-caption);
-  --text-xs--line-height: var(--lh-caption);
+  --text-xs--line-height: var(--lh-body);
   --text-sm: var(--fs-body);
   --text-sm--line-height: var(--lh-body);
   --text-base: var(--fs-body);
@@ -541,7 +552,7 @@ table.tbl-rows { font-size: var(--fs-body); }
 .tbl-rows thead th {
   font-size: var(--fs-caption);
   font-weight: 600;
-  line-height: var(--lh-caption);
+  line-height: var(--lh-body);
   padding: 8px 16px;
   white-space: nowrap;
 }
@@ -707,7 +718,7 @@ table.tbl-rows { font-size: var(--fs-body); }
    not exist sets nothing, and body declares no font-size, so `text-caption`
    silently rendered at the browser default 16px instead of 12 — which is how
    the team card ended up looking oversized next to every other page. */
-.text-caption       { font-size: var(--fs-caption);    line-height: var(--lh-caption); }
+.text-caption       { font-size: var(--fs-caption);    line-height: var(--lh-body); }
 
 /* ══════════════════════════════════════════
    Page layout

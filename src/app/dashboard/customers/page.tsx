@@ -438,7 +438,7 @@ function CustomerDetail({
                 {jobs.length > 1 && (
                   <input
                     value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาห้อง"
-                    className="field-input" style={{ width: 150, padding: '5px 10px', fontSize: 12 }}
+                    className="field-input" style={{ width: 150, padding: '5px 10px', fontSize: 'var(--fs-micro)' }}
                   />
                 )}
               </div>

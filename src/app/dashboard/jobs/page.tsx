@@ -225,8 +225,8 @@ function JobCard({ job, paymentMap, progressMap, onClick, seqNo }: {
       {payPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: barColor }}>{payPct}%</span>
+            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, color: barColor }}>{payPct}%</span>
           </div>
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${payPct}%`, borderRadius: '9999px', background: barColor }} />
@@ -466,9 +466,9 @@ function AddJobModal({
 function ReadField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="min-w-0">
-      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       <p className="font-semibold tabular-nums truncate"
-        style={{ fontSize: 12.5, lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
+        style={{ fontSize: 'var(--fs-body)', lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
         {value || '—'}
       </p>
     </div>

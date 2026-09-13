@@ -143,9 +143,9 @@ interface DeliveryDocs { handover: boolean; warranty: boolean; commission: boole
 function Row2({ label, value, tone }: { label: string; value: React.ReactNode; tone?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</span>
+      <span style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</span>
       <span className="font-semibold text-right"
-        style={{ fontSize: 12.5, lineHeight: 1.45, color: tone ?? 'var(--text-1)' }}>{value}</span>
+        style={{ fontSize: 'var(--fs-body)', lineHeight: 1.45, color: tone ?? 'var(--text-1)' }}>{value}</span>
     </div>
   )
 }
@@ -721,7 +721,7 @@ export default function HandoverPage() {
               const rooms = t.delivered + t.late
               return (
                 <div key={t.key} className="flex-shrink-0 flex flex-col items-center gap-0.5 group" style={{ minWidth: '52px' }}>
-                  <div style={{ height: '14px', fontSize: '12px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
+                  <div style={{ height: '14px', fontSize: 'var(--fs-micro)', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
                     {t.value > 0 && <span style={{ color: 'var(--chart-1)' }}>{bahtShort(t.value)}</span>}
                   </div>
                   <div className="w-full relative flex items-end justify-center" style={{ height: '104px' }}>

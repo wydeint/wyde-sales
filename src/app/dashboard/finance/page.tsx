@@ -459,7 +459,7 @@ export default function FinancePage() {
                 return (
                   <div key={m.key} className="flex-shrink-0 flex flex-col items-center gap-0.5 group" style={{ minWidth: '44px' }}>
                     {/* Value labels — income (blue) / expense (red) */}
-                    <div style={{ height: '14px', fontSize: '12px', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
+                    <div style={{ height: '14px', fontSize: 'var(--fs-micro)', fontWeight: 600, lineHeight: '14px', textAlign: 'center', width: '100%' }}>
                       {m.received > 0 && <span style={{ color: 'var(--accent-blue)' }}>{fk(m.received)}</span>}
                       {m.received > 0 && m.expense > 0 && <span style={{ color: 'var(--text-3)' }}>/</span>}
                       {m.expense > 0 && <span style={{ color: 'var(--accent-red)' }}>{fk(m.expense)}</span>}

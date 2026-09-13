@@ -356,7 +356,7 @@ function CellInput({ col, value, onChange }: {
     border: '1px solid var(--accent)',
     borderRadius: 4,
     padding: '2px 6px',
-    fontSize: 12,
+    fontSize: 'var(--fs-micro)',
     color: 'var(--text-1)',
     outline: 'none',
   }
@@ -364,7 +364,7 @@ function CellInput({ col, value, onChange }: {
   if (col.type === 'select' && col.options) {
     return (
       <select value={String(value ?? '')} onChange={e => onChange(e.target.value)}
-        className="field-input" style={{ padding: '2px 6px', fontSize: 12, height: 26 }}>
+        className="field-input" style={{ padding: '2px 6px', fontSize: 'var(--fs-micro)', height: 26 }}>
         <option value="">—</option>
         {col.options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -373,7 +373,7 @@ function CellInput({ col, value, onChange }: {
   if (col.type === 'boolean') {
     return (
       <select value={value === true ? 'true' : value === false ? 'false' : ''} onChange={e => onChange(e.target.value === 'true')}
-        className="field-input" style={{ padding: '2px 6px', fontSize: 12, height: 26 }}>
+        className="field-input" style={{ padding: '2px 6px', fontSize: 'var(--fs-micro)', height: 26 }}>
         <option value="">—</option>
         <option value="true">Yes</option>
         <option value="false">No</option>

@@ -1171,7 +1171,7 @@ function RoomSheet({
       <div className="ds-card space-y-2.5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h2 className="font-bold" style={{ fontSize: 13, lineHeight: 1.3, color: 'var(--text-1)' }}>
+            <h2 className="font-bold" style={{ fontSize: 'var(--fs-body)', lineHeight: 1.3, color: 'var(--text-1)' }}>
               ห้อง {job.room_no ?? '—'}
               <span className={`ml-2 badge ${job.customer_type === 'B2B' ? 'badge-purple' : 'badge-blue'}`}>
                 {job.customer_type ?? '—'}
@@ -1182,12 +1182,12 @@ function RoomSheet({
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>GP% จริง</p>
+            <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>GP% จริง</p>
             <p className="font-bold tabular-nums"
-              style={{ fontSize: 20, lineHeight: 1.2, color: 'var(--text-1)' }}>
+              style={{ fontSize: 'var(--fs-page-title)', lineHeight: 1.2, color: 'var(--text-1)' }}>
               {gpText(gpCosted(revEx, t.act, t.actLines))}
             </p>
-            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>คิดจาก Revenue exc.VAT</p>
+            <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>คิดจาก Revenue exc.VAT</p>
           </div>
         </div>
 
@@ -1204,11 +1204,11 @@ function RoomSheet({
           {job.customer_type === 'B2B' && <Field label="PO จากลูกค้า" value={job.po_no ?? '—'} highlight />}
           <Field label="Revenue inc.VAT" value={baht(rev)} />
           <div className="min-w-0">
-            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>
+            <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>
               Revenue exc.VAT
             </p>
             <p className="font-semibold tabular-nums"
-              style={{ fontSize: 12.5, lineHeight: 1.45,
+              style={{ fontSize: 'var(--fs-body)', lineHeight: 1.45,
                 color: vat === 'ok' ? 'var(--text-1)' : 'var(--accent-orange)' }}>
               {baht(revEx)}
             </p>
@@ -1227,7 +1227,7 @@ function RoomSheet({
           {/* วันที่จัดซื้อรับงานต่อ — จุดเริ่มนับ KPI 14 วัน จัดซื้อกรอกเองได้จาก
               หน้าตัวเอง ไม่ต้องรอใคร */}
           <div className="min-w-0">
-            <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--accent)' }}>จัดซื้อรับงาน</p>
+            <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--accent)' }}>จัดซื้อรับงาน</p>
             <Cell v={job.procurement_received_at ?? ''} type="date" w="7.5rem" canWrite={canWrite}
               display={fmtDate(job.procurement_received_at)} placeholder="+ วันรับงาน"
               onSave={v => onSetReceived(v)} />
@@ -1525,9 +1525,9 @@ function RoomSheet({
 function Field({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="min-w-0">
-      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       <p className="font-semibold tabular-nums"
-        style={{ fontSize: 12.5, lineHeight: 1.45,
+        style={{ fontSize: 'var(--fs-body)', lineHeight: 1.45,
           color: highlight ? 'var(--accent-purple)' : 'var(--text-1)' }}>{value}</p>
     </div>
   )
@@ -1544,7 +1544,7 @@ function AssignField({ label, value, people, canWrite, canTake, onTake, onPick }
 }) {
   return (
     <div>
-      <p style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
+      <p style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.4, color: 'var(--text-3)' }}>{label}</p>
       {canWrite ? (
         <div className="flex items-center gap-2">
           <select
@@ -1563,7 +1563,7 @@ function AssignField({ label, value, people, canWrite, canTake, onTake, onPick }
         </div>
       ) : (
         <p className="font-semibold"
-          style={{ fontSize: 12.5, lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
+          style={{ fontSize: 'var(--fs-body)', lineHeight: 1.45, color: value ? 'var(--text-1)' : 'var(--text-3)' }}>
           {people.find(u => u.id === value)?.name ?? 'ยังไม่มอบหมาย'}
         </p>
       )}

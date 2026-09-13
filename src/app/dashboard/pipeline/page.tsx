@@ -329,8 +329,8 @@ function BookedJobCard({ job, onClick, onDelete }: { job: BookedJob; onClick: ()
       {barPct !== null && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>ชำระแล้ว</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: barColor }}>{barPct}%</span>
+            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--text-3)' }}>ชำระแล้ว</span>
+            <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 700, color: barColor }}>{barPct}%</span>
           </div>
           <div style={{ height: '4px', borderRadius: '9999px', overflow: 'hidden', background: 'var(--hover-bg)' }}>
             <div style={{ height: '100%', width: `${barPct}%`, borderRadius: '9999px', background: barColor }} />

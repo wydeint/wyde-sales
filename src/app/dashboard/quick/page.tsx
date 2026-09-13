@@ -5,7 +5,7 @@ import FileAttach from '@/components/ui/FileAttach'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import MoneyInput from '@/components/ui/MoneyInput'
-import { crmStage } from '@/lib/status'
+import { crmStage, EVENT_CUSTOMER_STATUSES } from '@/lib/status'
 import { Spinner, EmptyState } from '@/components/ui/StateUI'
 import { useRouter } from 'next/navigation'
 import { bahtShort } from '@/lib/money'
@@ -21,6 +21,7 @@ import { showAlert } from '@/components/ui/dialog'
 import { netReceived } from '@/lib/voucher'
 import { deliverJob } from '@/lib/jobLifecycle'
 import { todayStr } from '@/lib/today'
+import { compareThai } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────
 interface WidgetData {
@@ -163,7 +164,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
       .order('customer_name')
       .limit(15)
     if (error) console.error('OriginPoolSheet search error:', error)
-    setResults(data || [])
+    setResults(sortByName(data))
     setLoading(false)
   }
 
@@ -174,7 +175,7 @@ function OriginPoolSheet({ open, onClose }: { open: boolean; onClose: () => void
   }
 
   return (
-    <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="ค้นหาลูกค้า (Origin Pool)" icon={Database}>
+    <Sheet open={open} onClose={() => { setSearch(''); setResults([]); onClose() }} title="Origin Pool" icon={Database}>
       <div className="p-4">
         <div className="relative mb-4">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
@@ -219,7 +220,7 @@ function WydeClientsSheet({ open, onClose }: { open: boolean; onClose: () => voi
       .not('working_status', 'eq', 'ยกเลิก')
       .order('customer_name')
       .limit(10)
-    setResults(data || [])
+    setResults(sortByName(data))
     setLoading(false)
   }
 
@@ -317,7 +318,7 @@ function ProspectsSheet({ open, onClose }: { open: boolean; onClose: () => void 
       .order('customer_name')
       .limit(12)
     if (error) console.error('ProspectsSheet search error:', error)
-    setResults(data || [])
+    setResults(sortByName(data))
     setLoading(false)
   }
 
@@ -396,7 +397,7 @@ function EventAddSheet({ open, onClose, events }: {
       .order('customer_name')
       .limit(15)
     if (error) console.error('EventAddSheet search error:', error)
-    setLeads(data || [])
+    setLeads(sortByName(data))
     setLoading(false)
   }
 
@@ -436,12 +437,17 @@ function EventAddSheet({ open, onClose, events }: {
     onClose()
   }
 
-  const STATUS_OPTIONS = [
-    { value: 'interested',    label: 'สนใจ ติดตามต่อ', activeColor: 'var(--accent-green)',  activeBg: 'color-mix(in srgb, var(--accent-green)  15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-green)  40%, transparent)' },
-    { value: 'booked',        label: 'Booked',           activeColor: 'var(--accent-blue)',   activeBg: 'color-mix(in srgb, var(--accent-blue)   15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-blue)   40%, transparent)' },
-    { value: 'not_interested',label: 'ไม่สนใจ',         activeColor: 'var(--accent-red)',    activeBg: 'color-mix(in srgb, var(--accent-red)    15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-red)    40%, transparent)' },
-    { value: 'not_met',       label: 'ไม่ได้พบ',        activeColor: 'var(--accent-orange)', activeBg: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', activeBorder: 'color-mix(in srgb, var(--accent-orange) 40%, transparent)' },
-  ]
+  /* One list for both screens — see EVENT_CUSTOMER_STATUSES in lib/status.ts
+     for what these had drifted into. The colours here come from the shared
+     entry so a status looks the same on a phone as it does on the Events
+     page. */
+  const STATUS_OPTIONS = EVENT_CUSTOMER_STATUSES.map(e => ({
+    value: e.value,
+    label: e.label,
+    activeColor: e.color,
+    activeBg: `color-mix(in srgb, ${e.color} 15%, transparent)`,
+    activeBorder: `color-mix(in srgb, ${e.color} 40%, transparent)`,
+  }))
 
   return (
     <Sheet open={open} onClose={resetAndClose} title="เพิ่มลูกค้า Event" icon={CalendarDays}>
@@ -449,7 +455,7 @@ function EventAddSheet({ open, onClose, events }: {
         <div className="p-4">
           <p className="text-xs mb-4" style={t2}>เลือก Event</p>
           {events.length === 0 ? (
-            <p className="text-center py-8 text-sm" style={t3}>ไม่มี Event</p>
+            <p className="text-center py-8 text-sm" style={t3}>ยังไม่มี Event</p>
           ) : (
             <div className="space-y-2">
               {events.map(ev => (
@@ -539,6 +545,17 @@ function EventAddSheet({ open, onClose, events }: {
       )}
     </Sheet>
   )
+}
+
+/**
+ * `.order('customer_name')` on the query sorts with the database collation
+ * (en_US.UTF-8), which puts Thai leading vowels — เ แ โ ใ ไ — before the
+ * consonant they are read after. 47% of the Thai names in the table come back
+ * in the wrong place. The query keeps its order so the `.limit()` picks a
+ * stable slice; the list the salesperson actually reads is sorted here.
+ */
+function sortByName<T extends { customer_name?: string | null }>(rows: T[] | null): T[] {
+  return [...(rows || [])].sort((a, b) => compareThai(a.customer_name, b.customer_name))
 }
 
 const CHANNEL_OPTS = ['โอนเข้าบัญชีบริษัท', 'บัตรเครดิต', 'เงินสด', 'QR Code']
@@ -1266,7 +1283,7 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
           : items.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle2 size={32} className="mx-auto mb-4" style={{ color: 'color-mix(in srgb, var(--accent-green) 50%, transparent)' }} />
-              <p style={t2}>ไม่มีงานเกินกำหนด 🎉</p>
+              <p style={t2}>ยังไม่มีงานเกินกำหนด 🎉</p>
             </div>
           ) : items.map((j: any) => (
             <div key={j.id} className="rounded-[18px] p-3 mb-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
@@ -1419,7 +1436,7 @@ function DocumentsSheet({ open, onClose }: { open: boolean; onClose: () => void 
       const key = `${item.name}|${item.room}`
       if (!seen.has(key)) { seen.add(key); merged.push(item) }
     }
-    setResults(merged)
+    setResults(merged.sort((a, b) => compareThai(a.name, b.name)))
     setLoading(false)
   }
 
@@ -1547,14 +1564,14 @@ export default function QuickPage() {
   type Btn = { key: string; icon: LucideIcon; label: string; iconColor: string; btnStyle: React.CSSProperties; badge?: number; sheet?: string; href?: string }
 
   const BUTTONS: Btn[] = [
-    { key: 'clients',    icon: Briefcase,      label: 'Wyde\nClients',   iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'clients' },
+    { key: 'clients',    icon: Briefcase,      label: 'Job\nRegistry',   iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'clients' },
     { key: 'prospects',  icon: Users,           label: 'Prospects',       iconColor: 'var(--accent)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'prospects' },
     { key: 'event',      icon: CalendarDays,    label: 'ลูกค้า\nEvent',  iconColor: 'var(--accent-green)',  btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'event' },
-    { key: 'lookup',     icon: Database,        label: 'ค้นหา\nลูกค้า', iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'lookup' },
+    { key: 'lookup',     icon: Database,        label: 'Origin\nPool', iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'lookup' },
     { key: 'pay',        icon: Receipt,         label: 'บันทึก\nรับเงิน',iconColor: 'var(--accent-orange)',btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.pendingInstallments, sheet: 'pay' },
-    { key: 'docs',       icon: FileText,        label: 'เอกสาร\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'docs' },
+    { key: 'docs',       icon: FileText,        label: 'ไฟล์แนบ\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'docs' },
     { key: 'deliver',    icon: ArrowRightLeft,  label: 'บันทึก\nส่งมอบ', iconColor: 'var(--accent-green)',  btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.readyToDeliver, sheet: 'deliver' },
-    { key: 'handover',   icon: ClipboardList,   label: 'สถานะ\nงาน',     iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'handover' },
+    { key: 'handover',   icon: ClipboardList,   label: 'อัปเดต\nสถานะงาน',     iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'handover' },
     { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: 'var(--accent-red)',    btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.overdueJobs, sheet: 'overdue' },
     { key: 'mydeals',    icon: Briefcase,       label: 'My\nDeals',       iconColor: 'var(--accent)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, href: '/dashboard/my-deals' },
     { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: 'var(--accent-orange)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'commission' },

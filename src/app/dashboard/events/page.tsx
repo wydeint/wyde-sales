@@ -12,6 +12,7 @@ import { baht } from '@/lib/money'
 import { createProspectJob } from '@/lib/prospectJob'
 import { incVatOf } from '@/lib/procurement'
 import { cleanName } from '@/lib/customerName'
+import { EVENT_CUSTOMER_STATUSES } from '@/lib/status'
 
 interface Project { id: string; name: string }
 interface Lead { id: number; tower: string; room_no: string; customer_name: string; phone: string }
@@ -51,13 +52,10 @@ const EVENT_TYPES = [
   { value: 'other', label: 'อื่นๆ' },
 ]
 
-const CUST_STATUS = [
-  { value: 'booked',          label: 'Booked',                    color: 'badge badge-green' },
-  { value: 'converted',       label: 'เข้าระบบแล้ว',              color: 'badge badge-blue' },
-  { value: 'interested',      label: 'สนใจ ติดตามต่อ',            color: 'badge badge-orange' },
-  { value: 'not_interested',  label: 'ไม่สนใจ',                   color: 'badge badge-red' },
-  { value: 'not_met',         label: 'ไม่ได้พบ ติดตามภายหลัง',   color: 'badge badge-gray' },
-]
+/* Shared with Quick Mode — see EVENT_CUSTOMER_STATUSES in lib/status.ts. */
+const CUST_STATUS = EVENT_CUSTOMER_STATUSES.map(e => ({
+  value: e.value, label: e.label, color: e.badge,
+}))
 
 const BOOKING_TYPES = [
   { value: 'Event', label: 'Event' },

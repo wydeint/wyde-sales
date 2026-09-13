@@ -72,6 +72,24 @@ export const FUNNEL_ORDER: CrmStage[] = CRM_STAGES.filter(s => s.value !== 'lost
  * distinguishable from a customer who simply walked away, without adding a
  * funnel stage that every report would have to learn.
  */
+/**
+ * event_customers.status — how a guest met at an event was left.
+ *
+ * Was declared twice: once on the Events page and once inside Quick Mode, and
+ * the two had already drifted. Quick Mode was missing `converted` altogether,
+ * so a guest who had been brought into the system could not be marked as such
+ * from a phone, and its `not_met` read "ไม่ได้พบ" against the Events page's
+ * "ไม่ได้พบ ติดตามภายหลัง" — the same status under two names depending on
+ * which screen you were standing on.
+ */
+export const EVENT_CUSTOMER_STATUSES: StatusEntry[] = [
+  { value: 'booked',         label: 'Booked',                  icon: '★', badge: 'badge badge-green',  color: 'var(--accent-green)' },
+  { value: 'converted',      label: 'เข้าระบบแล้ว',            icon: '✓', badge: 'badge badge-blue',   color: 'var(--accent-blue)' },
+  { value: 'interested',     label: 'สนใจ ติดตามต่อ',          icon: '◉', badge: 'badge badge-orange', color: 'var(--accent-orange)' },
+  { value: 'not_interested', label: 'ไม่สนใจ',                 icon: '✕', badge: 'badge badge-red',    color: 'var(--accent-red)' },
+  { value: 'not_met',        label: 'ไม่ได้พบ ติดตามภายหลัง',  icon: '◷', badge: 'badge badge-gray',   color: 'var(--text-3)' },
+]
+
 export const CANCEL_OUTCOMES: StatusEntry[] = [
   { value: 'forfeit', label: 'ยึดเงินจอง', icon: '⊘', badge: 'badge badge-amber', color: 'var(--accent-amber)' },
   { value: 'refund',  label: 'คืนเงิน',    icon: '↩', badge: 'badge badge-blue',  color: 'var(--accent-blue)' },

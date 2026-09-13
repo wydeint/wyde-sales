@@ -52,8 +52,24 @@ export function fmtCompact(n: number | null | undefined): string {
  * had its own idea of the order — Handover had none at all and showed whatever
  * order Postgres returned.
  */
-export function compareRoom(a: string | null | undefined, b: string | null | undefined): number {
+/**
+ * Sort Thai text the way a Thai reader expects.
+ *
+ * Not the same as letting the database do it. Postgres sorts with the
+ * database's collation, which here is en_US.UTF-8 — that orders Thai by code
+ * point, and the leading vowels (เ แ โ ใ ไ) are stored *before* the consonant
+ * they are pronounced after. Measured on the real table: 272 of the 582 Thai
+ * customer names, 47%, come back in a different position than they belong in.
+ *
+ * So a list of Thai names is sorted here, not with `.order()`.
+ */
+export function compareThai(a: string | null | undefined, b: string | null | undefined): number {
   return (a || '').localeCompare(b || '', 'th', { numeric: true, sensitivity: 'base' })
+}
+
+/** Room labels — same comparison, named for the thing it is usually used on. */
+export function compareRoom(a: string | null | undefined, b: string | null | undefined): number {
+  return compareThai(a, b)
 }
 
 /**

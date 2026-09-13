@@ -587,9 +587,20 @@ table.tbl-rows { font-size: var(--fs-body); }
   text-align: right;
   min-width: var(--num-w, 9ch);
 }
-.tbl-rows .num-money { --num-w: 9ch; }   /* 1,065,220 */
-.tbl-rows .num-pct   { --num-w: 5ch; }   /* 51.9%     */
-.tbl-rows .num-count { --num-w: 4ch; }   /* 12 · 3/5  */
+/* em, not ch. `ch` is the advance of the "0" glyph, and that glyph is wider in
+   bold — so a bold total row got a wider block than the regular rows above it
+   and its digits landed 2-3px off the column they total. em depends only on
+   font-size, so a block is the same width whatever weight sits in it, and
+   still scales with the fluid type scale. Values are the measured ch widths at
+   regular weight, converted: one tabular digit is 0.547em in this face. */
+/* Widths measured from the values these columns actually render, not from a
+   guessed digit count. The first cut used 9 digits for money and 135 of the
+   479 money cells on Project Summary overflowed it — ฿347,500.00 is wider than
+   ฿1.06 MB. A block narrower than its content stops doing its job: the value
+   spills past the block's right edge and the column goes ragged again. */
+.tbl-rows .num-money { --num-w: 5.75em; }   /* ฿347,500.00 is 5.71em */
+.tbl-rows .num-pct   { --num-w: 3.90em; }   /* "1 · 100%" is 3.74em  */
+.tbl-rows .num-count { --num-w: 2.25em; }   /* 12 · 3/5              */
 
 /* Column headings should sit behind the data, not compete with it. The shared
    rule sets size and weight but no colour, so a bare <th> inherits --text-1 and

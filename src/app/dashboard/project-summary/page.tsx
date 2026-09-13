@@ -575,7 +575,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                       <tr style={{ borderBottom: '1px solid var(--divider)' }}>
                         <th className="text-left font-semibold" style={{ color: 'var(--text-3)' }}>ห้อง</th>
                         <th className="text-left font-semibold" style={{ color: 'var(--text-3)' }}>สถานะ</th>
-                        <th className="num num-count font-semibold" style={{ color: 'var(--text-3)' }}><span>วันที่ขาย</span></th>
+                        <th className="font-semibold" style={{ color: 'var(--text-3)' }}><span>วันที่ขาย</span></th>
                         <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>มูลค่างาน</span></th>
                         <th className="num num-money font-semibold" style={{ color: 'var(--text-3)' }}><span>รับแล้ว</span></th>
                       </tr>
@@ -585,7 +585,7 @@ function ProjectDrawer({ row, overallLeadDays, onClose }: {
                         <tr key={j.id} style={{ borderTop: '1px solid var(--divider)' }}>
                           <td className=" font-semibold" style={{ color: 'var(--text-1)' }}>{j.room}</td>
                           <td className="" style={{ color: j.delivered ? 'var(--accent-green)' : 'var(--accent-amber)' }}>{j.status}</td>
-                          <td className=" num num-count tabular-nums" style={{ color: j.order_date ? 'var(--text-2)' : 'var(--accent-amber)' }}><span>
+                          <td className=" tabular-nums" style={{ color: j.order_date ? 'var(--text-2)' : 'var(--accent-amber)' }}><span>
                             {j.order_date ? thaiDate(j.order_date) : 'ไม่มีวันที่'}
                           </span></td>
                           <td className=" num num-money tabular-nums" style={{ color: 'var(--text-2)' }}><span>{fK(j.rev)}</span></td>
@@ -632,22 +632,39 @@ function TotalRow({ slices, side }: { slices: Slice[]; side: 'sales' | 'delivery
   }), { n: 0, rev: 0, cash: 0, del: 0, delRev: 0 })
   if (t.n === 0) return null
   const waiting = t.n - t.del
-  const cell = 'num num-money tabular-nums font-bold'
+  /*
+   * Two things a total row has to copy from the column above it, and this one
+   * copied neither:
+   *
+   *  - the width class. One shared `cell` constant put num-money (9ch) on every
+   *    column, including งาน, whose data cells are num-count (4ch). Different
+   *    block widths put the total's digits 37px off the column it totals.
+   *  - the <span>. The block rule is `td.num > span`, so a cell with the class
+   *    and no wrapper gets no block at all — measured min-width 0 against the
+   *    29px the cells above it had.
+   *
+   * So: same width class per column, and every figure wrapped.
+   */
+  const money = 'num num-money tabular-nums font-bold'
+  const count = 'num num-count tabular-nums font-bold'
+  const pct = 'num num-pct tabular-nums font-bold'
   return (
     <tfoot>
       <tr style={{ borderTop: '1px solid var(--divider)' }}>
-        <td className=" font-bold" style={{ color: 'var(--text-2)' }}>รวม</td>
-        <td className={cell} style={{ color: 'var(--text-1)' }}>{t.n}</td>
+        <td className="font-bold" style={{ color: 'var(--text-2)' }}>รวม</td>
+        <td className={count} style={{ color: 'var(--text-1)' }}><span>{t.n}</span></td>
         {side === 'sales' ? (
           <>
-            <td className={cell} style={{ color: 'var(--text-1)' }}>{fK(t.rev)}</td>
-            <td className={cell} style={{ color: 'var(--accent-green)' }}>{fK(t.cash)}</td>
+            <td className={money} style={{ color: 'var(--text-1)' }}><span>{fK(t.rev)}</span></td>
+            <td className={money} style={{ color: 'var(--accent-green)' }}><span>{fK(t.cash)}</span></td>
           </>
         ) : (
           <>
-            <td className={cell} style={{ color: 'var(--accent-green)' }}>{t.del > 0 ? t.del : '–'}</td>
-            <td className={cell} style={{ color: 'var(--accent-amber)' }}>{waiting > 0 ? waiting : '–'}</td>
-            <td className={cell} style={{ color: 'var(--text-1)' }}>{waiting > 0 ? fK(t.rev - t.delRev) : '–'}</td>
+            {/* ส่งมอบแล้ว renders "12 · 71%" in the body, so it is the pct width,
+                not the count width — the column above tells you which. */}
+            <td className={pct} style={{ color: 'var(--accent-green)' }}><span>{t.del > 0 ? t.del : '–'}</span></td>
+            <td className={count} style={{ color: 'var(--accent-amber)' }}><span>{waiting > 0 ? waiting : '–'}</span></td>
+            <td className={money} style={{ color: 'var(--text-1)' }}><span>{waiting > 0 ? fK(t.rev - t.delRev) : '–'}</span></td>
           </>
         )}
       </tr>

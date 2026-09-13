@@ -36,6 +36,7 @@ export default function PeriodPicker({
   unit, setUnit, offset, setOffset,
   units = ['month', 'quarter', 'year'],
   allowFuture = false,
+  active = true,
   className = '',
 }: {
   unit: PeriodUnit
@@ -46,6 +47,16 @@ export default function PeriodPicker({
   /** Which units this page offers. Finance adds 'today' and 'week'. */
   units?: PeriodUnit[]
   allowFuture?: boolean
+  /**
+   * Whether the period is currently what the page is filtered by. A page that
+   * also offers "ทั้งหมด" passes false while that is chosen: the control stays
+   * in place and stays usable — picking a unit is how you leave ทั้งหมด — but
+   * no unit is drawn as selected, because none of them is in force.
+   * Hiding it instead was worse: the month / quarter / year buttons vanished,
+   * so from a standing start there was nothing on screen to say the page could
+   * be filtered by period at all.
+   */
+  active?: boolean
   className?: string
 }) {
   const b = getPeriodBounds(unit, offset)
@@ -57,7 +68,7 @@ export default function PeriodPicker({
       <div className="tab-group">
         {units.map(u => (
           <button key={u} onClick={() => { setUnit(u); setOffset(0) }}
-            className={`tab-btn ${unit === u ? 'active' : ''}`}>
+            className={`tab-btn ${active && unit === u ? 'active' : ''}`}>
             {UNIT_LABELS[u]}
           </button>
         ))}
@@ -96,7 +107,7 @@ export default function PeriodPicker({
                 the dot slot is always there, only its colour changes. */}
             <span aria-hidden style={{
               display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
-              background: atPresent ? 'var(--accent)' : 'transparent',
+              background: active && atPresent ? 'var(--accent)' : 'transparent',
             }} />
           </span>
 

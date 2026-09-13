@@ -101,10 +101,16 @@ export default function ProcurementPage() {
   /** แท็บเอกสารกรองด้วยคำถามของตัวเอง: อะไรยังไม่ได้กรอก */
   const [docFilter, setDocFilter] = useState<'' | 'so' | 'pr' | 'po' | 'vat'>('')
   /*
-   * ตัวกรองช่วงเวลาเปิดตลอด ค่าเริ่มต้นคือเดือนปัจจุบัน — จัดซื้อใช้บ่อย
-   * ปุ่ม "ทั้งหมด" อยู่ในแถวเดียวกันสำหรับตอนที่อยากเห็นงานค้างทุกเดือน
+   * ค่าเริ่มต้นคือ "ทั้งหมด" ไม่ใช่เดือนปัจจุบัน
+   *
+   * เดิมเปิดหน้ามาแล้วกรองเป็นเดือนนี้ไว้ น้องจึงหางานที่จะลงต้นทุนไม่เจอตั้งแต่
+   * ครั้งแรก — งานที่ยังไม่ได้ลงต้นทุนส่วนใหญ่ส่งมอบเดือนก่อนๆ ตัวกรองที่ตั้งไว้
+   * ก่อนที่ใครจะได้ค้นอะไรเลย ทำให้หน้าตอบว่า "ไม่มี" ทั้งที่แปลว่า "ไม่มีในเดือนนี้"
+   *
+   * ตัวเลือกเดือน/ไตรมาส/ปี ยังอยู่บนจอตลอดแม้อยู่โหมดทั้งหมด (ดู active prop
+   * ของ PeriodPicker) — เดิมมันหายไปเลย จึงไม่มีอะไรบอกว่าหน้านี้กรองตามช่วงได้
    */
-  const [byPeriod, setByPeriod] = useState(true)
+  const [byPeriod, setByPeriod] = useState(false)
   const [anchor, setAnchor] = useState<CostAnchor>('delivery')
   const [unit, setUnit] = useState<PeriodUnit>('month')
   const [offset, setOffset] = useState(0)
@@ -527,11 +533,16 @@ export default function ProcurementPage() {
           {/* ปุ่มนี้คุม PeriodPicker จึงต้องอยู่ติดกัน — เดิมลอยอยู่สุดแถวบน
               ห่างจากสิ่งที่มันเปิด-ปิดไปคนละบรรทัด */}
           <div className="flex items-center gap-2 w-full flex-wrap">
-            <button onClick={() => setByPeriod(!byPeriod)}
+            <button onClick={() => setByPeriod(false)}
               className={`tab-btn ${byPeriod ? '' : 'active'}`}
               style={byPeriod ? { border: '1px solid var(--divider)' } : undefined}
               aria-pressed={!byPeriod}>ทั้งหมด</button>
-            {byPeriod && <PeriodPicker unit={unit} setUnit={setUnit} offset={offset} setOffset={setOffset} />}
+            {/* อยู่บนจอเสมอ ไม่ซ่อนตอนโหมดทั้งหมด — และการกดเลือกช่วงคือวิธีออก
+                จากโหมดทั้งหมด ปุ่มที่กดแล้วไม่มีอะไรเกิดขึ้นแย่กว่าปุ่มที่หายไป */}
+            <PeriodPicker
+              unit={unit} setUnit={u => { setUnit(u); setByPeriod(true) }}
+              offset={offset} setOffset={o => { setOffset(o); setByPeriod(true) }}
+              active={byPeriod} />
             {/* อยู่ติด PeriodPicker เพราะช่วงเวลาคือสิ่งที่กำหนดขอบเขตของไฟล์ —
                 ปุ่มที่ลอยห่างจากตัวควบคุมของตัวเองทำให้เดาไม่ออกว่าจะได้อะไรมา */}
             <button onClick={exportReport} className="btn-util ml-auto flex items-center gap-1.5"

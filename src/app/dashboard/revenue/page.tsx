@@ -131,6 +131,7 @@ export default function RevenuePage() {
   const [filterWorkType, setFilterWorkType] = useState('')
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [expandedSales, setExpandedSales] = useState<Set<string>>(new Set())
+  const [expandedType, setExpandedType] = useState<Set<string>>(new Set())
   const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([])
   const [referrals, setReferrals] = useState<{ job_id: string; referrer_name: string; referral_amount: number }[]>([])
   /** ต้นทุนรวมต่อห้อง — คำนวณสดจาก job_cost_items (jobs.cost ถูกลบในเฟส 5) */
@@ -233,6 +234,47 @@ export default function RevenuePage() {
       map.set(name, { name, revenue: cur.revenue + jobRev(j), units: cur.units + 1, jobs: [...cur.jobs, j] })
     })
     return [...map.values()].sort((a, b) => b.revenue - a.revenue)
+  }, [periodJobs])
+
+  /**
+   * ประเภทงาน × ประเภทลูกค้า — the Summary tab's own cut.
+   *
+   * These are two independent axes, not one: `customer_type` says who signed
+   * (TFRS 15) and `work_type` says whether the counterparty is a related party
+   * (TAS 24). Every combination is legitimate, which is exactly why a cross
+   * table is the right shape — a list down one axis hides the other. See
+   * reference_rpt_axis.
+   *
+   * The three N-RPT flavours fold into one row because the split between them
+   * is a sales channel (Event, EQ), not a different kind of counterparty; the
+   * detail is there for whoever opens the row.
+   */
+  type Cell = { value: number; units: number }
+  const byType = useMemo(() => {
+    const blank = (): Cell => ({ value: 0, units: 0 })
+    const rows = new Map<string, { subs: Map<string, Record<string, Cell>> ; total: Record<string, Cell> }>()
+    const add = (c: Record<string, Cell>, ct: string, v: number) => {
+      c[ct] = c[ct] || blank(); c[ct].value += v; c[ct].units++
+      c.all = c.all || blank(); c.all.value += v; c.all.units++
+    }
+    for (const j of periodJobs) {
+      const wt = (j.work_type || '').trim()
+      const group = !wt ? 'ไม่ระบุ' : wt.startsWith('N-RPT') ? 'N-RPT' : wt
+      // "N-RPT/Event" → "Event"; a bare "N-RPT" is the plain flavour.
+      const sub = group === 'N-RPT' ? (wt.split('/')[1] || 'ทั่วไป') : ''
+      const ct = j.customer_type === 'B2B' ? 'B2B' : j.customer_type === 'B2C' ? 'B2C' : 'อื่นๆ'
+      const row = rows.get(group) || { subs: new Map(), total: {} }
+      add(row.total, ct, jobRev(j))
+      if (sub) {
+        const s = row.subs.get(sub) || {}
+        add(s, ct, jobRev(j))
+        row.subs.set(sub, s)
+      }
+      rows.set(group, row)
+    }
+    return [...rows.entries()]
+      .map(([name, r]) => ({ name, total: r.total, subs: [...r.subs.entries()].sort((a, b) => (b[1].all?.value || 0) - (a[1].all?.value || 0)) }))
+      .sort((a, b) => (b.total.all?.value || 0) - (a.total.all?.value || 0))
   }, [periodJobs])
 
   const byStatus = useMemo(() => {
@@ -425,28 +467,55 @@ export default function RevenuePage() {
       {/* ── Summary view ── */}
       {view === 'summary' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="ds-card">
-            <h2 className="text-section-title mb-4 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
-              <Users size={13} style={{ color: 'var(--accent-blue)' }} />
-              {mainTab === 'sales' ? 'ยอดขาย by Sales' : 'Revenue by Sales'}
+          {/* Replaces the old "by Sales" bars, which repeated the รายคน tab
+              beside it. This is the cut no other tab offers. */}
+          <div className="ds-card ds-card-flush tbl-scroll">
+            <h2 className="text-section-title flex items-center gap-2" style={{ color: 'var(--text-1)', padding: 'var(--space-md) var(--space-md) 0' }}>
+              <Building2 size={13} style={{ color: 'var(--accent-blue)' }} />
+              ประเภทงาน × ประเภทลูกค้า
             </h2>
-            {bySales.length === 0 ? (
-              <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</p>
-            ) : bySales.map((s, i) => (
-              <div key={s.name} className="mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs w-4" style={{ color: 'var(--text-3)' }}>{i + 1}.</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>{s.name}</span>
-                    <span className="text-xs" style={{ color: 'var(--text-3)' }}>{s.units} งาน</span>
-                  </div>
-                  <span className="text-sm font-bold" style={{ color: mainTab === 'sales' ? 'var(--accent-orange)' : 'var(--accent-green)' }}>{fk(s.revenue)}</span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--divider)' }}>
-                  <div className="h-full rounded-full" style={{ width: (s.revenue / salesMax * 100) + '%', background: 'var(--chart-1)' }} />
-                </div>
-              </div>
-            ))}
+            <table className="w-full tbl-rows">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--divider)' }}>
+                  <th>ประเภทงาน</th>
+                  <th className="num num-money">B2C</th>
+                  <th className="num num-money">B2B</th>
+                  <th className="num num-money">รวม</th>
+                </tr>
+              </thead>
+              <tbody>
+                {byType.length === 0 ? (
+                  <tr><td colSpan={4} className="text-center" style={{ color: 'var(--text-3)' }}>ยังไม่มีข้อมูล</td></tr>
+                ) : byType.map(r => {
+                  const open = expandedType.has(r.name)
+                  const cell = (c: Cell | undefined) => c
+                    ? <><span className="block">{fk(c.value)}</span><span className="block text-micro" style={{ color: 'var(--text-3)' }}>{c.units} งาน</span></>
+                    : <span style={{ color: 'var(--text-3)' }}>—</span>
+                  return (
+                    <React.Fragment key={r.name}>
+                      <tr style={{ cursor: r.subs.length ? 'pointer' : 'default' }}
+                        onClick={() => { if (!r.subs.length) return; const n = new Set(expandedType); n.has(r.name) ? n.delete(r.name) : n.add(r.name); setExpandedType(n) }}>
+                        <td className="font-semibold" style={{ color: 'var(--text-1)' }}>
+                          {r.subs.length > 0 && <ChevronDown size={12} className="inline mr-1 transition-transform" style={{ color: 'var(--text-3)', transform: open ? 'none' : 'rotate(-90deg)' }} />}
+                          {r.name}
+                        </td>
+                        <td className="num num-money"><span>{cell(r.total.B2C)}</span></td>
+                        <td className="num num-money"><span>{cell(r.total.B2B)}</span></td>
+                        <td className="num num-money font-semibold"><span>{cell(r.total.all)}</span></td>
+                      </tr>
+                      {open && r.subs.map(([sub, c]) => (
+                        <tr key={sub} style={{ background: 'var(--hover-bg)' }}>
+                          <td style={{ color: 'var(--text-2)', paddingLeft: 'calc(var(--space-md) + 14px)' }}>↳ {sub}</td>
+                          <td className="num num-money"><span>{cell(c.B2C)}</span></td>
+                          <td className="num num-money"><span>{cell(c.B2B)}</span></td>
+                          <td className="num num-money"><span>{cell(c.all)}</span></td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div className="ds-card">

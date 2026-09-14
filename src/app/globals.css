@@ -765,7 +765,11 @@ table.tbl-rows { font-size: var(--fs-body); }
    so the grid stays correct at either column count without the component
    knowing which one it is in. See components/ui/SummaryCard.tsx. */
 .summary-strip { display: grid; grid-template-columns: repeat(2, 1fr); }
-.summary-strip > * { padding: var(--space-md); border-left: 1px solid var(--divider); }
+/* min-width: 0 because a grid item defaults to min-width: auto, which refuses
+   to shrink below its content. A long figure — ฿760,241.78 with a "เดือนก่อน"
+   note under it — then pushes its own 1fr track wider than the share it was
+   given, and the strip overflows the card instead of wrapping inside it. */
+.summary-strip > * { padding: var(--space-md); border-left: 1px solid var(--divider); min-width: 0; }
 .summary-strip > *:nth-child(2n + 1) { border-left: 0; }
 .summary-strip > *:nth-child(n + 3)  { border-top: 1px solid var(--divider); }
 
@@ -773,6 +777,29 @@ table.tbl-rows { font-size: var(--fs-body); }
    The count comes from the component, because nth-child cannot read a custom
    property — a fixed repeat(4) left an empty column whenever a page showed
    three figures, which is most of them. */
+/* Quick Mode's Overview: three month-to-date figures and one standing figure.
+ *
+ * On a phone it is a 2×2 block — two bands, no gaps. Three-across does not
+ * work at this width: measured on a 390px screen the columns come out 116px
+ * and ฿612,687.87 overflows its cell by 21px, and the fix is not a smaller
+ * type size on the one number people open the page for. Two columns give
+ * ~150px of text, which the longest realistic figure fits inside.
+ *
+ * From 640px up it becomes the three figures in a row with the fourth spanning
+ * the full width beneath them — that one is the only figure you can act on, so
+ * it gets its own band once there is room for one. */
+.qm-overview { display: grid; grid-template-columns: repeat(2, 1fr); }
+.qm-overview > * { padding: var(--space-md); border-left: 1px solid var(--divider); }
+.qm-overview > *:nth-child(2n + 1) { border-left: 0; }
+.qm-overview > *:nth-child(n + 3) { border-top: 1px solid var(--divider); }
+
+@media (min-width: 640px) {
+  .qm-overview { grid-template-columns: repeat(3, 1fr); }
+  .qm-overview > * { border-top: 0; border-left: 1px solid var(--divider); }
+  .qm-overview > *:first-child { border-left: 0; }
+  .qm-overview > *:last-child { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--divider); }
+}
+
 @media (min-width: 640px) {
   .summary-strip > * { border-top: 0; border-left: 1px solid var(--divider); }
   .summary-strip > *:first-child { border-left: 0; }

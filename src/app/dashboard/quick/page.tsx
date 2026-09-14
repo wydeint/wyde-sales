@@ -18,10 +18,11 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import { showAlert } from '@/components/ui/dialog'
-import { netReceived } from '@/lib/voucher'
+import { netReceived, settledAmount } from '@/lib/voucher'
 import { deliverJob } from '@/lib/jobLifecycle'
 import { todayStr } from '@/lib/today'
 import { compareThai } from '@/lib/utils'
+import { fetchAllRows } from '@/lib/fetchAll'
 
 // ─── Types ────────────────────────────────────────────────
 interface WidgetData {
@@ -30,6 +31,34 @@ interface WidgetData {
   pendingInstallments: number
   pendingAmount: number
   readyToDeliver: number
+}
+
+/**
+ * The four numbers at the top of Quick Mode — all of them the logged-in
+ * seller's own, never the company's.
+ *
+ * They used to be company-wide: the query behind them never filtered
+ * `sales_id`, so a seller holding 21 jobs opened the page to a count in the
+ * three hundreds with not one of their own jobs in it. Nothing to act on, so
+ * nobody read the cards.
+ *
+ * Sold / delivered / collected are *this month* — they answer "how am I
+ * doing". `gap` is a standing figure and answers "what is left to do": booked
+ * customers who have paid a deposit but have not reached 50%, which is the
+ * step that moves a job from Prospects into My Deals. It is the only one of
+ * the four that is never zero, which is why it gets its own wide card.
+ *
+ * Definitions come from lib/salesScorecard.ts so these agree with Sales
+ * Performance › รายคน to the baht. The one deliberate difference: `cash`
+ * counts `paid_amount` only. Voucher money is paid by the developer, not by
+ * the customer (see reference_rpt_axis), so it is not cash the seller
+ * collected.
+ */
+interface Overview {
+  soldValue: number; soldN: number; soldPrev: number
+  delivValue: number; delivN: number; delivPrev: number
+  cashValue: number; cashPrev: number
+  gapValue: number; gapN: number
 }
 
 interface JobOption {
@@ -56,6 +85,18 @@ const normRoom = (s: string) => s.replace(/-/g, '').toLowerCase()
  *  ฿1.5M and ฿1,600 to ฿2k, which is a lot of precision to lose on a screen
  *  people use to quote customers. */
 const fmtBaht = bahtShort
+
+/** First day of the month `back` months ago, as YYYY-MM-DD.
+ *
+ *  Built from local date parts on purpose. `toISOString()` converts to UTC, and
+ *  Bangkok is UTC+7 — between midnight and 7am it reports the previous day, so
+ *  on the 1st of a month it would hand back the month before. */
+function monthStart(back = 0): string {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() - back)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+}
 
 /** The note moved to the job in the customers/jobs de-duplication. A customer
  *  can hold several; show the first one that has anything to say. */
@@ -1505,6 +1546,10 @@ export default function QuickPage() {
   const router = useRouter()
   const supabase = createClient()
   const [widgets, setWidgets] = useState<WidgetData>({ inProgressJobs: 0, overdueJobs: 0, pendingInstallments: 0, pendingAmount: 0, readyToDeliver: 0 })
+  const [overview, setOverview] = useState<Overview | null>(null)
+  const [seller, setSeller] = useState(true)
+  const [myId, setMyId] = useState<string | null>(null)
+  const [scope, setScope] = useState<'mine' | 'all'>('all')
   const [allJobs, setAllJobs] = useState<JobOption[]>([])
   const [activeEvents, setActiveEvents] = useState<EventOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -1519,8 +1564,84 @@ export default function QuickPage() {
     setTodayTH(now.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' }))
   }, [])
 
+  /**
+   * Who is looking, and whether they should see their own figures or everyone's.
+   *
+   * A seller (`sales`/`staff` — six people) is always scoped to their own jobs;
+   * that is the whole point of the cards. Anyone else — the two sales managers,
+   * the executives, the admins — owns few jobs or none, so scoping to them
+   * would show a page of ฿0. They get the company's figures and a toggle back
+   * to their own, because one admin (Areeruk.y) does carry a couple of jobs.
+   */
+  const loadMe = useCallback(async (): Promise<{ id: string; seller: boolean } | null> => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.email) return null
+    const { data } = await supabase.from('users').select('id, role, level').eq('email', user.email).maybeSingle()
+    if (!data) return null
+    return { id: data.id, seller: data.role === 'sales' && data.level === 'staff' }
+  }, [supabase])
+
+  /** `salesId` null = every seller's jobs, for managers and admins. */
+  const loadOverview = useCallback(async (salesId: string | null) => {
+    const thisMonth = monthStart(0)
+    const prevMonth = monthStart(1)
+
+    // Both tables are at or past PostgREST's 1,000-row cap, which truncates
+    // without erroring — a plain select would quietly under-count.
+    const [{ data: myJobs }, { data: myPays }] = await Promise.all([
+      fetchAllRows<any>(() => {
+        let q = supabase.from('jobs')
+          .select('id, revenue_inc_vat, order_date, actual_deliver_date, crm_stage, working_status')
+          // `.neq()` alone drops NULL rows silently, and a prospect's
+          // working_status is NULL — they would vanish from the gap figure.
+          .or('working_status.neq.ยกเลิก,working_status.is.null')
+        if (salesId) q = q.eq('sales_id', salesId)
+        return q.order('id')
+      }),
+      fetchAllRows<any>(() => {
+        let q = supabase.from('payments')
+          .select('job_id, amount, paid_amount, voucher_amount, status, paid_date, jobs!inner(sales_id)')
+          .eq('status', 'paid')
+        if (salesId) q = q.eq('jobs.sales_id', salesId)
+        return q.order('id')
+      }),
+    ])
+
+    const settled: Record<string, number> = {}
+    let cashValue = 0, cashPrev = 0
+    for (const p of myPays || []) {
+      if (p.job_id) settled[p.job_id] = (settled[p.job_id] || 0) + settledAmount(p.paid_amount, p.amount, p.voucher_amount)
+      const cash = Number(p.paid_amount) || 0
+      if (p.paid_date >= thisMonth) cashValue += cash
+      else if (p.paid_date >= prevMonth) cashPrev += cash
+    }
+
+    const o: Overview = {
+      soldValue: 0, soldN: 0, soldPrev: 0,
+      delivValue: 0, delivN: 0, delivPrev: 0,
+      cashValue, cashPrev, gapValue: 0, gapN: 0,
+    }
+    for (const j of myJobs || []) {
+      const rev = Number(j.revenue_inc_vat) || 0
+      if (j.order_date >= thisMonth) { o.soldValue += rev; o.soldN++ }
+      else if (j.order_date >= prevMonth) o.soldPrev += rev
+      if (j.actual_deliver_date >= thisMonth) { o.delivValue += rev; o.delivN++ }
+      else if (j.actual_deliver_date >= prevMonth) o.delivPrev += rev
+      // ② from lib/salesScorecard — a booked customer still short of 50%.
+      // The ฿100 floor is there because instalments are percentage splits, so a
+      // job can sit a few satang short of its own value and read as money owed.
+      const gap = rev * 0.5 - (settled[j.id] || 0)
+      if (j.crm_stage === 'booked' && gap >= 100) { o.gapValue += gap; o.gapN++ }
+    }
+    setOverview(o)
+  }, [supabase])
+
   const load = useCallback(async () => {
     setLoading(true)
+    const me = await loadMe()
+    // A seller sees their own; everyone else opens on the company total. The
+    // toggle below re-runs this for the non-seller who wants their own back.
+    if (me) { setSeller(me.seller); setMyId(me.id); loadOverview(me.seller ? me.id : null) }
     const [{ data: jobsData }, { data: paymentsData }, { data: handoverData }, { data: eventsData }] = await Promise.all([
       supabase.from('jobs').select('id, customer_name, room_no, work_start_date, work_days, working_status, revenue_ex_vat, expected_finish_date, projects:project_id(name), sales:sales_id(name)').not('working_status', 'eq', 'ยกเลิก'),
       supabase.from('payments').select('job_id, amount, status').eq('status', 'pending').not('job_id', 'is', null),
@@ -1556,9 +1677,15 @@ export default function QuickPage() {
     setAllJobs(jobs)
     setActiveEvents((eventsData || []).map((e: any) => ({ id: e.id, eventName: e.event_name, projectId: e.project_id, projectName: e.project_name, eventDate: e.event_date })))
     setLoading(false)
-  }, [supabase])
+  }, [supabase, loadMe, loadOverview])
 
   useEffect(() => { load() }, [load])
+
+  /** Managers and admins only — a seller has no toggle to move. */
+  useEffect(() => {
+    if (!myId || seller) return
+    loadOverview(scope === 'mine' ? myId : null)
+  }, [scope, myId, seller, loadOverview])
 
   // ─── Button layout: flat 3×4 grid = 12 buttons ──────
   type Btn = { key: string; icon: LucideIcon; label: string; iconColor: string; btnStyle: React.CSSProperties; badge?: number; sheet?: string; href?: string }
@@ -1610,27 +1737,59 @@ export default function QuickPage() {
 
       {/* ── Overview ── */}
       <div className="px-5 mb-6">
-        <p className="text-micro font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-3)' }}>Overview</p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-micro font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Overview</p>
+          {!seller && (
+            <div className="flex rounded-[8px] overflow-hidden" style={{ border: '1px solid var(--divider)' }}>
+              {([['all', 'ทั้งบริษัท'], ['mine', 'ของฉัน']] as const).map(([v, label]) => (
+                <button key={v} onClick={() => setScope(v)} className="px-3 py-1.5 text-label font-bold"
+                  style={scope === v
+                    ? { background: 'var(--accent)', color: '#fff' }
+                    : { background: 'transparent', color: 'var(--text-3)' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-[18px] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />)}
-          </div>
+          <>
+            <div className="h-24 rounded-[18px] animate-pulse mb-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />
+            <div className="h-24 rounded-[18px] animate-pulse" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }} />
+          </>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'งานกำลังทำ', value: widgets.inProgressJobs, sub: `${widgets.overdueJobs > 0 ? widgets.overdueJobs + ' เกินกำหนด' : 'ปกติทุกงาน'}`, varColor: 'var(--accent-orange)' },
-              { label: 'งวดรอชำระ', value: widgets.pendingInstallments, sub: fmtBaht(widgets.pendingAmount), varColor: 'var(--accent-blue)' },
-              { label: 'รอส่งมอบ', value: widgets.readyToDeliver, sub: 'งานเสร็จแล้ว', varColor: 'var(--accent-green)' },
-              { label: 'เกินกำหนด', value: widgets.overdueJobs, sub: 'กดปุ่มดูรายละเอียด', varColor: widgets.overdueJobs > 0 ? 'var(--accent-red)' : 'var(--text-3)' },
-            ].map(w => (
-              <div key={w.label} className="rounded-[18px] p-4 border"
-                style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
-                <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>{w.label}</p>
-                <p className="text-kpi-number" style={{ color: w.varColor }}>{w.value}</p>
-                <p className="text-xs mt-1 opacity-60" style={{ color: w.varColor }}>{w.sub}</p>
-              </div>
-            ))}
-          </div>
+          <>
+            {/* Three figures for "how am I doing this month". One strip, hairline
+                dividers — they are read together, so they are one object, not
+                three cards competing with the one below that has work in it.
+
+                Every slot carries a count and last month's figure: mid-September,
+                three of seven sellers are still on ฿0 for sales and three on ฿0
+                for deliveries. A bare zero reads as a broken page; "฿0 · เดือนก่อน
+                ฿283K" reads as a month that has not started. */}
+            {/* The fourth figure is the only one you can act on: booked
+                customers who paid a deposit but have not reached 50%.
+                It has no tap target yet — the list it should open is the
+                "ติดตามลูกค้า" sheet, still being specified, and a control that
+                opens nothing is worse than a figure that plainly reads. */}
+            <div className="qm-overview ds-card ds-card-flush">
+              {[
+                { label: 'ยอดขาย', value: overview?.soldValue ?? 0, n: overview?.soldN ?? 0, prev: overview?.soldPrev ?? 0, tone: 'var(--accent)', sub: null as string | null },
+                { label: 'ยอดส่งมอบ', value: overview?.delivValue ?? 0, n: overview?.delivN ?? 0, prev: overview?.delivPrev ?? 0, tone: 'var(--accent-green)', sub: null as string | null },
+                { label: 'เงินสดรับ', value: overview?.cashValue ?? 0, n: null, prev: overview?.cashPrev ?? 0, tone: 'var(--accent-blue)', sub: null as string | null },
+                { label: 'โอกาสเก็บถึง 50%', value: overview?.gapValue ?? 0, n: null, prev: 0, tone: 'var(--accent-orange)',
+                  sub: `${overview?.gapN ?? 0} งานที่จองแล้วยังไม่ถึงครึ่ง` as string | null },
+              ].map(c => (
+                <div key={c.label}>
+                  <p className="text-label" style={{ color: 'var(--text-3)' }}>{c.label}</p>
+                  <p className="text-kpi-money mt-0.5" style={{ color: c.tone }}>{fmtBaht(c.value)}</p>
+                  <p className="text-micro mt-1" style={{ color: 'var(--text-3)' }}>
+                    {c.sub ?? <>{c.n !== null && `${c.n} งาน · `}เดือนก่อน {fmtBaht(c.prev)}</>}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

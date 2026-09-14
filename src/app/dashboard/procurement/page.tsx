@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, ArrowLeft, Pencil, Trash2, Image as ImageIcon, FileDown } from 'lucide-react'
+import { Plus, ArrowLeft, Pencil, Trash2, Image as ImageIcon, FileDown, CheckSquare } from 'lucide-react'
 import { PageSpinner, PageError, TableEmpty } from '@/components/ui/StateUI'
 import PageHeader from '@/components/ui/PageHeader'
 import FilterBar from '@/components/ui/FilterBar'
@@ -427,6 +427,22 @@ export default function ProcurementPage() {
     if (error) { alert('บันทึกไม่สำเร็จ: ' + error.message); load() }
   }
 
+  /**
+   * แก้หลายบรรทัดพร้อมกันด้วยคำสั่งเดียว
+   *
+   * วันที่ขออนุมัติเป็นของ "ชุดที่ขออนุมัติไปด้วยกัน" ไม่ใช่ของแต่ละบรรทัด —
+   * ห้องที่มีตั้งแต่ 5 บรรทัดขึ้นไปมี 68 ห้อง เฉลี่ยห้องละ 10.1 บรรทัด น้องจึง
+   * ต้องพิมพ์วันเดิมซ้ำสิบครั้ง · แต่ตั้งทั้งห้องรวดเดียวก็ไม่ได้ เพราะ 113 จาก
+   * 206 ห้องมี supplier มากกว่าหนึ่งราย และ 108 ห้องมี PO มากกว่าหนึ่งใบ
+   * ซึ่งขออนุมัติคนละรอบกัน — จึงต้องให้เลือกเองว่าบรรทัดไหนบ้าง
+   */
+  async function updateItemsBulk(ids: string[], patch: Partial<CostItem>) {
+    if (!ids.length) return
+    setItems(prev => prev.map(it => (ids.includes(it.id) ? { ...it, ...patch } : it)))
+    const { error } = await supabase.from('job_cost_items').update(patch).in('id', ids)
+    if (error) { alert('บันทึกไม่สำเร็จ: ' + error.message); load() }
+  }
+
   /** สร้างแถวใหม่ — ต้องมีชื่อรายการก่อน ไม่งั้นได้แถวว่างเต็มตาราง */
   async function createItem(categoryId: string, itemName: string) {
     if (!openJob || !itemName.trim()) return
@@ -657,6 +673,7 @@ export default function ProcurementPage() {
             onBack={() => setOpenJob(null)}
             onCreate={createItem}
             onPatch={updateItemField}
+            onBulkPatch={updateItemsBulk}
             onDelete={deleteItem}
             onAssign={assign}
             onSetReceived={v => saveDoc(job.id, 'procurement_received_at', v)}
@@ -1078,7 +1095,7 @@ function WorkTab({ rows, itemsByJob, projById, nameOf, setOpenJob }: {
 
 function RoomSheet({
   job, items, cats, supById, supsOfCat, canWrite, nameOf, projById, myUserId, myRole, users,
-  onBack, onCreate, onPatch, onDelete, onAssign, onSetReceived,
+  onBack, onCreate, onPatch, onBulkPatch, onDelete, onAssign, onSetReceived,
 }: {
   job: Job
   items: CostItem[]
@@ -1094,6 +1111,7 @@ function RoomSheet({
   onBack: () => void
   onCreate: (categoryId: string, itemName: string) => void
   onPatch: (id: string, patch: Partial<CostItem>) => void
+  onBulkPatch: (ids: string[], patch: Partial<CostItem>) => void
   onDelete: (id: string) => void
   onAssign: (job: Job, field: 'qs_id' | 'buyer_id' | 'admin_id', userId: string) => void
   onSetReceived: (value: string) => void
@@ -1104,7 +1122,19 @@ function RoomSheet({
   const used = cats.filter(c => items.some(i => i.category_id === c.id))
   const shown = cats.filter(c => used.includes(c) || extra.has(c.id))
   const unused = cats.filter(c => !shown.includes(c))
-  const cols = canWrite ? 10 : 9
+  /** โหมดเลือกหลายบรรทัด — ปิดไว้เป็นปกติ ตารางนี้แน่นอยู่แล้ว
+   *  ไม่ควรมีช่องติ๊กโผล่ตลอดเวลาให้รกตา */
+  const [selMode, setSelMode] = useState(false)
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [bulkDate, setBulkDate] = useState('')
+
+  const toggleSel = (ids: string[], on?: boolean) => setSel(prev => {
+    const n = new Set(prev)
+    const turnOn = on ?? !ids.every(id => n.has(id))
+    ids.forEach(id => (turnOn ? n.add(id) : n.delete(id)))
+    return n
+  })
+  const cols = (canWrite ? 10 : 9) + (selMode ? 1 : 0)
   const rev = Number(job.revenue_inc_vat || 0)
   const base = revenueBase(job.revenue_inc_vat, job.revenue_ex_vat)
   const revEx = base.value
@@ -1315,6 +1345,16 @@ function RoomSheet({
                   : 'คัดลอกภาพตาราง'}
               </button>
             )}
+            {canWrite && items.length > 1 && (
+              <button onClick={() => { setSelMode(v => !v); setSel(new Set()) }}
+                className="text-xs px-2.5 py-1.5 rounded-[8px] font-medium transition-colors flex items-center gap-1.5"
+                style={selMode
+                  ? { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }
+                  : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                <CheckSquare size={13} />
+                {selMode ? 'ออกจากโหมดเลือก' : 'เลือกหลายบรรทัด'}
+              </button>
+            )}
             {canWrite && unused.length > 0 && (
               <select className="field-input" style={{ width: 'auto' }} value=""
                 aria-label="เปิดหมวดงานเพิ่ม"
@@ -1329,6 +1369,13 @@ function RoomSheet({
           <table className="w-full tbl-dense tbl-rows">
             <thead>
               <tr>
+                {selMode && (
+                  <th style={{ width: 32 }}>
+                    <input type="checkbox" aria-label="เลือกทั้งห้อง"
+                      checked={items.length > 0 && items.every(i => sel.has(i.id))}
+                      onChange={e => toggleSel(items.map(i => i.id), e.target.checked)} />
+                  </th>
+                )}
                 <th className="text-left th-muted">รายการ</th>
                 <th className="text-left th-muted">PO</th>
                 <th className="text-left th-muted">Supplier</th>
@@ -1358,14 +1405,27 @@ function RoomSheet({
                 return (
                   <FragmentRows key={c.id}>
                     <tr style={{ background: 'var(--active-bg)' }}>
-                      <td colSpan={cols}>
+                      {selMode && (
+                        <td style={{ width: 32 }}>
+                          <input type="checkbox" aria-label={`เลือกทั้งหมวด ${c.name}`}
+                            checked={list.length > 0 && list.every(i => sel.has(i.id))}
+                            onChange={e => toggleSel(list.map(i => i.id), e.target.checked)} />
+                        </td>
+                      )}
+                      <td colSpan={cols - (selMode ? 1 : 0)}>
                         <span className="font-semibold">{ci + 1}. {c.name}</span>
                         {c.owner_dept === 'qs' && <span className="ml-2 badge badge-orange">QS</span>}
                         {!c.needs_supplier && <span className="ml-2 badge badge-gray">ไม่ต้องมี Supplier</span>}
                       </td>
                     </tr>
                     {list.map((it, ii) => (
-                      <tr key={it.id}>
+                      <tr key={it.id} style={selMode && sel.has(it.id) ? { background: 'color-mix(in srgb, var(--accent) 10%, transparent)' } : undefined}>
+                        {selMode && (
+                          <td style={{ width: 32 }}>
+                            <input type="checkbox" aria-label={`เลือก ${it.item_name}`}
+                              checked={sel.has(it.id)} onChange={() => toggleSel([it.id])} />
+                          </td>
+                        )}
                         <td style={{ maxWidth: '13rem' }}>
                           <Cell v={it.item_name} w="12rem" wrap canWrite={canWrite}
                             onSave={v => { if (v.trim()) onPatch(it.id, { item_name: v.trim() }) }} />
@@ -1486,6 +1546,9 @@ function RoomSheet({
               {/* เน้นแถวรวมแบบเดียวกับตารางหน้า Revenue — เส้นสี accent กับพื้น
                   ที่เข้มขึ้น ไม่ใช่เส้น divider จางๆ ที่กลืนไปกับแถวข้อมูล */}
               <tr style={{ borderTop: '2px solid var(--accent)', background: 'var(--active-bg)' }}>
+                {/* โหมดเลือกเพิ่มคอลัมน์ซ้ายหนึ่งช่อง แถวรวมต้องขยับตาม ไม่งั้น
+                    ตัวเลขทั้งแถวเลื่อนไปอยู่ใต้หัวคอลัมน์ผิดทั้งหมด */}
+                {selMode && <td />}
                 <td className="font-bold">รวมทั้งห้อง</td>
                 <td colSpan={2} className="text-caption" style={{ color: 'var(--text-3)' }}>
                   Revenue exc.VAT <b style={{ color: 'var(--text-2)' }}>{baht(revEx)}</b>
@@ -1514,6 +1577,38 @@ function RoomSheet({
             </tfoot>
           </table>
         </div>
+
+        {/* แถบสั่งงานของโหมดเลือก — บอกจำนวนที่เลือกก่อนเสมอ เพราะคำสั่งนี้
+            เขียนทับหลายบรรทัดพร้อมกันและไม่มี undo */}
+        {selMode && (
+          <div className="sticky bottom-0 flex flex-wrap items-center gap-3"
+            style={{ padding: 'var(--space-md)', borderTop: '1px solid var(--divider)', background: 'var(--card-bg)' }}>
+            <span className="font-semibold" style={{ color: sel.size ? 'var(--text-1)' : 'var(--text-3)' }}>
+              เลือก {sel.size} บรรทัด
+            </span>
+            {sel.size > 0 && (
+              <button onClick={() => setSel(new Set())} className="text-label" style={{ color: 'var(--accent-blue)' }}>
+                ล้างการเลือก
+              </button>
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              <label className="text-caption" style={{ color: 'var(--text-3)' }}>วันที่ขออนุมัติ</label>
+              <input type="date" className="field-input" style={{ width: 'auto' }}
+                value={bulkDate} onChange={e => setBulkDate(e.target.value)} />
+              <button
+                disabled={!sel.size || !bulkDate}
+                onClick={async () => {
+                  const ids = [...sel]
+                  if (!confirm(`ตั้งวันที่ขออนุมัติเป็น ${fmtDate(bulkDate)} ให้ ${ids.length} บรรทัด?`)) return
+                  await onBulkPatch(ids, { approved_at: bulkDate })
+                  setSel(new Set())
+                }}
+                className="btn-primary disabled:opacity-40">
+                ตั้งค่า
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

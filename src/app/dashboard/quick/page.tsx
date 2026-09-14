@@ -2,7 +2,7 @@
 
 import DateInput from '@/components/ui/DateInput'
 import FileAttach from '@/components/ui/FileAttach'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import MoneyInput from '@/components/ui/MoneyInput'
 import { crmStage, EVENT_CUSTOMER_STATUSES } from '@/lib/status'
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import { bahtShort } from '@/lib/money'
 import {
   Search, X, CheckCircle2, ChevronRight, AlertTriangle,
-  AlertCircle, ArrowLeft, Home,
+  AlertCircle, ArrowLeft, Home, Plus, BadgeCheck,
   Briefcase, Users, CalendarDays, Database,
   Receipt, FileText, ArrowRightLeft, ClipboardList,
   DollarSign, Zap, Phone, User, Building2, Paperclip,
@@ -20,8 +20,12 @@ import {
 import { showAlert } from '@/components/ui/dialog'
 import { netReceived, settledAmount } from '@/lib/voucher'
 import { deliverJob } from '@/lib/jobLifecycle'
-import { todayStr } from '@/lib/today'
+import { todayStr, daysFromToday } from '@/lib/today'
 import { compareThai } from '@/lib/utils'
+import { createProspectJob as createProspectJobShared } from '@/lib/prospectJob'
+import { cleanName } from '@/lib/customerName'
+import { nextCustomerId } from '@/lib/customerId'
+import { calcB2CInstallments } from '@/lib/paymentPlans'
 import { fetchAllRows } from '@/lib/fetchAll'
 
 // ─── Types ────────────────────────────────────────────────
@@ -86,6 +90,9 @@ const normRoom = (s: string) => s.replace(/-/g, '').toLowerCase()
  *  people use to quote customers. */
 const fmtBaht = bahtShort
 
+/** How far either side of today an event still counts as "on now". */
+const EVENT_BANNER_DAYS = 2
+
 /** First day of the month `back` months ago, as YYYY-MM-DD.
  *
  *  Built from local date parts on purpose. `toISOString()` converts to UTC, and
@@ -143,11 +150,21 @@ function Sheet({ open, onClose, title, icon: Icon, children }: {
           left: PAD,
           right: PAD,
           bottom: PAD,
-          background: 'var(--glass-bg)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 18,
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
+          // --panel-bg, the same surface Modal and JobDrawer use, not
+          // --glass-bg. Glass is white at 62%, and over the black/60 scrim that
+          // composites to RGB(196,196,197) — a mid grey, not a white card. The
+          // secondary text on it then measures 3.61:1 (--text-3) and 3.95:1
+          // (--text-2), both under the 4.5:1 that body text needs. On
+          // --panel-bg the same two read 5.98:1 and 6.53:1.
+          //
+          // Dark mode never showed it: --glass-bg #202020 and --panel-bg #1d1d1d
+          // are three shades apart, so the fault only ever appeared in light.
+          //
+          // The blur goes with it. At 96% opacity there is nothing left to see
+          // through, and a full-screen backdrop-filter is not free on a phone.
+          background: 'var(--panel-bg)',
+          border: '1px solid var(--card-border)',
+          borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
         }}
       >
@@ -174,8 +191,14 @@ const sheetInputStyle: React.CSSProperties = {
   background: 'var(--input-bg)', border: '1px solid var(--divider)',
   color: 'var(--text-1)', fontSize: 'var(--fs-body)',
 }
-const sheetCard: React.CSSProperties = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', borderRadius: 18, padding: '12px 16px' }
-const sheetCardDark: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 11, padding: '8px 12px' }
+/* 8, not 18 and not 11. The system has two corner sizes: 18 for something
+ * floating on the page background, 8 for something sitting inside something
+ * else. These rows sit inside the sheet, so they take 8 — they were 18, the
+ * same corner as the sheet holding them, which is what made a list of them
+ * read as a stack of loose cards. The 11 on the second one is older still: it
+ * was .ds-card-sm's radius, retired when the card sizes were merged. */
+const sheetCard: React.CSSProperties = { background: 'var(--hover-bg)', border: '1px solid var(--divider)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }
+const sheetCardDark: React.CSSProperties = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 'var(--radius-md)', padding: '8px 12px' }
 const t1: React.CSSProperties = { color: 'var(--text-1)' }
 const t2: React.CSSProperties = { color: 'var(--text-2)' }
 const t3: React.CSSProperties = { color: 'var(--text-3)' }
@@ -718,7 +741,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
           <h4 className="font-semibold text-lg mb-2" style={t1}>ยังไม่ได้ตั้งแผนชำระ</h4>
           <p className="text-sm mb-2" style={t2}>{selectedJob.customerName}</p>
           <p className="text-sm mb-6" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
-          <p className="text-xs mb-6" style={t3}>กรุณาตั้งแผนงวดชำระเงินก่อน จึงจะบันทึกรับเงินได้</p>
+          <p className="text-xs mb-6" style={t3}>งานนี้ยังไม่มีงวดชำระในระบบ · ตั้งแผนได้ที่หน้า Prospect หรือ My Deals บนคอมพิวเตอร์</p>
           <button onClick={() => setStep('job')}
             className="w-full py-3 rounded-[8px] mb-4 text-sm" style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
             ← เลือกลูกค้าอื่น
@@ -726,7 +749,7 @@ function QuickPaySheet({ open, onClose, jobs }: {
           <button onClick={resetAndClose}
             className="w-full py-3 rounded-[8px] text-sm font-semibold"
             style={{ background: 'color-mix(in srgb, var(--accent-orange) 15%, transparent)', color: 'var(--accent-orange)' }}>
-            ไปตั้งแผนชำระ →
+            ปิดหน้านี้
           </button>
         </div>
       )}
@@ -840,233 +863,6 @@ function QuickPaySheet({ open, onClose, jobs }: {
   )
 }
 
-// ─── Plan Setup Sheet ──────────────────────────────────────
-function PlanSetupSheet({ open, onClose, jobs }: {
-  open: boolean; onClose: () => void; jobs: JobOption[]
-}) {
-  const supabase = createClient()
-  const [step, setStep] = useState<'job' | 'type' | 'b2c' | 'b2b'>('job')
-  const [search, setSearch] = useState('')
-  const [selectedJob, setSelectedJob] = useState<JobOption | null>(null)
-  const [b2bCount, setB2bCount] = useState(3)
-  const [b2bPcts, setB2bPcts] = useState<number[]>([34, 33, 33])
-  const [saving, setSaving] = useState(false)
-
-  const filteredJobs = jobs.filter(j =>
-    !search || j.customerName.toLowerCase().includes(search.toLowerCase()) ||
-    normRoom(j.roomNo).includes(normRoom(search))
-  )
-
-  function selectB2bCount(n: number) {
-    setB2bCount(n)
-    const base = Math.floor(100 / n)
-    const rem = 100 - base * n
-    setB2bPcts(Array.from({ length: n }, (_, i) => i === n - 1 ? base + rem : base))
-  }
-
-  function calcB2CInstallments(plan: 'A' | 'B' | 'C') {
-    const total = selectedJob?.revenue || 0
-    if (plan === 'A') return [
-      { no: 1, name: 'ชำระเต็มจำนวน 100%', pct: 100, amount: total, trigger: true, final: true }
-    ]
-    if (plan === 'B') return [
-      { no: 1, name: 'ชำระ 50% แรก (เริ่มงาน)', pct: 50, amount: Math.round(total * 0.5), trigger: true, final: false },
-      { no: 2, name: 'ชำระ 50% สุดท้าย (ส่งมอบ)', pct: 50, amount: Math.round(total * 0.5), trigger: false, final: true },
-    ]
-    const dep = Math.round(total * 0.1)
-    const rest = Math.round((total - dep) / 2)
-    return [
-      { no: 1, name: 'มัดจำจองสิทธิ์', pct: 10, amount: dep, trigger: false, final: false },
-      { no: 2, name: 'ชำระ 50% แรก (เริ่มงาน)', pct: 45, amount: rest, trigger: true, final: false },
-      { no: 3, name: 'ชำระ 50% สุดท้าย (ส่งมอบ)', pct: 45, amount: total - dep - rest, trigger: false, final: true },
-    ]
-  }
-
-  async function saveInstallments(installments: any[]) {
-    if (!selectedJob) return
-    setSaving(true)
-    await supabase.from('payments').delete().eq('job_id', selectedJob.id).eq('status', 'pending')
-    const rows = installments.map(i => ({
-      job_id: selectedJob.id,
-      installment_no: i.no,
-      installment_name: i.name,
-      amount: i.amount,
-      percentage: i.pct,
-      status: 'pending',
-      is_work_trigger: i.trigger,
-      is_final: i.final,
-    }))
-    await supabase.from('payments').insert(rows)
-    await supabase.from('jobs').update({ payment_plan_type: 'B2C' }).eq('id', selectedJob.id)
-    setSaving(false)
-    resetAndClose()
-    await showAlert('ตั้งแผนชำระเรียบร้อย ✅')
-  }
-
-  async function saveB2BInstallments() {
-    if (!selectedJob) return
-    const total = selectedJob.revenue
-    const insts = b2bPcts.map((pct, i) => ({
-      no: i + 1,
-      name: i === 0 ? 'งวดที่ 1 (เริ่มงาน)' : i === b2bCount - 1 ? `งวดสุดท้าย (ส่งมอบ)` : `งวดที่ ${i + 1}`,
-      pct, amount: Math.round((pct / 100) * total),
-      trigger: i === 0, final: i === b2bCount - 1,
-    }))
-    setSaving(true)
-    await supabase.from('payments').delete().eq('job_id', selectedJob.id).eq('status', 'pending')
-    const rows = insts.map(i => ({
-      job_id: selectedJob.id,
-      installment_no: i.no, installment_name: i.name,
-      amount: i.amount, percentage: i.pct, status: 'pending',
-      is_work_trigger: i.trigger, is_final: i.final,
-    }))
-    await supabase.from('payments').insert(rows)
-    await supabase.from('jobs').update({ payment_plan_type: 'B2B' }).eq('id', selectedJob.id)
-    setSaving(false)
-    resetAndClose()
-    await showAlert('ตั้งแผนชำระเรียบร้อย ✅')
-  }
-
-  function resetAndClose() {
-    setStep('job'); setSearch(''); setSelectedJob(null)
-    setB2bCount(3); setB2bPcts([34, 33, 33]); onClose()
-  }
-
-  const totalPct = b2bPcts.reduce((s, p) => s + p, 0)
-
-  return (
-    <Sheet open={open} onClose={resetAndClose} title="ตั้งแผนชำระ" icon={ClipboardList}>
-      {step === 'job' && (
-        <div className="p-4">
-          <div className="relative mb-4">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
-            <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="ค้นหาลูกค้า Wyde..."
-              className={sheetInput} style={sheetInputStyle} />
-          </div>
-          <div className="space-y-2">
-            {filteredJobs.slice(0, 15).map(j => (
-              <button key={j.id} onClick={() => { setSelectedJob(j); setStep('type') }}
-                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-left" style={sheetCard}>
-                <div>
-                  <p className="font-semibold text-sm" style={t1}>{j.customerName}</p>
-                  <p className="text-xs mt-1" style={t2}>{j.roomNo} · {j.projectName} · {fmtBaht(j.revenue)}</p>
-                </div>
-                <ChevronRight size={16} style={t3} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {step === 'type' && selectedJob && (
-        <div className="p-4">
-          <button onClick={() => setStep('job')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
-            <ArrowLeft size={14} /> {selectedJob.customerName}
-          </button>
-          <div className="rounded-2xl p-4 mb-5" style={sheetCard}>
-            <p className="font-semibold" style={t1}>{selectedJob.customerName}</p>
-            <p className="text-xs mt-1" style={t2}>{selectedJob.roomNo} · {selectedJob.projectName}</p>
-            <p className="font-bold mt-1" style={{ color: 'var(--accent-green)' }}>{fmtBaht(selectedJob.revenue)}</p>
-          </div>
-          <p className="text-xs mb-4" style={t2}>ประเภทลูกค้า</p>
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => setStep('b2c')}
-              className="py-5 rounded-[18px] font-semibold text-center border"
-              style={{ background: 'color-mix(in srgb, var(--accent-blue) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-blue) 30%, transparent)', color: 'var(--accent-blue)' }}>
-              <User size={28} strokeWidth={1.5} className="mx-auto mb-1" />
-              B2C
-              <p className="text-xs font-normal mt-1" style={t3}>บุคคลธรรมดา</p>
-            </button>
-            <button onClick={() => setStep('b2b')}
-              className="py-5 rounded-[18px] font-semibold text-center border"
-              style={{ background: 'color-mix(in srgb, var(--accent-purple) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-purple) 30%, transparent)', color: 'var(--accent-purple)' }}>
-              <Building2 size={28} strokeWidth={1.5} className="mx-auto mb-1" />
-              B2B
-              <p className="text-xs font-normal mt-1" style={t3}>นิติบุคคล</p>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === 'b2c' && selectedJob && (
-        <div className="p-4">
-          <button onClick={() => setStep('type')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
-            <ArrowLeft size={14} /> เลือกแผน B2C
-          </button>
-          <div className="space-y-3">
-            {(['A', 'B', 'C'] as const).map(plan => {
-              const insts = calcB2CInstallments(plan)
-              const labels: Record<string, string> = { A: 'แผน A — จ่ายครั้งเดียว 100%', B: 'แผน B — 50% + 50%', C: 'แผน C — มัดจำ + 50% + 50%' }
-              return (
-                <div key={plan} style={sheetCard}>
-                  <p className="font-semibold mb-4" style={t1}>{labels[plan]}</p>
-                  <div className="space-y-1 mb-4">
-                    {insts.map(i => (
-                      <div key={i.no} className="flex justify-between text-xs">
-                        <span style={t2}>{i.name}</span>
-                        <span style={t1}>{fmtBaht(i.amount)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={() => saveInstallments(insts)} disabled={saving}
-                    className="w-full py-3 rounded-[8px] text-sm font-semibold disabled:opacity-40 border"
-                    style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)', borderColor: 'color-mix(in srgb, var(--accent) 40%, transparent)', color: 'var(--accent)' }}>
-                    {saving ? 'กำลังบันทึก...' : `เลือกแผน ${plan}`}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {step === 'b2b' && selectedJob && (
-        <div className="p-4">
-          <button onClick={() => setStep('type')} className="text-sm mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
-            <ArrowLeft size={14} /> B2B — กำหนดงวด
-          </button>
-          <div className="mb-4">
-            <label className="text-xs mb-2 block" style={t3}>จำนวนงวด</label>
-            <div className="flex gap-2">
-              {[2, 3, 4, 5, 6].map(n => (
-                <button key={n} onClick={() => selectB2bCount(n)}
-                  className="flex-1 py-3 rounded-[8px] text-sm font-semibold transition-colors border"
-                  style={b2bCount === n
-                    ? { background: 'color-mix(in srgb, var(--accent-purple) 20%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-purple) 40%, transparent)', color: 'var(--accent-purple)' }
-                    : { background: 'var(--hover-bg)', color: 'var(--text-2)', borderColor: 'var(--divider)' }}>
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2 mb-4">
-            {b2bPcts.map((pct, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl px-4 py-3" style={sheetCard}>
-                <span className="text-xs w-16 flex-shrink-0" style={t2}>งวดที่ {i + 1}</span>
-                <input type="number" value={pct}
-                  onChange={e => { const n = [...b2bPcts]; n[i] = Number(e.target.value); setB2bPcts(n) }}
-                  className="w-16 rounded-[8px] px-2 py-1.5 text-sm text-center focus:outline-none"
-                  style={{ ...sheetCardDark, color: 'var(--text-1)', fontSize: 'var(--fs-body)' }} />
-                <span className="text-xs" style={t2}>%</span>
-                <span className="text-xs ml-auto" style={t1}>{fmtBaht(Math.round((pct / 100) * selectedJob.revenue))}</span>
-              </div>
-            ))}
-          </div>
-          <div className="text-center text-sm mb-4" style={{ color: totalPct === 100 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-            รวม {totalPct}% {totalPct !== 100 && '— ต้องรวมได้ 100%'}
-          </div>
-          <button onClick={saveB2BInstallments} disabled={saving || totalPct !== 100}
-            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] transition-colors"
-            style={{ background: 'var(--accent-purple)' }}>
-            {saving ? 'กำลังบันทึก...' : 'บันทึกแผนชำระ B2B'}
-          </button>
-        </div>
-      )}
-    </Sheet>
-  )
-}
-
 // ─── Deliver Sheet ─────────────────────────────────────────
 function DeliverSheet({ open, onClose, jobs }: {
   open: boolean; onClose: () => void; jobs: JobOption[]
@@ -1172,7 +968,7 @@ function DeliverSheet({ open, onClose, jobs }: {
           {checkingPlan ? (
             <p className="text-center text-sm" style={t2}>กำลังตรวจสอบ...</p>
           ) : !canDeliver ? (
-            <div className="rounded-[18px] p-4 text-center" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
+            <div className="rounded-[8px] p-4 text-center" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
               <AlertTriangle size={24} className="mx-auto mb-2" style={{ color: 'var(--accent-red)' }} />
               <p className="font-semibold text-sm" style={{ color: 'var(--accent-red)' }}>ยังชำระไม่ครบ</p>
               <p className="text-xs mt-1" style={t2}>ต้องชำระงวดสุดท้ายก่อนจึงจะส่งมอบได้</p>
@@ -1327,7 +1123,7 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
               <p style={t2}>ยังไม่มีงานเกินกำหนด 🎉</p>
             </div>
           ) : items.map((j: any) => (
-            <div key={j.id} className="rounded-[18px] p-3 mb-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
+            <div key={j.id} className="rounded-[8px] p-3 mb-2" style={{ background: 'color-mix(in srgb, var(--accent-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-red) 20%, transparent)' }}>
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-sm" style={t1}>{j.customer_name}</p>
@@ -1343,15 +1139,17 @@ function OverdueSheet({ open, onClose }: { open: boolean; onClose: () => void })
   )
 }
 
-// ─── Commission Sheet ──────────────────────────────────────
-function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+// ─── Commission — a tab inside เช็คยอดเงิน, not a button of its own ─────────
+// It answers "how am I doing", which is the same question as the balance tab
+// next to it, and it was opened about as often as a monthly payslip.
+function CommissionBody({ active }: { active: boolean }) {
   const supabase = createClient()
   const [items, setItems] = useState<any[]>([])
   const [summary, setSummary] = useState({ total: 0, pending: 0, approved: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!open) return
+    if (!active) return
     setLoading(true)
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -1381,14 +1179,13 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
       setLoading(false)
     }
     load()
-  }, [open])
+  }, [active])
 
   const STATUS_STYLE: Record<string, string> = {
     pending: 'var(--accent-orange)', approved: 'var(--accent-green)', paid: 'var(--accent-blue)', rejected: 'var(--accent-red)'
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Commission ของฉัน" icon={DollarSign}>
       <div className="p-4">
         {loading ? <div className="py-8 flex justify-center"><Spinner /></div> : (
           <>
@@ -1397,11 +1194,11 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
                 <p className="text-micro mb-1" style={t3}>รวมทั้งหมด</p>
                 <p className="font-bold text-sm" style={t1}>{fmtBaht(summary.total)}</p>
               </div>
-              <div className="rounded-[18px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)' }}>
+              <div className="rounded-[8px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)' }}>
                 <p className="text-micro mb-1" style={t3}>รอยืนยัน</p>
                 <p className="font-bold text-sm" style={{ color: 'var(--accent-orange)' }}>{fmtBaht(summary.pending)}</p>
               </div>
-              <div className="rounded-[18px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)' }}>
+              <div className="rounded-[8px] p-3 text-center" style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)' }}>
                 <p className="text-micro mb-1" style={t3}>อนุมัติแล้ว</p>
                 <p className="font-bold text-sm" style={{ color: 'var(--accent-green)' }}>{fmtBaht(summary.approved)}</p>
               </div>
@@ -1426,6 +1223,649 @@ function CommissionSheet({ open, onClose }: { open: boolean; onClose: () => void
           </>
         )}
       </div>
+  )
+}
+
+// ─── เช็คยอดเงิน ───────────────────────────────────────────
+/**
+ * Read-only on purpose, and separate from บันทึกรับเงิน even though both read
+ * the same instalments.
+ *
+ * The moment it serves is a phone call: the customer asks what is still owed
+ * and the answer has to arrive in a few seconds. Walking that through the
+ * recording flow would put a "save payment" button under the seller's thumb
+ * while they are mid-conversation — one mis-tap and money is booked that was
+ * never received. Nothing in here writes.
+ */
+function BalanceSheet({ open, onClose, jobs }: {
+  open: boolean; onClose: () => void; jobs: JobOption[]
+}) {
+  const supabase = createClient()
+  const [tab, setTab] = useState<'job' | 'mine'>('job')
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<JobOption | null>(null)
+  const [detail, setDetail] = useState<{ total: number; settled: number; rows: any[] } | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function pick(job: JobOption) {
+    setSelected(job); setDetail(null); setLoading(true)
+    const [{ data: jobRow }, { data: pays }] = await Promise.all([
+      supabase.from('jobs').select('revenue_inc_vat').eq('id', job.id).maybeSingle(),
+      supabase.from('payments')
+        .select('id, installment_name, installment_no, amount, paid_amount, voucher_amount, status, due_date, paid_date')
+        .eq('job_id', job.id).order('installment_no'),
+    ])
+    const rows = pays || []
+    // settledAmount, not paid_amount: a voucher settles the customer's side of
+    // the instalment even though the cash comes from the developer. The
+    // question here is "what do I still owe", so it counts both.
+    const settled = rows.filter(r => r.status === 'paid')
+      .reduce((s, r) => s + settledAmount(r.paid_amount, r.amount, r.voucher_amount), 0)
+    setDetail({ total: Number(jobRow?.revenue_inc_vat) || 0, settled, rows })
+    setLoading(false)
+  }
+
+  function back() { setSelected(null); setDetail(null) }
+  function closeAll() { setSearch(''); setSelected(null); setDetail(null); setTab('job'); onClose() }
+
+  const filtered = jobs.filter(j =>
+    !search || j.customerName.toLowerCase().includes(search.toLowerCase()) ||
+    normRoom(j.roomNo).includes(normRoom(search)) ||
+    j.projectName.toLowerCase().includes(search.toLowerCase()))
+
+  const next = detail?.rows.find(r => r.status !== 'paid') ?? null
+  const remaining = detail ? Math.max(0, detail.total - detail.settled) : 0
+
+  return (
+    <Sheet open={open} onClose={closeAll} title="เช็คยอดเงิน" icon={DollarSign}>
+      <div className="flex gap-2 px-4 pt-4">
+        {([['job', 'ยอดลูกค้า'], ['mine', 'Commission']] as const).map(([v, label]) => (
+          <button key={v} onClick={() => setTab(v)}
+            className="flex-1 py-2.5 rounded-[8px] text-body font-bold transition-colors"
+            style={tab === v
+              ? { background: 'var(--accent)', color: '#fff' }
+              : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'mine' && <CommissionBody active={open && tab === 'mine'} />}
+
+      {tab === 'job' && !selected && (
+        <div className="p-4">
+          <div className="relative mb-4">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
+            <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="พิมพ์ชื่อลูกค้า / ห้อง / โครงการ..."
+              className={sheetInput} style={sheetInputStyle} />
+          </div>
+          <div className="space-y-2">
+            {filtered.slice(0, 15).map(j => (
+              <button key={j.id} onClick={() => pick(j)}
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-[8px] text-left"
+                style={sheetCard}>
+                <div>
+                  <p className="font-semibold text-body" style={t1}>{j.customerName}</p>
+                  <p className="text-label mt-1" style={t2}>{j.roomNo} · {j.projectName}</p>
+                </div>
+                <ChevronRight size={16} style={t3} />
+              </button>
+            ))}
+            {filtered.length === 0 && <EmptyState message="ไม่พบงานที่ค้นหา" />}
+          </div>
+        </div>
+      )}
+
+      {tab === 'job' && selected && (
+        <div className="p-4">
+          <button onClick={back} className="text-label mb-4 flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
+            <ArrowLeft size={14} /> เลือกงานอื่น
+          </button>
+          <p className="font-semibold text-body" style={t1}>{selected.customerName}</p>
+          <p className="text-label mb-4" style={t2}>{selected.roomNo} · {selected.projectName}</p>
+
+          {loading ? <div className="py-8 flex justify-center"><Spinner /></div> : detail && (
+            <>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)' }}>
+                  <p className="text-micro mb-1" style={t3}>ชำระแล้ว</p>
+                  <p className="font-bold text-body" style={{ color: 'var(--accent-green)' }}>{fmtBaht(detail.settled)}</p>
+                </div>
+                <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-orange) 10%, transparent)' }}>
+                  <p className="text-micro mb-1" style={t3}>คงเหลือ</p>
+                  <p className="font-bold text-body" style={{ color: 'var(--accent-orange)' }}>{fmtBaht(remaining)}</p>
+                </div>
+              </div>
+              <p className="text-label mb-3" style={t3}>มูลค่างานรวม {fmtBaht(detail.total)}</p>
+
+              {next ? (
+                <div className="p-3 rounded-[8px] mb-4" style={sheetCard}>
+                  <p className="text-micro mb-1" style={t3}>งวดถัดไป</p>
+                  <p className="font-semibold text-body" style={t1}>{next.installment_name || 'งวดที่ ' + next.installment_no}</p>
+                  <p className="text-label mt-1" style={t2}>
+                    {fmtBaht(next.amount || 0)} · ครบกำหนด {next.due_date ? fmtDate(next.due_date) : 'ยังไม่กำหนด'}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 rounded-[8px] mb-4 text-center" style={{ background: 'color-mix(in srgb, var(--accent-green) 10%, transparent)' }}>
+                  <p className="text-body font-semibold" style={{ color: 'var(--accent-green)' }}>เก็บครบทุกงวดแล้ว</p>
+                </div>
+              )}
+
+              {/* Every instalment, not only the next one — the caller often asks
+                  "what did I pay in June", which a summary cannot answer. */}
+              <p className="text-micro font-bold uppercase tracking-widest mb-2" style={t3}>ทุกงวด</p>
+              <div className="space-y-2">
+                {detail.rows.map(r => (
+                  <div key={r.id} className="flex items-center justify-between p-3 rounded-[8px]" style={sheetCard}>
+                    <div className="min-w-0">
+                      <p className="text-label font-semibold truncate" style={t1}>{r.installment_name || 'งวดที่ ' + r.installment_no}</p>
+                      <p className="text-micro mt-0.5" style={t3}>
+                        {r.status === 'paid'
+                          ? 'จ่ายแล้ว ' + (r.paid_date ? fmtDate(r.paid_date) : '')
+                          : 'ครบกำหนด ' + (r.due_date ? fmtDate(r.due_date) : 'ยังไม่กำหนด')}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <p className="text-label font-semibold" style={t1}>{fmtBaht(r.amount || 0)}</p>
+                      <p className="text-micro" style={{ color: r.status === 'paid' ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+                        {r.status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {detail.rows.length === 0 && <EmptyState message="งานนี้ยังไม่มีงวดชำระในระบบ" />}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </Sheet>
+  )
+}
+
+// ─── สร้างงานใหม่ ──────────────────────────────────────────
+/**
+ * Opens a prospect from the field — one room, one seller, one value.
+ *
+ * It searches before it creates, and that is the point of the first step. The
+ * register has been merged once already for 265 duplicate people; a seller
+ * standing in a sales gallery has no way to know the customer in front of them
+ * is already in the system under a slightly different spelling. So the name
+ * goes in first and anything close comes back before "new customer" is offered.
+ *
+ * The row is written through lib/prospectJob, the same function the desktop
+ * Prospects page uses. Opening a prospect touches customers and jobs together
+ * and has already been the source of two silent failures (a dropped `budget`
+ * column, then `notes`), so this screen does not get its own copy of it.
+ */
+function NewJobSheet({ open, onClose, myId, onCreated }: {
+  open: boolean; onClose: () => void; myId: string | null; onCreated: () => void
+}) {
+  const supabase = createClient()
+  const [step, setStep] = useState<'search' | 'form'>('search')
+  const [search, setSearch] = useState('')
+  const [matches, setMatches] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const [existing, setExisting] = useState<any | null>(null)
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
+  const [form, setForm] = useState({ name: '', phone: '', projectId: '', room: '', value: 0 })
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  useEffect(() => {
+    if (!open || projects.length) return
+    supabase.from('projects').select('id, name').order('name')
+      .then(({ data }) => setProjects((data || []) as any))
+  }, [open])
+
+  function lookup(q: string) {
+    setSearch(q)
+    clearTimeout(timer.current)
+    if (!q.trim()) { setMatches([]); return }
+    timer.current = setTimeout(async () => {
+      setSearching(true)
+      const { data } = await supabase.from('customers')
+        .select('id, customer_name, phone, project_id, projects(name)')
+        .or(`customer_name.ilike.%${q}%,phone.ilike.%${q}%`)
+        .limit(20)
+      // Sorted here, not by the query: Postgres collates Thai by code point and
+      // puts the leading vowels เ แ โ ใ ไ before their consonant.
+      setMatches(sortByName(data as any))
+      setSearching(false)
+    }, 300)
+  }
+
+  function startNew() {
+    setExisting(null)
+    setForm({ name: search.trim(), phone: '', projectId: '', room: '', value: 0 })
+    setErr(''); setStep('form')
+  }
+
+  function startRepeat(c: any) {
+    setExisting(c)
+    setForm({ name: c.customer_name || '', phone: c.phone || '', projectId: c.project_id || '', room: '', value: 0 })
+    setErr(''); setStep('form')
+  }
+
+  function reset() {
+    setStep('search'); setSearch(''); setMatches([]); setExisting(null); setErr('')
+    setForm({ name: '', phone: '', projectId: '', room: '', value: 0 })
+  }
+  function closeAll() { reset(); onClose() }
+
+  async function save() {
+    if (!form.name.trim()) { setErr('กรุณาใส่ชื่อลูกค้า'); return }
+    if (!form.projectId) { setErr('กรุณาเลือกโครงการ'); return }
+    if (!form.room.trim()) { setErr('กรุณาใส่เลขห้อง'); return }
+    setSaving(true); setErr('')
+    try {
+      let customerId = existing?.id as string | undefined
+      if (!customerId) {
+        customerId = await nextCustomerId(supabase)
+        const { error } = await supabase.from('customers').insert([{
+          id: customerId,
+          customer_name: cleanName(form.name),
+          phone: form.phone.trim() || null,
+          project_id: form.projectId,
+          interested_room: form.room.trim(),
+          customer_type: 'B2C',
+          source: 'Quick Mode',
+        }])
+        if (error) throw new Error(error.message)
+      }
+      await createProspectJobShared(supabase, {
+        customerId: customerId!,
+        customerName: cleanName(form.name),
+        projectId: form.projectId,
+        roomNo: form.room.trim(),
+        customerType: 'B2C',
+        // The seller who opened it owns it. 36 of the 49 prospects in the
+        // system have no sales_id at all, which is why nobody chases them.
+        salesId: myId,
+        crmStage: 'interested',
+        revenueIncVat: form.value || 0,
+      })
+      onCreated()
+      closeAll()
+    } catch (e: any) {
+      setErr(e?.message || 'บันทึกไม่สำเร็จ')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Sheet open={open} onClose={closeAll} title="สร้างงานใหม่" icon={Plus}>
+      {step === 'search' && (
+        <div className="p-4">
+          <p className="text-label mb-3" style={t3}>ค้นก่อนว่าเคยมีลูกค้ารายนี้ในระบบหรือยัง</p>
+          <div className="relative mb-4">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
+            <input autoFocus value={search} onChange={e => lookup(e.target.value)}
+              placeholder="ชื่อลูกค้า หรือ เบอร์โทร..."
+              className={sheetInput} style={sheetInputStyle} />
+          </div>
+
+          {searching && <div className="py-6 flex justify-center"><Spinner /></div>}
+
+          {!searching && search.trim() !== '' && (
+            <>
+              {matches.length > 0 && (
+                <>
+                  <p className="text-micro font-bold uppercase tracking-widest mb-2" style={t3}>มีอยู่แล้วในระบบ</p>
+                  <div className="space-y-2 mb-4">
+                    {matches.map(c => (
+                      <button key={c.id} onClick={() => startRepeat(c)}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-[8px] text-left"
+                        style={sheetCard}>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-body truncate" style={t1}>{c.customer_name}</p>
+                          <p className="text-label truncate" style={t2}>
+                            {c.phone || 'ไม่มีเบอร์'}{(c.projects as any)?.name ? ' · ' + (c.projects as any).name : ''}
+                          </p>
+                        </div>
+                        <ChevronRight size={16} style={t3} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <button onClick={startNew}
+                className="w-full py-3.5 rounded-[8px] text-body font-semibold"
+                style={{ background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                + เป็นลูกค้าใหม่ ไม่ตรงกับรายชื่อข้างบน
+              </button>
+            </>
+          )}
+
+          {!searching && !search.trim() && (
+            <p className="text-center text-label py-8" style={t3}>พิมพ์ชื่อหรือเบอร์เพื่อเริ่ม</p>
+          )}
+        </div>
+      )}
+
+      {step === 'form' && (
+        <div className="p-4 space-y-4">
+          <button onClick={() => setStep('search')} className="text-label flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
+            <ArrowLeft size={14} /> กลับไปค้นหา
+          </button>
+
+          {existing && (
+            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-blue) 10%, transparent)' }}>
+              <p className="text-label" style={{ color: 'var(--accent-blue)' }}>
+                ลูกค้ารายเดิม — งานนี้จะถูกเพิ่มใต้ระเบียนเดิม ไม่สร้างลูกค้าซ้ำ
+              </p>
+            </div>
+          )}
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>ชื่อลูกค้า</label>
+            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+              disabled={!!existing}
+              className="w-full rounded-[8px] px-4 py-3 focus:outline-none disabled:opacity-60"
+              style={sheetInputStyle} />
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>เบอร์โทร</label>
+            <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+              inputMode="tel" placeholder="ไม่ใส่ก็ได้"
+              className="w-full rounded-[8px] px-4 py-3 focus:outline-none"
+              style={sheetInputStyle} />
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>โครงการ</label>
+            <select value={form.projectId} onChange={e => setForm({ ...form, projectId: e.target.value })}
+              className="w-full rounded-[8px] px-4 py-3 focus:outline-none"
+              style={sheetInputStyle}>
+              <option value="">— เลือกโครงการ —</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>เลขห้อง</label>
+            <input value={form.room} onChange={e => setForm({ ...form, room: e.target.value })}
+              placeholder="เช่น A1203"
+              className="w-full rounded-[8px] px-4 py-3 focus:outline-none"
+              style={sheetInputStyle} />
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>มูลค่างานโดยประมาณ (รวม VAT)</label>
+            <MoneyInput value={form.value ? String(form.value) : ''}
+              onChange={v => setForm({ ...form, value: Number(v) || 0 })}
+              ariaLabel="มูลค่างานโดยประมาณ" className={sheetInput.replace('pl-9', 'px-4')} style={sheetInputStyle} />
+            <p className="text-micro mt-1.5" style={t3}>ใส่คร่าวๆ ได้ ตัวเลขจริงจะยืนยันอีกครั้งตอนบันทึกจอง</p>
+          </div>
+
+          {err && (
+            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
+              <p className="text-label" style={{ color: 'var(--accent-red)' }}>{err}</p>
+            </div>
+          )}
+
+          <button onClick={save} disabled={saving}
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] text-body"
+            style={{ background: 'var(--accent-blue)' }}>
+            {saving ? 'กำลังบันทึก...' : 'สร้างงาน'}
+          </button>
+          <p className="text-micro text-center" style={t3}>บันทึกเป็นสถานะ "สนใจ" และใส่ชื่อคุณเป็นผู้ดูแลอัตโนมัติ</p>
+        </div>
+      )}
+    </Sheet>
+  )
+}
+
+// ─── บันทึกจอง ─────────────────────────────────────────────
+/** The instalment the seller is actually chasing after a booking, by name. */
+const FIRST_50 = 'ชำระ 50% แรก เริ่มงาน'
+
+/** How long the 50% instalment gets before it is due. 60 days is the house
+ *  default; the others are there because a room waiting on transfer from the
+ *  developer cannot be held to the same clock. */
+const DUE_DAY_CHOICES = [30, 45, 60, 90, 180]
+const DUE_DAY_DEFAULT = 60
+
+/**
+ * Turns an interested prospect into a booked job in one save.
+ *
+ * Doing it in the normal screens takes two trips: move the stage to จอง, then
+ * open the payment plan and build it by hand. That gap is where the deals sit —
+ * 123 of the 161 booked jobs in the system have a deposit row and nothing else,
+ * so the seller who wants to collect the 50% has no instalment to collect
+ * against and the job never moves.
+ *
+ * So this writes all three at once: the plan, the deposit as received, and the
+ * stage. The instalment shapes come from lib/paymentPlans — there used to be a
+ * fourth copy of that maths in this file, and its plan C split the remainder
+ * after the deposit instead of taking 50% of the job, which is how 13 of 52
+ * plan-C jobs ended up the wrong shape.
+ */
+function BookingSheet({ open, onClose, myId, onSaved }: {
+  open: boolean; onClose: () => void; myId: string | null; onSaved: () => void
+}) {
+  const supabase = createClient()
+  const [step, setStep] = useState<'pick' | 'form'>('pick')
+  const [list, setList] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState('')
+  const [job, setJob] = useState<any | null>(null)
+  const [value, setValue] = useState(0)
+  const [deposit, setDeposit] = useState(0)
+  const [paidDate, setPaidDate] = useState('')
+  const [dueDays, setDueDays] = useState(DUE_DAY_DEFAULT)
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+
+  useEffect(() => { setPaidDate(todayStr()) }, [])
+
+  useEffect(() => {
+    if (!open) return
+    setLoading(true)
+    ;(async () => {
+      // Prospect stages only. A job that is already booked has a plan; sending
+      // it through here again would write a second one.
+      let q = supabase.from('jobs')
+        .select('id, customer_id, customer_name, room_no, revenue_inc_vat, crm_stage, project_id, projects(name)')
+        .in('crm_stage', ['new', 'interested', 'quoted', 'close_pending'])
+        .or('working_status.neq.ยกเลิก,working_status.is.null')
+      if (myId) q = q.eq('sales_id', myId)
+      const { data } = await q.limit(200)
+      setList(sortByName(data as any))
+      setLoading(false)
+    })()
+  }, [open, myId])
+
+  function pick(j: any) {
+    setJob(j)
+    setValue(Number(j.revenue_inc_vat) || 0)
+    setDeposit(0)
+    setDueDays(DUE_DAY_DEFAULT)
+    setErr('')
+    setStep('form')
+  }
+
+  function reset() {
+    setStep('pick'); setJob(null); setSearch(''); setValue(0); setDeposit(0)
+    setDueDays(DUE_DAY_DEFAULT); setErr('')
+  }
+  function closeAll() { reset(); onClose() }
+
+  const plan = value > 0 ? calcB2CInstallments('C', value, deposit) : []
+
+  async function save() {
+    if (!job) return
+    if (value <= 0) { setErr('กรุณาใส่มูลค่างาน'); return }
+    if (deposit <= 0) { setErr('กรุณาใส่ยอดมัดจำที่รับมา'); return }
+    if (deposit >= value) { setErr('ยอดมัดจำต้องน้อยกว่ามูลค่างาน'); return }
+    setSaving(true); setErr('')
+    try {
+      const { count } = await supabase.from('payments')
+        .select('*', { count: 'exact', head: true }).eq('job_id', job.id)
+      if (count && count > 0) throw new Error('งานนี้มีงวดชำระอยู่แล้ว กรุณาใช้ปุ่มบันทึกรับเงินแทน')
+
+      const due = daysFromToday(dueDays)
+      const rows = plan.map(p => ({
+        // payments.id has no default — the row is rejected without one. Same
+        // shape the other plan-setup screens use, so the ids stay comparable.
+        id: `PAY-${job.id}-${p.no}`,
+        job_id: job.id,
+        // Denormalised onto the payment by the rest of the app; keep them in
+        // step or this job's instalments look different from every other one.
+        customer_id: job.customer_id ?? null,
+        project_id: job.project_id ?? null,
+        room: job.room_no ?? null,
+        installment_no: p.no,
+        installment_name: p.name,
+        amount: p.amount,
+        percentage: p.pct,
+        is_work_trigger: p.trigger,
+        is_final: p.final,
+        // Only the 50% instalment gets a date. The deposit is already in hand,
+        // and the final one falls due on handover, which has no date yet.
+        due_date: p.name === FIRST_50 ? due : null,
+        // The deposit is being received right now; the rest is outstanding.
+        status: p.no === 1 ? 'paid' : 'pending',
+        paid_date: p.no === 1 ? paidDate : null,
+        paid_amount: p.no === 1 ? p.amount : null,
+      }))
+      const { error: payErr } = await supabase.from('payments').insert(rows)
+      if (payErr) throw new Error(payErr.message)
+
+      const { error: jobErr } = await supabase.from('jobs').update({
+        revenue_inc_vat: value,
+        revenue_ex_vat: Math.round((value / 1.07) * 100) / 100,
+        crm_stage: 'booked',
+        working_status: 'จอง',
+        payment_plan_type: 'C',
+        order_date: paidDate,
+        ...(myId ? { sales_id: myId } : {}),
+      }).eq('id', job.id)
+      if (jobErr) throw new Error(jobErr.message)
+
+      onSaved()
+      closeAll()
+    } catch (e: any) {
+      setErr(e?.message || 'บันทึกไม่สำเร็จ')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const filtered = list.filter(j =>
+    !search || (j.customer_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    normRoom(j.room_no || '').includes(normRoom(search)))
+
+  return (
+    <Sheet open={open} onClose={closeAll} title="บันทึกจอง" icon={BadgeCheck}>
+      {step === 'pick' && (
+        <div className="p-4">
+          <div className="relative mb-4">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={t3} />
+            <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="ชื่อลูกค้า / ห้อง..."
+              className={sheetInput} style={sheetInputStyle} />
+          </div>
+          {loading ? <div className="py-8 flex justify-center"><Spinner /></div> : (
+            <div className="space-y-2">
+              {filtered.slice(0, 20).map(j => (
+                <button key={j.id} onClick={() => pick(j)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-[8px] text-left"
+                  style={sheetCard}>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-body truncate" style={t1}>{j.customer_name || '—'}</p>
+                    <p className="text-label truncate" style={t2}>
+                      {j.room_no || '—'}{(j.projects as any)?.name ? ' · ' + (j.projects as any).name : ''}
+                    </p>
+                  </div>
+                  <span className="badge badge-blue flex-shrink-0 ml-2">{crmStage(j.crm_stage).label}</span>
+                </button>
+              ))}
+              {filtered.length === 0 && (
+                <EmptyState message="ไม่มีลูกค้าที่ยังไม่จองในความดูแลของคุณ" />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === 'form' && job && (
+        <div className="p-4 space-y-4">
+          <button onClick={() => setStep('pick')} className="text-label flex items-center gap-1" style={{ color: 'var(--accent-blue)' }}>
+            <ArrowLeft size={14} /> เลือกลูกค้าอื่น
+          </button>
+          <div>
+            <p className="font-semibold text-body" style={t1}>{job.customer_name || '—'}</p>
+            <p className="text-label" style={t2}>{job.room_no || '—'}{(job.projects as any)?.name ? ' · ' + (job.projects as any).name : ''}</p>
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>มูลค่างาน (รวม VAT)</label>
+            <MoneyInput value={value ? String(value) : ''} onChange={v => setValue(Number(v) || 0)}
+              ariaLabel="มูลค่างาน" className="w-full rounded-[8px] px-4 py-3 focus:outline-none" style={sheetInputStyle} />
+            <p className="text-micro mt-1.5" style={t3}>ตัวเลขนี้คือยอดยืนยันจริง จะทับค่าที่ใส่ไว้ตอนสร้างงาน</p>
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>ยอดมัดจำที่รับมา</label>
+            <MoneyInput value={deposit ? String(deposit) : ''} onChange={v => setDeposit(Number(v) || 0)}
+              ariaLabel="ยอดมัดจำ" className="w-full rounded-[8px] px-4 py-3 focus:outline-none" style={sheetInputStyle} />
+          </div>
+
+          <div>
+            <label className="text-label block mb-1.5" style={t3}>วันที่รับมัดจำ</label>
+            <DateInput value={paidDate} onChange={e => setPaidDate(e.target.value)} />
+          </div>
+
+          <div>
+            <label className="text-label block mb-2" style={t3}>งวด 50% ครบกำหนดในอีก</label>
+            <div className="grid grid-cols-5 gap-1.5">
+              {DUE_DAY_CHOICES.map(d => (
+                <button key={d} onClick={() => setDueDays(d)}
+                  className="py-2.5 rounded-[8px] text-label font-bold"
+                  style={dueDays === d
+                    ? { background: 'var(--accent)', color: '#fff' }
+                    : { background: 'var(--hover-bg)', color: 'var(--text-2)', border: '1px solid var(--divider)' }}>
+                  {d} วัน
+                </button>
+              ))}
+            </div>
+            <p className="text-micro mt-1.5" style={t3}>ครบกำหนด {fmtDate(daysFromToday(dueDays))}</p>
+          </div>
+
+          {plan.length > 0 && (
+            <div className="p-3 rounded-[8px]" style={sheetCard}>
+              <p className="text-micro font-bold uppercase tracking-widest mb-2" style={t3}>แผนที่จะสร้าง (แผน C)</p>
+              {plan.map(p => (
+                <div key={p.no} className="flex items-center justify-between py-1">
+                  <span className="text-label" style={t2}>{p.no}. {p.name}</span>
+                  <span className="text-label font-semibold" style={p.no === 1 ? { color: 'var(--accent-green)' } : t1}>
+                    {fmtBaht(p.amount)}{p.no === 1 ? ' · รับแล้ว' : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {err && (
+            <div className="p-3 rounded-[8px]" style={{ background: 'color-mix(in srgb, var(--accent-red) 10%, transparent)' }}>
+              <p className="text-label" style={{ color: 'var(--accent-red)' }}>{err}</p>
+            </div>
+          )}
+
+          <button onClick={save} disabled={saving}
+            className="w-full py-4 disabled:opacity-40 text-white font-semibold rounded-[8px] text-body"
+            style={{ background: 'var(--accent)' }}>
+            {saving ? 'กำลังบันทึก...' : 'บันทึกจอง + ตั้งงวด'}
+          </button>
+          <p className="text-micro text-center" style={t3}>สร้างงวดครบ 3 งวด · ลงรับเงินมัดจำ · เปลี่ยนสถานะเป็นจอง ในครั้งเดียว</p>
+        </div>
+      )}
     </Sheet>
   )
 }
@@ -1681,28 +2121,70 @@ export default function QuickPage() {
 
   useEffect(() => { load() }, [load])
 
+  /**
+   * The event whose banner is showing, if any.
+   *
+   * `events` holds a date, not a status, so "on now" is a window around today.
+   * Two days either side: a booth usually runs a weekend, and someone entering
+   * the customers they met on Sunday evening should still see it on Monday.
+   */
+  const liveEvent = useMemo(() => {
+    const day = 86400000
+    const today = new Date(todayStr()).getTime()
+    return activeEvents.find(e => {
+      if (!e.eventDate) return false
+      const d = new Date(e.eventDate).getTime()
+      return Math.abs(d - today) <= EVENT_BANNER_DAYS * day
+    }) ?? null
+  }, [activeEvents])
+
   /** Managers and admins only — a seller has no toggle to move. */
   useEffect(() => {
     if (!myId || seller) return
     loadOverview(scope === 'mine' ? myId : null)
   }, [scope, myId, seller, loadOverview])
 
-  // ─── Button layout: flat 3×4 grid = 12 buttons ──────
+  /**
+   * Eight buttons in two rows, ordered by what a seller actually does.
+   *
+   * The old grid held twelve and opened with a whole row of lookups — Job
+   * Registry, Prospects, ลูกค้า Event, Origin Pool — while the most-used action
+   * in the app sat on the second row. Measured over the four weeks to
+   * 2026-09-14, by rows written: recording a payment 35–149 a week, attaching a
+   * file 31–78, recording a delivery 15–25, opening a job 3–19, adding a
+   * customer 3–8.
+   *
+   * Gone from the grid, and why:
+   *   อัปเดตสถานะงาน — working_status moves on its own now (owner's call)
+   *   My Deals       — jumps out to a desktop page, against the point of this mode
+   *   หน้าหลัก        — now the full-width row under the grid
+   *   Job Registry / Prospects — folded into ติดตามลูกค้า
+   *   Commission     — second tab of เช็คยอดเงิน
+   *   ลูกค้า Event    — a banner that appears only while an event is on; it was
+   *                    used 0 times in 28 days and then 88 times in one day
+   *   งานเกินกำหนด    — late *work*, not late money; the Overview covers what
+   *                    needs chasing and the owner dropped this one
+   *
+   * Labels are at most two lines of seven Thai characters: a 375px screen
+   * leaves each cell ~76px, and ~52px of that is text.
+   */
   type Btn = { key: string; icon: LucideIcon; label: string; iconColor: string; btnStyle: React.CSSProperties; badge?: number; sheet?: string; href?: string }
 
+  const TILE: React.CSSProperties = { background: 'var(--card-bg)', borderColor: 'var(--divider)' }
   const BUTTONS: Btn[] = [
-    { key: 'clients',    icon: Briefcase,      label: 'Job\nRegistry',   iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'clients' },
-    { key: 'prospects',  icon: Users,           label: 'Prospects',       iconColor: 'var(--accent)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'prospects' },
-    { key: 'event',      icon: CalendarDays,    label: 'ลูกค้า\nEvent',  iconColor: 'var(--accent-green)',  btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'event' },
-    { key: 'lookup',     icon: Database,        label: 'Origin\nPool', iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'lookup' },
-    { key: 'pay',        icon: Receipt,         label: 'บันทึก\nรับเงิน',iconColor: 'var(--accent-orange)',btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.pendingInstallments, sheet: 'pay' },
-    { key: 'docs',       icon: FileText,        label: 'ไฟล์แนบ\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'docs' },
-    { key: 'deliver',    icon: ArrowRightLeft,  label: 'บันทึก\nส่งมอบ', iconColor: 'var(--accent-green)',  btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.readyToDeliver, sheet: 'deliver' },
-    { key: 'handover',   icon: ClipboardList,   label: 'อัปเดต\nสถานะงาน',     iconColor: 'var(--accent-blue)',   btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'handover' },
-    { key: 'overdue',    icon: AlertTriangle,   label: 'งานเกิน\nกำหนด', iconColor: 'var(--accent-red)',    btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, badge: widgets.overdueJobs, sheet: 'overdue' },
-    { key: 'mydeals',    icon: Briefcase,       label: 'My\nDeals',       iconColor: 'var(--accent)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, href: '/dashboard/my-deals' },
-    { key: 'commission', icon: DollarSign,      label: 'Commission',      iconColor: 'var(--accent-orange)', btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, sheet: 'commission' },
-    { key: 'home',       icon: Home,            label: 'หน้าหลัก',       iconColor: 'var(--text-3)',        btnStyle: { background: 'var(--card-bg)', borderColor: 'var(--divider)' }, href: '/dashboard' },
+    { key: 'pay',      icon: Receipt,        label: 'บันทึก\nรับเงิน',  iconColor: 'var(--accent-orange)', btnStyle: TILE, badge: widgets.pendingInstallments, sheet: 'pay' },
+    { key: 'docs',     icon: FileText,       label: 'ไฟล์แนบ\nลูกค้า', iconColor: 'var(--accent-purple)', btnStyle: TILE, sheet: 'docs' },
+    { key: 'deliver',  icon: ArrowRightLeft, label: 'บันทึก\nส่งมอบ',  iconColor: 'var(--accent-green)',  btnStyle: TILE, badge: widgets.readyToDeliver, sheet: 'deliver' },
+    { key: 'newjob',   icon: Plus,           label: 'สร้างงาน\nใหม่',  iconColor: 'var(--accent-blue)',   btnStyle: TILE, sheet: 'newjob' },
+    // 'booking' — บันทึกจอง — is built and tested but deliberately not on the
+    // grid yet. It sets plan C only, and the owner is still deciding how the
+    // other plans (A, B and the B2B shapes) should reach a phone, since a B2B
+    // job also has to pass through จอง before its instalments can be set. The
+    // sheet stays in the file rather than being deleted and rewritten; put the
+    // tile back here once that is settled.
+    { key: 'follow',   icon: Users,          label: 'ติดตาม\nลูกค้า',  iconColor: 'var(--accent)',        btnStyle: TILE, sheet: 'follow' },
+    { key: 'balance',  icon: DollarSign,     label: 'เช็ค\nยอดเงิน',   iconColor: 'var(--accent-orange)', btnStyle: TILE, sheet: 'balance' },
+    { key: 'lookup',   icon: Database,       label: 'Origin\nPool',     iconColor: 'var(--accent-blue)',   btnStyle: TILE, sheet: 'lookup' },
   ]
 
   function handleAction(btn: Btn) {
@@ -1777,8 +2259,8 @@ export default function QuickPage() {
                 { label: 'ยอดขาย', value: overview?.soldValue ?? 0, n: overview?.soldN ?? 0, prev: overview?.soldPrev ?? 0, tone: 'var(--accent)', sub: null as string | null },
                 { label: 'ยอดส่งมอบ', value: overview?.delivValue ?? 0, n: overview?.delivN ?? 0, prev: overview?.delivPrev ?? 0, tone: 'var(--accent-green)', sub: null as string | null },
                 { label: 'เงินสดรับ', value: overview?.cashValue ?? 0, n: null, prev: overview?.cashPrev ?? 0, tone: 'var(--accent-blue)', sub: null as string | null },
-                { label: 'โอกาสเก็บถึง 50%', value: overview?.gapValue ?? 0, n: null, prev: 0, tone: 'var(--accent-orange)',
-                  sub: `${overview?.gapN ?? 0} งานที่จองแล้วยังไม่ถึงครึ่ง` as string | null },
+                { label: 'โอกาสเก็บเงินถึง 50%', value: overview?.gapValue ?? 0, n: null, prev: 0, tone: 'var(--accent-orange)',
+                  sub: `${overview?.gapN ?? 0} งานที่เก็บได้แค่งวดมัดจำจองสิทธิ์` as string | null },
               ].map(c => (
                 <div key={c.label}>
                   <p className="text-label" style={{ color: 'var(--text-3)' }}>{c.label}</p>
@@ -1796,7 +2278,27 @@ export default function QuickPage() {
       {/* ── Divider ── */}
       <div className="mx-5 mb-6" style={{ height: 1, background: 'linear-gradient(to right, transparent, var(--divider) 20%, var(--divider) 80%, transparent)' }} />
 
-      {/* ── Quick Menu — flat 3×4 grid ── */}
+      {/* ── Event banner — only while an event is on ──
+          Adding customers at a booth is the one thing here that is not a daily
+          job: zero uses in 28 days, then 88 in a single day. A permanent tile
+          spends a slot on that; a banner spends nothing and is larger than a
+          tile on the day it matters. */}
+      {liveEvent && (
+        <div className="px-5 mb-6">
+          <button onClick={() => setOpenSheet('event')}
+            className="w-full ds-card flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
+            style={{ borderColor: 'color-mix(in srgb, var(--accent-green) 40%, transparent)', background: 'color-mix(in srgb, var(--accent-green) 8%, var(--card-bg))' }}>
+            <CalendarDays size={22} style={{ color: 'var(--accent-green)', flexShrink: 0 }} />
+            <div className="min-w-0 flex-1">
+              <p className="text-body font-bold truncate" style={{ color: 'var(--text-1)' }}>{liveEvent.eventName}</p>
+              <p className="text-label truncate" style={{ color: 'var(--text-3)' }}>{liveEvent.projectName} · แตะเพื่อเพิ่มลูกค้า</p>
+            </div>
+            <ChevronRight size={18} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+          </button>
+        </div>
+      )}
+
+      {/* ── Quick Menu — 2 rows of 4 ── */}
       <div className="px-5 pb-8">
         <div className="flex items-center gap-3 mb-4">
           <p className="text-micro font-bold uppercase tracking-widest flex-shrink-0" style={{ color: 'var(--text-3)' }}>Quick Menu</p>
@@ -1820,19 +2322,33 @@ export default function QuickPage() {
             </button>
           ))}
         </div>
+
+        {/* Leaving Quick Mode is not a ninth function, so it does not look like
+            one: no card fill, just a rule around it, and it says where it goes
+            rather than showing a house. It sits last because that is where you
+            are when you have finished. */}
+        <button onClick={() => router.push('/dashboard')}
+          className="w-full mt-2.5 flex items-center justify-center gap-2 rounded-[18px] border transition-all active:scale-[0.99]"
+          style={{ minHeight: 56, background: 'transparent', borderColor: 'var(--divider)', color: 'var(--text-2)' }}>
+          <ArrowLeft size={16} />
+          <span className="text-body font-bold">ไปหน้าหลัก</span>
+        </button>
       </div>
 
       {/* Sheets */}
       <OriginPoolSheet open={openSheet === 'lookup'} onClose={() => setOpenSheet(null)} />
       <WydeClientsSheet open={openSheet === 'clients'} onClose={() => setOpenSheet(null)} />
-      <ProspectsSheet open={openSheet === 'prospects'} onClose={() => setOpenSheet(null)} />
+      {/* ติดตามลูกค้า — still the Prospects sheet while the two groups
+          ("ของฉัน" / "ยังไม่มีเจ้าของ") are being built onto it. */}
+      <ProspectsSheet open={openSheet === 'follow'} onClose={() => setOpenSheet(null)} />
       <EventAddSheet open={openSheet === 'event'} onClose={() => setOpenSheet(null)} events={activeEvents} />
       <QuickPaySheet open={openSheet === 'pay'} onClose={() => { setOpenSheet(null); load() }} jobs={allJobs} />
-      <PlanSetupSheet open={openSheet === 'plan'} onClose={() => { setOpenSheet(null); load() }} jobs={allJobs} />
       <DeliverSheet open={openSheet === 'deliver'} onClose={() => { setOpenSheet(null); load() }} jobs={allJobs} />
       <QuickHandoverSheet open={openSheet === 'handover'} onClose={() => { setOpenSheet(null); load() }} jobs={allJobs} />
       <OverdueSheet open={openSheet === 'overdue'} onClose={() => setOpenSheet(null)} />
-      <CommissionSheet open={openSheet === 'commission'} onClose={() => setOpenSheet(null)} />
+      <BalanceSheet open={openSheet === 'balance'} onClose={() => setOpenSheet(null)} jobs={allJobs} />
+      <NewJobSheet open={openSheet === 'newjob'} onClose={() => setOpenSheet(null)} myId={myId} onCreated={load} />
+      <BookingSheet open={openSheet === 'booking'} onClose={() => setOpenSheet(null)} myId={myId} onSaved={load} />
       <DocumentsSheet open={openSheet === 'docs'} onClose={() => setOpenSheet(null)} />
     </div>
   )

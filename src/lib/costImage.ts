@@ -54,6 +54,9 @@ export interface CostImageInput {
   totalAct: number
   gpEst: string
   gpAct: string
+  /** คนที่กดสร้างภาพ — ภาพนี้ถูกส่งไปขออนุมัติทางอีเมล คนอนุมัติจึงควรเห็น
+   *  ว่าใครเป็นคนทำโดยไม่ต้องไล่ถามย้อนกลับมา */
+  preparedBy?: string
 }
 
 const INK = '#1e1b4b'
@@ -115,7 +118,10 @@ function clip(ctx: CanvasRenderingContext2D, text: string, max: number): string 
 
 export function drawCostTable(input: CostImageInput): HTMLCanvasElement {
   const rowCount = input.groups.reduce((s, g) => s + g.rows.length + 1, 0)
-  const headerH = 108
+  // 108 while the last line of the header sat flush against the table. The
+  // "จัดทำโดย…" line needs its own room plus a rule under it, so the block is
+  // 20px taller: stamp centred at 104, rule at 118, column labels from 128.
+  const headerH = 128
   const height = headerH + ROW_H + rowCount * ROW_H + ROW_H + PAD
 
   // วาดที่ 2 เท่าแล้วย่อด้วย CSS — ตัวหนังสือคมบนจอ retina และในอีเมล
@@ -187,10 +193,18 @@ export function drawCostTable(input: CostImageInput): HTMLCanvasElement {
   y += 22
   ctx.font = `400 11px ${FONT}`
   ctx.fillStyle = '#9ca3af'
-  ctx.fillText(`ออกจากระบบ Super Sales เมื่อ ${new Date().toLocaleString('th-TH', {
+  const stamp = `ออกจากระบบ Super Sales เมื่อ ${new Date().toLocaleString('th-TH', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })}`, PAD, y + 6)
+  })}`
+  ctx.fillText(input.preparedBy ? `จัดทำโดย ${input.preparedBy}  ·  ${stamp}` : stamp, PAD, y + 6)
   y = headerH
+
+  // เส้นคั่นหัวกระดาษกับตาราง — ไม่มีเส้นนี้ หัวคอลัมน์ลอยต่อจากบรรทัด
+  // "จัดทำโดย…" เหมือนเป็นข้อความชุดเดียวกัน คนอ่านอีเมลต้องเพ่งหาว่าตาราง
+  // เริ่มตรงไหน
+  ctx.strokeStyle = LINE
+  ctx.lineWidth = 1
+  ctx.beginPath(); ctx.moveTo(PAD, y - 9.5); ctx.lineTo(WIDTH - PAD, y - 9.5); ctx.stroke()
 
   const xs: number[] = []
   let acc = PAD

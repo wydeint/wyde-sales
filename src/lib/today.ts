@@ -28,8 +28,14 @@ export function todayStr(): string {
 
 /** `n` days before today, same rules as todayStr(). */
 export function daysAgoStr(n: number): string {
+  return daysFromToday(-n)
+}
+
+/** `n` days after today (negative goes back), same rules as todayStr().
+ *  Used for instalment due dates, which are always "x days from the booking". */
+export function daysFromToday(n: number): string {
   const d = new Date()
-  d.setDate(d.getDate() - n)
+  d.setDate(d.getDate() + n)
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')

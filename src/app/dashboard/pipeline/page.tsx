@@ -22,7 +22,7 @@ import { bahtShort } from '@/lib/money'
 import { createProspectJob as createProspectJobShared } from '@/lib/prospectJob'
 import { cleanName, nameKey } from '@/lib/customerName'
 import { cancelJob } from '@/lib/jobLifecycle'
-import { showAlert } from '@/components/ui/dialog'
+import { showAlert, showConfirm } from '@/components/ui/dialog'
 import { deleteJobCascade, deleteJobsCascade } from '@/lib/deleteJob'
 import { compareRoom } from '@/lib/utils'
 import { resolveCustomerId, nextCustomerId } from '@/lib/customerId'
@@ -86,6 +86,27 @@ const stageMap = Object.fromEntries(STAGES.map(s => [s.value, s]))
  *  fact about the record — nobody could tell what to do about it. It is a real
  *  state with a real cause (a customer created before, or instead of, a job) and
  *  the fix is to open a job or delete the record, so the chip says so. */
+/**
+ * Ask before moving a stage.
+ *
+ * These buttons used to write the moment they were touched. They sit in a row
+ * of five, 26px tall, inside a drawer that is also scrolled and tapped — so a
+ * mis-tap silently moved a real customer to a new stage with nothing to undo
+ * it. Hit during testing on 2026-09-15: one stray click booked a ฿0 prospect.
+ *
+ * The prompt names both ends of the move, because "are you sure?" on its own
+ * does not tell you which button you actually hit.
+ */
+async function confirmStageMove(
+  fromLabel: string, toLabel: string, extra?: string,
+  tone: 'normal' | 'danger' = 'normal',
+): Promise<boolean> {
+  return showConfirm(
+    `ย้ายจาก "${fromLabel}" ไปเป็น "${toLabel}"` + (extra ? `\n${extra}` : ''),
+    { title: 'ยืนยันการย้ายสถานะ', confirmLabel: 'ย้ายสถานะ', tone },
+  )
+}
+
 const UNKNOWN_STAGE = { value: '', label: 'ยังไม่เปิดงาน', text: 'var(--accent-orange)', dot: 'var(--accent-orange)', bg: 'transparent', border: 'color-mix(in srgb, var(--accent-orange) 40%, transparent)', badge: 'color-mix(in srgb, var(--accent-orange) 12%, transparent)', chip: 'color-mix(in srgb, var(--accent-orange) 20%, transparent)' }
 /** Cancellation and the order note live on the job now. A card shows one job,
  *  the drawer focuses one — but both are handed a customer, so read through to
@@ -713,6 +734,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               // every other job this person holds — one card's stage change
               // rewrote the lot. The customer copy is only touched when there is
               // no job to carry it (a prospect that predates createProspectJob).
+              if (!await confirmStageMove(crmStage(jobOf(customer, focusJobId).crm_stage).label, s.label)) return
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: s.value }).eq('id', focusJobId)
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: s.value } : j) : (customer as any).jobs
               onUpdate({ ...customer, jobs: updatedJobs } as any)
@@ -727,6 +749,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
             disabled={!canClose}
             title={canClose ? undefined : `ต้องชำระอย่างน้อย 50% ก่อนเริ่มงาน (ชำระแล้ว ${jobValue > 0 ? Math.round(totalSettled / jobValue * 100) : 0}%)`}
             onClick={async () => {
+              if (!await confirmStageMove(crmStage(jobOf(customer, focusJobId).crm_stage).label, closedStage.label, 'งานจะเริ่มนับว่าดำเนินการแล้ว')) return
               if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'closed' }).eq('id', focusJobId)
               const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'closed' } : j) : (customer as any).jobs
               onUpdate({ ...customer, jobs: updatedJobs } as any)
@@ -979,6 +1002,10 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
                   // NULL along with the cancelled — so a booked ฿3.8M job sat
                   // invisible on Finance, My Deals and Payments alike. Moving the
                   // stage was the only step anyone took, so the stage has to carry it.
+                  if (!await confirmStageMove(
+                    crmStage(effectiveStage).label, s.label,
+                    s.value === 'booked' ? 'สถานะงานจะถูกตั้งเป็น "จอง" ด้วย' : undefined,
+                  )) return
                   const jobPatch: Record<string, unknown> = { crm_stage: s.value }
                   if (s.value === 'booked') jobPatch.working_status = 'จอง'
                   if (focusJobId) await supabase.from('jobs').update(jobPatch).eq('id', focusJobId)
@@ -992,6 +1019,7 @@ function CustomerDrawer({ customer, focusJobId, focusJobWorkingStatus, focusJobC
               ))}
               {effectiveStage !== 'lost' && (
                 <button onClick={async () => {
+                  if (!await confirmStageMove(crmStage(effectiveStage).label, 'หลุด', 'งานจะถูกนับว่าไม่ได้ปิดการขาย', 'danger')) return
                   if (focusJobId) await supabase.from('jobs').update({ crm_stage: 'lost' }).eq('id', focusJobId)
                   const updatedJobs = focusJobId ? ((customer as any).jobs as JobMeta[] || []).map((j: JobMeta) => j.id === focusJobId ? { ...j, crm_stage: 'lost' } : j) : (customer as any).jobs
                   onUpdate({ ...customer, jobs: updatedJobs } as any)
@@ -2024,7 +2052,7 @@ export default function ProspectsKanbanPage() {
             <button onClick={() => { setAddModal(true); setAddStep('search'); setAddSearchQ(''); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}
               className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-sm font-semibold text-white"
               style={{ background: 'var(--accent)' }}>
-              <Plus size={15} /> เพิ่ม Prospect
+              <Plus size={15} /> สร้างงานใหม่
             </button>
           }
         />
@@ -2221,7 +2249,7 @@ export default function ProspectsKanbanPage() {
                 <Search size={20} style={{ color: 'var(--text-3)' }} />
               </div>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-2)' }}>ไม่พบ Prospect ใน {stage.label}</p>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองเลือกกลุ่มอื่น หรือเพิ่ม Prospect ใหม่</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>ลองเลือกกลุ่มอื่น หรือสร้างงานใหม่</p>
             </div>
           ) : (() => {
             const grouped = list.reduce<Record<string, { name: string; items: CardItem[] }>>((acc, card) => {
@@ -2302,7 +2330,7 @@ export default function ProspectsKanbanPage() {
       )}
 
       {/* Add modal — step 1: search, step 2: new customer form */}
-      <Modal open={addModal} title={addStep === 'search' ? 'เพิ่ม Prospect / ซื้อซ้ำ' : 'ลูกค้าใหม่'} onClose={() => { setAddModal(false); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}>
+      <Modal open={addModal} title={addStep === 'search' ? 'สร้างงานใหม่ / ซื้อซ้ำ' : 'ลูกค้าใหม่'} onClose={() => { setAddModal(false); setRepeatConfirm(null); setRepeatJobForm({ project_id: '', room: '', work_type: '', budget: '', assigned_to: '' }) }}>
         {addStep === 'search' ? (
           <div className="space-y-3">
             <input value={addSearchQ} onChange={e => { setAddSearchQ(e.target.value); setRepeatConfirm(null) }}

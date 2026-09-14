@@ -1179,6 +1179,7 @@ function RoomSheet({
         totalEst: t.est, totalAct: t.act,
         gpEst: gpText(gpCosted(revEx, t.est, t.estLines)),
         gpAct: gpText(gpCosted(revEx, t.act, t.actLines)),
+        preparedBy: nameOf(myUserId),
       })
       const how = await copyCanvas(canvas, `ต้นทุน-${job.room_no ?? 'ห้อง'}.png`)
       setCopyState(how)
